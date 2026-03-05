@@ -1,0 +1,12 @@
+<template>
+  <Vertical>
+    <PageTitle title="Notes" subtitle="Menu" />
+    <Note />
+  </Vertical>
+</template>
+
+<script setup lang="ts">
+import PageTitle from '@/example-components/PageTitle.vue'
+import Vertical from '@/example-layouts/vertical.vue'
+import Note from './components/Notes.vue'
+</script>
