@@ -24,6 +24,22 @@ const router = createRouter({
       },
       component: () => import('@/views/chat/index.vue')
     },
+    {
+      path: '/login',
+      name: 'Login',
+      meta: {
+        title: 'Login'
+      },
+      component: () => import('@/views/auth/login/index.vue')
+    },
+    {
+      path: '/katalog',
+      name: 'Katalog',
+      meta: {
+        title: 'Katalog'
+      },
+      component: () => import('@/views/katalog/index.vue')
+    },
 
     // Example
     {

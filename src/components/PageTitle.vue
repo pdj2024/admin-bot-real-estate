@@ -3,7 +3,7 @@
     <h4 class="text-default-900 text-lg font-semibold">{{ title }}</h4>
 
     <div class="md:flex hidden items-center gap-2 text-sm font-semibold">
-      <RouterLink to="" class="text-sm font-medium text-default-700">Tailwick</RouterLink>
+      <RouterLink to="" class="text-sm font-medium text-default-700">SIM Real Estate</RouterLink>
 
       <Icon icon="tabler:chevron-right" class="text-sm flex-shrink-0 text-default-500 rtl:rotate-180"></Icon>
 

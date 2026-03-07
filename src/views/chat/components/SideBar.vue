@@ -102,7 +102,7 @@
               </div>
               <div class="">
                 <h6 class="mb-1 text-default-800 font-semibold text-sm">Mama Burhan</h6>
-                <p class="text-xs truncate text-default-500">Hy There! I'm using Whatsapp</p>
+                <p class="text-xs truncate text-default-500">Hi There! I'm using Whatsapp</p>
               </div>
             </RouterLink>
             <RouterLink to="" class="flex gap-3 py-2 px-4 hover:bg-default-150">
@@ -112,7 +112,7 @@
               </div>
               <div class="">
                 <h6 class="mb-1 text-default-800 font-semibold text-sm">Mita Jubaedah</h6>
-                <p class="text-xs truncate text-default-500">Hy There! I'm using Whatsapp</p>
+                <p class="text-xs truncate text-default-500">Hi There! I'm using Whatsapp</p>
               </div>
             </RouterLink>
             <RouterLink to="" class="flex gap-3 py-2 px-4 hover:bg-default-150">
@@ -122,7 +122,7 @@
               </div>
               <div class="">
                 <h6 class="mb-1 text-default-800 font-semibold text-sm">Ronald D'Clincton</h6>
-                <p class="text-xs truncate text-default-500">Hy There! I'm using Whatsapp</p>
+                <p class="text-xs truncate text-default-500">Hi There! I'm using Whatsapp</p>
               </div>
             </RouterLink>
             <RouterLink to="" class="flex gap-3 py-2 px-4 hover:bg-default-150">

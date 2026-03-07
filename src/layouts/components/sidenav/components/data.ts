@@ -32,6 +32,12 @@ export const menuItems: MenuItemType[] = [
     label: 'Kelola',
     isTitle: true
   },
+  {
+    key: 'katalog',
+    label: 'Katalog',
+    icon: 'lucide:layout-grid',
+    url: '/katalog'
+  },
   // {
   //   key: 'chat',
   //   label: 'Chat',
