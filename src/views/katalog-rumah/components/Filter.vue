@@ -1,5 +1,5 @@
 <template>
-  <div ref="filterRef" :class="[!openFilter ? 'hidden' : 'block']" class="col-span-1 z-[60] fixed bottom-10 left-1/2 -translate-x-1/2 w-[92vw] max-w-[390px] md:static md:translate-x-0 md:w-full md:max-w-none md:!block">
+  <div ref="filterRef" :class="[!openFilter ? 'hidden' : 'block']" class="col-span-1 z-[60] fixed bottom-10 left-1/2 -translate-x-1/2 w-[92vw] md:z-[30] max-w-[390px] md:static md:translate-x-0 md:w-full md:max-w-none md:!block">
     <div class="card">
       <div class="card-body">
         <div class="flex items-center justify-between gap-3">

@@ -42,7 +42,7 @@ export const useLayout = defineStore(
 
       const html = document.documentElement
 
-      if (nSize === 'offcanvas') {
+      if (nSize === 'offcanvas' && layout.value.isMobileMenuOpen) {
         html.classList.add('sidenav-enable')
         showBackdrop()
       } else {
@@ -56,11 +56,17 @@ export const useLayout = defineStore(
 
     /** Toggle mobile menu */
     const toggleMobileMenu = () => {
-      layout.value.isMobileMenuOpen = !layout.value.isMobileMenuOpen
       const html = document.documentElement
-      html.classList.toggle('sidenav-enable', layout.value.isMobileMenuOpen)
-      if (layout.value.isMobileMenuOpen) showBackdrop()
-      else hideBackdrop()
+
+      layout.value.isMobileMenuOpen = !layout.value.isMobileMenuOpen
+
+      if (layout.value.isMobileMenuOpen) {
+        html.classList.add('sidenav-enable')
+        showBackdrop()
+      } else {
+        html.classList.remove('sidenav-enable')
+        hideBackdrop()
+      }
     }
 
     const setPosition = (nPosition: LayoutDirectionType, persist = true) => {
@@ -101,9 +107,21 @@ export const useLayout = defineStore(
     }
 
     const init = () => {
+      const html = document.documentElement
+
+      // reset mobile state
+      layout.value.isMobileMenuOpen = false
+      html.classList.remove('sidenav-enable')
+
+      hideBackdrop()
+
+      // apply saved settings
       setTheme(layout.value.theme)
       setSideNavColor(layout.value.sidenav.color)
-      setSideNavSize(layout.value.sidenav.size)
+
+      // jangan membuka sidebar saat init
+      toggleAttribute('data-sidenav-size', layout.value.sidenav.size)
+
       setPosition(layout.value.position)
     }
 
@@ -130,6 +148,8 @@ export const useLayout = defineStore(
     }
   },
   {
-    persist: true
+    persist: {
+      pick: ['layout.theme', 'layout.sidenav', 'layout.position']
+    }
   }
 )

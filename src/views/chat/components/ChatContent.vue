@@ -63,7 +63,7 @@
             </button>
           </div>
 
-          <div v-if="openEtalase" ref="etalaseRef" class="z-1 fixed bottom-15 left-1/2 -translate-x-1/2 w-[95vw] sm:w-[850px] sm:bottom-5 sm:right-5 sm:left-auto sm:translate-x-0 bg-white rounded-2xl shadow-2xl p-4 border border-default-100">
+          <div v-if="openEtalase" ref="etalaseRef" class="z-40 fixed bottom-15 left-1/2 -translate-x-1/2 w-[95vw] sm:w-[850px] sm:bottom-5 sm:right-5 sm:left-auto sm:translate-x-0 bg-white rounded-2xl shadow-2xl p-4 border border-default-100">
             <div class="flex items-center justify-between mb-4 px-2">
               <h4 class="text-default-900 font-bold text-base">Pilih Etalase</h4>
               <button @click="openEtalase = false" class="text-default-400 hover:text-default-900 transition-all">
@@ -87,7 +87,7 @@
                 <div class="card overflow-hidden group border border-default-100 shadow-sm hover:shadow-md transition-all duration-300" v-for="(item, idx) in catalogues" :key="idx">
                   <div class="card-body p-0 relative overflow-hidden h-36">
                     <img :src="item.image" alt="rumah" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                    <span class="absolute top-2 start-2 bg-primary text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase"> READY STOCK </span>
+                    <span class="absolute top-2 start-2 bg-primary text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase"> TERSEDIA </span>
                   </div>
 
                   <div class="p-3">
@@ -138,8 +138,9 @@
                       </div>
 
                       <div class="hs-dropdown relative inline-flex">
-                        <button type="button" class="hs-dropdown-toggle btn size-7 bg-default-100 hover:bg-default-200 text-default-500">
-                          <Icon icon="lucide:ellipsis" class="size-3.5"></Icon>
+                        <button type="button" @click="openEtalase = false" class="btn bg-green-500 text-white h-7 inline-flex items-center gap-2 hover:bg-default-200">
+                          <Icon icon="lucide:send" class="size-4 text-white" />
+                          Kirim
                         </button>
                       </div>
                     </div>
@@ -149,7 +150,7 @@
             </div>
           </div>
 
-          <div v-if="openTukarCS" ref="tukarCSRef" class="z-1 fixed bottom-15 left-1/2 -translate-x-1/2 w-[92vw] max-w-[390px] sm:bottom-2 sm:absolute sm:right-0 sm:left-auto sm:translate-x-0 bg-white rounded-2xl shadow-xl p-4">
+          <div v-if="openTukarCS" ref="tukarCSRef" class="z-40 fixed bottom-15 left-1/2 -translate-x-1/2 w-[92vw] max-w-[390px] sm:bottom-2 sm:absolute sm:right-0 sm:left-auto sm:translate-x-0 bg-white rounded-2xl shadow-xl p-4">
             <!-- Title -->
             <div class="text-center mb-2">
               <span class="text-default-400 text-sm">Pilih CS</span>
@@ -193,7 +194,7 @@
             </div>
           </div>
 
-          <Filter v-if="openFilter" ref="filterRef" class="bg-white shadow-lg sm:shadow-none z-3 fixed left-1/2 bottom-12 -translate-x-1/2 w-[92vw] max-w-[390px] sm:bottom-1 sm:absolute sm:right-0 sm:left-auto sm:translate-x-0 sm:max-w-[700px] rounded-2xl shadow-xl p-4 max-h-[80vh] overflow-y-auto custom-scrollbar" />
+          <Filter v-if="openFilter" @close="openFilter = false" ref="filterRef" class="z-[41] bg-white sm:shadow-none fixed left-1/2 bottom-12 -translate-x-1/2 w-[92vw] max-w-[390px] sm:bottom-1 sm:absolute sm:right-0 sm:left-auto sm:translate-x-0 sm:max-w-[700px] rounded-2xl shadow-xl p-4 max-h-[80vh] overflow-y-auto custom-scrollbar" />
         </div>
       </div>
     </div>
@@ -334,7 +335,6 @@ const containerRef = ref<HTMLElement | null>(null)
 const handleClickOutside = (event: MouseEvent) => {
   const target = event.target as Node
 
-  // 1. Cek Filter (Paling Atas)
   if (openFilter.value && filterRef.value) {
     const filterEl = filterRef.value.$el || filterRef.value
     if (!filterEl.contains(target)) {
@@ -343,7 +343,6 @@ const handleClickOutside = (event: MouseEvent) => {
     }
   }
 
-  // 2. Cek Etalase
   if (openEtalase.value && etalaseRef.value) {
     if (!etalaseRef.value.contains(target)) {
       if (filterRef.value.contains(target)) {
@@ -353,7 +352,6 @@ const handleClickOutside = (event: MouseEvent) => {
     }
   }
 
-  // 3. Cek Tukar CS
   if (openTukarCS.value && tukarCSRef.value) {
     if (!tukarCSRef.value.contains(target)) {
       {
@@ -363,7 +361,6 @@ const handleClickOutside = (event: MouseEvent) => {
     }
   }
 
-  // 4. Cek Menu Utama (Popover kecil)
   if (openMenu.value && containerRef.value) {
     if (!containerRef.value.contains(target)) {
       openMenu.value = false
@@ -373,7 +370,7 @@ const handleClickOutside = (event: MouseEvent) => {
 
 const endChat = () => {
   confirm('Ingin mengakhiri percakapan Budi?', () => {
-    success('Berhasil mengakhiri chat')
+    success('Berhasil mengakhiri percakapan')
   })
 }
 
@@ -568,7 +565,7 @@ const chats = ref<Chat[]>([
     avatar: user2,
     message: [
       {
-        text: 'Saya ingin menanyakan pasir yang cocok untuk cor dak 2 lantai pakai pasir apa ya?'
+        text: 'Saya ingin Saya mau cari rumah yang cocok untuk 4 orang dengan 3 kamar dan 2 toilet, kalau bisa yang dekat dengan masjid dan kamar mandi'
       }
     ],
     dateTime: '16.44'

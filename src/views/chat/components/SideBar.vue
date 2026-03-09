@@ -1,43 +1,8 @@
 <template>
   <div class="lg:border-e border-default-200">
-    <div id="hs-offcanvas-left" class="hs-overlay [--auto-close:lg] lg:block lg:translate-x-0 lg:static lg:end-auto lg:bottom-0 w-96 hs-overlay-open:translate-x-0 -translate-x-full transition-all duration-300 transform h-full hidden fixed top-0 start-0 bottom-0 overflow-hidden z-60" role="dialog" tabindex="-1" aria-label="Sidebar">
+    <div id="hs-offcanvas-left" class="hs-overlay [--auto-close:lg] lg:block lg:translate-x-0 lg:static lg:end-auto lg:bottom-0 w-80 hs-overlay-open:translate-x-0 -translate-x-full transition-all duration-300 transform h-full hidden fixed top-0 start-0 bottom-0 overflow-hidden z-60" role="dialog" tabindex="-1" aria-label="Sidebar">
       <div class="card rounded-none shadow-none relative flex flex-row h-full max-h-full overflow-hidden divide-x divide-default-200">
-        <div class="card-body flex flex-col justify-between">
-          <!-- <RouterLink to="">
-            <img :src="logo" alt="logo" class="h-8 mx-auto" />
-          </RouterLink> -->
-          <div class="flex flex-col items-center gap-6 pt-10">
-            <button class="btn size-9 hover:bg-primary/10 hover:text-primary transition-all">
-              <Icon icon="lucide:messages-square" class="size-5"></Icon>
-            </button>
-            <!-- <button class="btn size-9 hover:bg-primary/10 hover:text-primary transition-all">
-              <Icon icon="lucide:user-square" class="size-5"></Icon>
-            </button>
-            <button class="btn size-9 hover:bg-primary/10 hover:text-primary transition-all">
-              <Icon icon="lucide:bot" class="size-5"></Icon>
-            </button>
-            <button class="btn size-9 hover:bg-primary/10 hover:text-primary transition-all">
-              <Icon icon="lucide:user-2" class="size-5"></Icon>
-            </button>
-            <button class="btn size-9 hover:bg-primary/10 hover:text-primary transition-all">
-              <Icon icon="lucide:scroll-text" class="size-5"></Icon>
-            </button> -->
-          </div>
-          <div class="flex flex-col items-center gap-4">
-            <button class="btn size-9 hover:bg-primary/10 hover:text-primary transition-all">
-              <Icon icon="lucide:settings" class="size-5"></Icon>
-            </button>
-            <!-- <div class="hs-dropdown relative">
-              <button type="button" class="hs-dropdown-toggle flex justify-center items-center" aria-haspopup="menu" aria-expanded="false" aria-label="Dropdown" hs-dropdown-placement="top-end">
-                <img :src="avatar1" alt="avatar" class="rounded-md bg-pink-500/10 size-12 object-cover" />
-              </button>
-              <div class="hs-dropdown-menu" role="menu">
-                <RouterLink class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-sm text-default-600 hover:bg-default-150 rounded" to=""> Logout </RouterLink>
-                <RouterLink class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-sm text-default-600 hover:bg-default-150 rounded" to=""> Switch Account </RouterLink>
-              </div>
-            </div> -->
-          </div>
-        </div>
+
         <div class="w-80">
           <div class="card-body">
             <div class="flex justify-between">

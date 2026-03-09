@@ -5,6 +5,15 @@ const router = createRouter({
   routes: [
     // Real
     {
+      path: '/login',
+      name: 'Login',
+      meta: {
+        title: 'Login'
+      },
+      component: () => import('@/views/auth/login/index.vue')
+    },
+
+    {
       path: '/',
       redirect: '/dashboard/'
     },
@@ -25,23 +34,39 @@ const router = createRouter({
       component: () => import('@/views/chat/index.vue')
     },
     {
-      path: '/login',
-      name: 'Login',
+      path: '/kalender',
+      name: 'Kalender',
       meta: {
-        title: 'Login'
+        title: 'Kalender'
       },
-      component: () => import('@/views/auth/login/index.vue')
+      component: () => import('@/views/kalender/index.vue')
     },
     {
-      path: '/katalog',
-      name: 'Katalog',
+      path: '/katalog-rumah',
+      name: 'Katalog Rumah',
       meta: {
-        title: 'Katalog'
+        title: 'Katalog Rumah'
       },
-      component: () => import('@/views/katalog/index.vue')
+      component: () => import('@/views/katalog-rumah/index.vue')
+    },
+    {
+      path: '/data/admin',
+      name: 'Data Admin',
+      meta: {
+        title: 'Data Admin'
+      },
+      component: () => import('@/views/data-master/admin/index.vue')
+    },
+    {
+      path: '/data/sales',
+      name: 'Data Sales',
+      meta: {
+        title: 'Data Sales'
+      },
+      component: () => import('@/views/data-master/sales/index.vue')
     },
 
-    // Example
+    //=================================== Example ===================================
     {
       path: '/example',
       redirect: '/example/dashboard/ecommerce'

@@ -4,7 +4,7 @@
     <div class="grid lg:grid-cols-4 grid-cols-1 gap-5">
       <Filter v-model:openFilter="isFilterOpen" />
 
-      <Product class="lg:col-span-3" @openFilter="isFilterOpen = !isFilterOpen" />
+      <Rumah class="lg:col-span-3" @openFilter="isFilterOpen = !isFilterOpen" />
     </div>
   </Vertical>
 </template>
@@ -14,7 +14,7 @@ import { ref } from 'vue'
 import PageTitle from '@/components/PageTitle.vue'
 import Vertical from '@/layouts/vertical.vue'
 import Filter from './components/Filter.vue'
-import Product from './components/Product.vue'
+import Rumah from './components/Rumah.vue'
 
 const isFilterOpen = ref(false)
 </script>

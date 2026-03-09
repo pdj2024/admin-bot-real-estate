@@ -21,25 +21,30 @@ import Footer from '@/layouts/components/footer/index.vue'
 import MobileMenu from '@/layouts/components/mobile-menu/index.vue'
 import SideNav from '@/layouts/components/sidenav/index.vue'
 import Topbar from '@/layouts/components/topbar/index.vue'
+import { onMounted, onUnmounted } from 'vue'
 import { useLayout } from '@/stores/layout'
-import { onMounted } from 'vue'
 
-defineProps<{ mainClass?: string }>()
+const layoutStore = useLayout()
+const { layout, setSideNavSize } = layoutStore
 
-const { layout, setSideNavSize } = useLayout()
+const resize = () => {
+  if (window.innerWidth <= 768) {
+    setSideNavSize('offcanvas')
+  } else {
+    setSideNavSize('hover')
+    layout.isMobileMenuOpen = false
+    document.documentElement.classList.remove('sidenav-enable')
+  }
+}
 
 onMounted(() => {
-  const resize = () => {
-    if (window.innerWidth <= 768) {
-      setSideNavSize('offcanvas')
-    } else if (window.innerWidth <= 1140) {
-      setSideNavSize('default')
-    } else {
-      setSideNavSize('default')
-    }
-  }
+  layoutStore.init()
 
   resize()
   window.addEventListener('resize', resize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', resize)
 })
 </script>

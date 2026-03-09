@@ -107,7 +107,7 @@
           <div v-for="(product, i) in msg.product" :key="i" class="card max-w-[280px] overflow-hidden group shadow-md border border-default-100 bg-white ml-auto">
             <div class="card-body p-0 relative overflow-hidden h-40">
               <img :src="product.image || 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?q=80&w=600'" alt="rumah" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-              <span class="absolute top-2 start-2 bg-primary text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase"> READY STOCK </span>
+              <span class="absolute top-2 start-2 bg-primary text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase"> TERSEDIA </span>
             </div>
 
             <div class="p-4 text-left">
@@ -137,15 +137,15 @@
                 </div>
                 <div class="flex items-center gap-1">
                   <Icon icon="lucide:bed" class="size-3 text-default-400"></Icon>
-                  <span class="text-[9px] text-default-600">{{ product.bed}} KT</span>
+                  <span class="text-[9px] text-default-600">{{ product.bed }} KT</span>
                 </div>
                 <div class="flex items-center gap-1 border-t border-default-50 pt-1">
                   <Icon icon="lucide:bath" class="size-3 text-default-400"></Icon>
-                  <span class="text-[9px] text-default-600">{{ product.bath}} KM</span>
+                  <span class="text-[9px] text-default-600">{{ product.bath }} KM</span>
                 </div>
                 <div class="flex items-center gap-1 border-t border-default-50 pt-1">
                   <Icon icon="lucide:car" class="size-3 text-default-400"></Icon>
-                  <span class="text-[9px] text-default-600">{{ product.car}} CP</span>
+                  <span class="text-[9px] text-default-600">{{ product.car }} CP</span>
                 </div>
                 <div class="flex items-center gap-1 border-t border-default-50 pt-1">
                   <Icon icon="lucide:layers-2" class="size-3 text-default-400"></Icon>
@@ -156,7 +156,7 @@
               <div class="flex items-end justify-between gap-2 mt-2">
                 <div>
                   <p class="text-[9px] text-default-400 leading-none mb-1">Mulai Dari</p>
-                  <h5 class="text-sm font-bold text-primary">Rp {{ product.price}}</h5>
+                  <h5 class="text-sm font-bold text-primary">Rp {{ product.price }}</h5>
                 </div>
 
                 <button class="bg-primary/10 text-primary px-3 py-1.5 rounded-lg text-[10px] font-bold hover:bg-primary hover:text-white transition-all">Detail</button>

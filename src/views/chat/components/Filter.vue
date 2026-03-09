@@ -1,5 +1,5 @@
 <template>
-  <div class="card border sm:border-none max-h-[85vh] sm:max-h-none">
+  <div class="card sm:border-none max-h-[85vh] sm:max-h-none">
     <div class="card-body p-4 sm:p-5">
       <div class="flex items-center justify-between gap-3 mb-4 sm:mb-6">
         <h6 class="text-base font-bold text-default-800">Filter Pencarian</h6>
@@ -77,7 +77,7 @@
       </div>
 
       <div class="mt-4 sm:mt-8 border-t border-default-100 pt-4">
-        <button class="w-full py-2.5 sm:py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/30 hover:bg-primary-600 transition-all text-sm sm:text-base">Terapkan Filter</button>
+        <button @click="emit('close')" class="w-full py-2.5 sm:py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/30 hover:bg-primary-600 transition-all text-sm sm:text-base">Terapkan Filter</button>
       </div>
     </div>
   </div>
@@ -85,4 +85,6 @@
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
+
+const emit = defineEmits(['close'])
 </script>

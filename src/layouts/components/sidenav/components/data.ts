@@ -18,25 +18,31 @@ export const menuItems: MenuItemType[] = [
     icon: 'lucide:messages-square',
     url: '/chat'
   },
-  // {
-  //   key: 'landing',
-  //   label: 'Landing Page',
-  //   icon: 'lucide:picture-in-picture-2',
-  //   children: [
-  //     { key: 'one-page', label: 'One Page', url: '/landing/one-page' },
-  //     { key: 'product', label: 'Product', url: '/landing/product' }
-  //   ]
-  // },
+  {
+    key: 'kalender',
+    label: 'Kalender',
+    icon: 'lucide:calendar-days',
+    url: '/kalender'
+  },
   {
     key: 'kelola-title',
     label: 'Kelola',
     isTitle: true
   },
   {
-    key: 'katalog',
-    label: 'Katalog',
-    icon: 'lucide:layout-grid',
-    url: '/katalog'
+    key: 'katalog-rumah',
+    label: 'Katalog Rumah',
+    icon: 'lucide:blocks',
+    url: '/katalog-rumah'
+  },
+  {
+    key: 'data-master',
+    label: 'Data Master',
+    icon: 'lucide:workflow',
+    children: [
+      { key: 'data-admin', label: 'Admin', url: '/data/admin'},
+      { key: 'data-sales', label: 'Sales', url: '/data/sales' },
+    ]
   },
   // {
   //   key: 'chat',

@@ -38,6 +38,7 @@ import { RouterLink } from 'vue-router'
 const { layout, setSideNavSize } = useLayout()
 
 const toggleSidebar = () => {
+  if (window.innerWidth <= 768) return
   setSideNavSize(layout.sidenav.size === 'hover-active' ? 'hover' : 'hover-active')
 }
 </script>

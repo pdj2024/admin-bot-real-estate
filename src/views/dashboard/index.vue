@@ -1,6 +1,6 @@
 <template>
   <Vertical>
-    <PageTitle title="Ecommerce" subtitle="Dashboards" />
+    <PageTitle title="Dashboards" subtitle="Menu Utama" />
     <div class="grid lg:grid-cols-3 grid-cols-1 gap-5 mb-5">
       <div class="lg:col-span-2 col-span-1">
         <WelcomeCard />
