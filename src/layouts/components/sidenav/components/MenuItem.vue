@@ -27,6 +27,7 @@ const route = useRoute()
 const pathname = computed(() => route.path)
 
 const isActive = computed(() => {
-  return props.item.url && pathname.value.endsWith(props.item.url)
+  if (!props.item.url) return false
+  return pathname.value.startsWith(props.item.url)
 })
 </script>

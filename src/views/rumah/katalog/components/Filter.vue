@@ -1,5 +1,6 @@
 <template>
-  <div ref="filterRef" :class="[!openFilter ? 'hidden' : 'block']" class="col-span-1 z-[60] fixed bottom-10 left-1/2 -translate-x-1/2 w-[92vw] md:z-[30] max-w-[390px] md:static md:translate-x-0 md:w-full md:max-w-none md:!block">
+  <!-- <div ref="filterRef" :class="[!openFilter ? 'hidden' : 'block']" class="col-span-1 z-[60] fixed bottom-10 left-1/2 -translate-x-1/2 w-[92vw] md:z-[30] max-w-[390px] "> -->
+  <div ref="filterRef" :class="[!openFilter ? 'hidden lg:block' : 'block']" class="col-span-1 z-[60] fixed bottom-10 left-1/2 -translate-x-1/2 w-[92vw] max-w-[390px] lg:static lg:translate-x-0 lg:w-full lg:max-w-none">
     <div class="card">
       <div class="card-body">
         <div class="flex items-center justify-between gap-3">
@@ -128,9 +129,9 @@
             </div>
           </div>
         </div>
-      <div class="mt-4 sm:mt-8 border-t border-default-100 pt-4">
-        <button class="w-full py-2.5 sm:py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/30 hover:bg-primary-600 transition-all text-sm sm:text-base">Terapkan Filter</button>
-      </div>
+        <div class="mt-4 sm:mt-8 border-t border-default-100 pt-4">
+          <button class="w-full py-2.5 sm:py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/30 hover:bg-primary-600 transition-all text-sm sm:text-base">Terapkan Filter</button>
+        </div>
       </div>
     </div>
   </div>

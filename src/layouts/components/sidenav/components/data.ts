@@ -30,10 +30,10 @@ export const menuItems: MenuItemType[] = [
     isTitle: true
   },
   {
-    key: 'katalog-rumah',
-    label: 'Katalog Rumah',
+    key: 'katalog',
+    label: 'Katalog',
     icon: 'lucide:blocks',
-    url: '/katalog-rumah'
+    url: '/katalog'
   },
   {
     key: 'data-master',

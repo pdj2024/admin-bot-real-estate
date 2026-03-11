@@ -38,6 +38,29 @@ export function confirm(text: string, callback: () => void) {
   })
 }
 
+export function confirmCancel(text: string, success: () => void, fail: () => void) {
+  Swal.fire({
+    title: "Konfirmasi!",
+    html: text,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    cancelButtonText: "Tidak",
+    confirmButtonText: "Ya",
+    backdrop: false,
+    allowOutsideClick: false,
+    focusConfirm: false,
+    returnFocus: false
+  }).then((result) => {
+    if (result.isConfirmed) {
+      success()
+    } else{
+      fail()
+    }
+  })
+}
+
 export function success(text: string) {
   let timerInterval: any
 

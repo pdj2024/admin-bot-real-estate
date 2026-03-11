@@ -42,12 +42,20 @@ const router = createRouter({
       component: () => import('@/views/kalender/index.vue')
     },
     {
-      path: '/katalog-rumah',
+      path: '/katalog',
       name: 'Katalog Rumah',
       meta: {
         title: 'Katalog Rumah'
       },
-      component: () => import('@/views/katalog-rumah/index.vue')
+      component: () => import('@/views/rumah/katalog/index.vue')
+    },
+    {
+      path: '/katalog/detail',
+      name: 'Detail Rumah',
+      meta: {
+        title: 'Detail Rumah',
+      },
+      component: () => import('@/views/rumah/detail/index.vue')
     },
     {
       path: '/data/admin',

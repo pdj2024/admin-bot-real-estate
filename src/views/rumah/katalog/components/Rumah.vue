@@ -9,16 +9,23 @@
 
           <div class="hs-dropdown relative inline-flex w-full md:w-auto text-default-900 text-lg font-semibold">
             <button type="button" class="hs-dropdown-toggle inline-flex items-center justify-between w-full md:w-auto btn btn-sm bg-transparent border border-primary text-primary transition-all duration-300 hover:bg-primary hover:text-white" aria-haspopup="true" aria-expanded="false">
-              Sort by: <b class="font-medium ms-1">{{ selectedSort }}</b>
+              Sort by:
+              <b class="font-medium ms-1">{{ selectedSort }}</b>
               <Icon icon="lucide:chevron-down" class="size-4 ms-2" />
             </button>
 
             <div class="hs-dropdown-menu hidden transition-[opacity,margin] duration-300 opacity-0 min-w-40 md:min-w-[160px] card z-30 mt-2 p-2 text-sm" role="menu">
+              <button class="dropdown-item" @click="setSort('Newest')">Newest</button>
+
               <button class="dropdown-item" @click="setSort('Lowest Price')">Lowest Price</button>
+
               <button class="dropdown-item" @click="setSort('Highest Price')">Highest Price</button>
-              <button class="dropdown-item" @click="setSort('High to Low')">High to Low</button>
+
               <hr class="border-t border-default-200 my-2 -mx-2" />
-              <button class="dropdown-item" @click="setSort('Low to High')">Low to High</button>
+
+              <button class="dropdown-item" @click="setSort('Largest Area')">Largest Area</button>
+
+              <button class="dropdown-item" @click="setSort('Smallest Area')">Smallest Area</button>
             </div>
           </div>
         </div>
@@ -30,35 +37,39 @@
           </button>
         </nav>
       </div>
-      <button type="button" @click="$emit('openFilter')" class="btn-trigger-filter md:hidden w-full flex justify-center items-center btn btn-sm bg-primary/10 hover:bg-primary/30 text-primary py-2 rounded-xl"><Icon icon="lucide:sliders-horizontal" class="size-4 mr-2" /> Filter</button>
+      <button type="button" @click="$emit('openFilter')" class="btn-trigger-filter lg:hidden w-full flex justify-center items-center btn btn-sm bg-primary/10 hover:bg-primary/30 text-primary py-2 rounded-xl"><Icon icon="lucide:sliders-horizontal" class="size-4 mr-2" /> Filter</button>
     </div>
     <div class="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-5 mt-5">
       <div class="card overflow-hidden group" v-for="(item, idx) in catalogues" :key="idx">
         <div class="card-body p-0 relative overflow-hidden">
           <img :src="item.image" alt="rumah" class="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-110" />
-          <span class="absolute top-3 start-3 bg-primary text-white text-[10px] font-bold px-2 py-1 rounded"> TERSEDIA </span>
+          <span class="absolute top-3 left-3 bg-primary text-white text-[10px] font-bold px-2 py-1 rounded"> TERSEDIA </span>
+          <span class="absolute bottom-17 right-3 bg-emerald-600 text-white text-[10px] font-bold px-2 py-1 rounded"> Akses Bandara ± 27 min</span>
+          <span class="absolute bottom-10 right-3 bg-amber-600 text-white text-[10px] font-bold px-2 py-1 rounded"> Akses tol ± 10 min</span>
+          <span class="absolute bottom-3 right-3 bg-cyan-600 text-white text-[10px] font-bold px-2 py-1 rounded"> Akses rumah sakit ± 5 min</span>
         </div>
 
         <div class="p-4">
-          <div class="flex items-center gap-1 text-primary mb-1">
+          <div class="flex items-center gap-1 text-primary">
             <Icon icon="lucide:map-pin" class="size-3"></Icon>
             <span class="text-[11px] font-medium uppercase tracking-wider">{{ item.location || 'Surabaya Timur' }}</span>
           </div>
-          <div>
-            <p class="text-xs font-semibold text-default-400 leading-none mb-1">Tipe {{ item.type || '45' }}</p>
-          </div>
+            <p class="text-[11px] font-medium uppercase tracking-wider text-default-500 mb-2">Jl. Ini Hanya Sementara</p>
 
-          <h6 class="text-base text-default-800 font-bold hover:text-primary transition-all mb-3 line-clamp-1">
+
+          <h6 class="text-base text-default-800 font-bold hover:text-primary transition-all mb-1 line-clamp-1">
             <RouterLink to="">{{ item.name }}</RouterLink>
           </h6>
+            <p class="text-xs font-semibold text-default-400 leading-none mb-1">Tipe {{ item.type || '45' }}</p>
 
-          <div class="grid grid-cols-3 gap-y-3 gap-x-2 border-y border-default-100 py-3 mb-4">
+
+          <div class="grid lg:grid-cols-3 grid-cols-2 gap-y-3 gap-x-2 border-y border-default-100 py-3 mb-4">
             <div class="flex items-center gap-1.5">
-              <Icon icon="lucide:maximize" class="size-3.5 text-default-400"></Icon>
+              <Icon icon="lucide:building" class="size-3.5 text-default-400"></Icon>
               <span class="text-xs text-default-600">LB {{ item.buildingSize }}m²</span>
             </div>
             <div class="flex items-center gap-1.5">
-              <Icon icon="lucide:layers" class="size-3.5 text-default-400"></Icon>
+              <Icon icon="lucide:land-plot" class="size-3.5 text-default-400"></Icon>
               <span class="text-xs text-default-600">LT {{ item.landSize }}m²</span>
             </div>
             <div class="flex items-center gap-1.5">
@@ -92,15 +103,15 @@
                 <Icon icon="lucide:ellipsis" class="iconify size-4"></Icon>
               </button>
               <div class="hs-dropdown-menu" role="menu">
-                <RouterLink class="flex items-center gap-1.5 py-1.5 font-medium px-3 text-default-500 hover:bg-default-150 rounded" to="">
+                <RouterLink class="w-full flex items-center gap-1.5 py-1.5 font-medium px-3 text-default-500 hover:bg-default-150 rounded" to="/katalog/detail">
                   <Icon icon="lucide:eye" class="size-3"></Icon>
                   Overview
                 </RouterLink>
-                <button class="flex items-center gap-1.5 py-1.5 font-medium px-3 w-full text-default-500 hover:bg-default-150 rounded" @click="showModal = true">
+                <button class="w-full flex items-center gap-1.5 py-1.5 font-medium px-3 text-default-500 hover:bg-default-150 rounded" @click="showModal = true">
                   <Icon icon="lucide:edit" class="size-3"></Icon>
                   Edit
                 </button>
-                <button class="flex items-center gap-1.5 py-1.5 font-medium px-3 text-default-500 hover:bg-default-150 rounded" @click="remove">
+                <button class="w-full flex items-center gap-1.5 py-1.5 font-medium px-3 text-default-500 hover:bg-default-150 rounded" @click="remove">
                   <Icon icon="lucide:trash-2" class="size-3"></Icon>
                   Delete
                 </button>
@@ -171,22 +182,22 @@
           <div class="grid grid-cols-2 gap-3">
             <div class="field">
               <Icon icon="lucide:banknote" class="field-icon" />
-              <input v-model="form.harga_jual.harga_1" type="number" placeholder="Jual 1" class="field-input" />
+              <input v-model="form.harga_jual.harga_1" type="number" placeholder="Harga Jual Awal" class="field-input" />
             </div>
 
             <div class="field">
               <Icon icon="lucide:banknote" class="field-icon" />
-              <input v-model="form.harga_jual.harga_2" type="number" placeholder="Jual 2" class="field-input" />
+              <input v-model="form.harga_jual.harga_2" type="number" placeholder="Harga Jual Diskon" class="field-input" />
             </div>
 
             <div class="field">
-              <Icon icon="lucide:key" class="field-icon" />
-              <input v-model="form.harga_sewa.harga_1" type="number" placeholder="Sewa 1" class="field-input" />
+              <Icon icon="lucide:banknote" class="field-icon" />
+              <input v-model="form.harga_sewa.harga_1" type="number" placeholder="Harga Sewa Awal" class="field-input" />
             </div>
 
             <div class="field">
-              <Icon icon="lucide:key" class="field-icon" />
-              <input v-model="form.harga_sewa.harga_2" type="number" placeholder="Sewa 2" class="field-input" />
+              <Icon icon="lucide:banknote" class="field-icon" />
+              <input v-model="form.harga_sewa.harga_2" type="number" placeholder="Harga Sewa Diskon" class="field-input" />
             </div>
           </div>
           <div class="toggle-box w-full col-span-2">
@@ -232,14 +243,14 @@
             </button>
 
             <div class="hs-dropdown-menu hidden mt-2 min-w-[120px] card p-2 text-sm z-50">
-              <button class="dropdown-item" @click="form.sertifikat = 'SHM'">SHM</button>
+              <button class="dropdown-item w-full" @click="form.sertifikat = 'SHM'">SHM</button>
 
-              <button class="dropdown-item" @click="form.sertifikat = 'SHGB'">SHGB</button>
+              <button class="dropdown-item w-full" @click="form.sertifikat = 'SHGB'">SHGB</button>
             </div>
           </div>
 
           <div class="field">
-            <Icon icon="lucide:landmark" class="field-icon" />
+            <Icon icon="lucide:land-plot" class="field-icon" />
             <input v-model="form.spesifikasi.luas_tanah" type="number" placeholder="Luas Tanah" class="field-input" />
           </div>
 
@@ -429,11 +440,16 @@ import { type IStaticMethods } from 'preline/preline'
 import { confirm, success } from '@/utils/sweet-alert'
 
 const showModal = ref<boolean>(false)
+const selectedSort = ref('Newest')
 
 type Transaksi = 'jual' | 'sewa'
 type StatusDisplay = 'aktif' | 'nonaktif'
 type StatusProperti = 'tersedia' | 'terjual' | 'tersewa'
 type Sertifikat = 'SHM' | 'SHGB' | null
+
+const setSort = (sort: string) => {
+  selectedSort.value = sort
+}
 
 interface PropertyForm {
   nama: string
@@ -510,7 +526,6 @@ const defaultForm = (): PropertyForm => ({
 })
 
 const form = ref<PropertyForm>(defaultForm())
-
 
 const resetForm = () => {
   form.value = defaultForm()

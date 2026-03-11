@@ -8,57 +8,6 @@
 
         <div class="flex-grow h-px bg-default-300 shadow-[0_1px_3px_rgba(0,0,0,0.2)]"></div>
       </div>
-
-      <!-- janji temu -->
-      <!-- <div class="max-w-sm mx-auto bg-white rounded-2xl shadow-lg border border-default-100 overflow-hidden my-4">
-        <div class="bg-indigo-600 px-4 py-3">
-          <h3 class="text-white font-semibold text-sm flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            Detail Janji Temu
-          </h3>
-        </div>
-
-        <div class="p-5 space-y-4">
-          <div class="flex justify-between items-center border-b border-default-50 pb-3">
-            <div>
-              <p class="text-[10px] uppercase tracking-wider text-default-400">Tanggal</p>
-              <p class="text-sm font-bold text-default-800">Senin, 10 Maret 2026</p>
-            </div>
-            <div class="text-right">
-              <p class="text-[10px] uppercase tracking-wider text-default-400">Waktu</p>
-              <p class="text-sm font-bold text-indigo-600">14:00 WIB</p>
-            </div>
-          </div>
-
-          <div>
-            <p class="text-[10px] uppercase tracking-wider text-default-400 mb-1">Lokasi Pertemuan</p>
-            <div class="flex gap-2 items-start">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
-              </svg>
-              <p class="text-sm text-default-700 leading-relaxed">Kopi Kenangan, Grand City Mall Surabaya, Lantai LG.</p>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-4 pt-2">
-            <div class="bg-default-50 p-2 rounded-lg">
-              <p class="text-[10px] uppercase tracking-wider text-default-400">Customer</p>
-              <p class="text-sm font-medium text-default-800">Andi Pratama</p>
-            </div>
-            <div class="bg-default-50 p-2 rounded-lg">
-              <p class="text-[10px] uppercase tracking-wider text-default-400">Salesman</p>
-              <p class="text-sm font-medium text-default-800">Budi Santoso</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="px-5 py-3 bg-default-50 flex gap-2">
-          <button class="flex-1 text-xs font-semibold py-2 rounded-md border border-default-200 text-default-600 hover:bg-white transition">Re-Schedule</button>
-          <button class="flex-1 text-xs font-semibold py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition">Konfirmasi</button>
-        </div>
-      </div> -->
     </template>
   </div>
   <div v-else class="flex gap-3" :class="chat.type === 'user' ? 'justify-start' : 'justify-end'">
@@ -164,6 +113,116 @@
             </div>
           </div>
         </div>
+
+        <!-- Janji Temu Bubble -->
+        <div v-if="msg.appointment" class="col-span-1">
+    <div v-for="(appointment, i) in msg.appointment" :key="i" class="max-w-sm mx-auto bg-white rounded-2xl shadow-lg border border-default-100 overflow-hidden my-4">
+
+      <div class="bg-indigo-600 px-4 py-3 flex justify-between items-center">
+        <h3 class="text-white font-semibold text-sm flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          Detail Janji Temu
+        </h3>
+      </div>
+
+
+      <div class="p-5 space-y-4">
+
+        <div class="flex justify-between items-center border-b border-default-50 pb-3">
+          <div>
+            <p class="text-[10px] uppercase tracking-wider text-default-400">Tanggal</p>
+            <p class="text-sm font-bold text-default-800">
+              {{
+                new Date(appointment.date).toLocaleDateString('id-ID', {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric'
+                })
+              }}
+            </p>
+          </div>
+          <div class="text-right">
+            <p class="text-[10px] uppercase tracking-wider text-default-400">Waktu</p>
+            <p class="text-sm font-bold text-indigo-600">{{ appointment.time }} WIB</p>
+          </div>
+        </div>
+
+        <!-- Lokasi -->
+        <div>
+          <p class="text-[10px] uppercase tracking-wider text-default-400 mb-1">Lokasi Unit</p>
+          <div class="flex gap-2 items-start">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+            </svg>
+            <p class="text-sm text-default-700 leading-relaxed">
+              {{ appointment.location }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Customer & Salesman -->
+        <div class="grid grid-cols-2 gap-4 pt-2">
+          <div class="bg-default-50 p-2 rounded-lg">
+            <p class="text-[10px] uppercase tracking-wider text-default-400">Customer</p>
+            <p class="text-sm font-medium text-default-800">{{ appointment.customerName }}</p>
+            <p class="text-[12px] text-default-800">{{ appointment.customerPhone }}</p>
+          </div>
+          <div class="bg-default-50 p-2 rounded-lg">
+            <p class="text-[10px] uppercase tracking-wider text-default-400">Salesman</p>
+            <p class="text-sm font-medium text-default-800">{{ appointment.salesName }}</p>
+            <p class="text-[12px] text-default-800">{{ appointment.salesPhone }}</p>
+          </div>
+        </div>
+
+        <!-- Properti -->
+        <div class="space-y-3">
+          <div class="flex gap-3 items-center">
+            <img :src="appointment.image" alt="rumah" class="w-20 h-16 object-cover rounded-lg" />
+            <div class="flex-1">
+              <p class="text-[10px] uppercase tracking-wider text-default-400 mb-1">Nama Properti</p>
+              <p class="text-sm font-medium text-default-800">{{ appointment.propertyName }}</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 text-xs text-default-700">
+            <div class="bg-default-50 p-2 rounded-lg text-center">
+              <p class="uppercase tracking-wider text-[10px] text-default-400 mb-1">Tipe</p>
+              <p class="font-medium">{{ appointment.type }}</p>
+            </div>
+            <div class="bg-default-50 p-2 rounded-lg text-center">
+              <p class="uppercase tracking-wider text-[10px] text-default-400 mb-1">LB / LT</p>
+              <p class="font-medium">{{ appointment.buildingSize }}m² / {{ appointment.landSize }}m²</p>
+            </div>
+            <div class="bg-default-50 p-2 rounded-lg text-center">
+              <p class="uppercase tracking-wider text-[10px] text-default-400 mb-1">Jml Lantai</p>
+              <p class="font-medium">{{ appointment.floors }} lt</p>
+            </div>
+            <div class="bg-default-50 p-2 rounded-lg text-center">
+              <p class="uppercase tracking-wider text-[10px] text-default-400 mb-1">Carport</p>
+              <p class="font-medium">{{ appointment.car }}</p>
+            </div>
+            <div class="bg-default-50 p-2 rounded-lg text-center">
+              <p class="uppercase tracking-wider text-[10px] text-default-400 mb-1">KT</p>
+              <p class="font-medium">{{ appointment.bed }}</p>
+            </div>
+            <div class="bg-default-50 p-2 rounded-lg text-center">
+              <p class="uppercase tracking-wider text-[10px] text-default-400 mb-1">WC</p>
+              <p class="font-medium">{{ appointment.bath }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="px-5 py-3 bg-default-50 flex gap-2">
+        <button class="flex-1 text-xs font-semibold py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition">Batal</button>
+        <button class="flex-1 text-xs font-semibold py-2 rounded-md border bg-green-500 text-white hover:bg-green-600 transition">Re-Schedule</button>
+      </div>
+    </div>
+  </div>
       </template>
     </div>
 
@@ -198,11 +257,31 @@ interface Product {
   car: number
 }
 
+interface Appointment {
+  date: string
+  time: string
+  location: string
+  customerName: string
+  customerPhone: string
+  salesName: string
+  salesPhone: string
+  image: string
+  propertyName: string
+  type: number
+  buildingSize: number
+  landSize: number
+  floors: number
+  car: number
+  bed: number
+  bath: number
+}
+
 interface BubbleMessage {
   text?: string
   images?: string[]
   product?: Product[]
   barrier?: string
+  appointment?: Appointment[]
 }
 
 interface Chat {

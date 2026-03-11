@@ -1,9 +1,12 @@
 <template>
   <div class="card sm:border-none max-h-[85vh] sm:max-h-none">
     <div class="card-body p-4 sm:p-5">
-      <div class="flex items-center justify-between gap-3 mb-4 sm:mb-6">
-        <h6 class="text-base font-bold text-default-800">Filter Pencarian</h6>
-        <button type="button" class="underline text-sm text-primary hover:text-primary-600 transition-all">Hapus Semua</button>
+      <div class="flex items-center justify-between mb-4 px-2">
+        <h4 class="text-default-900 font-bold text-base">Filter</h4>
+
+        <button @click.stop="emit('close')" class="text-default-400 hover:text-default-900 transition-all">
+          <Icon icon="lucide:x" class="size-5" />
+        </button>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 items-start">
@@ -77,7 +80,7 @@
       </div>
 
       <div class="mt-4 sm:mt-8 border-t border-default-100 pt-4">
-        <button @click="emit('close')" class="w-full py-2.5 sm:py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/30 hover:bg-primary-600 transition-all text-sm sm:text-base">Terapkan Filter</button>
+        <button @click.stop="emit('close')" class="w-full py-2.5 sm:py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/30 hover:bg-primary-600 transition-all text-sm sm:text-base">Terapkan Filter</button>
       </div>
     </div>
   </div>
