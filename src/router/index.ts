@@ -73,6 +73,14 @@ const router = createRouter({
       },
       component: () => import('@/views/data-master/sales/index.vue')
     },
+    {
+      path: '/data/customer',
+      name: 'Data Customer',
+      meta: {
+        title: 'Data Customer'
+      },
+      component: () => import('@/views/data-master/customer/index.vue')
+    },
 
     //=================================== Example ===================================
     {

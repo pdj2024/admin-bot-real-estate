@@ -24,6 +24,8 @@ import Topbar from '@/layouts/components/topbar/index.vue'
 import { onMounted, onUnmounted } from 'vue'
 import { useLayout } from '@/stores/layout'
 
+defineProps<{ mainClass?: string }>()
+
 const layoutStore = useLayout()
 const { layout, setSideNavSize } = layoutStore
 

@@ -49,21 +49,21 @@ const emit = defineEmits<{
     data: {
       title: string
       start: Date
-      time?: string
+      end: Date
       location: string
-      customer: string
-      customer_phone: string
-      salesman: string
-      salesman_phone: string
-      picture: string
-      property: string
+      customerName: string
+      customerPhone: string
+      salesName: string
+      salesPhone: string
+      image: string
+      propertyName: string
       type: number
-      lb: number
-      lt: number
+      buildingSize: number
+      landSize: number
       carport: number
-      jmlLt: number
-      kt: number
-      wc: number
+      floors: number
+      bedrooms: number
+      bathrooms: number
     }
   ): void
 }>()
@@ -81,211 +81,211 @@ const calendarEvents = [
   {
     title: 'P. Budi - Griya Asri Residence',
     start: new Date('2026-03-11T12:00:00'),
+    end: new Date('2026-03-11T15:00:00'),
     extendedProps: {
-      time: '12:00',
       location: 'Jl Hidup Liku-liku, Surabaya',
-      customer: 'Budi Santoso',
-      customer_phone: '0873482453534',
-      salesman: 'Andi Pratama',
-      salesman_phone: '081355667788',
-      picture: 'https://media.dekoruma.com/article/2024/10/30201434/Model-Rumah-Modern-Minimalis.jpg?resize=800%2C600&ssl=1',
-      property: 'Griya Asri Residence',
+      customerName: 'Budi Santoso',
+      customerPhone: '0873482453534',
+      salesName: 'Andi Pratama',
+      salesPhone: '081355667788',
+      image: 'https://media.dekoruma.com/article/2024/10/30201434/Model-Rumah-Modern-Minimalis.jpg?resize=800%2C600&ssl=1',
+      propertyName: 'Griya Asri Residence',
       type: 45,
-      lb: 45,
-      lt: 60,
+      buildingSize: 45,
+      landSize: 60,
       carport: 1,
-      jmlLt: 1,
-      kt: 2,
-      wc: 1
+      floors: 1,
+      bedrooms: 2,
+      bathrooms: 1
     }
   },
   {
     title: 'P. Herman - Griya Asri Residence',
     start: new Date('2026-03-11T10:30:00'),
+    end: new Date('2026-03-11T12:30:00'),
     extendedProps: {
-      time: '10:30',
       location: 'Jl Raya Darmo, Surabaya',
-      customer: 'Herman Wijaya',
-      customer_phone: '081233445566',
-      salesman: 'Andi Pratama',
-      salesman_phone: '081355667788',
-      picture: 'https://cdn1-production-images-kly.akamaized.net/7jfLlyvz6P_0Dh-KvXCFs5tf5jc=/1280x720/smart/filters:quality(75):strip_icc()/kly-media-production/medias/5214975/original/088768800_1746786001-7ba6160f-c619-4160-8633-7f463565afca.jpg',
-      property: 'Griya Asri Residence',
+      customerName: 'Herman Wijaya',
+      customerPhone: '081233445566',
+      salesName: 'Andi Pratama',
+      salesPhone: '081355667788',
+      image: 'https://cdn1-production-images-kly.akamaized.net/7jfLlyvz6P_0Dh-KvXCFs5tf5jc=/1280x720/smart/filters:quality(75):strip_icc()/kly-media-production/medias/5214975/original/088768800_1746786001-7ba6160f-c619-4160-8633-7f463565afca.jpg',
+      propertyName: 'Griya Asri Residence',
       type: 45,
-      lb: 45,
-      lt: 72,
+      buildingSize: 45,
+      landSize: 72,
       carport: 1,
-      jmlLt: 1,
-      kt: 2,
-      wc: 1
+      floors: 1,
+      bedrooms: 2,
+      bathrooms: 1
     }
   },
   {
     title: 'P. Siti - Green Lake Residence',
     start: new Date('2026-03-12T09:00:00'),
+    end: new Date('2026-03-12T11:00:00'),
     extendedProps: {
-      time: '09:00',
       location: 'Jl Ahmad Yani, Surabaya',
-      customer: 'Siti Rahma',
-      customer_phone: '081311223344',
-      salesman: 'Bima Kurniawan',
-      salesman_phone: '081355667788',
-      picture: 'https://static.promediateknologi.id/crop/0x28:1143x716/0x0/webp/photo/p2/239/2025/02/06/desain-rumah-minimalis-tahun-2024-1452919504.jpg',
-      property: 'Green Lake Residence',
+      customerName: 'Siti Rahma',
+      customerPhone: '081311223344',
+      salesName: 'Bima Kurniawan',
+      salesPhone: '081355667788',
+      image: 'https://static.promediateknologi.id/crop/0x28:1143x716/0x0/webp/photo/p2/239/2025/02/06/desain-rumah-minimalis-tahun-2024-1452919504.jpg',
+      propertyName: 'Green Lake Residence',
       type: 60,
-      lb: 60,
-      lt: 90,
+      buildingSize: 60,
+      landSize: 90,
       carport: 1,
-      jmlLt: 2,
-      kt: 3,
-      wc: 2
+      floors: 2,
+      bedrooms: 3,
+      bathrooms: 2
     }
   },
   {
     title: 'P. Dodi - Green Lake Residence',
     start: new Date('2026-03-13T13:00:00'),
+    end: new Date('2026-03-13T15:00:00'),
     extendedProps: {
-      time: '13:00',
       location: 'Jl Ketintang, Surabaya',
-      customer: 'Dodi Kurniawan',
-      customer_phone: '082155667788',
-      salesman: 'Bima Kurniawan',
-      salesman_phone: '081355667788',
-      picture: 'https://sn-studio.id/wp-content/uploads/2025/11/rumah-minimalis-sederhana-pak-joko.jpg',
-      property: 'Green Lake Residence',
+      customerName: 'Dodi Kurniawan',
+      customerPhone: '082155667788',
+      salesName: 'Bima Kurniawan',
+      salesPhone: '081355667788',
+      image: 'https://sn-studio.id/wp-content/uploads/2025/11/rumah-minimalis-sederhana-pak-joko.jpg',
+      propertyName: 'Green Lake Residence',
       type: 70,
-      lb: 70,
-      lt: 100,
+      buildingSize: 70,
+      landSize: 100,
       carport: 2,
-      jmlLt: 2,
-      kt: 3,
-      wc: 2
+      floors: 2,
+      bedrooms: 3,
+      bathrooms: 2
     }
   },
   {
     title: 'B. Rina - Bukit Indah Residence',
     start: new Date('2026-03-14T11:00:00'),
+    end: new Date('2026-03-14T13:00:00'),
     extendedProps: {
-      time: '11:00',
       location: 'Jl Manyar, Surabaya',
-      customer: 'Rina Putri',
-      customer_phone: '081299887766',
-      salesman: 'Yeni Anggraeni',
-      salesman_phone: '081355667788',
-      picture: 'https://www.emporioarchitect.com/img/blog/mengenal-lebih-dekat-mengenai-desain-rumah-minimalis-230622011359661434.jpg',
-      property: 'Bukit Indah Residence',
+      customerName: 'Rina Putri',
+      customerPhone: '081299887766',
+      salesName: 'Yeni Anggraeni',
+      salesPhone: '081355667788',
+      image: 'https://www.emporioarchitect.com/img/blog/mengenal-lebih-dekat-mengenai-desain-rumah-minimalis-230622011359661434.jpg',
+      propertyName: 'Bukit Indah Residence',
       type: 45,
-      lb: 45,
-      lt: 65,
+      buildingSize: 45,
+      landSize: 65,
       carport: 1,
-      jmlLt: 1,
-      kt: 2,
-      wc: 1
+      floors: 1,
+      bedrooms: 2,
+      bathrooms: 1
     }
   },
   {
     title: 'P. Agus - Bukit Indah Residence',
     start: new Date('2026-03-15T15:00:00'),
+    end: new Date('2026-03-15T17:00:00'),
     extendedProps: {
-      time: '15:00',
       location: 'Jl Merr, Surabaya',
-      customer: 'Agus Salim',
-      customer_phone: '082233441122',
-      salesman: 'Yeni Anggraeni',
-      salesman_phone: '081355667788',
-      picture: 'https://i0.wp.com/www.emporioarchitect.com/upload/portofolio/1280/desain-rumah-modern-2-setengah-lantai-24131022-85791957131022093203-0.jpg',
-      property: 'Bukit Indah Residence',
+      customerName: 'Agus Salim',
+      customerPhone: '082233441122',
+      salesName: 'Yeni Anggraeni',
+      salesPhone: '081355667788',
+      image: 'https://i0.wp.com/www.emporioarchitect.com/upload/portofolio/1280/desain-rumah-modern-2-setengah-lantai-24131022-85791957131022093203-0.jpg',
+      propertyName: 'Bukit Indah Residence',
       type: 60,
-      lb: 60,
-      lt: 84,
+      buildingSize: 60,
+      landSize: 84,
       carport: 1,
-      jmlLt: 2,
-      kt: 3,
-      wc: 2
+      floors: 2,
+      bedrooms: 3,
+      bathrooms: 2
     }
   },
   {
     title: 'P. Fajar - Grand Taman Residence',
     start: new Date('2026-03-16T09:30:00'),
+    end: new Date('2026-03-16T11:30:00'),
     extendedProps: {
-      time: '09:30',
       location: 'Jl Ahmad Dahlan, Sidoarjo',
-      customer: 'Fajar Nugroho',
-      customer_phone: '087811223344',
-      salesman: 'Andi Pratama',
-      salesman_phone: '081355667788',
-      picture: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWQq8cL70yyFxVkLMaLVPFOXby-Ra7iGQOug&s',
-      property: 'Grand Taman Residence',
+      customerName: 'Fajar Nugroho',
+      customerPhone: '087811223344',
+      salesName: 'Andi Pratama',
+      salesPhone: '081355667788',
+      image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWQq8cL70yyFxVkLMaLVPFOXby-Ra7iGQOug&s',
+      propertyName: 'Grand Taman Residence',
       type: 50,
-      lb: 50,
-      lt: 70,
+      buildingSize: 50,
+      landSize: 70,
       carport: 1,
-      jmlLt: 1,
-      kt: 2,
-      wc: 1
+      floors: 1,
+      bedrooms: 2,
+      bathrooms: 1
     }
   },
   {
     title: 'B. Maya - Grand Taman Residence',
     start: new Date('2026-03-17T14:00:00'),
+    end: new Date('2026-03-17T16:00:00'),
     extendedProps: {
-      time: '14:00',
       location: 'Jl Taman Sari, Sidoarjo',
-      customer: 'Maya Sari',
-      customer_phone: '081266778899',
-      salesman: 'Bima Kurniawan',
-      salesman_phone: '081355667788',
-      picture: 'https://asset2.morefurniture.id/NEWS/2025/2/Rumah%20Minimalis%20dengan%20Atap%20Skillion%20Ganda.jpg',
-      property: 'Grand Taman Residence',
+      customerName: 'Maya Sari',
+      customerPhone: '081266778899',
+      salesName: 'Bima Kurniawan',
+      salesPhone: '081355667788',
+      image: 'https://asset2.morefurniture.id/NEWS/2025/2/Rumah%20Minimalis%20dengan%20Atap%20Skillion%20Ganda.jpg',
+      propertyName: 'Grand Taman Residence',
       type: 65,
-      lb: 65,
-      lt: 95,
+      buildingSize: 65,
+      landSize: 95,
       carport: 2,
-      jmlLt: 2,
-      kt: 3,
-      wc: 2
+      floors: 2,
+      bedrooms: 3,
+      bathrooms: 2
     }
   },
   {
     title: 'P. Joko - Permata Indah Residence',
     start: new Date('2026-03-18T10:00:00'),
+    end: new Date('2026-03-18T12:00:00'),
     extendedProps: {
-      time: '10:00',
       location: 'Jl Diponegoro, Surabaya',
-      customer: 'Joko Susilo',
-      customer_phone: '081355667788',
-      salesman: 'Yeni Anggraeni',
-      salesman_phone: '081355667788',
-      picture: 'https://arsitekmasterpiece.co.id/wp-content/uploads/2024/09/Model-Rumah-Minimalis-Sederhana-di-Desa.jpg',
-      property: 'Permata Indah Residence',
+      customerName: 'Joko Susilo',
+      customerPhone: '081355667788',
+      salesName: 'Yeni Anggraeni',
+      salesPhone: '081355667788',
+      image: 'https://arsitekmasterpiece.co.id/wp-content/uploads/2024/09/Model-Rumah-Minimalis-Sederhana-di-Desa.jpg',
+      propertyName: 'Permata Indah Residence',
       type: 45,
-      lb: 45,
-      lt: 60,
+      buildingSize: 45,
+      landSize: 60,
       carport: 1,
-      jmlLt: 1,
-      kt: 2,
-      wc: 1
+      floors: 1,
+      bedrooms: 2,
+      bathrooms: 1
     }
   },
   {
     title: 'B. Lina - Permata Indah Residence',
     start: new Date('2026-03-19T16:00:00'),
+    end: new Date('2026-03-19T18:00:00'),
     extendedProps: {
-      time: '16:00',
       location: 'Jl Rungkut, Surabaya',
-      customer: 'Lina Marlina',
-      customer_phone: '082199887766',
-      salesman: 'Andi Pratama',
-      salesman_phone: '081355667788',
-      picture: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSwYgootRmQUBlII_rMpvQEM4KOm2D9bkS8dw&s',
-      property: 'Permata Indah Residence',
+      customerName: 'Lina Marlina',
+      customerPhone: '082199887766',
+      salesName: 'Andi Pratama',
+      salesPhone: '081355667788',
+      image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSwYgootRmQUBlII_rMpvQEM4KOm2D9bkS8dw&s',
+      propertyName: 'Permata Indah Residence',
       type: 70,
-      lb: 70,
-      lt: 110,
+      buildingSize: 70,
+      landSize: 110,
       carport: 2,
-      jmlLt: 2,
-      kt: 3,
-      wc: 2
+      floors: 2,
+      bedrooms: 3,
+      bathrooms: 2
     }
   }
 ]
@@ -327,22 +327,28 @@ const calendarOptions = computed<CalendarOptions>(() => ({
     emit('openAppointment', {
       title: event.title,
       start: event.start!,
-      time: data.time,
+      end: event.end!,
       location: data.location,
-      customer: data.customer,
-      customer_phone: data.customer_phone,
-      salesman: data.salesman,
-      salesman_phone: data.salesman_phone,
-      picture: data.picture,
-      property: data.property,
+      customerName: data.customerName,
+      customerPhone: data.customerPhone,
+      salesName: data.salesName,
+      salesPhone: data.salesPhone,
+      image: data.image,
+      propertyName: data.propertyName,
       type: data.type,
-      lb: data.lb,
-      lt: data.lt,
+      buildingSize: data.buildingSize,
+      landSize: data.landSize,
       carport: data.carport,
-      jmlLt: data.jmlLt,
-      kt: data.kt,
-      wc: data.wc
+      floors: data.floors,
+      bedrooms: data.bedrooms,
+      bathrooms: data.bathrooms
     })
+  },
+  eventDidMount: (info) => {
+    const event = info.event
+    const data = event.extendedProps
+    console.log(info.event)
+    info.el.setAttribute('title', info.event.title)
   }
 }))
 

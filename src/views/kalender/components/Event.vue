@@ -1,8 +1,6 @@
 <template>
-  <!-- Modal Event -->
   <div v-if="props.openAppointment" class="col-span-1">
     <div ref="appointmentRef" class="max-w-sm mx-auto bg-white rounded-2xl shadow-lg border border-default-100 overflow-hidden my-4">
-      <!-- HEADER DENGAN TOMBOL X -->
       <div class="bg-indigo-600 px-4 py-3 flex justify-between items-center">
         <h3 class="text-white font-semibold text-sm flex items-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -10,14 +8,10 @@
           </svg>
           Detail Janji Temu
         </h3>
-
-        <!-- Tombol X -->
         <button @click.stop="$emit('close')" class="text-white text-sm font-bold hover:text-gray-200">✕</button>
       </div>
 
-      <!-- BODY -->
       <div class="p-5 space-y-4">
-        <!-- Tanggal & Waktu -->
         <div class="flex justify-between items-center border-b border-default-50 pb-3">
           <div>
             <p class="text-[10px] uppercase tracking-wider text-default-400">Tanggal</p>
@@ -34,11 +28,10 @@
           </div>
           <div class="text-right">
             <p class="text-[10px] uppercase tracking-wider text-default-400">Waktu</p>
-            <p class="text-sm font-bold text-indigo-600">{{ props.appointment.time }} WIB</p>
+            <p class="text-sm font-bold text-indigo-600">{{ new Date(props.appointment.start).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }} - {{ new Date(props.appointment.end).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }} WIB</p>
           </div>
         </div>
 
-        <!-- Lokasi -->
         <div>
           <p class="text-[10px] uppercase tracking-wider text-default-400 mb-1">Lokasi Unit</p>
           <div class="flex gap-2 items-start">
@@ -51,27 +44,25 @@
           </div>
         </div>
 
-        <!-- Customer & Salesman -->
         <div class="grid grid-cols-2 gap-4 pt-2">
           <div class="bg-default-50 p-2 rounded-lg">
             <p class="text-[10px] uppercase tracking-wider text-default-400">Customer</p>
-            <p class="text-sm font-medium text-default-800">{{ props.appointment.customer }}</p>
-            <p class="text-[12px] text-default-800">{{ props.appointment.customer_phone }}</p>
+            <p class="text-sm font-medium text-default-800">{{ props.appointment.customerName }}</p>
+            <p class="text-[12px] text-default-600">{{ props.appointment.customerPhone }}</p>
           </div>
           <div class="bg-default-50 p-2 rounded-lg">
             <p class="text-[10px] uppercase tracking-wider text-default-400">Salesman</p>
-            <p class="text-sm font-medium text-default-800">{{ props.appointment.salesman }}</p>
-            <p class="text-[12px] text-default-800">{{ props.appointment.salesman_phone }}</p>
+            <p class="text-sm font-medium text-default-800">{{ props.appointment.salesName }}</p>
+            <p class="text-[12px] text-default-600">{{ props.appointment.salesPhone }}</p>
           </div>
         </div>
 
-        <!-- Properti -->
         <div class="space-y-3">
           <div class="flex gap-3 items-center">
-            <img :src="props.appointment.picture" alt="rumah" class="w-20 h-16 object-cover rounded-lg" />
+            <img :src="props.appointment.image" alt="rumah" class="w-20 h-16 object-cover rounded-lg bg-gray-100" />
             <div class="flex-1">
               <p class="text-[10px] uppercase tracking-wider text-default-400 mb-1">Nama Properti</p>
-              <p class="text-sm font-medium text-default-800">{{ props.appointment.property }}</p>
+              <p class="text-sm font-medium text-default-800">{{ props.appointment.propertyName }}</p>
             </div>
           </div>
 
@@ -82,11 +73,11 @@
             </div>
             <div class="bg-default-50 p-2 rounded-lg text-center">
               <p class="uppercase tracking-wider text-[10px] text-default-400 mb-1">LB / LT</p>
-              <p class="font-medium">{{ props.appointment.lb }}m² / {{ props.appointment.lt }}m²</p>
+              <p class="font-medium">{{ props.appointment.buildingSize }}m² / {{ props.appointment.landSize }}m²</p>
             </div>
             <div class="bg-default-50 p-2 rounded-lg text-center">
-              <p class="uppercase tracking-wider text-[10px] text-default-400 mb-1">Jml Lantai</p>
-              <p class="font-medium">{{ props.appointment.jmlLt }} lt</p>
+              <p class="uppercase tracking-wider text-[10px] text-default-400 mb-1">Lantai</p>
+              <p class="font-medium">{{ props.appointment.floors }} lt</p>
             </div>
             <div class="bg-default-50 p-2 rounded-lg text-center">
               <p class="uppercase tracking-wider text-[10px] text-default-400 mb-1">Carport</p>
@@ -94,17 +85,16 @@
             </div>
             <div class="bg-default-50 p-2 rounded-lg text-center">
               <p class="uppercase tracking-wider text-[10px] text-default-400 mb-1">KT</p>
-              <p class="font-medium">{{ props.appointment.kt }}</p>
+              <p class="font-medium">{{ props.appointment.bedrooms }}</p>
             </div>
             <div class="bg-default-50 p-2 rounded-lg text-center">
               <p class="uppercase tracking-wider text-[10px] text-default-400 mb-1">WC</p>
-              <p class="font-medium">{{ props.appointment.wc }}</p>
+              <p class="font-medium">{{ props.appointment.bathrooms }}</p>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- FOOTER -->
       <div class="px-5 py-3 bg-default-50 flex gap-2">
         <button @click="closeModal" class="flex-1 text-xs font-semibold py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition">Batal</button>
         <button @click.stop="openReschedule = true" class="flex-1 text-xs font-semibold py-2 rounded-md border bg-green-500 text-white hover:bg-green-600 transition">Re-Schedule</button>
@@ -112,99 +102,399 @@
     </div>
   </div>
 
-  <div v-if="openReschedule" ref="rescheduleRef" class="z-40 fixed bottom-10 left-1/2 -translate-x-1/2 w-[95vw] sm:w-[650px] sm:bottom-5 sm:right-15 sm:left-auto sm:translate-x-0 bg-white rounded-2xl shadow-2xl py-4 border border-default-100">
-    <!-- Header -->
+  <div v-if="openReschedule" ref="rescheduleRef" class="z-40 fixed bottom-30 left-1/2 -translate-x-1/2 w-[95vw] sm:w-[650px] sm:bottom-5 sm:right-95 sm:left-auto sm:translate-x-0 bg-white rounded-2xl shadow-2xl py-4 border border-default-100">
     <div class="flex items-center justify-between mb-4 px-6">
-      <h4 class="text-default-900 font-bold text-base">Pilih Jadwal</h4>
-
+      <h4 class="text-default-900 font-bold text-base">Pilih Jadwal Baru</h4>
       <button @click.stop="openReschedule = false" class="text-default-400 hover:text-default-900 transition-all">
         <Icon icon="lucide:x" class="size-5" />
       </button>
     </div>
-
-    <div>
-      <div class="card">
-        <div class="card-body">
-          <FullCalendar ref="fullCalendarRef" :options="calendarOptions" />
-        </div>
-      </div>
+    <div class="px-4">
+      <FullCalendar ref="fullCalendarRef" :options="calendarOptions" />
     </div>
   </div>
 
-  <div v-if="openRescheduleForm" ref="rescheduleFormRef" class="z-50 fixed bottom-55 left-1/2 -translate-x-1/2 w-[95vw] sm:w-[350px] sm:bottom-25 sm:right-15 sm:left-auto sm:translate-x-0 bg-white rounded-2xl shadow-2xl p-4 border border-default-100">
-    <!-- Header -->
+  <div v-if="openRescheduleForm" ref="rescheduleFormRef" class="z-50 fixed bottom-55 left-1/2 -translate-x-1/2 w-[95vw] sm:w-[350px] sm:bottom-30 sm:right-95 sm:left-auto sm:translate-x-0 bg-white rounded-2xl shadow-2xl p-4 border border-default-100">
     <div class="flex items-center justify-between mb-4 px-2">
       <h4 class="text-default-900 font-bold text-base">Form Reschedule</h4>
-
-      <button @click.stop="openRescheduleForm = false" class="text-default-400 hover:text-default-900 transition-all">
+      <button @click.stop="((openRescheduleForm = false), (isPopup = false))" class="text-default-400 hover:text-default-900 transition-all">
         <Icon icon="lucide:x" class="size-5" />
       </button>
     </div>
 
-    <!-- Form -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 px-2">
-      <!-- Nama Customer -->
+    <div class="grid grid-cols-1 gap-4 px-2">
       <div>
         <label class="text-xs text-default-500 mb-1 block"> Nama Customer </label>
-        <input type="text" placeholder="Masukkan nama customer" class="form-input w-full" :value="props.appointment.customer" disabled />
+        <input type="text" class="form-input w-full bg-gray-50" :value="props.appointment.customerName" disabled />
       </div>
-
-      <!-- Nama Sales -->
       <div>
         <label class="text-xs text-default-500 mb-1 block"> Nama Salesman </label>
-        <input type="text" placeholder="Masukkan nama sales" class="form-input w-full" :value="props.appointment.salesman" disabled />
+        <input type="text" class="form-input w-full bg-gray-50" :value="props.appointment.salesName" disabled />
+      </div>
+    </div>
+    <div class="grid grid-cols-1 gap-4 px-2">
+      <div>
+        <label class="text-xs text-default-500 mb-1 block">Tanggal Terpilih</label>
+        <input type="date" class="form-input w-full bg-gray-50 cursor-not-allowed" v-model="selectedDate" readonly />
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-default-500 mb-1 block">Jam Mulai</label>
+          <input type="time" v-model="startTime" class="form-input w-full" :class="{ 'border-red-500': scheduleError }" />
+        </div>
+        <div>
+          <label class="text-xs text-default-500 mb-1 block">Jam Selesai</label>
+          <input type="time" v-model="endTime" class="form-input w-full" :class="{ 'border-red-500': scheduleError }" />
+        </div>
       </div>
 
-      <!-- Tanggal -->
-      <div>
-        <label class="text-xs text-default-500 mb-1 block">Tanggal</label>
-        <input type="date" class="form-input w-full" :value="new Date(props.appointment.start).toISOString().slice(0, 10)" />
+      <div v-if="scheduleError" class="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-600 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+        </svg>
+        <p class="text-xs text-red-700 font-medium">{{ scheduleError }}</p>
       </div>
 
-      <!-- Waktu -->
-      <div>
-        <label class="text-xs text-default-500 mb-1 block"> Waktu </label>
-        <input type="time" class="form-input w-full" :value="props.appointment.time" />
+      <div v-else-if="startTime && endTime" class="bg-green-50 border border-green-200 rounded-lg p-3 flex items-start gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-green-600 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+        </svg>
+        <p class="text-xs text-green-700 font-medium">Jadwal tersedia untuk dipilih.</p>
       </div>
     </div>
 
-    <!-- Action -->
     <div class="flex justify-end gap-2 mt-6 px-2">
-      <button @click.stop="openReschedule = false" class="btn bg-default-200 hover:bg-default-300 text-default-700">Batal</button>
-
-      <button @click="saveReschedule" class="btn bg-green-500 hover:bg-green-600 text-white">Simpan</button>
+      <button @click.stop="((openRescheduleForm = false), (isPopup = false))" class="btn bg-default-200 hover:bg-default-300 text-default-700">Batal</button>
+      <button @click="saveReschedule" class="btn bg-green-500 hover:bg-green-600 text-white">Simpan Jadwal</button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { Icon } from '@iconify/vue'
 import { confirmCancel, confirm, success, fail } from '@/utils/sweet-alert'
-import { onBeforeUnmount, onMounted, ref, computed, nextTick } from 'vue'
 import FullCalendar from '@fullcalendar/vue3'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import listPlugin from '@fullcalendar/list'
 import interactionPlugin from '@fullcalendar/interaction'
 import idLocale from '@fullcalendar/core/locales/id'
-import type { CalendarOptions, EventClickArg, CalendarApi, EventApi } from '@fullcalendar/core'
-import type { DateClickArg } from '@fullcalendar/interaction'
+import type { CalendarOptions } from '@fullcalendar/core'
 
-const rescheduleFormRef = ref<HTMLElement | null>(null)
+// --- STATE ---
+const props = defineProps<{ openAppointment: boolean; appointment: any }>()
+const emit = defineEmits(['close', 'update'])
+
 const rescheduleRef = ref<HTMLElement | null>(null)
+const rescheduleFormRef = ref<HTMLElement | null>(null)
 const fullCalendarRef = ref<InstanceType<typeof FullCalendar> | null>(null)
+
 const openReschedule = ref(false)
 const openRescheduleForm = ref(false)
 const isMobile = ref(false)
+const isPopup = ref(false)
 
-const props = defineProps<{
-  openAppointment: boolean
-  appointment: any
-}>()
+const selectedDate = ref('')
+const startTime = ref('')
+const endTime = ref('')
 
-const emit = defineEmits<{
-  (e: 'close'): void
-}>()
+// --- DATA (Diringkas, sebaiknya pindahkan ke file lain jika terlalu panjang) ---
+
+const calendarEvents = [
+  {
+    title: 'P. Budi - Griya Asri Residence',
+    start: new Date('2026-03-11T12:00:00'),
+    end: new Date('2026-03-11T15:00:00'),
+    extendedProps: {
+      location: 'Jl Hidup Liku-liku, Surabaya',
+      customerName: 'Budi Santoso',
+      customerPhone: '0873482453534',
+      salesName: 'Andi Pratama',
+      salesPhone: '081355667788',
+      image: 'https://media.dekoruma.com/article/2024/10/30201434/Model-Rumah-Modern-Minimalis.jpg?resize=800%2C600&ssl=1',
+      propertyName: 'Griya Asri Residence',
+      type: 45,
+      buildingSize: 45,
+      landSize: 60,
+      carport: 1,
+      floors: 1,
+      bedrooms: 2,
+      bathrooms: 1
+    }
+  },
+  {
+    title: 'P. Herman - Griya Asri Residence',
+    start: new Date('2026-03-11T10:30:00'),
+    end: new Date('2026-03-11T12:30:00'),
+    extendedProps: {
+      location: 'Jl Raya Darmo, Surabaya',
+      customerName: 'Herman Wijaya',
+      customerPhone: '081233445566',
+      salesName: 'Andi Pratama',
+      salesPhone: '081355667788',
+      image: 'https://cdn1-production-images-kly.akamaized.net/7jfLlyvz6P_0Dh-KvXCFs5tf5jc=/1280x720/smart/filters:quality(75):strip_icc()/kly-media-production/medias/5214975/original/088768800_1746786001-7ba6160f-c619-4160-8633-7f463565afca.jpg',
+      propertyName: 'Griya Asri Residence',
+      type: 45,
+      buildingSize: 45,
+      landSize: 72,
+      carport: 1,
+      floors: 1,
+      bedrooms: 2,
+      bathrooms: 1
+    }
+  },
+  {
+    title: 'P. Siti - Green Lake Residence',
+    start: new Date('2026-03-12T09:00:00'),
+    end: new Date('2026-03-12T11:00:00'),
+    extendedProps: {
+      location: 'Jl Ahmad Yani, Surabaya',
+      customerName: 'Siti Rahma',
+      customerPhone: '081311223344',
+      salesName: 'Bima Kurniawan',
+      salesPhone: '081355667788',
+      image: 'https://static.promediateknologi.id/crop/0x28:1143x716/0x0/webp/photo/p2/239/2025/02/06/desain-rumah-minimalis-tahun-2024-1452919504.jpg',
+      propertyName: 'Green Lake Residence',
+      type: 60,
+      buildingSize: 60,
+      landSize: 90,
+      carport: 1,
+      floors: 2,
+      bedrooms: 3,
+      bathrooms: 2
+    }
+  },
+  {
+    title: 'P. Dodi - Green Lake Residence',
+    start: new Date('2026-03-13T13:00:00'),
+    end: new Date('2026-03-13T15:00:00'),
+    extendedProps: {
+      location: 'Jl Ketintang, Surabaya',
+      customerName: 'Dodi Kurniawan',
+      customerPhone: '082155667788',
+      salesName: 'Bima Kurniawan',
+      salesPhone: '081355667788',
+      image: 'https://sn-studio.id/wp-content/uploads/2025/11/rumah-minimalis-sederhana-pak-joko.jpg',
+      propertyName: 'Green Lake Residence',
+      type: 70,
+      buildingSize: 70,
+      landSize: 100,
+      carport: 2,
+      floors: 2,
+      bedrooms: 3,
+      bathrooms: 2
+    }
+  },
+  {
+    title: 'B. Rina - Bukit Indah Residence',
+    start: new Date('2026-03-14T11:00:00'),
+    end: new Date('2026-03-14T13:00:00'),
+    extendedProps: {
+      location: 'Jl Manyar, Surabaya',
+      customerName: 'Rina Putri',
+      customerPhone: '081299887766',
+      salesName: 'Yeni Anggraeni',
+      salesPhone: '081355667788',
+      image: 'https://www.emporioarchitect.com/img/blog/mengenal-lebih-dekat-mengenai-desain-rumah-minimalis-230622011359661434.jpg',
+      propertyName: 'Bukit Indah Residence',
+      type: 45,
+      buildingSize: 45,
+      landSize: 65,
+      carport: 1,
+      floors: 1,
+      bedrooms: 2,
+      bathrooms: 1
+    }
+  },
+  {
+    title: 'P. Agus - Bukit Indah Residence',
+    start: new Date('2026-03-15T15:00:00'),
+    end: new Date('2026-03-15T17:00:00'),
+    extendedProps: {
+      location: 'Jl Merr, Surabaya',
+      customerName: 'Agus Salim',
+      customerPhone: '082233441122',
+      salesName: 'Yeni Anggraeni',
+      salesPhone: '081355667788',
+      image: 'https://i0.wp.com/www.emporioarchitect.com/upload/portofolio/1280/desain-rumah-modern-2-setengah-lantai-24131022-85791957131022093203-0.jpg',
+      propertyName: 'Bukit Indah Residence',
+      type: 60,
+      buildingSize: 60,
+      landSize: 84,
+      carport: 1,
+      floors: 2,
+      bedrooms: 3,
+      bathrooms: 2
+    }
+  },
+  {
+    title: 'P. Fajar - Grand Taman Residence',
+    start: new Date('2026-03-16T09:30:00'),
+    end: new Date('2026-03-16T11:30:00'),
+    extendedProps: {
+      location: 'Jl Ahmad Dahlan, Sidoarjo',
+      customerName: 'Fajar Nugroho',
+      customerPhone: '087811223344',
+      salesName: 'Andi Pratama',
+      salesPhone: '081355667788',
+      image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWQq8cL70yyFxVkLMaLVPFOXby-Ra7iGQOug&s',
+      propertyName: 'Grand Taman Residence',
+      type: 50,
+      buildingSize: 50,
+      landSize: 70,
+      carport: 1,
+      floors: 1,
+      bedrooms: 2,
+      bathrooms: 1
+    }
+  },
+  {
+    title: 'B. Maya - Grand Taman Residence',
+    start: new Date('2026-03-17T14:00:00'),
+    end: new Date('2026-03-17T16:00:00'),
+    extendedProps: {
+      location: 'Jl Taman Sari, Sidoarjo',
+      customerName: 'Maya Sari',
+      customerPhone: '081266778899',
+      salesName: 'Bima Kurniawan',
+      salesPhone: '081355667788',
+      image: 'https://asset2.morefurniture.id/NEWS/2025/2/Rumah%20Minimalis%20dengan%20Atap%20Skillion%20Ganda.jpg',
+      propertyName: 'Grand Taman Residence',
+      type: 65,
+      buildingSize: 65,
+      landSize: 95,
+      carport: 2,
+      floors: 2,
+      bedrooms: 3,
+      bathrooms: 2
+    }
+  },
+  {
+    title: 'P. Joko - Permata Indah Residence',
+    start: new Date('2026-03-18T10:00:00'),
+    end: new Date('2026-03-18T12:00:00'),
+    extendedProps: {
+      location: 'Jl Diponegoro, Surabaya',
+      customerName: 'Joko Susilo',
+      customerPhone: '081355667788',
+      salesName: 'Yeni Anggraeni',
+      salesPhone: '081355667788',
+      image: 'https://arsitekmasterpiece.co.id/wp-content/uploads/2024/09/Model-Rumah-Minimalis-Sederhana-di-Desa.jpg',
+      propertyName: 'Permata Indah Residence',
+      type: 45,
+      buildingSize: 45,
+      landSize: 60,
+      carport: 1,
+      floors: 1,
+      bedrooms: 2,
+      bathrooms: 1
+    }
+  },
+  {
+    title: 'B. Lina - Permata Indah Residence',
+    start: new Date('2026-03-19T16:00:00'),
+    end: new Date('2026-03-19T18:00:00'),
+    extendedProps: {
+      location: 'Jl Rungkut, Surabaya',
+      customerName: 'Lina Marlina',
+      customerPhone: '082199887766',
+      salesName: 'Andi Pratama',
+      salesPhone: '081355667788',
+      image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSwYgootRmQUBlII_rMpvQEM4KOm2D9bkS8dw&s',
+      propertyName: 'Permata Indah Residence',
+      type: 70,
+      buildingSize: 70,
+      landSize: 110,
+      carport: 2,
+      floors: 2,
+      bedrooms: 3,
+      bathrooms: 2
+    }
+  }
+]
+
+// --- HELPERS ---
+const getToday = () => new Date().toLocaleDateString('en-CA')
+
+const isTimeConflict = (d: string, s: string, e: string) => {
+  if (!d || !s || !e) return false
+  const uS = new Date(`${d}T${s}:00`),
+    uE = new Date(`${d}T${e}:00`)
+  if (uE <= uS) return true
+  return calendarEvents.some((ev) => uS < new Date(ev.end) && uE > new Date(ev.start))
+}
+
+// --- LOGIC ---
+const scheduleError = computed(() => {
+  if (!selectedDate.value || !startTime.value || !endTime.value) return null
+  const min = '07:00',
+    max = '20:00'
+  if (startTime.value < min || endTime.value > max) return `Jam operasional: ${min} - ${max} WIB`
+  if (endTime.value <= startTime.value) return 'Jam selesai harus lebih besar'
+  if (isTimeConflict(selectedDate.value, startTime.value, endTime.value)) return 'Waktu sudah terisi jadwal lain'
+  return null
+})
+
+const handleScheduleClick = (rawDate: string | null | undefined) => {
+  if (isPopup.value || !rawDate) return
+  const datePart = rawDate.split('T')[0]
+  if (datePart < getToday()) return fail('Tidak dapat memilih tanggal lampau.')
+
+  selectedDate.value = datePart
+  const events = fullCalendarRef.value
+    ?.getApi()
+    .getEvents()
+    .filter((e) => e.start?.toLocaleDateString('en-CA') === datePart)
+
+  if (events?.length) {
+    const times = events.map((e) => `${e.start?.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}-${e.end?.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`).join(', ')
+    isPopup.value = true
+    confirmCancel(
+      `${datePart === getToday() ? 'Hari ini' : 'Tanggal ' + datePart} ada jadwal: ${times}. Lanjut?`,
+      () => {
+        openRescheduleForm.value = true
+        isPopup.value = false
+      },
+      () => {
+        isPopup.value = false
+      }
+    )
+  } else {
+    openRescheduleForm.value = true
+  }
+}
+
+const saveReschedule = () => {
+  if (scheduleError.value) return fail(scheduleError.value)
+  confirm(`Konfirmasi reschedule ke ${selectedDate.value} pkl ${startTime.value}-${endTime.value}?`, () => {
+    success('Jadwal diperbarui')
+    openRescheduleForm.value = false
+    openReschedule.value = true
+    emit('close')
+  })
+}
+
+// --- UI EVENT ---
+const handleClickOutside = (e: MouseEvent) => {
+  if ((e.target as Element).closest('.swal2-container')) return
+  if (!rescheduleRef.value?.contains(e.target as Node) && !rescheduleFormRef.value?.contains(e.target as Node)) {
+    if (openRescheduleForm.value) {
+      openRescheduleForm.value = false
+      isPopup.value = false
+    } else if (openReschedule.value) openReschedule.value = false
+  }
+}
+
+const calendarOptions = computed<CalendarOptions>(() => ({
+  plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin],
+  initialView: 'dayGridMonth',
+  locale: idLocale,
+  events: calendarEvents,
+  headerToolbar: isMobile.value ? { left: 'prev,next', center: 'title' } : { left: 'prev,next,today', center: 'title', right: 'dayGridMonth,timeGridWeek,listWeek' },
+  dateClick: (info) => handleScheduleClick(info.dateStr),
+  eventClick: (info) => handleScheduleClick(info.event.startStr)
+}))
 
 const closeModal = () => {
   confirmCancel(
@@ -219,360 +509,9 @@ const closeModal = () => {
   )
 }
 
-const saveReschedule = () => {
-  confirm('Apakah Anda yakin ingin mengubah jadwal janji temu?', () => {
-    openRescheduleForm.value = false
-    openReschedule.value = false
-
-    success('Ubah jadwal janji temu berhasil')
-  })
-}
-
-const handleClickOutside = (event: MouseEvent) => {
-  const target = event.target as Element
-
-  if (target.closest('.swal2-container')) return
-
-  const clickedInsideCalendar = rescheduleRef.value?.contains(target)
-  const clickedInsideForm = rescheduleFormRef.value?.contains(target)
-
-  if (!clickedInsideCalendar && !clickedInsideForm) {
-    if (openRescheduleForm.value) {
-      openRescheduleForm.value = false
-    } else if (openReschedule.value) {
-      openReschedule.value = false
-    }
-  }
-}
-
-const calendarEvents = [
-  {
-    title: 'P. Budi - Griya Asri Residence',
-    start: new Date('2026-03-11T12:00:00'),
-    extendedProps: {
-      time: '12:00',
-      location: 'Jl Hidup Liku-liku, Surabaya',
-      customer: 'Budi Santoso',
-      customer_phone: '0873482453534',
-      salesman: 'Andi Pratama',
-      salesman_phone: '081355667788',
-      picture: 'https://media.dekoruma.com/article/2024/10/30201434/Model-Rumah-Modern-Minimalis.jpg?resize=800%2C600&ssl=1',
-      property: 'Griya Asri Residence',
-      type: 45,
-      lb: 45,
-      lt: 60,
-      carport: 1,
-      jmlLt: 1,
-      kt: 2,
-      wc: 1
-    }
-  },
-  {
-    title: 'P. Herman - Griya Asri Residence',
-    start: new Date('2026-03-11T10:30:00'),
-    extendedProps: {
-      time: '10:30',
-      location: 'Jl Raya Darmo, Surabaya',
-      customer: 'Herman Wijaya',
-      customer_phone: '081233445566',
-      salesman: 'Andi Pratama',
-      salesman_phone: '081355667788',
-      picture: 'https://cdn1-production-images-kly.akamaized.net/7jfLlyvz6P_0Dh-KvXCFs5tf5jc=/1280x720/smart/filters:quality(75):strip_icc()/kly-media-production/medias/5214975/original/088768800_1746786001-7ba6160f-c619-4160-8633-7f463565afca.jpg',
-      property: 'Griya Asri Residence',
-      type: 45,
-      lb: 45,
-      lt: 72,
-      carport: 1,
-      jmlLt: 1,
-      kt: 2,
-      wc: 1
-    }
-  },
-  {
-    title: 'P. Siti - Green Lake Residence',
-    start: new Date('2026-03-12T09:00:00'),
-    extendedProps: {
-      time: '09:00',
-      location: 'Jl Ahmad Yani, Surabaya',
-      customer: 'Siti Rahma',
-      customer_phone: '081311223344',
-      salesman: 'Bima Kurniawan',
-      salesman_phone: '081355667788',
-      picture: 'https://static.promediateknologi.id/crop/0x28:1143x716/0x0/webp/photo/p2/239/2025/02/06/desain-rumah-minimalis-tahun-2024-1452919504.jpg',
-      property: 'Green Lake Residence',
-      type: 60,
-      lb: 60,
-      lt: 90,
-      carport: 1,
-      jmlLt: 2,
-      kt: 3,
-      wc: 2
-    }
-  },
-  {
-    title: 'P. Dodi - Green Lake Residence',
-    start: new Date('2026-03-13T13:00:00'),
-    extendedProps: {
-      time: '13:00',
-      location: 'Jl Ketintang, Surabaya',
-      customer: 'Dodi Kurniawan',
-      customer_phone: '082155667788',
-      salesman: 'Bima Kurniawan',
-      salesman_phone: '081355667788',
-      picture: 'https://sn-studio.id/wp-content/uploads/2025/11/rumah-minimalis-sederhana-pak-joko.jpg',
-      property: 'Green Lake Residence',
-      type: 70,
-      lb: 70,
-      lt: 100,
-      carport: 2,
-      jmlLt: 2,
-      kt: 3,
-      wc: 2
-    }
-  },
-  {
-    title: 'B. Rina - Bukit Indah Residence',
-    start: new Date('2026-03-14T11:00:00'),
-    extendedProps: {
-      time: '11:00',
-      location: 'Jl Manyar, Surabaya',
-      customer: 'Rina Putri',
-      customer_phone: '081299887766',
-      salesman: 'Yeni Anggraeni',
-      salesman_phone: '081355667788',
-      picture: 'https://www.emporioarchitect.com/img/blog/mengenal-lebih-dekat-mengenai-desain-rumah-minimalis-230622011359661434.jpg',
-      property: 'Bukit Indah Residence',
-      type: 45,
-      lb: 45,
-      lt: 65,
-      carport: 1,
-      jmlLt: 1,
-      kt: 2,
-      wc: 1
-    }
-  },
-  {
-    title: 'P. Agus - Bukit Indah Residence',
-    start: new Date('2026-03-15T15:00:00'),
-    extendedProps: {
-      time: '15:00',
-      location: 'Jl Merr, Surabaya',
-      customer: 'Agus Salim',
-      customer_phone: '082233441122',
-      salesman: 'Yeni Anggraeni',
-      salesman_phone: '081355667788',
-      picture: 'https://i0.wp.com/www.emporioarchitect.com/upload/portofolio/1280/desain-rumah-modern-2-setengah-lantai-24131022-85791957131022093203-0.jpg',
-      property: 'Bukit Indah Residence',
-      type: 60,
-      lb: 60,
-      lt: 84,
-      carport: 1,
-      jmlLt: 2,
-      kt: 3,
-      wc: 2
-    }
-  },
-  {
-    title: 'P. Fajar - Grand Taman Residence',
-    start: new Date('2026-03-16T09:30:00'),
-    extendedProps: {
-      time: '09:30',
-      location: 'Jl Ahmad Dahlan, Sidoarjo',
-      customer: 'Fajar Nugroho',
-      customer_phone: '087811223344',
-      salesman: 'Andi Pratama',
-      salesman_phone: '081355667788',
-      picture: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWQq8cL70yyFxVkLMaLVPFOXby-Ra7iGQOug&s',
-      property: 'Grand Taman Residence',
-      type: 50,
-      lb: 50,
-      lt: 70,
-      carport: 1,
-      jmlLt: 1,
-      kt: 2,
-      wc: 1
-    }
-  },
-  {
-    title: 'B. Maya - Grand Taman Residence',
-    start: new Date('2026-03-17T14:00:00'),
-    extendedProps: {
-      time: '14:00',
-      location: 'Jl Taman Sari, Sidoarjo',
-      customer: 'Maya Sari',
-      customer_phone: '081266778899',
-      salesman: 'Bima Kurniawan',
-      salesman_phone: '081355667788',
-      picture: 'https://asset2.morefurniture.id/NEWS/2025/2/Rumah%20Minimalis%20dengan%20Atap%20Skillion%20Ganda.jpg',
-      property: 'Grand Taman Residence',
-      type: 65,
-      lb: 65,
-      lt: 95,
-      carport: 2,
-      jmlLt: 2,
-      kt: 3,
-      wc: 2
-    }
-  },
-  {
-    title: 'P. Joko - Permata Indah Residence',
-    start: new Date('2026-03-18T10:00:00'),
-    extendedProps: {
-      time: '10:00',
-      location: 'Jl Diponegoro, Surabaya',
-      customer: 'Joko Susilo',
-      customer_phone: '081355667788',
-      salesman: 'Yeni Anggraeni',
-      salesman_phone: '081355667788',
-      picture: 'https://arsitekmasterpiece.co.id/wp-content/uploads/2024/09/Model-Rumah-Minimalis-Sederhana-di-Desa.jpg',
-      property: 'Permata Indah Residence',
-      type: 45,
-      lb: 45,
-      lt: 60,
-      carport: 1,
-      jmlLt: 1,
-      kt: 2,
-      wc: 1
-    }
-  },
-  {
-    title: 'B. Lina - Permata Indah Residence',
-    start: new Date('2026-03-19T16:00:00'),
-    extendedProps: {
-      time: '16:00',
-      location: 'Jl Rungkut, Surabaya',
-      customer: 'Lina Marlina',
-      customer_phone: '082199887766',
-      salesman: 'Andi Pratama',
-      salesman_phone: '081355667788',
-      picture: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSwYgootRmQUBlII_rMpvQEM4KOm2D9bkS8dw&s',
-      property: 'Permata Indah Residence',
-      type: 70,
-      lb: 70,
-      lt: 110,
-      carport: 2,
-      jmlLt: 2,
-      kt: 3,
-      wc: 2
-    }
-  }
-]
-
-const calendarOptions = computed<CalendarOptions>(() => ({
-  plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin],
-  initialView: 'dayGridMonth',
-  locale: idLocale,
-  height: 'auto',
-  contentHeight: 650,
-  aspectRatio: 1.8,
-
-  headerToolbar: isMobile.value
-    ? {
-        left: 'prev,next',
-        center: 'title',
-        right: ''
-      }
-    : {
-        left: 'prev,next,today',
-        center: 'title',
-        right: 'dayGridMonth,timeGridWeek,dayGridDay,listWeek'
-      },
-
-  footerToolbar: isMobile.value
-    ? {
-        center: 'dayGridMonth,timeGridWeek,listWeek'
-      }
-    : (false as false),
-
-  editable: true,
-  selectable: true,
-  events: calendarEvents,
-  dateClick(info: DateClickArg) {
-    const calendarApi = fullCalendarRef.value?.getApi()
-    if (!calendarApi) return
-
-    const events = calendarApi.getEvents()
-    const clickedDate = info.dateStr
-
-    const eventOnDate = events.filter((event) => {
-      return event.start?.toISOString().slice(0, 10) === clickedDate
-    })
-
-    if (eventOnDate.length > 0) {
-      const times = eventOnDate.map((event) =>
-        event.start?.toLocaleTimeString('id-ID', {
-          hour: '2-digit',
-          minute: '2-digit'
-        })
-      )
-
-      confirmCancel(
-        `Ada ${eventOnDate.length} jadwal di hari yang sama pada jam ${times.join(', ')}`,
-        () => {
-          nextTick(() => {
-            openReschedule.value = true
-            openRescheduleForm.value = true
-          })
-        },
-        () => {
-          nextTick(() => {
-            openReschedule.value = true
-            fail('Silahkan pilih tanggal dan waktu lain')
-          })
-        }
-      )
-    } else {
-      openReschedule.value = true
-      openRescheduleForm.value = true
-    }
-  },
-  eventClick(info: EventClickArg) {
-    const calendarApi = fullCalendarRef.value?.getApi()
-    if (!calendarApi) return
-
-    const events = calendarApi.getEvents()
-    const clickedDate = info.event.startStr
-
-    const eventOnDate = events.filter((event) => {
-      return event.start?.toISOString().slice(0, 10) === clickedDate
-    })
-
-    if (eventOnDate.length > 0) {
-      const times = eventOnDate.map((event) =>
-        event.start?.toLocaleTimeString('id-ID', {
-          hour: '2-digit',
-          minute: '2-digit'
-        })
-      )
-
-      confirmCancel(
-        `Ada ${eventOnDate.length} jadwal di hari yang sama pada jam ${times.join(', ')}`,
-        () => {
-          nextTick(() => {
-            openReschedule.value = true
-            openRescheduleForm.value = true
-          })
-        },
-        () => {
-          nextTick(() => {
-            openReschedule.value = true
-            fail('Silahkan pilih tanggal dan waktu lain')
-          })
-        }
-      )
-    } else {
-      openReschedule.value = true
-      openRescheduleForm.value = true
-    }
-  }
-}))
-
 onMounted(() => {
   isMobile.value = window.innerWidth < 640
   document.addEventListener('click', handleClickOutside)
 })
-
-onBeforeUnmount(() => {
-  document.removeEventListener('click', handleClickOutside)
-})
+onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 </script>

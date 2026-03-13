@@ -282,7 +282,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, onMounted, onBeforeUnmount, nextTick, computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import type { CalendarOptions, EventClickArg } from '@fullcalendar/core'
 import type { DateClickArg } from '@fullcalendar/interaction'
@@ -780,7 +780,7 @@ interface Appointment {
   buildingSize: number
   landSize: number
   floors: number
-  car: number
+  carport: number
   bed: number
   bath: number
 }
@@ -1028,7 +1028,7 @@ const chats = ref<Chat[]>([
             buildingSize: 60,
             landSize: 90,
             floors: 2,
-            car: 1,
+            carport: 1,
             bed: 3,
             bath: 2
           }

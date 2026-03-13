@@ -42,6 +42,7 @@ export const menuItems: MenuItemType[] = [
     children: [
       { key: 'data-admin', label: 'Admin', url: '/data/admin'},
       { key: 'data-sales', label: 'Sales', url: '/data/sales' },
+      { key: 'data-customer', label: 'Customer', url: '/data/customer' },
     ]
   },
   // {

@@ -202,7 +202,7 @@
             </div>
             <div class="bg-default-50 p-2 rounded-lg text-center">
               <p class="uppercase tracking-wider text-[10px] text-default-400 mb-1">Carport</p>
-              <p class="font-medium">{{ appointment.car }}</p>
+              <p class="font-medium">{{ appointment.carport }}</p>
             </div>
             <div class="bg-default-50 p-2 rounded-lg text-center">
               <p class="uppercase tracking-wider text-[10px] text-default-400 mb-1">KT</p>
@@ -271,7 +271,7 @@ interface Appointment {
   buildingSize: number
   landSize: number
   floors: number
-  car: number
+  carport: number
   bed: number
   bath: number
 }
