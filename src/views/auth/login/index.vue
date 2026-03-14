@@ -1,3 +1,60 @@
+<script setup lang="ts">
+import { Icon } from '@iconify/vue'
+import { RouterLink, useRouter, useRoute } from 'vue-router'
+import Auth from '@/layouts/auth.vue'
+import { success, fail } from '@/utils/sweet-alert'
+import { ref, onMounted } from 'vue'
+import api from '@/services/axios'
+
+const router = useRouter()
+const route = useRoute()
+
+const form = ref({
+  Email: '',
+  Password: ''
+})
+
+const handleLogin = async () => {
+  try {
+    const { data } = await api.post('/api/auth/login', {
+      Jenis_User: 'admin',
+      Email: form.value.Email,
+      Password: form.value.Password
+    })
+
+    if (data.StatusCode === 200) {
+      localStorage.setItem('token', data.token)
+      localStorage.setItem('refreshToken', data.refreshToken)
+
+      localStorage.setItem(
+        'user',
+        JSON.stringify({
+          id: data.No_Id,
+          name: data.Nama_Display,
+          role: data.Role_User
+        })
+      )
+
+      const greeting = route.query.redirect ? 'Hai ' + data.Nama_Display + '! Selamat datang kembali' : 'Hai ' + data.Nama_Display + '! Selamat datang'
+      success(greeting)
+
+      const redirectPath = (route.query.redirect as string) || '/dashboard'
+      router.push(redirectPath)
+    } else {
+      fail('Email atau Password yang Anda masukkan salah')
+    }
+  } catch (err) {
+    fail('Email atau Password yang Anda masukkan salah')
+  }
+}
+
+onMounted(() => {
+  if (route.query.expired) {
+    fail('Harap login terlebih dahulu')
+  }
+})
+</script>
+
 <template>
   <Auth>
     <div class="mt-8 text-center">
@@ -6,20 +63,20 @@
     </div>
     <form class="text-left w-full mt-10">
       <div class="mb-4">
-        <label for="email" class="block font-medium text-default-900 text-sm mb-2">Username</label>
-        <input type="text" id="email" class="form-input" placeholder="Masukkan username" style="padding: 0 12px" />
+        <label for="email" class="block font-medium text-default-900 text-sm mb-2">Email</label>
+        <input type="text" id="email" name="email" v-model="form.Email" class="form-input" placeholder="Masukkan Email" style="padding: 0 12px" />
       </div>
       <div class="mb-4">
         <RouterLink to="/basic-auth/reset-pass" class="text-primary font-medium text-sm mb-2 float-end">Lupa Password ?</RouterLink>
         <label for="Password" class="block font-medium text-default-900 text-sm mb-2">Password</label>
-        <input type="text" id="Password" class="form-input" placeholder="Masukkan Password" style="padding: 0 12px" />
+        <input type="password" id="Password" name="password" v-model="form.Password" class="form-input" placeholder="Masukkan Password" style="padding: 0 12px" />
       </div>
       <div class="flex items-center gap-2 mb-4">
         <input id="checkbox-1" type="checkbox" class="form-checkbox" />
         <label class="text-default-900 text-sm font-medium" for="checkbox-1">Ingat Saya</label>
       </div>
       <div class="mt-10 text-center">
-        <button type="button" @click="masuk()" class="btn bg-primary text-white w-full">Masuk</button>
+        <button type="button" @click="handleLogin()" class="btn bg-primary text-white w-full">Masuk</button>
       </div>
       <div class="my-9 relative text-center before:absolute before:top-2.5 before:left-0 before:border-t before:border-t-default-200 before:w-full before:h-0.5 before:right-0 before:-z-0">
         <h4 class="relative z-1 py-0.5 px-2 inline-block font-medium text-default-600 bg-card">Masuk dengan metode</h4>
@@ -43,17 +100,3 @@
     </form>
   </Auth>
 </template>
-
-<script setup lang="ts">
-import { Icon } from '@iconify/vue'
-import { RouterLink, useRouter } from 'vue-router'
-import Auth from '@/layouts/auth.vue'
-import { success } from '@/utils/sweet-alert';
-
-const router = useRouter()
-
-const masuk = () => {
-  router.push('/dashboard')
-  success("Selamat datang")
-}
-</script>

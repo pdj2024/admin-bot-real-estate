@@ -1,64 +1,18 @@
 <script setup lang="ts">
-import { onMounted, ref, watch, nextTick } from 'vue'
+import { onMounted, ref, nextTick } from 'vue'
 import { Icon } from '@iconify/vue'
-import { RouterLink } from 'vue-router'
-import { catalogues } from './data'
-import { type IStaticMethods } from 'preline/preline'
-import { confirm, success, fail } from '@/utils/sweet-alert'
 import api from '@/services/axios'
-import { useVueTable, FlexRender, getCoreRowModel, getPaginationRowModel, getSortedRowModel, getFilteredRowModel } from '@tanstack/vue-table'
+import Modal from './Modal.vue' // Impor modal baru kamu
+import { useVueTable, getCoreRowModel, getPaginationRowModel, getSortedRowModel, getFilteredRowModel, type SortingState } from '@tanstack/vue-table'
 
-const showModal = ref<boolean>(false)
-const selectedSort = ref('Newest')
-
-type Transaksi = 'Jual' | 'Sewa'
-type StatusDisplay = 'Aktif' | 'Nonaktif'
-type StatusProperti = 'Tersedia' | 'Terjual' | 'Tersewa'
-type Sertifikat = 'SHM' | 'SHGB' | null
-
-const photos = ref<File[]>([])
-const previewPhotos = ref<string[]>([])
-const products = ref<Product[]>([])
+const isModalOpen = ref(false)
+const isSortOpen = ref(false)
 const activeDropdownId = ref<string | null>(null)
 const filter = ref('')
-const loading = ref(false)
-
-interface PropertyForm {
-  nama: string
-  alamat: string
-  tipe: string
-  tipe_bangunan: string
-  sertifikat: Sertifikat
-
-  spesifikasi: {
-    luas_tanah: number | null
-    luas_bangunan: number | null
-    lantai: number | null
-    kamar_tidur: number | null
-    kamar_mandi: number | null
-    carport: number | null
-    listrik: number | null
-  }
-
-  status_display: StatusDisplay
-  status_properti: StatusProperti
-  status_transaksi: Transaksi[]
-
-  minimal_sewa: number | null
-
-  harga_jual: {
-    harga_1: number | null
-    harga_2: number | null
-  }
-
-  harga_sewa: {
-    harga_1: number | null
-    harga_2: number | null
-  }
-
-  keterangan: string
-  slug: string
-}
+const products = ref<Product[]>([])
+const selectedItem = ref<Product | null>(null)
+const sorting = ref<SortingState>([])
+const selectedSort = ref('Terbaru')
 
 export interface Product {
   No_Id: string
@@ -95,156 +49,46 @@ export interface Product {
   File_Image: string
 }
 
-const defaultForm = (): PropertyForm => ({
-  nama: '',
-  alamat: '',
-  tipe: '',
-  tipe_bangunan: '',
-  sertifikat: null,
+const setSort = (type: string) => {
+  selectedSort.value = type
 
-  spesifikasi: {
-    luas_tanah: null,
-    luas_bangunan: null,
-    lantai: null,
-    kamar_tidur: null,
-    kamar_mandi: null,
-    carport: null,
-    listrik: null
-  },
-
-  status_display: 'Aktif',
-  status_properti: 'Tersedia',
-  status_transaksi: [],
-
-  minimal_sewa: null,
-
-  harga_jual: {
-    harga_1: null,
-    harga_2: null
-  },
-
-  harga_sewa: {
-    harga_1: null,
-    harga_2: null
-  },
-
-  keterangan: '',
-  slug: ''
-})
-const form = ref<PropertyForm>(defaultForm())
-
-const setSort = (sort: string) => {
-  selectedSort.value = sort
-}
-
-const resetForm = () => {
-  form.value = defaultForm()
-  photos.value = []
-  previewPhotos.value = []
-}
-
-const handlePhoto = (event: Event) => {
-  const input = event.target as HTMLInputElement
-  const files = input.files
-
-  if (!files) return
-
-  photos.value = Array.from(files)
-
-  previewPhotos.value = photos.value.map((file) => URL.createObjectURL(file))
-}
-
-const removePhoto = (index: number) => {
-  previewPhotos.value.splice(index, 1)
-  photos.value.splice(index, 1)
-}
-
-const submitForm = () => {
-  confirm('Apakah Anda yakin isian sudah benar?', () => {
-    console.log('FORM DATA:', form.value)
-    console.log('PHOTOS:', photos.value)
-
-    resetForm()
-    showModal.value = false
-    success('Data berhasil terkirim')
-  })
-}
-
-const remove = () => {
-  confirm('Apakah Anda yakin ingin menghapus rumah ini?', () => {
-    success('Data rumah berhasil dihapus')
-  })
-}
-
-watch(
-  () => form.value.nama,
-  (val) => {
-    if (!val) return
-
-    form.value.slug = val
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, '-')
-      .replace(/[^\w\-]+/g, '')
-      .replace(/\-+/g, '-')
-  }
-)
-
-watch(showModal, async (val) => {
-  if (!val) return
-
-  await nextTick()
-  window.HSStaticMethods?.autoInit()
-})
-
-const toggleDropdown = (id: string) => {
-  console.log('Masuk 1')
-  if (activeDropdownId.value === id) {
-    console.log('Masuk 2')
-    activeDropdownId.value = null // Tutup jika diklik lagi
+  if (type === 'Harga Termurah') {
+    sorting.value = [{ id: 'Harga_Jual1', desc: false }]
+  } else if (type === 'Harga Termahal') {
+    sorting.value = [{ id: 'Harga_Jual1', desc: true }]
+  } else if (type === 'Luas Terbesar') {
+    sorting.value = [{ id: 'Luas_Tanah', desc: true }]
   } else {
-    console.log('Masuk 3')
-    activeDropdownId.value = id // Buka yang diklik
+    sorting.value = []
   }
 }
 
-declare global {
-  interface Window {
-    HSStaticMethods: IStaticMethods
-  }
-}
-
-const emit = defineEmits<{
-  (e: 'openFilter'): void
-}>()
-
-const columns = [
-  { accessorKey: 'Nama_Produk', header: 'Properti' },
-  { accessorKey: 'Tipe', header: 'Tipe' },
-  { accessorKey: 'Luas_Tanah', header: 'Luas (LT/LB)' },
-  { accessorKey: 'Harga_Jual1', header: 'Harga_Jual1' },
-  { accessorKey: 'Status_Properti', header: 'Status' },
-  { id: 'aksi', header: 'Aksi', enableSorting: false }
-]
-
-const formatCurrency = (value: number) => {
-  if (!value) return 'Rp 0'
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0
-  }).format(value)
+const handleSort = (type: string) => {
+  setSort(type) // Memanggil fungsi sorting yang sudah kita buat sebelumnya
+  isSortOpen.value = false // TUTUP dropdown setelah klik
 }
 
 const table = useVueTable({
   get data() {
     return products.value
   },
-  columns,
+  columns: [
+    { accessorKey: 'Nama_Produk', header: 'Properti' },
+    { accessorKey: 'Tipe', header: 'Tipe' },
+    { accessorKey: 'Luas_Tanah', header: 'Luas' },
+    { accessorKey: 'Harga_Jual1', header: 'Harga' },
+    { accessorKey: 'Status_Properti', header: 'Status' }
+  ],
   state: {
     get globalFilter() {
       return filter.value
+    },
+    get sorting() {
+      return sorting.value
     }
+  },
+  onSortingChange: (updaterOrValue) => {
+    sorting.value = typeof updaterOrValue === 'function' ? updaterOrValue(sorting.value) : updaterOrValue
   },
   getCoreRowModel: getCoreRowModel(),
   getPaginationRowModel: getPaginationRowModel(),
@@ -262,34 +106,69 @@ const fetchData = async () => {
     })
     products.value = data.Data
   } catch (err) {
-    console.error('Gagal memuat data:', err)
+    console.error(err)
   }
 }
 
-defineExpose({ fetchData })
+// const columns = [
+//   { accessorKey: 'Nama_Produk', header: 'Properti' },
+//   { accessorKey: 'Tipe', header: 'Tipe' },
+//   { accessorKey: 'Luas_Tanah', header: 'Luas (LT/LB)' },
+//   { accessorKey: 'Harga_Jual1', header: 'Harga_Jual1' },
+//   { accessorKey: 'Status_Properti', header: 'Status' },
+//   { id: 'aksi', header: 'Aksi', enableSorting: false }
+// ]
 
-// Opsional: Tutup dropdown saat klik di luar
+// const table = useVueTable({
+//   get data() {
+//     return products.value
+//   },
+//   columns,
+//   state: {
+//     get globalFilter() {
+//       return filter.value
+//     }
+//   },
+//   getCoreRowModel: getCoreRowModel(),
+//   getPaginationRowModel: getPaginationRowModel(),
+//   getSortedRowModel: getSortedRowModel(),
+//   getFilteredRowModel: getFilteredRowModel(),
+//   initialState: {
+//     pagination: { pageSize: 6 }
+//   }
+// })
+
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
+}
+
+const toggleDropdown = (id: string) => {
+  activeDropdownId.value = activeDropdownId.value === id ? null : id
+}
+
+const openAddModal = () => {
+  selectedItem.value = null
+  isModalOpen.value = true
+}
+
+const openEditModal = (data: Product) => {
+  selectedItem.value = { ...data }
+  isModalOpen.value = true
+}
+
 window.addEventListener('click', (e) => {
-  if (!(e.target as Element).closest('.hs-dropdown')) {
-    activeDropdownId.value = null
+  if (!(e.target as Element).closest('.relative')) activeDropdownId.value = null
+  const target = e.target as HTMLElement
+  if (!target.closest('#sorting-container')) {
+    isSortOpen.value = false
   }
 })
 
-watch(showModal, async (val) => {
-  if (!val) return
-  await nextTick()
-  window.HSStaticMethods?.autoInit()
-})
-
 onMounted(async () => {
-  fetchData()
-  await nextTick()
-
-  setTimeout(() => {
-    if (window.HSStaticMethods) {
-      window.HSStaticMethods.autoInit()
-    }
-  }, 100)
+  await fetchData()
+  nextTick(() => {
+    window.HSStaticMethods?.autoInit()
+  })
 })
 </script>
 
@@ -303,23 +182,27 @@ onMounted(async () => {
       </div>
 
       <div class="flex items-center gap-3">
-        <div class="hs-dropdown relative inline-flex">
-          <button type="button" class="hs-dropdown-toggle btn btn-sm bg-white border border-default-200 text-default-700 hover:bg-default-50 transition-all">
+        <div id="sorting-container" class="relative inline-flex">
+          <button type="button" @click="isSortOpen = !isSortOpen" class="btn btn-sm bg-white border border-default-200 text-default-700 hover:bg-default-50 transition-all">
             <Icon icon="lucide:arrow-up-down" class="size-3.5 me-2" />
-            Urutkan: <span class="text-primary ms-1">{{ selectedSort }}</span>
+            Urutkan: <span class="text-primary ms-1 font-bold">{{ selectedSort }}</span>
           </button>
-          <div class="hs-dropdown-menu hidden z-50 transition-[opacity,margin] duration-300 opacity-0 min-w-40 card p-2 shadow-xl border border-default-100" role="menu">
-            <button class="dropdown-item rounded" @click="setSort('Terbaru')">Terbaru</button>
-            <button class="dropdown-item rounded" @click="setSort('Harga Termurah')">Harga Termurah</button>
-            <button class="dropdown-item rounded" @click="setSort('Harga Termahal')">Harga Termahal</button>
-            <hr class="my-2 border-default-100" />
-            <button class="dropdown-item rounded" @click="setSort('Luas Terbesar')">Luas Terbesar</button>
-          </div>
+          <Transition enter-active-class="transition duration-100 ease-out" enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100" leave-active-class="transition duration-75 ease-in" leave-from-class="transform scale-100 opacity-100" leave-to-class="transform scale-95 opacity-0">
+            <div v-show="isSortOpen" class="absolute right-0 top-full mt-2 z-50 min-w-40 bg-white border border-default-100 rounded-xl shadow-xl p-2 animate-in fade-in zoom-in duration-200">
+              <button @click="handleSort('Terbaru')" class="dropdown-item w-full text-left rounded-lg p-2 hover:bg-slate-50 text-sm">Terbaru</button>
+              <button @click="handleSort('Harga Termurah')" class="dropdown-item w-full text-left rounded-lg p-2 hover:bg-slate-50 text-sm">Harga Termurah</button>
+              <button @click="handleSort('Harga Termahal')" class="dropdown-item w-full text-left rounded-lg p-2 hover:bg-slate-50 text-sm">Harga Termahal</button>
+
+              <hr class="my-2 border-default-100" />
+
+              <button @click="handleSort('Luas Terbesar')" class="dropdown-item w-full text-left rounded-lg p-2 hover:bg-slate-50 text-sm">Luas Terbesar</button>
+            </div>
+          </Transition>
         </div>
 
-        <button @click="showModal = true" class="btn btn-sm bg-primary text-white hover:bg-primary-600 shadow-md shadow-primary/20">
+        <button @click="openAddModal" class="btn btn-sm bg-primary text-white hover:bg-primary-600 shadow-md shadow-primary/20">
           <Icon icon="lucide:plus" class="size-4 me-1" />
-          Tambah
+          Tambah Rumah
         </button>
       </div>
     </div>
@@ -409,7 +292,7 @@ onMounted(async () => {
                 </button>
 
                 <div v-show="activeDropdownId === row.id" class="absolute right-0 bottom-10 z-[100] min-w-32 bg-white p-1 shadow-2xl border border-default-100 rounded-lg" role="menu">
-                  <button class="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-default-600 hover:bg-default-50 rounded"><Icon icon="lucide:edit-3" class="size-3.5" /> Edit</button>
+                  <button @click="openEditModal(row.original)" class="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-default-600 hover:bg-default-50 rounded"><Icon icon="lucide:edit-3" class="size-3.5" /> Edit</button>
                   <button class="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-red-500 hover:bg-red-50 rounded"><Icon icon="lucide:trash-2" class="size-3.5" /> Hapus</button>
                 </div>
               </div>
@@ -421,11 +304,11 @@ onMounted(async () => {
 
     <div class="flex flex-wrap md:justify-between justify-center items-center gap-4 mt-10 pb-10">
       <p class="text-default-500 text-sm">
-        Menampilkan <b>{{ 1 + table.getRowModel().rows.length * table.getState().pagination.pageIndex + ' sampai ' + table.getRowModel().rows.length * (table.getState().pagination.pageIndex + 1) }}</b> dari <b>{{ table.getFilteredRowModel().rows.length }}</b> data
+        Menampilkan <b>{{ table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1 }}</b> sampai <b>{{ Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, table.getFilteredRowModel().rows.length) }}</b> dari <b>{{ table.getFilteredRowModel().rows.length }}</b> data
       </p>
 
-      <nav class="flex items-center gap-1.5" aria-label="Pagination">
-        <button @click="table.previousPage()" :disabled="!table.getCanPreviousPage()" class="btn btn-sm px-3 bg-white border border-default-200 text-default-600 hover:bg-primary hover:text-white disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-default-600"><Icon icon="lucide:chevron-left" class="size-4 me-1" /> Prev</button>
+      <nav class="flex items-center gap-1.5">
+        <button @click="table.previousPage()" :disabled="!table.getCanPreviousPage()" class="btn btn-sm px-3 bg-white border border-default-200 disabled:opacity-50">Prev</button>
 
         <div v-if="table.getPageCount() > 0" class="flex items-center gap-1">
           <div v-if="table.getPageCount() <= 6" class="flex gap-1">
@@ -447,8 +330,10 @@ onMounted(async () => {
           </div>
         </div>
 
-        <button @click="table.nextPage()" :disabled="!table.getCanNextPage()" class="btn btn-sm px-3 bg-white border border-default-200 text-default-600 hover:bg-primary hover:text-white disabled:opacity-50">Next <Icon icon="lucide:chevron-right" class="size-4 ms-1" /></button>
+        <button @click="table.nextPage()" :disabled="!table.getCanNextPage()" class="btn btn-sm px-3 bg-white border border-default-200 disabled:opacity-50">Next</button>
       </nav>
     </div>
+
+    <Modal v-model:showModal="isModalOpen" :itemData="selectedItem" @success="fetchData" @close="console.log('tutup')"/>
   </div>
 </template>

@@ -2,15 +2,18 @@
 import { ref, watch, nextTick } from 'vue'
 import { Icon } from '@iconify/vue'
 import { confirm, success, fail } from '@/utils/sweet-alert'
+import api from '@/services/axios'
 
 const props = defineProps<{
   showModal: boolean
+  itemData?: any
 }>()
 
-const emit = defineEmits(['update:showModal', 'success'])
+const emit = defineEmits(['update:showModal', 'success', 'close'])
 
 // --- State Management ---
 const defaultForm = () => ({
+  No_Id: '',
   Nama_Produk: '',
   Alamat: '',
   Hide_alamat: false,
@@ -45,7 +48,52 @@ const newAkses = ref('') // State untuk input teks akses jalan
 const photos = ref<File[]>([])
 const previewPhotos = ref<string[]>([])
 
-// --- Logic Akses Jalan (Array) ---
+watch(
+  () => props.showModal,
+  (newVal) => {
+    if (newVal) {
+      if (props.itemData) {
+        // MODE EDIT: Isi form dengan data yang ada
+        form.value = { ...props.itemData }
+
+        // --- TAMBAHKAN LOGIKA INI ---
+        // Jika data yang diedit punya gambar, masukkan ke array preview
+        if (props.itemData.File_Image) {
+          previewPhotos.value = [props.itemData.File_Image]
+        } else {
+          previewPhotos.value = []
+        }
+        // ----------------------------
+      } else {
+        // MODE TAMBAH: Reset form & preview jadi kosong
+        form.value = defaultForm()
+        previewPhotos.value = [] // Pastikan preview bersih saat tambah baru
+        photos.value = [] // Pastikan file upload bersih
+      }
+    }
+  }
+)
+
+const submitForm = async () => {
+  const isEdit = !!form.value.No_Id // Cek apakah data punya ID (berarti edit)
+  const url = isEdit ? `/api/realEstate/update/${form.value.No_Id}` : '/api/realEstate/create'
+  const method = isEdit ? 'put' : 'post'
+
+  confirm(`Apakah Anda yakin ingin ${isEdit ? 'mengubah' : 'menambah'} data ini?`, async () => {
+    try {
+      // Jika Anda mengirim File/Gambar, gunakan FormData.
+      // Jika JSON biasa, cukup kirim form.value
+      await api[method](url, form.value)
+
+      success(`Data berhasil ${isEdit ? 'diperbarui' : 'disimpan'}!`)
+      emit('success') // Refresh tabel di parent
+      emit('update:showModal', false) // Tutup modal
+    } catch (err) {
+      fail('Terjadi kesalahan saat menyimpan data.')
+    }
+  })
+}
+
 const addAkses = () => {
   if (newAkses.value.trim()) {
     // Memastikan format konsisten: Akses [Tempat] ± [Waktu] min
@@ -73,41 +121,30 @@ const removePhoto = (index: number) => {
 }
 
 // --- Logic Slug & Submit ---
-watch(() => form.value.Nama_Produk, (val) => {
-  if (!val) return
-  const baseSlug = val.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '')
-  form.value.Slug = `${baseSlug}-${form.value.Luas_Bangunan || 0}`
-})
-
-const submitForm = () => {
-  // Validasi Harga Diskon
-  if (form.value.Harga_Jual2 && form.value.Harga_Jual2 >= form.value.Harga_Jual1!) {
-    return fail('Harga diskon (2) harus lebih kecil dari harga normal (1)')
+watch(
+  () => form.value.Nama_Produk,
+  (val) => {
+    if (!val) return
+    const baseSlug = val
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/[^\w\-]+/g, '')
+    form.value.Slug = `${baseSlug}-${form.value.Luas_Bangunan || 0}`
   }
-
-  confirm('Apakah data sudah benar?', () => {
-    console.log('DATA SIAP KIRIM:', form.value)
-    emit('success')
-    emit('update:showModal', false)
-    form.value = defaultForm()
-    success('Properti berhasil disimpan!')
-  })
-}
+)
 </script>
 
 <template>
   <div v-if="showModal" class="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" @click.self="$emit('update:showModal', false)">
     <div class="bg-white w-full max-w-4xl rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
-
       <div class="flex justify-between items-center p-5 border-b bg-gray-50/50">
-        <h2 class="text-xl font-extrabold text-slate-800">Tambah Katalog Properti</h2>
+        <h2 class="text-xl font-extrabold text-slate-800">{{ form.No_Id ? 'Edit Properti' : 'Tambah Properti' }}</h2>
         <button @click="$emit('update:showModal', false)" class="hover:bg-red-100 p-2 rounded-full transition-colors text-slate-500 hover:text-red-600">
           <Icon icon="lucide:x" class="size-6" />
         </button>
       </div>
-
       <div class="p-6 overflow-y-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
-
         <div class="flex flex-col gap-5">
           <div class="grid grid-cols-2 gap-3 items-center">
             <div class="field">
@@ -149,35 +186,35 @@ const submitForm = () => {
           </div>
 
           <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl">
-             <div class="col-span-2 flex items-center gap-4 mb-2">
-                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Transaksi</span>
-                <div class="flex gap-3">
-                   <label class="flex items-center gap-1.5 text-xs font-bold cursor-pointer"><input type="checkbox" value="Jual" v-model="form.Status_Transaksi" /> Jual</label>
-                   <label class="flex items-center gap-1.5 text-xs font-bold cursor-pointer"><input type="checkbox" value="Sewa" v-model="form.Status_Transaksi" /> Sewa</label>
-                </div>
-             </div>
+            <div class="col-span-2 flex items-center gap-4 mb-2">
+              <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Transaksi</span>
+              <div class="flex gap-3">
+                <label class="flex items-center gap-1.5 text-xs font-bold cursor-pointer"><input type="checkbox" value="Jual" v-model="form.Status_Transaksi" /> Jual</label>
+                <label class="flex items-center gap-1.5 text-xs font-bold cursor-pointer"><input type="checkbox" value="Sewa" v-model="form.Status_Transaksi" /> Sewa</label>
+              </div>
+            </div>
 
-             <template v-if="form.Status_Transaksi.includes('Jual')">
-                <div class="field">
-                  <label class="label !text-emerald-600">Harga Jual Normal</label>
-                  <input v-model="form.Harga_Jual1" type="number" class="field-input !pl-4" placeholder="Rp" />
-                </div>
-                <div class="field">
-                  <label class="label !text-emerald-600">Harga Jual Diskon</label>
-                  <input v-model="form.Harga_Jual2" type="number" class="field-input !pl-4" placeholder="Rp" />
-                </div>
-             </template>
+            <template v-if="form.Status_Transaksi.includes('Jual')">
+              <div class="field">
+                <label class="label !text-emerald-600">Harga Jual Normal</label>
+                <input v-model="form.Harga_Jual1" type="number" class="field-input !pl-4" placeholder="Rp" />
+              </div>
+              <div class="field">
+                <label class="label !text-emerald-600">Harga Jual Diskon</label>
+                <input v-model="form.Harga_Jual2" type="number" class="field-input !pl-4" placeholder="Rp" />
+              </div>
+            </template>
 
-             <template v-if="form.Status_Transaksi.includes('Sewa')">
-                <div class="field">
-                  <label class="label !text-blue-600">Harga Sewa Normal</label>
-                  <input v-model="form.Harga_Sewa1" type="number" class="field-input !pl-4" placeholder="Rp" />
-                </div>
-                <div class="field">
-                  <label class="label !text-blue-600">Harga Sewa Diskon</label>
-                  <input v-model="form.Harga_Sewa2" type="number" class="field-input !pl-4" placeholder="Rp" />
-                </div>
-             </template>
+            <template v-if="form.Status_Transaksi.includes('Sewa')">
+              <div class="field">
+                <label class="label !text-blue-600">Harga Sewa Normal</label>
+                <input v-model="form.Harga_Sewa1" type="number" class="field-input !pl-4" placeholder="Rp" />
+              </div>
+              <div class="field">
+                <label class="label !text-blue-600">Harga Sewa Diskon</label>
+                <input v-model="form.Harga_Sewa2" type="number" class="field-input !pl-4" placeholder="Rp" />
+              </div>
+            </template>
           </div>
         </div>
 
@@ -207,33 +244,33 @@ const submitForm = () => {
           </div>
 
           <div class="grid grid-cols-3 gap-2 w-full">
-             <div class="field" v-for="spec in [
-               {key: 'Jumlah_Kamar_Tidur', label: 'Kamar', icon: 'lucide:bed'},
-               {key: 'Jumlah_Kamar_Mandi', label: 'WC', icon: 'lucide:bath'},
-               {key: 'Jumlah_Carpot', label: 'Mobil', icon: 'lucide:car'}
-             ]" :key="spec.key">
-               <label class="label">{{ spec.label }}</label>
-               <input v-model="form[spec.key]" type="number" class="field-input !pl-4" />
-             </div>
+            <div
+              class="field"
+              v-for="spec in [
+                { key: 'Jumlah_Kamar_Tidur', label: 'Kamar', icon: 'lucide:bed' },
+                { key: 'Jumlah_Kamar_Mandi', label: 'WC', icon: 'lucide:bath' },
+                { key: 'Jumlah_Carpot', label: 'Mobil', icon: 'lucide:car' }
+              ]"
+              :key="spec.key"
+            >
+              <label class="label">{{ spec.label }}</label>
+              <input v-model="form[spec.key]" type="number" class="field-input !pl-4" />
+            </div>
           </div>
 
           <div class="field w-full">
             <label class="label">Akses Fasilitas (Gunakan ± dan min)</label>
             <div class="flex gap-2">
-               <input v-model="newAkses" @keyup.enter="addAkses" placeholder="Akses bandara ±20 min" class="field-input !pl-4" />
-               <button @click="addAkses" class="bg-slate-800 text-white px-3 rounded-lg flex items-center"><Icon icon="lucide:plus" /></button>
+              <input v-model="newAkses" @keyup.enter="addAkses" placeholder="Akses bandara ±20 min" class="field-input !pl-4" />
+              <button @click="addAkses" class="bg-slate-800 text-white px-3 rounded-lg flex items-center"><Icon icon="lucide:plus" /></button>
             </div>
             <div class="flex flex-wrap gap-2 mt-2">
-               <span v-for="(item, i) in form.Akses_Jalan" :key="i" class="bg-slate-100 text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1 border">
-                 {{ item }} <Icon @click="removeAkses(i)" icon="lucide:x" class="cursor-pointer text-red-500" />
-               </span>
+              <span v-for="(item, i) in form.Akses_Jalan" :key="i" class="bg-slate-100 text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1 border"> {{ item }} <Icon @click="removeAkses(i)" icon="lucide:x" class="cursor-pointer text-red-500" /> </span>
             </div>
           </div>
 
           <div class="toggle-box mt-2">
-            <span class="flex items-center gap-2 text-xs font-bold text-slate-600">
-              <Icon icon="lucide:power" /> Status Display Katalog
-            </span>
+            <span class="flex items-center gap-2 text-xs font-bold text-slate-600"> <Icon icon="lucide:power" /> Status Display Katalog </span>
             <button @click="form.Status_Display = form.Status_Display === 'Aktif' ? 'Nonaktif' : 'Aktif'" class="toggle" :class="form.Status_Display === 'Aktif' ? 'toggle-active' : ''">
               <span class="toggle-circle" :class="form.Status_Display === 'Aktif' ? 'translate-x-6' : ''"></span>
             </button>
@@ -247,7 +284,7 @@ const submitForm = () => {
       </div>
 
       <div class="flex justify-end gap-3 p-5 border-t bg-gray-50/50">
-        <button @click="$emit('update:showModal', false)" class="px-6 py-2 text-sm font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition-all">Batal</button>
+        <button @click="$emit('update:showModal', false, 'close')" class="px-6 py-2 text-sm font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition-all">Batal</button>
         <button @click="submitForm" class="px-8 py-2 bg-primary text-white text-sm font-extrabold rounded-xl shadow-lg shadow-primary/30 hover:shadow-none transition-all">Simpan Katalog</button>
       </div>
     </div>

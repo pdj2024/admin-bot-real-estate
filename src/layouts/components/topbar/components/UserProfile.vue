@@ -1,3 +1,18 @@
+<script setup lang="ts">
+import { Icon } from '@iconify/vue'
+import { RouterLink, useRouter } from 'vue-router'
+import { logout } from '@/services/auth'
+import { confirm, success } from '@/utils/sweet-alert'
+
+const router = useRouter()
+
+const handleLogout = () => {
+  confirm('Apakah Anda ingin keluar?', () => {
+    logout()
+  })
+}
+</script>
+
 <template>
   <div class="topbar-item hs-dropdown relative inline-flex">
     <button class="cursor-pointer flex items-center justify-center text-sm font-semibold rounded-full size-10 bg-default-200" aria-haspopup="menu" aria-expanded="false" aria-label="Dropdown">
@@ -37,7 +52,7 @@
           Upgrade Pro
         </RouterLink> -->
         <div class="border-t border-default-200 -mx-2 my-1"></div>
-        <RouterLink @click="keluar()" class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded" to="">
+        <RouterLink @click="handleLogout()" class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded" to="">
           <Icon icon="lucide:log-out" class="size-4"></Icon>
           Keluar
         </RouterLink>
@@ -46,19 +61,3 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import { Icon } from '@iconify/vue'
-import avatar1 from '@/assets/images/user/avatar-1.png'
-import { RouterLink, useRouter } from 'vue-router'
-
-import { confirm, success } from '@/utils/sweet-alert'
-
-const router = useRouter()
-
-const keluar = () => {
-  confirm('Apakah Anda ingin keluar?', () => {
-    router.push('/login')
-    success('Berhasil keluar, semoga harimu menyenangkan')
-  })
-}
-</script>

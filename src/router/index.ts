@@ -3,25 +3,31 @@ import { createRouter, createWebHistory } from 'vue-router'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    // Real
+    // Auth
     {
       path: '/login',
       name: 'Login',
       meta: {
-        title: 'Login'
+        title: 'Login',
+        guestOnly: true
       },
       component: () => import('@/views/auth/login/index.vue')
     },
 
+    // Role Admin
     {
       path: '/',
-      redirect: '/dashboard/'
+      redirect: '/dashboard/',
+      meta: {
+        requiresAuth: true
+      }
     },
     {
       path: '/dashboard',
       name: 'Dashboard',
       meta: {
-        title: 'Dashboard'
+        title: 'Dashboard',
+        requiresAuth: true
       },
       component: () => import('@/views/dashboard/index.vue')
     },
@@ -29,7 +35,8 @@ const router = createRouter({
       path: '/chat',
       name: 'Chat',
       meta: {
-        title: 'Chat'
+        title: 'Chat',
+        requiresAuth: true
       },
       component: () => import('@/views/chat/index.vue')
     },
@@ -37,7 +44,8 @@ const router = createRouter({
       path: '/kalender',
       name: 'Kalender',
       meta: {
-        title: 'Kalender'
+        title: 'Kalender',
+        requiresAuth: true
       },
       component: () => import('@/views/kalender/index.vue')
     },
@@ -45,7 +53,8 @@ const router = createRouter({
       path: '/katalog',
       name: 'Katalog Rumah',
       meta: {
-        title: 'Katalog Rumah'
+        title: 'Katalog Rumah',
+        requiresAuth: true
       },
       component: () => import('@/views/rumah/katalog/index.vue')
     },
@@ -54,6 +63,7 @@ const router = createRouter({
       name: 'Detail Rumah',
       meta: {
         title: 'Detail Rumah',
+        requiresAuth: true
       },
       component: () => import('@/views/rumah/detail/index.vue')
     },
@@ -61,7 +71,8 @@ const router = createRouter({
       path: '/data/admin',
       name: 'Data Admin',
       meta: {
-        title: 'Data Admin'
+        title: 'Data Admin',
+        requiresAuth: true
       },
       component: () => import('@/views/data-master/admin/index.vue')
     },
@@ -69,7 +80,8 @@ const router = createRouter({
       path: '/data/sales',
       name: 'Data Sales',
       meta: {
-        title: 'Data Sales'
+        title: 'Data Sales',
+        requiresAuth: true
       },
       component: () => import('@/views/data-master/sales/index.vue')
     },
@@ -77,7 +89,8 @@ const router = createRouter({
       path: '/data/customer',
       name: 'Data Customer',
       meta: {
-        title: 'Data Customer'
+        title: 'Data Customer',
+        requiresAuth: true
       },
       component: () => import('@/views/data-master/customer/index.vue')
     },
@@ -760,6 +773,24 @@ const router = createRouter({
       component: () => import('@/example-views/layout/rtl-mode/index.vue')
     }
   ]
+})
+
+router.beforeEach((to, from, next) => {
+
+  const isAuthenticated = !!localStorage.getItem('token') && !!localStorage.getItem('refreshToken')
+
+  if (to.path === '/login' && isAuthenticated) {
+    next({ name: 'Dashboard' })
+  }
+  else if (to.meta.requiresAuth && !isAuthenticated) {
+    next({
+      name: 'Login',
+      query: { redirect: to.fullPath }
+    })
+  }
+  else {
+    next()
+  }
 })
 
 export default router
