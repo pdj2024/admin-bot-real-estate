@@ -17,9 +17,8 @@
         </div>
       </div>
       <div class="card-body">
-        <client-only>
-          <VueApexCharts type="bar" height="353" :options="totalProjectChartOptions" :series="totalProjectChartseries" />
-        </client-only>
+        <VueApexCharts type="bar" height="353" :options="totalProjectChartOptions" :series="totalProjectChartseries" />
+
         <div id="totalProjectChart"></div>
       </div>
     </div>

@@ -27,9 +27,8 @@
     </div>
 
     <div class="card-body">
-      <client-only>
-        <VueApexCharts type="radialBar" height="445" :options="satisfactionRateOptions" :series="satisfactionRateseries" />
-      </client-only>
+      <VueApexCharts type="radialBar" height="445" :options="satisfactionRateOptions" :series="satisfactionRateseries" />
+
       <p class="text-center text-15xl">Based on Likes 💖</p>
     </div>
   </div>

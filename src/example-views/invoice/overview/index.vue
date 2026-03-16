@@ -46,7 +46,7 @@
               <div class="lg:col-span-9 lg:col-start-12 lg:text-end text-start text-sm">
                 <p class="mb-1 text-default-500">Legal Registration No: <span class="font-semibold">2155420</span></p>
                 <p class="mb-1 truncate text-default-500">Email: <span class="font-semibold">tailwick@themesdesign.in</span></p>
-                <p class="mb-1 text-default-500">Website: <RouterLink to="https://themesdesign.in" target="_blank" class="font-semibold underline text-primary">www.themesdesign.in</RouterLink></p>
+                <!-- <p class="mb-1 text-default-500">Website: <RouterLink to="https://themesdesign.in" target="_blank" class="font-semibold underline text-primary">www.themesdesign.in</RouterLink></p> -->
                 <p class="text-default-500">Contact No: <span class="font-semibold">+(01) 123 678 9654</span></p>
               </div>
             </div>

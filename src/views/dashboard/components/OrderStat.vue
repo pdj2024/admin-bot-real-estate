@@ -9,9 +9,7 @@
         </RouterLink>
       </div>
       <div class="card-body">
-        <client-only>
-          <VueApexCharts type="line" height="275" :options="chartOptions" :series="series" />
-        </client-only>
+        <VueApexCharts type="line" height="275" :options="chartOptions" :series="series" />
       </div>
     </div>
   </div>

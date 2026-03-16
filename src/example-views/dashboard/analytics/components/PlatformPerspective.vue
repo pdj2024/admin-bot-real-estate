@@ -15,9 +15,7 @@
         </div>
       </div>
       <div class="card-body">
-        <client-only>
-          <VueApexCharts type="treemap" height="252" :options="chartOptions" :series="series" />
-        </client-only>
+        <VueApexCharts type="treemap" height="252" :options="chartOptions" :series="series" />
       </div>
     </div>
   </div>

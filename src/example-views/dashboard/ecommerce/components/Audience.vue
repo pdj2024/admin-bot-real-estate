@@ -19,9 +19,7 @@
     </div>
 
     <div class="card-body">
-      <client-only>
-        <VueApexCharts type="bar" height="340" :options="audienceChartOptions" :series="audienceChartseries" id="audienceChart" class="apex-charts min-h-auto"></VueApexCharts>
-      </client-only>
+      <VueApexCharts type="bar" height="340" :options="audienceChartOptions" :series="audienceChartseries" id="audienceChart" class="apex-charts min-h-auto"></VueApexCharts>
     </div>
   </div>
 </template>

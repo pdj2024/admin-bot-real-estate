@@ -10,9 +10,8 @@
       <Footer />
     </div>
   </div>
-  <client-only>
-    <Customizer />
-  </client-only>
+
+  <Customizer />
 </template>
 
 <script setup lang="ts">

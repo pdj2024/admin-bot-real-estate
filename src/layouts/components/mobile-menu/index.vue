@@ -1,7 +1,5 @@
 <template>
-  <client-only>
-    <Sidenav />
-  </client-only>
+  <Sidenav />
 </template>
 
 <script setup lang="ts">

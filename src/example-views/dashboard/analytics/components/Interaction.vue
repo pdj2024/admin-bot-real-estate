@@ -15,9 +15,7 @@
         </button>
       </div>
       <div class="card-body">
-        <client-only>
-          <VueApexCharts type="bar" height="350" :options="pagesInteractionOptions" :series="pagesInteractionseries" />
-        </client-only>
+        <VueApexCharts type="bar" height="350" :options="pagesInteractionOptions" :series="pagesInteractionseries" />
       </div>
     </div>
   </div>

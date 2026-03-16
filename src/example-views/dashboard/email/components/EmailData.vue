@@ -15,9 +15,7 @@
         </div>
       </div>
       <div class="card-body">
-        <client-only>
-          <VueApexCharts type="line" height="333" :options="emailDataChartOptions" :series="emailDataChartseries" />
-        </client-only>
+        <VueApexCharts type="line" height="333" :options="emailDataChartOptions" :series="emailDataChartseries" />
       </div>
     </div>
   </div>

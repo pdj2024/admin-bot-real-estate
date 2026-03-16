@@ -24,9 +24,7 @@
       </div>
     </div>
     <div class="card-body">
-      <client-only>
-        <VueApexCharts type="bar" height="245" class="apex-charts" :options="dailyVisitInsightsChartOptions" :series="dailyVisitInsightsChartseries" />
-      </client-only>
+      <VueApexCharts type="bar" height="245" class="apex-charts" :options="dailyVisitInsightsChartOptions" :series="dailyVisitInsightsChartseries" />
     </div>
   </div>
 </template>

@@ -5,9 +5,7 @@
     </div>
 
     <div class="card-body">
-      <client-only>
-        <VueApexCharts type="line" height="260" :options="analyticschartOptions" :series="analyticsseries" />
-      </client-only>
+      <VueApexCharts type="line" height="260" :options="analyticschartOptions" :series="analyticsseries" />
     </div>
   </div>
 </template>

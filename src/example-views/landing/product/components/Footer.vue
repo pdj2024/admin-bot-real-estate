@@ -96,7 +96,7 @@
     </div>
 
     <div class="lg:py-10 py-6 mt-12 text-center text-default-500 text-base border-t border-default-200">
-      <p>{{ currentYear }} © Tailwick. Design & Develop by <RouterLink to="https://themesdesign.in/" target="_blank" class="underline text-default-800 font-bold transition-all hover:text-primary">Themesdesign</RouterLink></p>
+      <!-- <p>{{ currentYear }} © Tailwick. Design & Develop by <RouterLink to="https://themesdesign.in/" target="_blank" class="underline text-default-800 font-bold transition-all hover:text-primary">Themesdesign</RouterLink></p> -->
     </div>
   </footer>
 </template>

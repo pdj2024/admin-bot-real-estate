@@ -35,9 +35,8 @@
             </div>
           </div>
         </div>
-        <client-only>
-          <VueApexCharts type="bar" height="310" :options="salesOptions" :series="salesseries" />
-        </client-only>
+
+        <VueApexCharts type="bar" height="310" :options="salesOptions" :series="salesseries" />
       </div>
     </div>
   </div>

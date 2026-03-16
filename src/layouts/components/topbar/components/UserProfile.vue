@@ -38,12 +38,12 @@ const handleLogout = () => {
       </div>
       <div class="border-t border-t-default-200 -mx-2 my-2"></div>
       <div class="flex flex-col gap-y-1">
-        <RouterLink class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded" to="/apps/email">
+        <RouterLink class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded" to="/example/apps/email">
           <Icon icon="lucide:mail" class="size-4"></Icon>
           Inbox
           <span class="size-4.5 font-semibold bg-danger rounded text-white flex items-center justify-center text-xs">15</span>
         </RouterLink>
-        <RouterLink class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded" to="/apps/chat">
+        <RouterLink class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded" to="/example/apps/chat">
           <Icon icon="lucide:messages-square" class="size-4"></Icon>
           Chat
         </RouterLink>
@@ -60,4 +60,3 @@ const handleLogout = () => {
     </div>
   </div>
 </template>
-

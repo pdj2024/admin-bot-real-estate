@@ -15,7 +15,7 @@
           <p class="text-sm text-default-500">{{ item.address }}</p>
         </div>
         <div class="flex gap-2 mt-5">
-          <RouterLink to="/apps/chat" class="btn border-primary text-primary hover:bg-primary hover:text-white flex-grow">
+          <RouterLink to="/example/apps/chat" class="btn border-primary text-primary hover:bg-primary hover:text-white flex-grow">
             <Icon icon="lucide:messages-square" class="iconify"></Icon>
             <span class="align-middle">Send Message</span>
           </RouterLink>

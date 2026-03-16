@@ -13,9 +13,7 @@
                 <h5 class="text-default-800 text-lg font-semibold"><span class="counter-value" data-target="1452">1,452</span></h5>
               </div>
               <div class="col-span-2">
-                <client-only>
-                  <VueApexCharts type="line" height="80" :series="sentEmailseries" :options="sendEmailChartOptions" />
-                </client-only>
+                <VueApexCharts type="line" height="80" :series="sentEmailseries" :options="sendEmailChartOptions" />
               </div>
             </div>
             <span class="text-default-500">238 Emails (Monthly)</span>
@@ -30,9 +28,7 @@
                 <h5 class="text-default-800 text-lg font-semibold"><span data-target="92.74">92.74</span>%</h5>
               </div>
               <div class="col-span-2">
-                <client-only>
-                  <VueApexCharts type="line" height="80" :series="openRateseries" :options="openRateChartOptions" />
-                </client-only>
+                <VueApexCharts type="line" height="80" :series="openRateseries" :options="openRateChartOptions" />
               </div>
             </div>
             <span class="text-default-500">60 Opened (Monthly)</span>
@@ -47,9 +43,7 @@
                 <h5 class="text-default-800 text-lg font-semibold"><span data-target="3.79">3.79</span>%</h5>
               </div>
               <div class="col-span-2">
-                <client-only>
-                  <VueApexCharts type="line" height="80" :series="clickRateseries" :options="clickRateChartOptions" />
-                </client-only>
+                <VueApexCharts type="line" height="80" :series="clickRateseries" :options="clickRateChartOptions" />
               </div>
             </div>
             <span class="text-default-500">29 Clicks (Monthly)</span>
@@ -64,9 +58,8 @@
                 <h5 class="text-default-800 text-lg font-semibold"><span data-target="4.06">4.06</span>%</h5>
               </div>
               <div class="col-span-2">
-                <client-only>
-                  <VueApexCharts type="line" height="80" :series="clickThroughseries" :options="clickThroughChartOptions" />
-                </client-only>
+                <VueApexCharts type="line" height="80" :series="clickThroughseries" :options="clickThroughChartOptions" />
+
                 <div id="clickThrough"></div>
               </div>
             </div>

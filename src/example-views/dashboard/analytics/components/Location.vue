@@ -10,9 +10,7 @@
       </div>
 
       <div class="card-body">
-        <client-only>
-          <VueApexCharts type="line" height="350" :options="responseTimesOptions" :series="responseTimesseries" />
-        </client-only>
+        <VueApexCharts type="line" height="350" :options="responseTimesOptions" :series="responseTimesseries" />
       </div>
     </div>
   </div>

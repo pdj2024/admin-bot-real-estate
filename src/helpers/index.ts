@@ -10,7 +10,7 @@ export const appTitle = 'Tailwick - Tailwind CSS 3 Admin Layout & UI Kit Templat
 export const appDescription: string = 'A fully featured admin theme which can be used to build CRM, CMS, etc.'
 
 export const author: string = 'Themesdesign'
-export const authorWebsite: string = 'https://themesdesign.in/'
+// export const authorWebsite: string = 'https://themesdesign.in/'
 export const authorContact: string = ''
 
 export const basePath: string = ''

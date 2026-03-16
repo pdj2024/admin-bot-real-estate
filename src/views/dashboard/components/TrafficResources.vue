@@ -11,9 +11,7 @@
       <div class="card-body">
         <div class="grid md:grid-cols-12 grid-cols-1">
           <div class="rounded-md md:col-span-7 col-span-1">
-            <client-only>
-              <VueApexCharts type="radialBar" height="222" :options="initTrafficResources" dir="rtl" :series="initTrafficResourceseries" />
-            </client-only>
+            <VueApexCharts type="radialBar" height="222" :options="initTrafficResources" dir="rtl" :series="initTrafficResourceseries" />
           </div>
           <div class="md:col-span-5 col-span-1">
             <div class="flex flex-col gap-3">

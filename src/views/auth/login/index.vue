@@ -35,8 +35,10 @@ const handleLogin = async () => {
         })
       )
 
-      const greeting = route.query.redirect ? 'Hai ' + data.Nama_Display + '! Selamat datang kembali' : 'Hai ' + data.Nama_Display + '! Selamat datang'
+      const greeting = route.query.redirect as string == null? 'Hai ' + data.Nama_Display + '! Selamat datang' : 'Hai ' + data.Nama_Display + '! Selamat datang kembali'
       success(greeting)
+
+      console.log(route.query.redirect as string == null)
 
       const redirectPath = (route.query.redirect as string) || '/dashboard'
       router.push(redirectPath)

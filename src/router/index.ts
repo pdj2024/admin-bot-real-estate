@@ -50,22 +50,22 @@ const router = createRouter({
       component: () => import('@/views/kalender/index.vue')
     },
     {
-      path: '/katalog',
-      name: 'Katalog Rumah',
+      path: '/properti/katalog',
+      name: 'Katalog Properti',
       meta: {
-        title: 'Katalog Rumah',
+        title: 'Katalog Properti',
         requiresAuth: true
       },
-      component: () => import('@/views/rumah/katalog/index.vue')
+      component: () => import('@/views/properti/katalog/index.vue')
     },
     {
-      path: '/katalog/detail',
-      name: 'Detail Rumah',
+      path: '/properti/detail/:slug',
+      name: 'Detail properti',
       meta: {
-        title: 'Detail Rumah',
+        title: 'Detail properti',
         requiresAuth: true
       },
-      component: () => import('@/views/rumah/detail/index.vue')
+      component: () => import('@/views/properti/detail/index.vue')
     },
     {
       path: '/data/admin',

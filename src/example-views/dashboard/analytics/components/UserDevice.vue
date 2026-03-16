@@ -24,9 +24,7 @@
       </div>
     </div>
     <div class="card-body">
-      <client-only>
-        <VueApexCharts type="radar" height="230" :options="userDeviceChartsOptions" :series="userDeviceChartsseries" />
-      </client-only>
+      <VueApexCharts type="radar" height="230" :options="userDeviceChartsOptions" :series="userDeviceChartsseries" />
     </div>
   </div>
 </template>

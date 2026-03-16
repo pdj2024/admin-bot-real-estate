@@ -12,9 +12,8 @@
           </div>
         </div>
         <h5 class="mb-4 text-default-800 text-lg font-semibold"><span class="" data-target="100">100</span>%</h5>
-        <client-only>
-          <VueApexCharts class="w-87 h-20" type="bar" height="80" :series="deliveredRateseries" :options="deliveredRateChartOptions" />
-        </client-only>
+
+        <VueApexCharts class="w-87 h-20" type="bar" height="80" :series="deliveredRateseries" :options="deliveredRateChartOptions" />
       </div>
     </div>
     <div class="card">
@@ -29,9 +28,8 @@
           </div>
         </div>
         <h5 class="mb-4 text-default-800 text-lg font-semibold"><span class="" data-target="89">89</span>%</h5>
-        <client-only>
-          <VueApexCharts class="w-87 h-20" type="bar" height="80" :series="hardBounceRateseries" :options="hardBounceRateChartOptions" />
-        </client-only>
+
+        <VueApexCharts class="w-87 h-20" type="bar" height="80" :series="hardBounceRateseries" :options="hardBounceRateChartOptions" />
       </div>
     </div>
     <div class="card">
@@ -46,9 +44,8 @@
           </div>
         </div>
         <h5 class="mb-4 text-default-800 text-lg font-semibold"><span class="" data-target="33">33</span>%</h5>
-        <client-only>
-          <VueApexCharts class="w-87 h-20" type="bar" height="80" :series="unsubscribedRateseries" :options="unsubscribedRateChartOptions" />
-        </client-only>
+
+        <VueApexCharts class="w-87 h-20" type="bar" height="80" :series="unsubscribedRateseries" :options="unsubscribedRateChartOptions" />
       </div>
     </div>
     <div class="card">
@@ -63,9 +60,8 @@
           </div>
         </div>
         <h5 class="mb-4 text-default-800 text-lg font-semibold"><span class="" data-target="11.8">11.8</span>%</h5>
-        <client-only>
-          <VueApexCharts class="w-87 h-20" type="bar" height="80" :series="spanReportRateseries" :options="spanReportRateChartOptions" />
-        </client-only>
+
+        <VueApexCharts class="w-87 h-20" type="bar" height="80" :series="spanReportRateseries" :options="spanReportRateChartOptions" />
       </div>
     </div>
   </div>

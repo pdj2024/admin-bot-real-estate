@@ -62,7 +62,7 @@ const propertyImages = [
   'https://cpanel-blog.smsperkasa.com/wp-content/uploads/2024/08/Rumah-dengan-Pintu-Kayu-Besar-min-1024x1024.png',
   'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRXjgXfMWMKSFVuYwVigFxclgv927Kmb4LBDg&s',
   'https://cdn0-production-images-kly.akamaized.net/7x_hjv7tRV0CpDxrItZkZye-xq0=/500x500/smart/filters:quality(75):strip_icc()/kly-media-production/medias/5385959/original/055496800_1760949483-desain_rumah_1_lantai_sederhana__4_.jpg',
-  'https://i0.wp.com/www.emporioarchitect.com/img/blog/ide-desain-rumah-mewah-untuk-anda-130125013838148646.jpg',
+  'https://www.emporioarchitect.com/img/blog/ide-desain-rumah-mewah-untuk-anda-130125013838148646.jpg',
   'https://static.promediateknologi.id/crop/0x28:1143x716/0x0/webp/photo/p2/239/2025/02/06/desain-rumah-minimalis-tahun-2024-1452919504.jpg'
 ]
 

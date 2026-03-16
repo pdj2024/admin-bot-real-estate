@@ -88,9 +88,7 @@
           <h6 class="car-title">Orders Overview</h6>
         </div>
         <div class="card-body">
-          <client-only>
-            <VueApexCharts type="bar" height="190" :options="chartOptions" :series="series" />
-          </client-only>
+          <VueApexCharts type="bar" height="190" :options="chartOptions" :series="series" />
         </div>
       </div>
     </div>

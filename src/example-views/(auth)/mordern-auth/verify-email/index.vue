@@ -27,7 +27,7 @@
             2025 Tailwick. Crafted with
             <Icon icon="tabler:heart-filled" class="iconify align-middle text-danger"></Icon>
             by
-            <RouterLink to="https://themesdesign.in/" target="_blank" class="text-default-800 hover:text-primary transition duration-200 underline">Themesdesign</RouterLink>
+            <!-- <RouterLink to="https://themesdesign.in/" target="_blank" class="text-default-800 hover:text-primary transition duration-200 underline">Themesdesign</RouterLink> -->
           </span>
         </div>
       </div>

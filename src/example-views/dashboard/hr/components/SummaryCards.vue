@@ -9,9 +9,7 @@
               <h5 class="text-3xl font-medium mt-4"><span data-target="615">615</span></h5>
             </div>
             <div>
-              <client-only>
-                <VueApexCharts type="radialBar" height="110" :options="totalEmployeeOptions" :series="totalEmployeeseries" />
-              </client-only>
+              <VueApexCharts type="radialBar" height="110" :options="totalEmployeeOptions" :series="totalEmployeeseries" />
             </div>
           </div>
           <div class="flex items-center justify-between gap-3 mt-8">
@@ -27,9 +25,9 @@
               <p class="text-base text-default-500 font-medium">Total Application</p>
               <h5 class="text-3xl font-medium mt-4"><span data-target="174">174</span></h5>
             </div>
-            <client-only>
-              <VueApexCharts type="radialBar" height="110" :options="totalApplicationOptions" :series="totalApplicationseries" />
-            </client-only>
+
+            <VueApexCharts type="radialBar" height="110" :options="totalApplicationOptions" :series="totalApplicationseries" />
+
             <div id="totalApplication"></div>
           </div>
           <div class="flex items-center justify-between gap-3 mt-8">
@@ -45,9 +43,9 @@
               <p class="text-base text-default-500 font-medium">Hired Candidates</p>
               <h5 class="text-3xl font-medium mt-4"><span data-target="64">64</span></h5>
             </div>
-            <client-only>
-              <VueApexCharts type="radialBar" height="110" :options="hiredCandidatesOptions" :series="hiredCandidatesseries" />
-            </client-only>
+
+            <VueApexCharts type="radialBar" height="110" :options="hiredCandidatesOptions" :series="hiredCandidatesseries" />
+
             <div id="hiredCandidates"></div>
           </div>
           <div class="flex items-center justify-between gap-3 mt-8">
@@ -63,9 +61,9 @@
               <p class="text-base text-default-500 font-medium">Rejected Candidates</p>
               <h5 class="text-3xl font-medium mt-4"><span data-target="110">110</span></h5>
             </div>
-            <client-only>
-              <VueApexCharts type="radialBar" height="110" :options="rejectedCandidatesOptions" :series="rejectedCandidatesseries" />
-            </client-only>
+
+            <VueApexCharts type="radialBar" height="110" :options="rejectedCandidatesOptions" :series="rejectedCandidatesseries" />
+
             <div id="rejectedCandidates"></div>
           </div>
           <div class="flex items-center justify-between gap-3 mt-8">

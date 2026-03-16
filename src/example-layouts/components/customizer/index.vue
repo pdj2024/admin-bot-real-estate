@@ -57,7 +57,7 @@
       <div class="p-4 flex border-t border-dashed border-default-900/10">
         <div class="flex w-full gap-4">
           <button type="button" class="btn bg-default-150 grow" id="reset-layout" @click="reset">Reset</button>
-          <RouterLink to="https://1.envato.market/tailwick-tailwind" target="_blank" class="btn bg-primary text-white grow">Buy Now</RouterLink>
+          <!-- <RouterLink to="https://1.envato.market/tailwick-tailwind" target="_blank" class="btn bg-primary text-white grow">Buy Now</RouterLink> -->
         </div>
       </div>
     </div>

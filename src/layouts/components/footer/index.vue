@@ -6,7 +6,7 @@
         © {{ appName }}
       </div>
       <div class="md:flex hidden gap-2 item-center md:justify-end">
-        Design &amp; Develop by<RouterLink to="https://themesdesign.in/" target="_blank" class="text-primary">{{ author }}</RouterLink>
+        <!-- Design &amp; Develop by<RouterLink to="https://themesdesign.in/" target="_blank" class="text-primary">{{ author }}</RouterLink> -->
       </div>
     </div>
   </footer>

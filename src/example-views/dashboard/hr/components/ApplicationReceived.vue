@@ -13,9 +13,7 @@
           </div>
         </div>
 
-        <client-only>
-          <VueApexCharts type="line" height="315" :options="applicationReceivedChartOptions" :series="applicationReceivedChartseries" />
-        </client-only>
+        <VueApexCharts type="line" height="315" :options="applicationReceivedChartOptions" :series="applicationReceivedChartseries" />
       </div>
     </div>
   </div>

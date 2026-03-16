@@ -14,9 +14,7 @@
         </div>
       </div>
       <div class="card-body">
-        <client-only>
-          <VueApexCharts type="radialBar" height="370" :options="emailMarketingChartOptions" :series="emailMarketingChartseries" />
-        </client-only>
+        <VueApexCharts type="radialBar" height="370" :options="emailMarketingChartOptions" :series="emailMarketingChartseries" />
       </div>
     </div>
   </div>

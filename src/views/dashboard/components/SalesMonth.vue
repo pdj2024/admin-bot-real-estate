@@ -25,9 +25,8 @@
           <h5 class="font-semibold text-default-800">$<span data-target="746.84">746.84</span>k</h5>
         </div>
       </div>
-      <client-only>
-        <VueApexCharts type="line" height="275" :options="salesThisMonthChart" :series="salesThisMonthChartseries" />
-      </client-only>
+
+      <VueApexCharts type="line" height="275" :options="salesThisMonthChart" :series="salesThisMonthChartseries" />
     </div>
   </div>
 </template>

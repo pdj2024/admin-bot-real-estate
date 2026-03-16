@@ -4,9 +4,7 @@
       <h6 class="card-title">Subscription Distribution</h6>
     </div>
     <div class="card-body">
-      <client-only>
-        <VueApexCharts type="donut" height="290" :options="subscriptionDistributionOptions" :series="subscriptionDistributionseries" />
-      </client-only>
+      <VueApexCharts type="donut" height="290" :options="subscriptionDistributionOptions" :series="subscriptionDistributionseries" />
     </div>
   </div>
 </template>
