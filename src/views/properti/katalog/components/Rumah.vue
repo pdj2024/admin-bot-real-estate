@@ -4,6 +4,7 @@ import { Icon } from '@iconify/vue'
 import api from '@/services/axios'
 import Modal from './Modal.vue' // Impor modal baru kamu
 import { useVueTable, getCoreRowModel, getPaginationRowModel, getSortedRowModel, getFilteredRowModel, type SortingState } from '@tanstack/vue-table'
+import { confirm, success, fail } from '@/utils/sweet-alert'
 
 const isModalOpen = ref(false)
 const isSortOpen = ref(false)
@@ -13,6 +14,16 @@ const products = ref<Product[]>([])
 const selectedItem = ref<Product | null>(null)
 const sorting = ref<SortingState>([])
 const selectedSort = ref('Terbaru')
+
+interface MediaUrl {
+  Url: string | null
+  Expired_At: Date
+  IsCompressed: false
+  ContentType: string
+  ThumbUrl: string | null
+  Size: number
+  Id_Media: string
+}
 
 export interface Product {
   No_Id: string
@@ -42,11 +53,13 @@ export interface Product {
   Keterangan: string
   Slug: string
   Flag_Sewa: string
+  Minimal_Sewa: number | null
   Satuan_Minimal_Sewa: string
   Area: string
   Hide_alamat: boolean
   Akses_Jalan: string[]
-  File_Image: string
+  File_Image: string[]
+  MediaUrls: MediaUrl[]
 }
 
 const setSort = (type: string) => {
@@ -64,8 +77,8 @@ const setSort = (type: string) => {
 }
 
 const handleSort = (type: string) => {
-  setSort(type) // Memanggil fungsi sorting yang sudah kita buat sebelumnya
-  isSortOpen.value = false // TUTUP dropdown setelah klik
+  setSort(type)
+  isSortOpen.value = false
 }
 
 const table = useVueTable({
@@ -102,7 +115,7 @@ const table = useVueTable({
 const fetchData = async () => {
   try {
     const { data } = await api.get('/api/realEstate/getAll', {
-      headers: { 'X-Jenis-User': 'Customer' }
+      headers: { 'X-Jenis-User': 'Admin' }
     })
     products.value = data.Data
   } catch (err) {
@@ -146,6 +159,26 @@ const toggleDropdown = (id: string) => {
   activeDropdownId.value = activeDropdownId.value === id ? null : id
 }
 
+const updateStatusTransaksi = async (product: any, newStatus: string) => {
+  confirm(`Apakah Anda yakin ingin mengubah status menjadi ${newStatus}?`, async () => {
+    try {
+      if (newStatus === 'Tersedia') {
+        product.Status_Display = 'Aktif'
+      } else {
+        product.Status_Display = 'Nonaktif'
+      }
+      product.Status_Properti = newStatus
+      await api.put('/api/realEstate/update?no_id=' + product.No_Id, product, {
+        headers: { 'X-Jenis-User': 'admin' }
+      })
+      fetchData()
+      activeDropdownId.value = null
+    } catch (error) {
+      console.error('Gagal mengubah status:', error)
+    }
+  })
+}
+
 const openAddModal = () => {
   selectedItem.value = null
   isModalOpen.value = true
@@ -154,6 +187,46 @@ const openAddModal = () => {
 const openEditModal = (data: Product) => {
   selectedItem.value = { ...data }
   isModalOpen.value = true
+}
+
+const deleteProduct = async (data: Product) => {
+  confirm('Apakah Anda ingin menghapus data ini?', async () => {
+    try {
+      // hapus media dulu
+      const res = await api.delete('/api/mediacloud/delete-batch', {
+        data: {
+          ids: [...data.File_Image]
+        },
+        headers: {
+          'X-Jenis-User': 'admin'
+        }
+      })
+
+      const successMedia: string[] = res.data?.Success || []
+
+      // cek apakah semua File_Image berhasil dihapus
+      const semuaTerhapus = data.File_Image.every((id: string) => successMedia.includes(id))
+
+      if (!semuaTerhapus) {
+        fail('Beberapa gambar gagal dihapus')
+        return
+      }
+
+      // lanjut hapus produk
+      await api.delete(`/api/realEstate/delete?no_id=${data.No_Id}`, {
+        headers: {
+          'X-Jenis-User': 'admin'
+        }
+      })
+
+      fetchData
+      success('Berhasil hapus produk')
+    } catch (err: any) {
+      console.log(err.message)
+      // console.error('Error:', err.response?.data || err.Message)
+      fail('Gagal menghapus data')
+    }
+  })
 }
 
 window.addEventListener('click', (e) => {
@@ -202,7 +275,7 @@ onMounted(async () => {
 
         <button @click="openAddModal" class="btn btn-sm bg-primary text-white hover:bg-primary-600 shadow-md shadow-primary/20">
           <Icon icon="lucide:plus" class="size-4 me-1" />
-          Tambah Rumah
+          Tambah Properti
         </button>
       </div>
     </div>
@@ -210,91 +283,123 @@ onMounted(async () => {
     <button type="button" @click="$emit('openFilter')" class="lg:hidden w-full flex justify-center items-center btn btn-sm bg-primary/10 hover:bg-primary/20 text-primary py-3 rounded-xl mb-5"><Icon icon="lucide:sliders-horizontal" class="size-4 mr-2" /> Filter Pencarian</button>
 
     <div class="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
-      <div v-for="row in table.getRowModel().rows" :key="row.id" class="card group flex flex-col h-full overflow-hidden border border-default-100 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300">
-        <div class="relative h-56 overflow-hidden">
-          <img :src="row.original.File_Image" alt="rumah" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-          <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
+      <div v-for="row in table.getRowModel().rows" :key="row.id" class="card group flex flex-col h-full rounded-2xl overflow-hidden border transition-all duration-500 hover:-translate-y-1 relative" :class="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia' ? 'bg-slate-50 border-slate-200 opacity-75 grayscale-[30%] hover:grayscale-0' : 'bg-white border-slate-100 hover:border-primary/30 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]'">
+        <div v-if="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia'" class="absolute inset-0 z-50 bg-slate-900/5 pointer-events-none"></div>
 
-          <div class="absolute top-3 left-3 flex flex-col gap-2">
-            <div>
-              <span class="bg-emerald-500 text-white text-[10px] uppercase tracking-widest font-bold px-2 py-1 rounded shadow-lg">{{ row.original.Status_Properti }}</span>
-            </div>
-            <div class="flex gap-1">
-              <span v-for="(trans, i) in row.original.Status_Transaksi" :key="i" class="bg-indigo-600 text-white text-[10px] uppercase font-bold px-2 py-1 rounded shadow-lg">{{ trans }}</span>
+        <div class="relative h-60 overflow-hidden" :class="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia' ? 'grayscale' : ''">
+          <img v-if="row.original.MediaUrls.length >= 1" :src="row.original.MediaUrls[0].Id_Media" alt="rumah" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+
+          <div v-if="row.original.MediaUrls.length == 0" class="w-full h-full bg-slate-100 flex flex-col items-center justify-center transition-transform duration-700 group-hover:scale-105">
+            <Icon icon="lucide:image" class="size-16 text-slate-300 group-hover:text-primary/50 transition-colors" />
+            <span class="text-xs text-slate-400 mt-2 font-medium">Belum ada foto</span>
+          </div>
+
+          <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
+
+          <div v-if="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia'" class="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+            <div class="bg-red-500/90 backdrop-blur-sm text-white px-4 py-1.5 rounded-lg border border-red-400/50 shadow-xl transform -rotate-12">
+              <span class="text-xs font-black tracking-[0.2em] uppercase">{{ row.original.Status_Properti != 'Tersedia' ? row.original.Status_Properti : row.original.Status_Display }}</span>
             </div>
           </div>
 
-          <div class="absolute bottom-3 right-3 flex flex-col gap-1 items-end">
-            <span v-for="(akses, idx) in row.original.Akses_Jalan.slice(0, 3)" :key="idx" class="bg-white/90 backdrop-blur-md text-default-800 text-[10px] font-bold px-2 py-0.5 rounded-sm border-l-2 border-primary shadow-sm">
+          <div class="absolute top-4 left-4 flex flex-col gap-2 z-10">
+            <div>
+              <span class="backdrop-blur-sm text-white text-[10px] uppercase tracking-widest font-bold px-2.5 py-1 rounded-md shadow-sm" :class="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia' ? 'bg-slate-500/90' : 'bg-emerald-500/90'">
+                {{ row.original.Status_Properti }}
+              </span>
+            </div>
+            <div class="flex flex-wrap gap-1.5 max-w-[80%]">
+              <span v-for="(trans, i) in row.original.Status_Transaksi" :key="i" class="backdrop-blur-sm text-white text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-md shadow-sm" :class="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia' ? 'bg-slate-600/90' : 'bg-indigo-600/90'">
+                {{ trans }}
+              </span>
+            </div>
+          </div>
+
+          <div class="absolute bottom-4 right-4 flex flex-col gap-1.5 items-end z-10">
+            <span v-for="(akses, idx) in row.original.Akses_Jalan.slice(0, 3)" :key="idx" class="bg-white/95 backdrop-blur-md text-slate-700 text-[10px] font-semibold px-2.5 py-1 rounded-md border-l-4 shadow-sm flex items-center gap-1.5" :class="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia' ? 'border-slate-400' : 'border-primary'">
+              <Icon icon="lucide:map-pin" class="size-2.5" :class="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia' ? 'text-slate-400' : 'text-primary'" />
               {{ akses }}
             </span>
           </div>
         </div>
 
-        <div class="p-4">
-          <div class="flex items-center gap-1 text-primary" :class="row.original.Hide_alamat ? 'mb-3' : ''">
-            <Icon icon="lucide:map-pin" class="size-3"></Icon>
-            <span class="text-[10px] font-bold uppercase tracking-wider">{{ row.original.Area }}</span>
+        <div class="p-5 flex flex-col flex-1">
+          <div class="flex items-start gap-1.5 text-primary mb-3" :class="row.original.Hide_alamat ? 'mb-4' : ''">
+            <Icon icon="lucide:map-pin" class="size-4 mt-0.5 flex-shrink-0" :class="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia' ? 'text-slate-400' : ''" />
+            <div class="flex flex-col">
+              <span class="text-[11px] font-bold uppercase tracking-wider" :class="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia' ? 'text-slate-500' : ''">{{ row.original.Area }}</span>
+              <p v-if="!row.original.Hide_alamat" class="text-[10px] font-medium text-slate-500 line-clamp-1 mt-0.5">{{ row.original.Alamat }}</p>
+            </div>
           </div>
-          <p v-if="!row.original.Hide_alamat" class="text-[11px] font-medium uppercase tracking-wider text-default-500 mb-2">{{ row.original.Alamat }}</p>
-          <h6 class="text-base text-default-900 font-bold hover:text-primary transition-colors line-clamp-1 mb-1">
+
+          <h6 class="text-lg text-slate-900 font-extrabold transition-colors line-clamp-1 mb-1 leading-tight" :class="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia' ? 'text-slate-600' : 'group-hover:text-primary'">
             <RouterLink :to="`/properti/detail/${row.original.Slug}`">{{ row.original.Nama_Produk }}</RouterLink>
           </h6>
-          <p class="text-xs font-semibold text-default-400 leading-none mb-3">{{ row.original.Tipe }} Tipe {{ row.original.Luas_Bangunan + ' [Uk ' + row.original.Tipe_Ukuran + ']' }}</p>
-          <div class="grid lg :grid-cols-3 grid-cols-2 gap-y-3 gap-x-2 border-y border-default-100 py-3 mb-4">
-            <div class="flex items-center gap-1.5">
-              <Icon icon="lucide:building" class="size-3.5 text-default-400"></Icon> <span class="text-xs text-default-600">LB {{ row.original.Luas_Bangunan }}m²</span>
-            </div>
 
-            <div class="flex items-center gap-1.5">
-              <Icon icon="lucide:land-plot" class="size-3.5 text-default-400"></Icon> <span class="text-xs text-default-600">LT {{ row.original.Luas_Tanah }}m²</span>
-            </div>
+          <p class="text-[13px] font-medium text-slate-500 leading-none mb-4">
+            {{ row.original.Tipe }} &bull; Tipe {{ row.original.Luas_Bangunan }} <span class="opacity-70">[Uk {{ row.original.Tipe_Ukuran }}]</span>
+          </p>
 
+          <div class="grid grid-cols-2 gap-4 rounded-xl p-3 mb-5 border" :class="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia' ? 'bg-slate-100 border-slate-200' : 'bg-slate-50 border-slate-100'">
             <div class="flex items-center gap-1.5">
-              <Icon icon="lucide:bed" class="size-3.5 text-default-400"></Icon> <span class="text-xs text-default-600">{{ row.original.Jumlah_Kamar_Tidur }} Kamar</span>
+              <Icon icon="lucide:home" class="size-4 text-slate-400" /> <span class="text-xs font-semibold text-slate-600">LB {{ row.original.Luas_Bangunan }}<span class="text-[10px]">m²</span></span>
             </div>
-
             <div class="flex items-center gap-1.5">
-              <Icon icon="lucide:bath" class="size-3.5 text-default-400"></Icon> <span class="text-xs text-default-600">{{ row.original.Jumlah_Kamar_Mandi }} WC</span>
+              <Icon icon="lucide:land-plot" class="size-4 text-slate-400" /> <span class="text-xs font-semibold text-slate-600">LT {{ row.original.Luas_Tanah }}<span class="text-[10px]">m²</span></span>
             </div>
-
             <div class="flex items-center gap-1.5">
-              <Icon icon="lucide:car" class="size-3.5 text-default-400"></Icon> <span class="text-xs text-default-600">{{ row.original.Jumlah_Carpot }} Mobil</span>
+              <Icon icon="lucide:bed" class="size-4 text-slate-400" /> <span class="text-xs font-semibold text-slate-600">{{ row.original.Jumlah_Kamar_Tidur }} K.Tidur</span>
             </div>
-
             <div class="flex items-center gap-1.5">
-              <Icon icon="lucide:layers" class="size-3.5 text-default-400"></Icon> <span class="text-xs text-default-600">{{ row.original.Jumlah_Lantai }} Lantai</span>
+              <Icon icon="lucide:bath" class="size-4 text-slate-400" /> <span class="text-xs font-semibold text-slate-600">{{ row.original.Jumlah_Kamar_Mandi }} K.Mandi</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <Icon icon="lucide:car" class="size-4 text-slate-400" /> <span class="text-xs font-semibold text-slate-600">{{ row.original.Jumlah_Carpot }} Mobil</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <Icon icon="lucide:layers" class="size-4 text-slate-400" /> <span class="text-xs font-semibold text-slate-600">{{ row.original.Jumlah_Lantai }} Lantai</span>
             </div>
           </div>
 
-          <div class="mt-auto pt-2">
-            <div class="flex items-center justify-between gap-2">
-              <div class="flex flex-col min-h-[65px] justify-center">
-                <div v-if="row.original.Harga_Jual1 > 0" class="mb-1">
-                  <div v-if="row.original.Harga_Jual2 > 0">
-                    <span class="text-[9px] text-red-500 line-through block leading-none">{{ formatCurrency(row.original.Harga_Jual1) }}</span>
-                    <span class="text-sm font-extrabold text-primary leading-tight">{{ formatCurrency(row.original.Harga_Jual2) }}</span>
-                  </div>
-                  <span v-else class="text-sm font-extrabold text-primary leading-tight">{{ formatCurrency(row.original.Harga_Jual1) }}</span>
+          <div class="mt-auto pt-4 border-t flex items-end justify-between gap-3" :class="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia' ? 'border-slate-200' : 'border-slate-100'">
+            <div class="flex flex-col gap-1.5 w-full">
+              <div v-if="row.original.Harga_Jual1 > 0" class="flex flex-col">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Harga Jual</span>
+                <div v-if="row.original.Harga_Jual2 > 0" class="flex items-center gap-2 flex-wrap">
+                  <span class="text-base font-black leading-none" :class="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia' ? 'text-slate-600' : 'text-primary'">{{ formatCurrency(row.original.Harga_Jual2) }}</span>
+                  <span class="text-[11px] text-red-400 line-through font-medium">{{ formatCurrency(row.original.Harga_Jual1) }}</span>
                 </div>
-
-                <div v-if="row.original.Harga_Sewa1 > 0" :class="{ 'mt-1 pt-1 border-t border-dashed border-default-200': row.original.Harga_Jual1 > 0 }">
-                  <span class="text-[9px] text-default-400 block leading-none">Sewa /{{ row.original.Satuan_Minimal_Sewa || 'Thn' }}</span>
-                  <span class="font-bold text-default-700" :class="row.original.Harga_Jual1 > 0 ? 'text-xs' : 'text-sm font-extrabold text-primary'">
-                    {{ formatCurrency(row.original.Harga_Sewa2 > 0 ? row.original.Harga_Sewa2 : row.original.Harga_Sewa1) }}
-                  </span>
-                </div>
+                <span v-else class="text-base font-black leading-none" :class="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia' ? 'text-slate-600' : 'text-primary'">{{ formatCurrency(row.original.Harga_Jual1) }}</span>
               </div>
 
-              <div class="relative flex-shrink-0">
-                <button type="button" @click.stop="toggleDropdown(row.id)" class="size-8 flex items-center justify-center rounded-full bg-default-100 text-default-600 hover:bg-primary hover:text-white transition-all shadow-sm">
-                  <Icon icon="lucide:more-vertical" class="size-4" />
-                </button>
+              <div v-if="row.original.Harga_Jual1 > 0 && row.original.Harga_Sewa1 > 0" class="w-full h-px my-0.5" :class="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia' ? 'bg-slate-200' : 'bg-slate-100'"></div>
 
-                <div v-show="activeDropdownId === row.id" class="absolute right-0 bottom-10 z-[100] min-w-32 bg-white p-1 shadow-2xl border border-default-100 rounded-lg" role="menu">
-                  <button @click="openEditModal(row.original)" class="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-default-600 hover:bg-default-50 rounded"><Icon icon="lucide:edit-3" class="size-3.5" /> Edit</button>
-                  <button class="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-red-500 hover:bg-red-50 rounded"><Icon icon="lucide:trash-2" class="size-3.5" /> Hapus</button>
+              <div v-if="row.original.Harga_Sewa1 > 0" class="flex flex-col">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">
+                  Sewa
+                  <span v-if="row.original.Minimal_Sewa != 0 && row.original.Satuan_Minimal_Sewa != ''">(Min. {{ row.original.Minimal_Sewa }} {{ row.original.Satuan_Minimal_Sewa }})</span>
+                </span>
+                <div class="flex items-end gap-1">
+                  <span class="font-bold text-slate-800" :class="row.original.Harga_Jual1 > 0 ? 'text-sm' : row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia' ? 'text-base font-black text-slate-600' : 'text-base font-black text-primary'">
+                    {{ formatCurrency(row.original.Harga_Sewa2 > 0 ? row.original.Harga_Sewa2 : row.original.Harga_Sewa1) }}
+                  </span>
+                  <span class="text-[10px] text-slate-500 font-medium mb-0.5">/{{ row.original.Satuan_Minimal_Sewa || 'thn' }}</span>
                 </div>
+              </div>
+            </div>
+
+            <div class="relative flex-shrink-0 z-10">
+              <button type="button" @click.stop="toggleDropdown(row.id)" class="size-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-600 border border-slate-200 hover:bg-primary hover:text-white hover:border-primary transition-all shadow-sm relative z-20">
+                <Icon icon="lucide:more-vertical" class="size-5" />
+              </button>
+
+              <div v-show="activeDropdownId === row.id" class="absolute right-0 bottom-12 z-[100] min-w-[180px] bg-white p-1.5 shadow-xl border border-slate-100 rounded-xl" role="menu">
+                <button @click="updateStatusTransaksi(row.original, 'Terjual')" v-if="row.original.Status_Transaksi.includes('Jual') && row.original.Status_Properti != 'Terjual'" class="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"><Icon icon="lucide:badge-check" class="size-4" /> Sudah Terjual</button>
+                <button @click="updateStatusTransaksi(row.original, 'Tersedia')" v-if="row.original.Status_Transaksi.includes('Jual') && row.original.Status_Properti === 'Terjual'" class="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"><Icon icon="lucide:circle-x" class="size-4" /> Batal Terjual</button>
+                <button @click="updateStatusTransaksi(row.original, 'Tersewa')" v-if="row.original.Status_Transaksi.includes('Sewa') && row.original.Status_Properti != 'Tersewa'" class="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"><Icon icon="lucide:key" class="size-4" /> Sudah Tersewa</button>
+                <button @click="updateStatusTransaksi(row.original, 'Tersedia')" v-if="row.original.Status_Transaksi.includes('Sewa') && row.original.Status_Properti === 'Tersewa'" class="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"><Icon icon="lucide:circle-x" class="size-4" /> Batal Tersewa</button>
+                <button @click="openEditModal(row.original)" class="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-slate-600 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"><Icon icon="lucide:pencil" class="size-4" /> Edit</button>
+                <button @click="deleteProduct(row.original)" class="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-red-500 hover:bg-red-50 rounded-lg transition-colors mt-0.5"><Icon icon="lucide:trash-2" class="size-4" /> Hapus</button>
               </div>
             </div>
           </div>
@@ -304,7 +409,7 @@ onMounted(async () => {
 
     <div class="flex flex-wrap md:justify-between justify-center items-center gap-4 mt-10 pb-10">
       <p class="text-default-500 text-sm">
-        Menampilkan <b>{{ table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1 }}</b> sampai <b>{{ Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, table.getFilteredRowModel().rows.length) }}</b> dari <b>{{ table.getFilteredRowModel().rows.length }}</b> data
+        Menampilkan <b>{{ table.getFilteredRowModel().rows.length != 0 ? table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1 : '0' }}</b> sampai <b>{{ Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, table.getFilteredRowModel().rows.length) }}</b> dari <b>{{ table.getFilteredRowModel().rows.length }}</b> data
       </p>
 
       <nav class="flex items-center gap-1.5">
@@ -334,6 +439,6 @@ onMounted(async () => {
       </nav>
     </div>
 
-    <Modal v-model:showModal="isModalOpen" :itemData="selectedItem" @success="fetchData" @close="console.log('tutup')"/>
+    <Modal v-model:showModal="isModalOpen" :itemData="selectedItem" @success="fetchData" @close="console.log('tutup')" />
   </div>
 </template>

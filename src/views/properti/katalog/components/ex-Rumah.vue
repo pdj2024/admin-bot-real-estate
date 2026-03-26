@@ -1,495 +1,395 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { onMounted, ref, nextTick } from 'vue'
 import { Icon } from '@iconify/vue'
-import { confirm, success, fail } from '@/utils/sweet-alert'
 import api from '@/services/axios'
-import axios from 'axios'
+import Modal from './Modal.vue' // Impor modal baru kamu
+import { useVueTable, getCoreRowModel, getPaginationRowModel, getSortedRowModel, getFilteredRowModel, type SortingState } from '@tanstack/vue-table'
+import { confirm, success, fail } from '@/utils/sweet-alert'
 
-const newAkses = ref('')
-const panjang = ref('')
-const lebar = ref('')
-const photos = ref<File[]>([])
-const previewPhotos = ref<string[]>([])
-const provinces = ref<Province[]>([])
-const cities = ref<City[]>([])
-const dropdownProvinceRef = ref<HTMLElement | null>(null)
-const tempProvinceName = ref('')
+const isModalOpen = ref(false)
+const isSortOpen = ref(false)
+const activeDropdownId = ref<string | null>(null)
+const filter = ref('')
+const products = ref<Product[]>([])
+const selectedItem = ref<Product | null>(null)
+const sorting = ref<SortingState>([])
+const selectedSort = ref('Terbaru')
 
-const openDropdownProvince = ref(false)
-const openDropdownCity = ref(false)
+interface MediaUrl {
+  Url: string | null
+  Expired_At: Date
+  IsCompressed: false
+  ContentType: string
+  ThumbUrl: string | null
+  Size: number
+  Id_Media: string
+}
 
-const props = defineProps<{
-  showModal?: boolean
-  itemData?: any
-}>()
-
-const emit = defineEmits(['update:showModal', 'success', 'close'])
-
-interface RealEstateForm {
+export interface Product {
   No_Id: string
   Nama_Produk: string
   Alamat: string
-  Hide_alamat: boolean
+  Email: string
   Tipe: string
   Tipe_Ukuran: string
   Jenis_Sertifikat: string
-  Luas_Tanah: number | null
-  Luas_Bangunan: number | null
+  Luas_Tanah: number
+  Luas_Bangunan: number
   Jumlah_Lantai: number
-  Jumlah_Kamar_Tidur: number | null
-  Jumlah_Kamar_Mandi: number | null
-  Jumlah_Carpot: number | null
+  Jumlah_Kamar_Tidur: number
+  Jumlah_Kamar_Mandi: number
+  Jumlah_Carpot: number
   Daya_Listrik: number
   Status_Display: string
   Status_Properti: string
   Status_Transaksi: string[]
-  Minimal_Sewa: number
-  Satuan_Minimal_Sewa: string
-  Harga_Jual1: number | null
-  Harga_Jual2: number | null
-  Harga_Sewa1: number | null
-  Harga_Sewa2: number | null
+  minimal_sewa: number
+  Harga_Jual1: number
+  Harga_Jual2: number
+  Harga_Jual3: number
+  Harga_Sewa1: number
+  Harga_Sewa2: number
+  Harga_Sewa3: number
   Keterangan: string
   Slug: string
+  Flag_Sewa: string
+  Minimal_Sewa: number
+  Satuan_Minimal_Sewa: string
   Area: string
+  Hide_alamat: boolean
   Akses_Jalan: string[]
-  File_Image: string
+  File_Image: string[]
+  MediaUrls: MediaUrl[]
 }
 
-interface Province {
-  id: string
-  name: string
-}
+const setSort = (type: string) => {
+  selectedSort.value = type
 
-interface City {
-  id: string
-  name: string
-}
-
-const specs = [
-  { key: 'Jumlah_Kamar_Tidur', label: 'Jml Kamar', icon: 'lucide:bed' },
-  { key: 'Jumlah_Kamar_Mandi', label: 'Jml KM', icon: 'lucide:bath' },
-  { key: 'Jumlah_Carpot', label: 'Carport', icon: 'lucide:car' }
-] as const
-
-// --- State Management ---
-const defaultForm = (): RealEstateForm => ({
-  No_Id: '',
-  Nama_Produk: '',
-  Alamat: '',
-  Hide_alamat: false,
-  Tipe: 'Rumah',
-  Tipe_Ukuran: '',
-  Jenis_Sertifikat: 'SHM',
-  Luas_Tanah: null,
-  Luas_Bangunan: null,
-  Jumlah_Lantai: 1,
-  Jumlah_Kamar_Tidur: null,
-  Jumlah_Kamar_Mandi: null,
-  Jumlah_Carpot: null,
-  Daya_Listrik: 1300,
-  Status_Display: 'Aktif',
-  Status_Properti: 'Tersedia',
-  Status_Transaksi: ['Jual'],
-  Minimal_Sewa: 0,
-  Satuan_Minimal_Sewa: 'Tahun',
-  Harga_Jual1: null,
-  Harga_Jual2: null,
-  Harga_Sewa1: null,
-  Harga_Sewa2: null,
-  Keterangan: '',
-  Slug: '',
-  Area: '',
-  Akses_Jalan: [],
-  File_Image: 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=800'
-})
-
-const form = ref<RealEstateForm>(defaultForm())
-
-watch([panjang, lebar], ([newP, newL]) => {
-  if (newP || newL) {
-    form.value.Tipe_Ukuran = `${newP}x${newL}`
+  if (type === 'Harga Termurah') {
+    sorting.value = [{ id: 'Harga_Jual1', desc: false }]
+  } else if (type === 'Harga Termahal') {
+    sorting.value = [{ id: 'Harga_Jual1', desc: true }]
+  } else if (type === 'Luas Terbesar') {
+    sorting.value = [{ id: 'Luas_Tanah', desc: true }]
   } else {
-    form.value.Tipe_Ukuran = ''
+    sorting.value = []
+  }
+}
+
+const handleSort = (type: string) => {
+  setSort(type) // Memanggil fungsi sorting yang sudah kita buat sebelumnya
+  isSortOpen.value = false // TUTUP dropdown setelah klik
+}
+
+const table = useVueTable({
+  get data() {
+    return products.value
+  },
+  columns: [
+    { accessorKey: 'Nama_Produk', header: 'Properti' },
+    { accessorKey: 'Tipe', header: 'Tipe' },
+    { accessorKey: 'Luas_Tanah', header: 'Luas' },
+    { accessorKey: 'Harga_Jual1', header: 'Harga' },
+    { accessorKey: 'Status_Properti', header: 'Status' }
+  ],
+  state: {
+    get globalFilter() {
+      return filter.value
+    },
+    get sorting() {
+      return sorting.value
+    }
+  },
+  onSortingChange: (updaterOrValue) => {
+    sorting.value = typeof updaterOrValue === 'function' ? updaterOrValue(sorting.value) : updaterOrValue
+  },
+  getCoreRowModel: getCoreRowModel(),
+  getPaginationRowModel: getPaginationRowModel(),
+  getSortedRowModel: getSortedRowModel(),
+  getFilteredRowModel: getFilteredRowModel(),
+  initialState: {
+    pagination: { pageSize: 6 }
   }
 })
 
-watch(
-  () => props.showModal,
-  (newVal) => {
-    if (newVal) {
-      if (props.itemData) {
-        form.value = { ...props.itemData }
-
-        if (props.itemData.Tipe_Ukuran) {
-          const splitUkuran = props.itemData.Tipe_Ukuran.split('x')
-          panjang.value = splitUkuran[0] || ''
-          lebar.value = splitUkuran[1] || ''
-        }
-
-        if (props.itemData.File_Image) {
-          const baseUrl = 'http://26.75.164.107:270/'
-          const fullImageUrl = props.itemData.File_Image.startsWith('http') ? props.itemData.File_Image : baseUrl + props.itemData.File_Image
-
-          previewPhotos.value = [fullImageUrl]
-        } else {
-          previewPhotos.value = []
-        }
-      } else {
-        form.value = defaultForm()
-        previewPhotos.value = ['https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=800']
-        photos.value = []
-        panjang.value = ''
-        lebar.value = ''
-      }
-    }
-  }
-)
-
-const getProvince = async () => {
+const fetchData = async () => {
   try {
-    const { data } = await axios.get('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json')
-    // Emsifa API mengembalikan array langsung
-    provinces.value = data
+    const { data } = await api.get('/api/realEstate/getAll', {
+      headers: { 'X-Jenis-User': 'Admin' }
+    })
+    products.value = data.Data
   } catch (err) {
-    console.error('Gagal ambil provinsi:', err)
+    console.error(err)
   }
 }
 
-const handleProvinceClick = async (province: Province) => {
-  tempProvinceName.value = province.name
-  await getCity(province.id)
-  openDropdownProvince.value = false
-  openDropdownCity.value = true // Otomatis buka dropdown kota setelah pilih provinsi
+// const columns = [
+//   { accessorKey: 'Nama_Produk', header: 'Properti' },
+//   { accessorKey: 'Tipe', header: 'Tipe' },
+//   { accessorKey: 'Luas_Tanah', header: 'Luas (LT/LB)' },
+//   { accessorKey: 'Harga_Jual1', header: 'Harga_Jual1' },
+//   { accessorKey: 'Status_Properti', header: 'Status' },
+//   { id: 'aksi', header: 'Aksi', enableSorting: false }
+// ]
+
+// const table = useVueTable({
+//   get data() {
+//     return products.value
+//   },
+//   columns,
+//   state: {
+//     get globalFilter() {
+//       return filter.value
+//     }
+//   },
+//   getCoreRowModel: getCoreRowModel(),
+//   getPaginationRowModel: getPaginationRowModel(),
+//   getSortedRowModel: getSortedRowModel(),
+//   getFilteredRowModel: getFilteredRowModel(),
+//   initialState: {
+//     pagination: { pageSize: 6 }
+//   }
+// })
+
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
 }
 
-const getCity = async (id: string) => {
-  try {
-    const { data } = await axios.get(`https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${id}.json`)
-    cities.value = data
-  } catch (err) {
-    console.error('Gagal ambil kota:', err)
-  }
+const toggleDropdown = (id: string) => {
+  activeDropdownId.value = activeDropdownId.value === id ? null : id
 }
 
-const setArea = (city: City) => {
-  // Menggabungkan Kota dan Provinsi ke dalam form.Area
-  form.value.Area = `${city.name}, ${tempProvinceName.value}`
-  openDropdownCity.value = false
+const openAddModal = () => {
+  selectedItem.value = null
+  isModalOpen.value = true
 }
 
-const submitForm = async () => {
-  const isEdit = !!form.value.No_Id
-  const url = isEdit ? `/api/realEstate/update/${form.value.No_Id}` : '/api/realEstate/create'
-  const method = isEdit ? 'put' : 'post'
+const openEditModal = (data: Product) => {
+  selectedItem.value = { ...data }
+  isModalOpen.value = true
+}
 
-  confirm(`Apakah Anda yakin ingin ${isEdit ? 'mengubah' : 'menambah'} data ini?`, async () => {
+const deleteProduct = async (data: Product) => {
+  confirm('Apakah Anda ingin menghapus data ini?', async () => {
     try {
-      await api[method](url, form.value)
+      // hapus media dulu
+      const res = await api.delete('/api/mediacloud/delete-batch', {
+        data: {
+          ids: [...data.File_Image]
+        },
+        headers: {
+          'X-Jenis-User': 'admin'
+        }
+      })
 
-      success(`Data berhasil ${isEdit ? 'diperbarui' : 'disimpan'}!`)
-      emit('success') // Refresh tabel di parent
-      emit('update:showModal', false) // Tutup modal
-    } catch (err) {
-      fail('Terjadi kesalahan saat menyimpan data.')
+      const successMedia: string[] = res.data?.Success || []
+
+      // cek apakah semua File_Image berhasil dihapus
+      const semuaTerhapus = data.File_Image.every((id: string) => successMedia.includes(id))
+
+      if (!semuaTerhapus) {
+        fail('Beberapa gambar gagal dihapus')
+        return
+      }
+
+      // lanjut hapus produk
+      await api.delete(`/api/realEstate/delete?no_id=${data.No_Id}`, {
+        headers: {
+          'X-Jenis-User': 'admin'
+        }
+      })
+
+      fetchData
+      success('Berhasil hapus produk')
+    } catch (err: any) {
+      console.log(err.message)
+      // console.error('Error:', err.response?.data || err.Message)
+      fail('Gagal menghapus data')
     }
   })
 }
 
-const handleCancel = () => {
-  emit('update:showModal', false)
-  emit('close')
-}
-
-const addAkses = () => {
-  if (newAkses.value.trim()) {
-    form.value.Akses_Jalan.push(newAkses.value.trim())
-    newAkses.value = ''
+window.addEventListener('click', (e) => {
+  if (!(e.target as Element).closest('.relative')) activeDropdownId.value = null
+  const target = e.target as HTMLElement
+  if (!target.closest('#sorting-container')) {
+    isSortOpen.value = false
   }
-}
-
-const removeAkses = (index: number) => {
-  form.value.Akses_Jalan.splice(index, 1)
-}
-
-// --- Logic Foto ---
-const handlePhoto = (event: Event) => {
-  const input = event.target as HTMLInputElement
-  if (!input.files) return
-  const files = Array.from(input.files)
-  photos.value = files
-  previewPhotos.value = files.map((file) => URL.createObjectURL(file))
-}
-
-const removePhoto = (index: number) => {
-  previewPhotos.value.splice(index, 1)
-  photos.value.splice(index, 1)
-}
-
-// --- Logic Slug & Submit ---
-watch(
-  () => form.value.Nama_Produk,
-  (val) => {
-    if (!val) return
-    const baseSlug = val
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, '-')
-      .replace(/[^\w\-]+/g, '')
-    form.value.Slug = `${baseSlug}-${form.value.Luas_Bangunan || 0}`
-  }
-)
-
-const handleClickOutside = (e: MouseEvent) => {
-  if (!dropdownProvinceRef.value?.contains(e.target as Node)) {
-    openDropdownProvince.value = false
-  }
-}
-
-onMounted(async () => {
-  await getProvince()
-  document.addEventListener('click', handleClickOutside)
 })
 
-onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
+onMounted(async () => {
+  await fetchData()
+  nextTick(() => {
+    window.HSStaticMethods?.autoInit()
+  })
+})
 </script>
 
 <template>
-  <div v-if="showModal" class="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" @click.self="$emit('update:showModal', false)">
-    <div class="bg-white w-full max-w-4xl rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
-      <div class="flex justify-between items-center p-5 border-b bg-gray-50/50">
-        <h2 class="text-xl font-extrabold text-slate-800">{{ form.No_Id ? 'Edit Properti' : 'Tambah Properti' }}</h2>
-        <button @click="$emit('update:showModal', false)" class="hover:bg-red-100 p-2 rounded-full transition-colors text-slate-500 hover:text-red-600">
-          <Icon icon="lucide:x" class="size-6" />
+  <div class="lg:col-span-3 col-span-1">
+    <div class="flex items-center md:justify-between flex-wrap gap-4 mb-6 print:hidden">
+      <div>
+        <p class="text-default-500 text-sm">
+          Menampilkan <span class="font-bold text-default-900">{{ table.getFilteredRowModel().rows.length }}</span> Properti
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div id="sorting-container" class="relative inline-flex">
+          <button type="button" @click="isSortOpen = !isSortOpen" class="btn btn-sm bg-white border border-default-200 text-default-700 hover:bg-default-50 transition-all">
+            <Icon icon="lucide:arrow-up-down" class="size-3.5 me-2" />
+            Urutkan: <span class="text-primary ms-1 font-bold">{{ selectedSort }}</span>
+          </button>
+          <Transition enter-active-class="transition duration-100 ease-out" enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100" leave-active-class="transition duration-75 ease-in" leave-from-class="transform scale-100 opacity-100" leave-to-class="transform scale-95 opacity-0">
+            <div v-show="isSortOpen" class="absolute right-0 top-full mt-2 z-50 min-w-40 bg-white border border-default-100 rounded-xl shadow-xl p-2 animate-in fade-in zoom-in duration-200">
+              <button @click="handleSort('Terbaru')" class="dropdown-item w-full text-left rounded-lg p-2 hover:bg-slate-50 text-sm">Terbaru</button>
+              <button @click="handleSort('Harga Termurah')" class="dropdown-item w-full text-left rounded-lg p-2 hover:bg-slate-50 text-sm">Harga Termurah</button>
+              <button @click="handleSort('Harga Termahal')" class="dropdown-item w-full text-left rounded-lg p-2 hover:bg-slate-50 text-sm">Harga Termahal</button>
+
+              <hr class="my-2 border-default-100" />
+
+              <button @click="handleSort('Luas Terbesar')" class="dropdown-item w-full text-left rounded-lg p-2 hover:bg-slate-50 text-sm">Luas Terbesar</button>
+            </div>
+          </Transition>
+        </div>
+
+        <button @click="openAddModal" class="btn btn-sm bg-primary text-white hover:bg-primary-600 shadow-md shadow-primary/20">
+          <Icon icon="lucide:plus" class="size-4 me-1" />
+          Tambah Properti
         </button>
       </div>
-      <div class="p-6 overflow-y-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div class="flex flex-col gap-5">
-          <div class="grid grid-cols-2 gap-3 items-center">
-            <div class="field">
-              <div v-for="(img, index) in previewPhotos" :key="index" class="preview-box">
-                <img :src="img" class="preview-img" />
-                <button @click="removePhoto(index)" class="preview-delete">✕</button>
-              </div>
+    </div>
 
-              <div v-if="previewPhotos.length === 0" class="preview-box flex items-center justify-center border-2 border-dashed border-slate-200">
-                <Icon icon="lucide:image" class="size-10 text-slate-300" />
-              </div>
-            </div>
-            <label class="upload-box border-2 border-dashed border-primary/40 hover:bg-primary/5 transition-all cursor-pointer rounded-xl h-full flex flex-col items-center justify-center">
-              <Icon icon="lucide:upload-cloud" class="size-6 text-primary mb-2" />
-              <span class="text-xs font-bold text-primary">Upload Foto</span>
-              <input type="file" multiple @change="handlePhoto" class="hidden" />
-            </label>
+    <button type="button" @click="$emit('openFilter')" class="lg:hidden w-full flex justify-center items-center btn btn-sm bg-primary/10 hover:bg-primary/20 text-primary py-3 rounded-xl mb-5"><Icon icon="lucide:sliders-horizontal" class="size-4 mr-2" /> Filter Pencarian</button>
+
+    <div class="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
+      <div v-for="row in table.getRowModel().rows" :key="row.id" class="card group flex flex-col h-full overflow-hidden border border-default-100 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300">
+        <div class="relative h-56 overflow-hidden">
+          <img v-if="row.original.MediaUrls.length >= 1" :src="row.original.MediaUrls[0].Id_Media" alt="rumah" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+          <div v-if="row.original.MediaUrls.length == 0" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+            <center>
+              <Icon icon="lucide:image" class="size-20 group-hover:text-primary transition-colors align-center" />
+            </center>
           </div>
+          <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
 
-          <div class="field">
-            <label class="label">Nama Properti</label>
-            <div class="relative">
-              <Icon icon="lucide:home" class="field-icon" />
-              <input v-model="form.Nama_Produk" placeholder="Contoh: Griya Asri Residence" class="field-input" />
+          <div class="absolute top-3 left-3 flex flex-col gap-2">
+            <div>
+              <span class="bg-emerald-500 text-white text-[10px] uppercase tracking-widest font-bold px-2 py-1 rounded shadow-lg">{{ row.original.Status_Properti }}</span>
+            </div>
+            <div class="flex gap-1">
+              <span v-for="(trans, i) in row.original.Status_Transaksi" :key="i" class="bg-indigo-600 text-white text-[10px] uppercase font-bold px-2 py-1 rounded shadow-lg">{{ trans }}</span>
             </div>
           </div>
 
-          <div class="field">
-            <label class="label flex justify-between">
-              Alamat Lengkap
-              <label class="flex items-center gap-1 cursor-pointer text-[10px] text-slate-500">
-                <input type="checkbox" v-model="form.Hide_alamat" class="size-3 rounded" />
-                Sembunyikan Alamat?
-              </label>
-            </label>
-
-            <div class="grid grid-cols-2 gap-3 w-full">
-              <div class="fiel">
-                <div class="relative flex-shrink-0">
-                  <div class="relative" @click="openDropdownProvince = !openDropdownProvince">
-                    <Icon icon="lucide:map-pin" class="field-icon" />
-                    <input v-model="form.Area" placeholder="Area..." class="field-input" />
-                  </div>
-
-                  <div v-show="openDropdownProvince" ref="dropdownProvinceRef" class="absolute left-0 bottom-12 z-[100] min-w-[200px] bg-white shadow-2xl border border-slate-200 rounded-xl p-2 max-h-60 overflow-y-auto custom-scroll">
-                    <p class="text-[10px] font-bold text-slate-400 px-3 py-1 uppercase">Pilih Provinsi</p>
-
-                    <button v-for="province in provinces" :key="province.id" type="button" @click="handleProvinceClick(province)" class="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 rounded-lg transition-colors capitalize">
-                      {{ province.name.toLowerCase() }}
-                    </button>
-                  </div>
-
-                  <div v-show="openDropdownCity" ref="dropdownCityRef" class="absolute left-0 bottom-12 z-[100] min-w-[200px] bg-white shadow-2xl border border-slate-200 rounded-xl p-2 max-h-60 overflow-y-auto custom-scroll">
-                    <p class="text-[10px] font-bold text-slate-400 px-3 py-1 uppercase">Pilih Kota/Kabupaten</p>
-
-                    <button v-for="city in cities" :key="city.id" type="button" @click="setArea(city)" class="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 rounded-lg transition-colors capitalize">
-                      {{ city.name.toLowerCase() }}
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <div class="field">
-                <div class="relative">
-                  <Icon icon="lucide:map-pin" class="field-icon" />
-                  <input v-model="form.Alamat" placeholder="Alamat unit..." class="field-input" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="field w-full">
-            <label class="label">Slug</label>
-            <div class="relative">
-              <Icon icon="lucide:link-2" class="field-icon" />
-              <input v-model="form.Slug" placeholder="Contoh: Griya Asri Residence" class="field-input" />
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl">
-            <div class="col-span-2 flex items-center gap-4 mb-2">
-              <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Harga</span>
-              <div class="flex gap-3">
-                <label class="flex items-center gap-1.5 text-xs font-bold cursor-pointer"><input type="checkbox" value="Jual" v-model="form.Status_Transaksi" /> Jual</label>
-                <label class="flex items-center gap-1.5 text-xs font-bold cursor-pointer"><input type="checkbox" value="Sewa" v-model="form.Status_Transaksi" /> Sewa</label>
-              </div>
-            </div>
-
-            <template v-if="form.Status_Transaksi.includes('Jual')">
-              <div class="field">
-                <label class="label !text-emerald-600">Jual Normal</label>
-                <input v-model="form.Harga_Jual1" type="number" class="field-input !pl-4" placeholder="Rp" />
-              </div>
-              <div class="field">
-                <label class="label !text-emerald-600">Jual Diskon</label>
-                <input v-model="form.Harga_Jual2" type="number" class="field-input !pl-4" placeholder="Rp" />
-              </div>
-            </template>
-
-            <template v-if="form.Status_Transaksi.includes('Sewa')">
-              <div class="field">
-                <label class="label !text-blue-600">Sewa Normal</label>
-                <input v-model="form.Harga_Sewa1" type="number" class="field-input !pl-4" placeholder="Rp" />
-              </div>
-              <div class="field">
-                <label class="label !text-blue-600">Sewa Diskon</label>
-                <input v-model="form.Harga_Sewa2" type="number" class="field-input !pl-4" placeholder="Rp" />
-              </div>
-            </template>
+          <div class="absolute bottom-3 right-3 flex flex-col gap-1 items-end">
+            <span v-for="(akses, idx) in row.original.Akses_Jalan.slice(0, 3)" :key="idx" class="bg-white/90 backdrop-blur-md text-default-800 text-[10px] font-bold px-2 py-0.5 rounded-sm border-l-2 border-primary shadow-sm">
+              {{ akses }}
+            </span>
           </div>
         </div>
 
-        <div class="flex flex-col gap-4 items-start">
-          <div class="grid grid-cols-2 gap-3 w-full">
-            <div class="field">
-              <label class="label">Sertifikat</label>
-              <select v-model="form.Jenis_Sertifikat" class="field-input !pl-4">
-                <option value="SHM">SHM</option>
-                <option value="SHGB">SHGB</option>
-                <option value="SHU">SHU</option>
-                <option value="Lainnya">Lainnya</option>
-              </select>
+        <div class="p-4">
+          <div class="flex items-center gap-1 text-primary" :class="row.original.Hide_alamat ? 'mb-3' : ''">
+            <Icon icon="lucide:map-pin" class="size-3"></Icon>
+            <span class="text-[10px] font-bold uppercase tracking-wider">{{ row.original.Area }}</span>
+          </div>
+          <p v-if="!row.original.Hide_alamat" class="text-[11px] font-medium uppercase tracking-wider text-default-500 mb-2">{{ row.original.Alamat }}</p>
+          <h6 class="text-base text-default-900 font-bold hover:text-primary transition-colors line-clamp-1 mb-1">
+            <RouterLink :to="`/properti/detail/${row.original.Slug}`">{{ row.original.Nama_Produk }}</RouterLink>
+          </h6>
+          <p class="text-xs font-semibold text-default-400 leading-none mb-3">{{ row.original.Tipe }} Tipe {{ row.original.Luas_Bangunan + ' [Uk ' + row.original.Tipe_Ukuran + ']' }}</p>
+          <div class="grid lg :grid-cols-3 grid-cols-2 gap-y-3 gap-x-2 border-y border-default-100 py-3 mb-4">
+            <div class="flex items-center gap-1.5">
+              <Icon icon="lucide:home" class="size-3.5 text-default-400"></Icon> <span class="text-xs text-default-600">LB {{ row.original.Luas_Bangunan }}m²</span>
             </div>
-            <div class="field">
-              <label class="label">Luas Tanah (m²)</label>
-              <input v-model="form.Luas_Tanah" type="number" class="field-input !pl-4" />
+
+            <div class="flex items-center gap-1.5">
+              <Icon icon="lucide:land-plot" class="size-3.5 text-default-400"></Icon> <span class="text-xs text-default-600">LT {{ row.original.Luas_Tanah }}m²</span>
             </div>
-            <div class="field">
-              <label class="label">Luas Bangunan (m²)</label>
-              <input v-model="form.Luas_Bangunan" type="number" class="field-input !pl-4" />
+
+            <div class="flex items-center gap-1.5">
+              <Icon icon="lucide:bed" class="size-3.5 text-default-400"></Icon> <span class="text-xs text-default-600">{{ row.original.Jumlah_Kamar_Tidur }} Kamar</span>
             </div>
-            <div class="field">
-              <label class="label">Ukuran (P x L)</label>
-              <div class="flex items-center gap-2">
-                <div class="relative flex-1">
-                  <input v-model="panjang" type="number" placeholder="P" class="field-input !pl-4 text-center" />
+
+            <div class="flex items-center gap-1.5">
+              <Icon icon="lucide:bath" class="size-3.5 text-default-400"></Icon> <span class="text-xs text-default-600">{{ row.original.Jumlah_Kamar_Mandi }} WC</span>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+              <Icon icon="lucide:car" class="size-3.5 text-default-400"></Icon> <span class="text-xs text-default-600">{{ row.original.Jumlah_Carpot }} Mobil</span>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+              <Icon icon="lucide:layers" class="size-3.5 text-default-400"></Icon> <span class="text-xs text-default-600">{{ row.original.Jumlah_Lantai }} Lantai</span>
+            </div>
+          </div>
+
+          <div class="mt-auto pt-2">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex flex-col min-h-[65px] justify-center">
+                <div v-if="row.original.Harga_Jual1 > 0" class="mb-1">
+                  <div v-if="row.original.Harga_Jual2 > 0">
+                    <span class="text-[9px] text-red-500 line-through block leading-none">{{ formatCurrency(row.original.Harga_Jual1) }}</span>
+                    <span class="text-sm font-extrabold text-primary leading-tight">{{ formatCurrency(row.original.Harga_Jual2) }}</span>
+                  </div>
+                  <span v-else class="text-sm font-extrabold text-primary leading-tight">{{ formatCurrency(row.original.Harga_Jual1) }}</span>
                 </div>
 
-                <span class="text-slate-400 font-bold">x</span>
+                <div v-if="row.original.Harga_Sewa1 > 0" :class="{ 'mt-1 pt-1 border-t border-dashed border-default-200': row.original.Harga_Jual1 > 0 }">
+                  <span class="text-[9px] text-default-400 block leading-none">Sewa (min. {{ row.original.Minimal_Sewa + ' ' + row.original.Satuan_Minimal_Sewa }})</span>
+                  <span class="font-bold text-default-700" :class="row.original.Harga_Jual1 > 0 ? 'text-xs' : 'text-sm font-extrabold text-primary'"> {{ formatCurrency(row.original.Harga_Sewa2 > 0 ? row.original.Harga_Sewa2 : row.original.Harga_Sewa1) }} /{{ row.original.Satuan_Minimal_Sewa || 'Tahun' }} </span>
+                </div>
+              </div>
 
-                <div class="relative flex-1">
-                  <input v-model="lebar" type="number" placeholder="L" class="field-input !pl-4 text-center" />
+              <div class="relative flex-shrink-0">
+                <button type="button" @click.stop="toggleDropdown(row.id)" class="size-8 flex items-center justify-center rounded-full bg-default-100 text-default-600 hover:bg-primary hover:text-white transition-all shadow-sm">
+                  <Icon icon="lucide:more-vertical" class="size-4" />
+                </button>
+
+                <div v-show="activeDropdownId === row.id" class="absolute right-0 bottom-10 z-[100] min-w-32 bg-white p-1 shadow-2xl border border-default-100 rounded-lg" role="menu">
+                  <button @click="openEditModal(row.original)" class="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-default-600 hover:bg-default-50 rounded"><Icon icon="lucide:edit-3" class="size-3.5" /> Edit</button>
+                  <button @click="deleteProduct(row.original)" class="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-red-500 hover:bg-red-50 rounded"><Icon icon="lucide:trash-2" class="size-3.5" /> Hapus</button>
                 </div>
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
 
-          <div class="grid grid-cols-3 gap-2 w-full">
-            <div class="field" v-for="spec in specs" :key="spec.key">
-              <label class="label">{{ spec.label }}</label>
-              <input v-model="form[spec.key as keyof RealEstateForm]" type="number" class="field-input !pl-4" />
-            </div>
-          </div>
+    <div class="flex flex-wrap md:justify-between justify-center items-center gap-4 mt-10 pb-10">
+      <p class="text-default-500 text-sm">
+        Menampilkan <b>{{ table.getFilteredRowModel().rows.length != 0 ? table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1 : '0' }}</b> sampai <b>{{ Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, table.getFilteredRowModel().rows.length) }}</b> dari <b>{{ table.getFilteredRowModel().rows.length }}</b> data
+      </p>
 
-          <div class="field w-full">
-            <label class="label">Akses Fasilitas (Gunakan ± dan min)</label>
-            <div class="flex gap-2">
-              <input v-model="newAkses" @keyup.enter="addAkses" placeholder="Akses bandara ±20 min" class="field-input !pl-4" />
-              <button @click="addAkses" class="bg-slate-800 text-white px-3 rounded-lg flex items-center"><Icon icon="lucide:plus" /></button>
-            </div>
-            <div class="flex flex-wrap gap-2 mt-2">
-              <span v-for="(item, i) in form.Akses_Jalan" :key="i" class="bg-slate-100 text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1 border"> {{ item }} <Icon @click="removeAkses(i)" icon="lucide:x" class="cursor-pointer text-red-500" /> </span>
-            </div>
-          </div>
+      <nav class="flex items-center gap-1.5">
+        <button @click="table.previousPage()" :disabled="!table.getCanPreviousPage()" class="btn btn-sm px-3 bg-white border border-default-200 disabled:opacity-50">Prev</button>
 
-          <div class="toggle-box mt-2">
-            <span class="flex items-center gap-2 text-xs font-bold text-slate-600"> <Icon icon="lucide:power" /> Status Display Katalog </span>
-            <button @click="form.Status_Display = form.Status_Display === 'Aktif' ? 'Nonaktif' : 'Aktif'" class="toggle" :class="form.Status_Display === 'Aktif' ? 'toggle-active' : ''">
-              <span class="toggle-circle" :class="form.Status_Display === 'Aktif' ? 'translate-x-6' : ''"></span>
+        <div v-if="table.getPageCount() > 0" class="flex items-center gap-1">
+          <div v-if="table.getPageCount() <= 6" class="flex gap-1">
+            <button v-for="n in table.getPageCount()" :key="n" @click="table.setPageIndex(n - 1)" class="btn size-8" :class="table.getState().pagination.pageIndex === n - 1 ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-white border border-default-200 text-default-600 hover:border-primary hover:text-primary'">
+              {{ n }}
             </button>
           </div>
 
-          <div class="field w-full">
-            <label class="label">Keterangan</label>
-            <textarea v-model="form.Keterangan" placeholder="Keunggulan properti..." class="field-input !pl-4 resize-none h-42 pt-2"></textarea>
+          <div v-else class="flex gap-1">
+            <button v-for="n in 3" :key="n" @click="table.setPageIndex(n - 1)" class="btn size-8" :class="table.getState().pagination.pageIndex === n - 1 ? 'bg-primary text-white' : 'bg-white border'">
+              {{ n }}
+            </button>
+
+            <button class="btn size-8 bg-white border border-default-200 text-default-600 cursor-default" disabled>...</button>
+
+            <button v-for="n in [2, 1, 0]" :key="n" @click="table.setPageIndex(table.getPageCount() - 1 - n)" class="btn size-8" :class="table.getState().pagination.pageIndex === table.getPageCount() - 1 - n ? 'bg-primary text-white' : 'bg-white border'">
+              {{ table.getPageCount() - n }}
+            </button>
           </div>
         </div>
-      </div>
 
-      <div class="flex justify-end gap-3 p-5 border-t bg-gray-50/50">
-        <button @click="handleCancel" class="px-6 py-2 text-sm font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition-all">Batal</button>
-        <button @click="submitForm" class="px-8 py-2 bg-primary text-white text-sm font-extrabold rounded-xl shadow-lg shadow-primary/30 hover:shadow-none transition-all">Simpan Katalog</button>
-      </div>
+        <button @click="table.nextPage()" :disabled="!table.getCanNextPage()" class="btn btn-sm px-3 bg-white border border-default-200 disabled:opacity-50">Next</button>
+      </nav>
     </div>
+
+    <Modal v-model:showModal="isModalOpen" :itemData="selectedItem" @success="fetchData" @close="console.log('tutup')" />
   </div>
 </template>
-
-<style scoped>
-@reference "@/assets/css/style.css";
-
-.label {
-  @apply block text-[11px] font-extrabold text-slate-400 uppercase mb-1.5 ml-1 tracking-wider;
-}
-
-.field-icon {
-  @apply absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-4 pointer-events-none;
-}
-
-.field-input {
-  @apply w-full border border-slate-200 rounded-xl py-2 pl-9 pr-4 text-sm bg-white focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none;
-}
-
-.preview-box {
-  @apply relative w-full aspect-square rounded-xl overflow-hidden bg-slate-100 border-2 border-slate-50;
-}
-
-.preview-img {
-  @apply w-full h-full object-cover;
-}
-
-.preview-delete {
-  @apply absolute top-2 right-2 bg-red-500 text-white rounded-full size-6 flex items-center justify-center text-xs shadow-lg;
-}
-
-.toggle-box {
-  @apply w-full flex items-center justify-between p-3 border border-slate-200 rounded-xl bg-slate-50/50;
-}
-
-.toggle {
-  @apply w-12 h-6 bg-slate-200 rounded-full relative transition-all duration-300;
-}
-
-.toggle-active {
-  @apply bg-primary;
-}
-
-.toggle-circle {
-  @apply absolute top-1 left-1 size-4 bg-white rounded-full transition-all duration-300 shadow-sm;
-}
-</style>

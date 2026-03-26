@@ -23,6 +23,7 @@ const handleLogin = async () => {
     })
 
     if (data.StatusCode === 200) {
+      localStorage.setItem('no_id', data.No_Id)
       localStorage.setItem('token', data.token)
       localStorage.setItem('refreshToken', data.refreshToken)
 

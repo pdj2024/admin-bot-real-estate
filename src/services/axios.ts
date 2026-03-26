@@ -12,6 +12,16 @@ const api = axios.create({
 let isRefreshing = false
 let failedQueue: any[] = []
 
+export const isTokenExpired = (token: string) => {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    // Beri toleransi 30 detik sebelum benar-benar expired
+    return (payload.exp * 1000) < (Date.now() + 30000);
+  } catch {
+    return true;
+  }
+}
+
 const processQueue = (error: any, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) {
