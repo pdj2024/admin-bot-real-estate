@@ -66,9 +66,11 @@ const handleSubmit = async () => {
       emit('success')
       handleClose()
     } catch (err: any) {
-      console.log(err)
-      console.error(err)
-      fail(err.response?.data?.Message || 'Terjadi kesalahan pada server')
+      console.error('Full Error Object:', err)
+
+      const serverErrorMessage = err.response?.data?.Error || err.response?.data?.message
+
+      fail(serverErrorMessage || 'Terjadi kesalahan sistem (500)')
     } finally {
       emit('success')
     }

@@ -134,7 +134,7 @@ const defaultForm = (): RealEstateForm => ({
   Flag_Sewa: 'Tidak',
   Ada_Minimal_Sewa: false,
   Minimal_Sewa: 0,
-  Satuan_Minimal_Sewa: '',
+  Satuan_Minimal_Sewa: 'Tahun',
   Harga_Jual1: 0,
   Harga_Jual2: 0,
   Harga_Sewa1: 0,
@@ -222,7 +222,7 @@ const selectCity = (c: City) => {
 }
 const getProvince = async () => {
   try {
-    const { data } = await axios.get('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json')
+    const { data } = await axios.get('/region/provinces.json')
     provinces.value = data
   } catch (err) {
     console.error(err)
@@ -231,7 +231,7 @@ const getProvince = async () => {
 
 const getCity = async (id: string | number) => {
   try {
-    const { data } = await axios.get('https://www.emsifa.com/api-wilayah-indonesia/api/regencies/' + id + '.json')
+    const { data } = await axios.get('/region/regencies/' + id + '.json')
     cities.value = data
   } catch (err) {
     console.error(err)
@@ -371,16 +371,20 @@ const reqUploadUrl = async () => {
 }
 
 const sendMedia = async (uploadUrl: string, media: File) => {
+  if (!media || !(media instanceof File)) {
+    console.error('sendMedia: Objek media tidak valid atau undefined')
+    return null
+  }
+
   try {
     const response = await axios.put(uploadUrl, media, {
       headers: {
-        'Content-Type': media.type
+        'Content-Type': media.type // Aman sekarang
       }
     })
-
     return response.data
   } catch (err) {
-    console.log(media)
+    console.log('Detail Media Error:', media)
     console.error('Gagal mengunggah biner ke Google Cloud:', err)
     throw err
   }
@@ -436,42 +440,53 @@ const submitForm = async () => {
 
     try {
       const targetUrl = isEdit ? `/api/realEstate/update?no_id=${form.value.No_Id}` : '/api/realEstate/create'
-
       let finalMediaIds: string[] = []
 
-      if (photos.value.length > 0) {
+      // 1. Validasi Foto sebelum proses
+      if (photos.value && photos.value.length > 0) {
+        // Ambil tiket sesuai jumlah foto yang ada
         const uploadTickets = await reqUploadUrl()
 
-        await Promise.all(uploadTickets.map((ticket: any, index: number) => sendMedia(ticket.UploadUrl, photos.value[index])))
+        // Pastikan kita hanya memproses sebanyak jumlah minimum antara tiket dan foto
+        // Ini untuk mencegah 'undefined' jika jumlahnya tidak sinkron
+        const validProcessCount = Math.min(uploadTickets.length, photos.value.length)
+        const activePhotos = photos.value.slice(0, validProcessCount)
+        const activeTickets = uploadTickets.slice(0, validProcessCount)
 
+        // 2. Upload biner ke Cloud (Google Cloud Storage)
+        await Promise.all(activeTickets.map((ticket: any, index: number) => sendMedia(ticket.UploadUrl, activePhotos[index])))
+
+        // 3. Konfirmasi Batch ke Database Media
         const resIds = await confirmMediaBatch(
-          uploadTickets.map((ticket: any, index: number) => ({
+          activeTickets.map((ticket: any, index: number) => ({
             id_kategori: null,
             uploader_id: localStorage.getItem('no_id'),
-            fileName: photos.value[index].name,
+            fileName: activePhotos[index].name,
             objectName: ticket.ObjectName,
-            original_size: photos.value[index].size,
-            content_type: photos.value[index].type
+            original_size: activePhotos[index].size,
+            content_type: activePhotos[index].type // Aman, tidak akan undefined lagi
           }))
         )
 
         finalMediaIds = resIds
       }
 
-      // pakai form, bukan props
+      // 4. Gabungkan foto lama (jika edit) dengan foto baru
       const combinedPhotos = [...new Set([...(form.value.File_Image || []), ...finalMediaIds])]
 
+      // 5. Siapkan Payload
       const payload = {
         ...form.value,
-        File_Image: combinedPhotos
+        File_Image: combinedPhotos,
+        Flag_Sewa: form.value.Status_Transaksi?.includes('Sewa') ? 'Ya' : 'Tidak'
       }
+
+      // Hapus properti yang tidak perlu dikirim ke API backend (seperti MediaUrls hasil fetch)
       const { MediaUrls, ...cleanPayload } = payload
 
-      // fix flag sewa
-      payload.Flag_Sewa = payload.Status_Transaksi?.includes('Sewa') ? 'Ya' : 'Tidak'
+      console.log('FINAL PAYLOAD:', cleanPayload)
 
-      console.log('FINAL PAYLOAD:', payload)
-
+      // 6. Eksekusi API
       await api[isEdit ? 'put' : 'post'](targetUrl, cleanPayload, {
         headers: { 'X-Jenis-User': 'admin' }
       })
@@ -480,9 +495,8 @@ const submitForm = async () => {
       emit('success')
       emit('update:showModal', false)
     } catch (err: any) {
-      console.log('Hai ' + err.message)
-      // console.error(err)
-      fail(err.response?.data?.message || 'Gagal menyimpan data.')
+      console.error('Submit Error:', err)
+      fail(err.response?.data?.message || err.message || 'Gagal menyimpan data.')
     } finally {
       isLoading.value = false
     }
@@ -534,11 +548,26 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
               <div v-if="!previewPhotos.length" class="flex-shrink-0 text-slate-500 text-[10px] italic flex items-center px-2">Belum ada foto terpilih</div>
             </div>
           </div>
-          <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
-            <label class="label flex justify-between" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'"> Nama Properti </label>
-            <div class="relative">
-              <Icon icon="lucide:house" class="field-icon" />
-              <input v-model="form.Nama_Produk" placeholder="Nama Perumahan, Apartement, Resort" class="field-input" />
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="field" :class="{ inactive: form.Status_Display !== 'Aktif' }">
+              <label class="label">Tipe Properti</label>
+              <div class="relative">
+                <select v-model="form.Tipe" class="field-input !pl-4 w-full appearance-none">
+                  <option value="Rumah">Rumah</option>
+                  <option value="Apartemen">Apartemen</option>
+                  <option value="Villa">Villa</option>
+                  <option value="Mansion">Mansion</option>
+                </select>
+                <Icon icon="lucide:chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 size-4 pointer-events-none text-slate-400" />
+              </div>
+            </div>
+
+            <div class="md:col-span-2 field" :class="{ inactive: form.Status_Display !== 'Aktif' }">
+              <label class="label">Nama Properti</label>
+              <div class="relative">
+                <Icon icon="lucide:house" class="field-icon" />
+                <input v-model="form.Nama_Produk" placeholder="Contoh: The Sapphire Sky Mansion" class="field-input w-full" />
+              </div>
             </div>
           </div>
 
@@ -698,10 +727,12 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
                 <input v-model="lebar" placeholder="L" type="number" class="field-input !pl-2 text-center" />
               </div>
             </div>
+          </div>
+          <div class="grid grid-cols-3 gap-2">
             <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'"><label class="label">Luas Tanah (m²)</label><input v-model="form.Luas_Tanah" type="number" class="field-input !pl-4" /></div>
             <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'"><label class="label">Luas Bangunan (m²)</label><input v-model="form.Luas_Bangunan" type="number" class="field-input !pl-4" /></div>
+            <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'"><label class="label">Jumlah Lantai</label><input v-model="form.Jumlah_Lantai" type="number" class="field-input !pl-4" /></div>
           </div>
-
           <div class="grid grid-cols-3 gap-2">
             <div v-for="s in specs" :key="s.key" class="field">
               <label class="label">{{ s.label }}</label>

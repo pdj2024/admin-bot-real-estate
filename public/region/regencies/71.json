@@ -1,0 +1,17 @@
+[
+  { "id": "7101", "province_id": "71", "name": "Kabupaten Bolaang Mongondow" },
+  { "id": "7102", "province_id": "71", "name": "Kabupaten Minahasa" },
+  { "id": "7103", "province_id": "71", "name": "Kabupaten Kepulauan Sangihe" },
+  { "id": "7104", "province_id": "71", "name": "Kabupaten Kepulauan Talaud" },
+  { "id": "7105", "province_id": "71", "name": "Kabupaten Minahasa Selatan" },
+  { "id": "7106", "province_id": "71", "name": "Kabupaten Minahasa Utara" },
+  { "id": "7107", "province_id": "71", "name": "Kabupaten Bolaang Mongondow Utara" },
+  { "id": "7108", "province_id": "71", "name": "Kabupaten Siau Tagulandang Biaro" },
+  { "id": "7109", "province_id": "71", "name": "Kabupaten Minahasa Tenggara" },
+  { "id": "7110", "province_id": "71", "name": "Kabupaten Bolaang Mongondow Selatan" },
+  { "id": "7111", "province_id": "71", "name": "Kabupaten Bolaang Mongondow Timur" },
+  { "id": "7171", "province_id": "71", "name": "Kota Manado" },
+  { "id": "7172", "province_id": "71", "name": "Kota Bitung" },
+  { "id": "7173", "province_id": "71", "name": "Kota Tomohon" },
+  { "id": "7174", "province_id": "71", "name": "Kota Kotamobagu" }
+]

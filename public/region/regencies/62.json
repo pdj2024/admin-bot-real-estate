@@ -1,0 +1,16 @@
+[
+  { "id": "6201", "province_id": "62", "name": "Kabupaten Kotawaringin Barat" },
+  { "id": "6202", "province_id": "62", "name": "Kabupaten Kotawaringin Timur" },
+  { "id": "6203", "province_id": "62", "name": "Kabupaten Kapuas" },
+  { "id": "6204", "province_id": "62", "name": "Kabupaten Barito Selatan" },
+  { "id": "6205", "province_id": "62", "name": "Kabupaten Barito Utara" },
+  { "id": "6206", "province_id": "62", "name": "Kabupaten Sukamara" },
+  { "id": "6207", "province_id": "62", "name": "Kabupaten Lamandau" },
+  { "id": "6208", "province_id": "62", "name": "Kabupaten Seruyan" },
+  { "id": "6209", "province_id": "62", "name": "Kabupaten Katingan" },
+  { "id": "6210", "province_id": "62", "name": "Kabupaten Pulang Pisau" },
+  { "id": "6211", "province_id": "62", "name": "Kabupaten Gunung Mas" },
+  { "id": "6212", "province_id": "62", "name": "Kabupaten Barito Timur" },
+  { "id": "6213", "province_id": "62", "name": "Kabupaten Murung Raya" },
+  { "id": "6271", "province_id": "62", "name": "Kota Palangka Raya" }
+]

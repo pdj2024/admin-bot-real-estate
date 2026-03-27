@@ -296,9 +296,15 @@ onMounted(async () => {
 
           <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
 
-          <div v-if="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia'" class="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+          <!-- <div v-if="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia'" class="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
             <div class="bg-red-500/90 backdrop-blur-sm text-white px-4 py-1.5 rounded-lg border border-red-400/50 shadow-xl transform -rotate-12">
               <span class="text-xs font-black tracking-[0.2em] uppercase">{{ row.original.Status_Properti != 'Tersedia' ? row.original.Status_Properti : row.original.Status_Display }}</span>
+            </div>
+          </div> -->
+
+          <div v-if="row.original && (row.original.Status_Display !== 'Aktif' || row.original.Status_Properti !== 'Tersedia')" class="absolute inset-0 flex items-center justify-center z-30 pointer-events-none p-6">
+            <div class="text-white px-2 py-1 rounded-sm transform -rotate-6 font-black tracking-[0.15em] uppercase italic text-xs md:text-sm backdrop-blur-md bg-black/40 shadow-lg border border-white/10 select-none">
+              {{ row.original.Status_Properti != 'Tersedia' ? row.original.Status_Properti : row.original.Status_Display }}
             </div>
           </div>
 
@@ -363,6 +369,33 @@ onMounted(async () => {
 
           <div class="mt-auto pt-4 border-t flex items-end justify-between gap-3" :class="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia' ? 'border-slate-200' : 'border-slate-100'">
             <div class="flex flex-col gap-1.5 w-full">
+              <div v-if="row.original.Harga_Sewa1 > 0" class="flex flex-col">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">
+                  Harga Sewa
+                  <span v-if="row.original.Minimal_Sewa != 0 && row.original.Satuan_Minimal_Sewa != ''">(Min. {{ row.original.Minimal_Sewa }} {{ row.original.Satuan_Minimal_Sewa }})</span>
+                </span>
+
+                <div class="flex flex-col gap-0.5">
+                  <div class="flex items-end gap-1.5">
+                    <span :class="['font-bold tracking-tight', row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia' ? 'text-slate-400 font-medium' : 'text-slate-800 text-base font-black']">
+                      {{ formatCurrency(row.original.Harga_Sewa2 > 0 ? row.original.Harga_Sewa2 : row.original.Harga_Sewa1) }}
+                    </span>
+
+                    <span v-if="row.original.Harga_Sewa2 > 0" class="text-[11px] text-slate-400 line-through mb-0.5 decoration-slate-300">
+                      {{ formatCurrency(row.original.Harga_Sewa1) }}
+                    </span>
+
+                    <span class="text-[10px] text-slate-500 font-medium mb-0.5 lowercase italic"> /{{ row.original.Satuan_Minimal_Sewa || 'thn' }} </span>
+                  </div>
+
+                  <div v-if="row.original.Harga_Sewa2 > 0" class="flex">
+                    <span class="text-[9px] font-bold bg-red-100 text-red-600 px-1.5 py-0.5 rounded uppercase tracking-tighter"> Promo Hemat </span>
+                  </div>
+                </div>
+              </div>
+
+              <div v-if="row.original.Harga_Jual1 > 0 && row.original.Harga_Sewa1 > 0" class="w-full h-px my-0.5" :class="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia' ? 'bg-slate-200' : 'bg-slate-100'"></div>
+
               <div v-if="row.original.Harga_Jual1 > 0" class="flex flex-col">
                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Harga Jual</span>
                 <div v-if="row.original.Harga_Jual2 > 0" class="flex items-center gap-2 flex-wrap">
@@ -371,23 +404,11 @@ onMounted(async () => {
                 </div>
                 <span v-else class="text-base font-black leading-none" :class="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia' ? 'text-slate-600' : 'text-primary'">{{ formatCurrency(row.original.Harga_Jual1) }}</span>
               </div>
-
-              <div v-if="row.original.Harga_Jual1 > 0 && row.original.Harga_Sewa1 > 0" class="w-full h-px my-0.5" :class="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia' ? 'bg-slate-200' : 'bg-slate-100'"></div>
-
-              <div v-if="row.original.Harga_Sewa1 > 0" class="flex flex-col">
-                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">
-                  Sewa
-                  <span v-if="row.original.Minimal_Sewa != 0 && row.original.Satuan_Minimal_Sewa != ''">(Min. {{ row.original.Minimal_Sewa }} {{ row.original.Satuan_Minimal_Sewa }})</span>
-                </span>
-                <div class="flex items-end gap-1">
-                  <span class="font-bold text-slate-800" :class="row.original.Harga_Jual1 > 0 ? 'text-sm' : row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia' ? 'text-base font-black text-slate-600' : 'text-base font-black text-primary'">
-                    {{ formatCurrency(row.original.Harga_Sewa2 > 0 ? row.original.Harga_Sewa2 : row.original.Harga_Sewa1) }}
-                  </span>
-                  <span class="text-[10px] text-slate-500 font-medium mb-0.5">/{{ row.original.Satuan_Minimal_Sewa || 'thn' }}</span>
-                </div>
-              </div>
             </div>
+          </div>
 
+          <div class="mt-3 flex items-end justify-between gap-3">
+            <div class="flex flex-col gap-1.5 w-full"></div>
             <div class="relative flex-shrink-0 z-10">
               <button type="button" @click.stop="toggleDropdown(row.id)" class="size-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-600 border border-slate-200 hover:bg-primary hover:text-white hover:border-primary transition-all shadow-sm relative z-20">
                 <Icon icon="lucide:more-vertical" class="size-5" />

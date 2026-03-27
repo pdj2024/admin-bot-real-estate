@@ -1,0 +1,12 @@
+[
+  { "id": "6401", "province_id": "64", "name": "Kabupaten Paser" },
+  { "id": "6402", "province_id": "64", "name": "Kabupaten Kutai Barat" },
+  { "id": "6403", "province_id": "64", "name": "Kabupaten Kutai Kartanegara" },
+  { "id": "6404", "province_id": "64", "name": "Kabupaten Kutai Timur" },
+  { "id": "6405", "province_id": "64", "name": "Kabupaten Berau" },
+  { "id": "6409", "province_id": "64", "name": "Kabupaten Penajam Paser Utara" },
+  { "id": "6411", "province_id": "64", "name": "Kabupaten Mahakam Hulu" },
+  { "id": "6471", "province_id": "64", "name": "Kota Balikpapan" },
+  { "id": "6472", "province_id": "64", "name": "Kota Samarinda" },
+  { "id": "6474", "province_id": "64", "name": "Kota Bontang" }
+]

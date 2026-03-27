@@ -62,54 +62,65 @@ onUnmounted(() => clearInterval(timer))
 <template>
   <div class="col-span-1">
     <div class="sticky top-24">
-      <div class="card mb-5">
-        <div class="card-body">
-          <div class="relative overflow-hidden mb-5 rounded-md h-[350px] md:h-[450px] group bg-default-100" @touchstart="handleTouchStart" @touchend="handleTouchEnd">
-            <div class="h-full transition-all duration-500 ease-in-out">
+      <div class="mb-5">
+        <RouterLink to="/properti/katalog" class="inline-flex items-center text-xs font-bold uppercase tracking-widest text-default-500 hover:text-primary transition-all group">
+          <Icon icon="lucide:arrow-left" class="size-4 me-2 transition-transform group-hover:-translate-x-1" />
+          Kembali ke Katalog
+        </RouterLink>
+      </div>
+
+      <div class="card mb-4 border-none shadow-sm bg-white overflow-hidden rounded-xl">
+        <div class="card-body p-4 relative">
+          <div class="relative overflow-hidden mb-4 rounded-lg h-[350px] md:h-[420px] group bg-default-50 shadow-inner" @touchstart="handleTouchStart" @touchend="handleTouchEnd">
+            <div v-if="product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia')" class="absolute inset-0 flex items-center justify-center z-30 pointer-events-none p-6">
+              <div class="text-white px-6 py-3 rounded-xl transform -rotate-6 font-black tracking-[0.15em] uppercase italic text-xl md:text-2xl backdrop-blur-md bg-black/40 shadow-2xl border border-white/10 select-none">
+                {{ product.Status_Properti != 'Tersedia' ? product.Status_Properti : product.Status_Display }}
+              </div>
+            </div>
+
+            <div v-if="product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia')" class="absolute inset-0 z-20 bg-white/10 backdrop-blur-[1px] cursor-not-allowed"></div>
+
+            <div :class="['h-full w-full transition-all duration-700 ease-out', product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia') ? 'grayscale opacity-60' : 'group-hover:scale-105']">
               <img :src="product?.MediaUrls[currentIndex].Id_Media" class="w-full h-full object-cover" alt="Property Image" />
             </div>
 
-            <button @click="prevSlide" class="absolute left-2 top-1/2 -translate-y-1/2 size-10 sm:flex items-center justify-center rounded-full bg-white/20 backdrop-blur-md text-white opacity-0 group-hover:opacity-100 transition-all hidden md:flex z-10 hover:bg-white/40">
+            <button @click="prevSlide" class="absolute left-3 top-1/2 -translate-y-1/2 size-11 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-lg text-white border border-white/20 opacity-0 group-hover:opacity-100 transition-all z-10 hover:bg-primary hover:border-primary">
               <Icon icon="lucide:chevron-left" class="size-6"></Icon>
             </button>
-
-            <button @click="nextSlide" class="absolute right-2 top-1/2 -translate-y-1/2 size-10 sm:flex items-center justify-center rounded-full bg-white/20 backdrop-blur-md text-white opacity-0 group-hover:opacity-100 transition-all hidden md:flex z-10 hover:bg-white/40">
+            <button @click="nextSlide" class="absolute right-3 top-1/2 -translate-y-1/2 size-11 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-lg text-white border border-white/20 opacity-0 group-hover:opacity-100 transition-all z-10 hover:bg-primary hover:border-primary">
               <Icon icon="lucide:chevron-right" class="size-6"></Icon>
             </button>
 
-            <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-              <button v-for="(_, index) in product?.MediaUrls.length" :key="index" @click="goToSlide(index)" class="size-1.5 rounded-full transition-all" :class="currentIndex === index ? 'bg-primary w-4' : 'bg-white/60'"></button>
+            <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10 bg-black/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
+              <button v-for="(_, index) in product?.MediaUrls.length" :key="index" @click="goToSlide(index)" class="size-1.5 rounded-full transition-all duration-300" :class="currentIndex === index ? 'bg-primary w-5' : 'bg-white/50'"></button>
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-2">
-            <a href="https://wa.me/yournumber" class="bg-primary hover:bg-danger-600 text-white rounded-md py-3 flex items-center justify-center gap-2 font-semibold transition-all shadow-sm">
-              <Icon icon="lucide:headset" class="size-5"></Icon>
-              Tanyakan
+          <div class="grid grid-cols-2 gap-3 relative">
+            <div v-if="product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia')" class="absolute inset-0 z-10 cursor-not-allowed"></div>
+
+            <a href="#" :class="['flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-bold text-sm tracking-wide transition-all shadow-sm', product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia') ? 'bg-default-100 text-default-400' : 'bg-primary text-white hover:bg-primary-600 hover:shadow-primary/20']">
+              <Icon icon="lucide:headset" class="size-4"></Icon>
+              Hubungi Agen
             </a>
 
-            <a :href="`/properti/detail/${product?.Slug}`" class="bg-white hover:bg-gray-200 rounded-md py-3 flex items-center justify-center gap-2 font-semibold transition-all shadow-sm">
-              <Icon icon="lucide:share-2" class="size-5"></Icon>
+            <a href="#" :class="['flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-bold text-sm tracking-wide transition-all shadow-sm border', product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia') ? 'border-default-100 text-default-300' : 'border-default-200 text-default-700 hover:bg-default-50 hover:border-default-300']">
+              <Icon icon="lucide:share-2" class="size-4"></Icon>
               Bagikan
             </a>
           </div>
         </div>
       </div>
 
-      <div class="card overflow-hidden">
-        <!-- <div class="p-4 bg-default-50 border-b border-default-200 flex justify-between items-center">
-          <div class="flex items-center gap-2">
-            <div class="size-9 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold">RW</div>
-            <div>
-              <h6 class="font-bold text-default-800 leading-none">Maya</h6>
-              <p class="text-[11px] text-default-500 mt-1 uppercase font-semibold">Admin 2</p>
-            </div>
-          </div>
-          <div class="flex items-center text-yellow-500 text-sm font-bold"><Icon icon="lucide:star" class="size-4 fill-yellow-500 mr-1"></Icon> 4.8</div>
-        </div> -->
+      <div :class="['card border-none shadow-sm bg-white rounded-xl overflow-hidden transition-all duration-500', product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia') ? 'grayscale opacity-60' : '']">
         <div class="p-4 flex justify-between items-center">
-          <span class="text-sm text-default-500 flex items-center gap-1"> <Icon icon="lucide:map-pin" class="size-4.5"></Icon> {{ product?.Area }} </span>
-          <button class="text-xs font-bold text-primary hover:underline uppercase">Lihat Profil</button>
+          <div class="flex items-center gap-2 text-default-600">
+            <div class="bg-primary/10 p-1.5 rounded-md">
+              <Icon icon="lucide:map-pin" class="size-4 text-primary"></Icon>
+            </div>
+            <span class="text-sm font-bold tracking-tighter">{{ product?.Area || 'Lokasi Terdaftar' }}</span>
+          </div>
+          <button class="text-[12px] font-black text-primary hover:text-primary-700 tracking-widest border-b border-primary/20">Lihat Area</button>
         </div>
       </div>
     </div>

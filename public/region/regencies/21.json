@@ -1,0 +1,9 @@
+[
+  { "id": "2101", "province_id": "21", "name": "Kabupaten Karimun" },
+  { "id": "2102", "province_id": "21", "name": "Kabupaten Bintan" },
+  { "id": "2103", "province_id": "21", "name": "Kabupaten Natuna" },
+  { "id": "2104", "province_id": "21", "name": "Kabupaten Lingga" },
+  { "id": "2105", "province_id": "21", "name": "Kabupaten Kepulauan Anambas" },
+  { "id": "2171", "province_id": "21", "name": "Kota Batam" },
+  { "id": "2172", "province_id": "21", "name": "Kota Tanjung Pinang" }
+]

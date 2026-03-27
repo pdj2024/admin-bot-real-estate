@@ -1,133 +1,127 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import type { Product } from '../index.vue'
 
 defineProps<{
   product: Product | null
 }>()
 
+const router = useRouter()
+
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
 }
 </script>
+
 <template>
   <div class="lg:col-span-2 col-span-1">
-    <div class="card">
-      <div class="card-body">
-        <div class="flex justify-between items-center">
-          <span v-if="product?.Status_Transaksi.includes('Jual')" class="px-2.5 py-0.5 text-xs inline-block font-semibold rounded bg-success/10 text-success">Dijual</span>
-          <span v-if="product?.Status_Transaksi.includes('Jual') && product?.Status_Transaksi.includes('Sewa')" class="px-2.5 py-0.5 text-xs inline-block font-semibold rounded bg-success/10 text-success"> dan </span>
-          <span v-if="product?.Status_Transaksi.includes('Sewa')" class="px-2.5 py-0.5 text-xs inline-block font-semibold rounded bg-success/10 text-success">Disewakan</span>
-          <div class="hs-dropdown relative inline-flex">
-            <button type="button" class="hs-dropdown-toggle btn size-7.5 bg-default-200 hover:bg-default-600 text-default-500 hover:text-white" aria-haspopup="menu" aria-expanded="false" aria-label="Dropdown" hs-dropdown-placement="bottom-end">
-              <Icon icon="lucide:ellipsis" class="iconify size-4"></Icon>
-            </button>
-            <div class="hs-dropdown-menu" role="menu">
-              <RouterLink class="flex items-center gap-1.5 py-1.5 font-medium px-3 text-sm text-default-500 hover:bg-default-150 rounded" to="">
-                <Icon icon="lucide:edit" class="size-3"></Icon>
-                Edit Properti
-              </RouterLink>
-              <RouterLink class="flex items-center gap-1.5 py-1.5 font-medium px-3 text-sm text-default-500 hover:bg-default-150 rounded" to="">
-                <Icon icon="lucide:trash-2" class="size-3"></Icon>
-                Hapus
-              </RouterLink>
-            </div>
+    <div :class="['card relative transition-all duration-500 border-none shadow-sm hover:shadow-md bg-white rounded-xl overflow-hidden', product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia') ? 'grayscale opacity-70 select-none' : '']">
+      <div v-if="product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia')" class="absolute inset-0 z-50 bg-white/20 backdrop-blur-[1px] cursor-not-allowed"></div>
+
+      <div class="card-body p-6">
+        <div class="flex justify-between items-center mb-4">
+          <div class="flex items-center gap-2">
+            <template v-for="(transaksi, index) in product?.Status_Transaksi" :key="index">
+              <span class="px-3 py-1 text-[11px] uppercase tracking-wider font-bold rounded-full bg-primary/10 text-primary border border-primary/20">
+                {{ transaksi }}
+              </span>
+            </template>
           </div>
         </div>
-
-        <h5 class="mt-3 mb-1 text-xl text-default-800 font-semibold">{{ product?.Nama_Produk }}</h5>
-        <ul class="flex flex-wrap text-sm items-center gap-4 mb-5 text-default-500">
-          <li class="flex items-center gap-1">
-            <Icon icon="lucide:scaling" class="size-4 text-primary"></Icon>
-            <span class="font-medium">uk {{ product?.Tipe_Ukuran }}</span>
-          </li>
-          <li class="flex items-center gap-1">
-            <Icon icon="lucide:map-pin" class="size-4 text-primary"></Icon>
-            <span class="font-medium">{{ product?.Alamat }}</span>
-          </li>
-        </ul>
 
         <div class="mb-6">
-          <h4 v-if="product" class="text-default-900 font-bold text-2xl">
-            {{ product?.Harga_Jual2 == 0 ? formatCurrency(product.Harga_Jual1) : formatCurrency(product.Harga_Jual2) }}
-            <div v-if="product?.Harga_Jual2 != 0">
-              <small class="font-normal text-base line-through align-middle text-default-500">
+          <h5 class="text-2xl text-default-900 font-bold tracking-tight mb-2 uppercase leading-tight">
+            {{ product?.Nama_Produk }}
+          </h5>
+          <div class="flex items-center gap-2 text-default-500">
+            <Icon icon="lucide:map-pin" class="size-4 text-primary" />
+            <span class="text-sm font-medium">{{ product?.Alamat }}</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <div v-if="product?.Status_Transaksi.includes('Jual')" class="bg-default-50 p-4 rounded-xl border border-default-100">
+            <p class="text-[10px] text-default-500 font-bold uppercase tracking-widest mb-1">Harga Jual</p>
+            <h4 class="text-primary font-extrabold text-2xl flex items-baseline gap-2">
+              {{ product?.Harga_Jual2 == 0 ? formatCurrency(product.Harga_Jual1) : formatCurrency(product.Harga_Jual2) }}
+              <span v-if="product?.Harga_Jual2 != 0" class="text-sm font-medium line-through text-default-400 italic">
                 {{ formatCurrency(product?.Harga_Jual1 || 0) }}
-              </small>
+              </span>
+            </h4>
+          </div>
 
-              <small class="text-success text-base align-middle font-medium ms-2"> Diskon {{ product?.Harga_Jual1 ? (((product.Harga_Jual1 - product.Harga_Jual2) / product.Harga_Jual1) * 100).toFixed(2) : '0.00' }} % </small>
+          <div v-if="product?.Status_Transaksi.includes('Sewa')" class="bg-primary/5 p-4 rounded-xl border border-primary/10">
+            <p class="text-[10px] text-primary font-bold uppercase tracking-widest mb-1">Harga Sewa</p>
+            <h4 class="text-primary font-extrabold text-2xl">
+              {{ formatCurrency(product?.Harga_Sewa1 || 0) }}
+              <span class="text-xs font-medium text-default-500 lowercase">/ {{ product?.Satuan_Minimal_Sewa || 'Tahun' }}</span>
+            </h4>
+          </div>
+        </div>
+
+        <div class="mb-8">
+          <h6 class="text-xs font-bold text-default-800 uppercase tracking-widest mb-4 flex items-center gap-2"><span class="w-8 h-[1.5px] bg-primary"></span> Ringkasan Properti</h6>
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div
+              v-for="(spec, idx) in [
+                { icon: 'lucide:bed', label: 'K. Tidur', val: product?.Jumlah_Kamar_Tidur },
+                { icon: 'lucide:bath', label: 'K. Mandi', val: product?.Jumlah_Kamar_Mandi },
+                { icon: 'lucide:layers', label: 'Lantai', val: product?.Jumlah_Lantai },
+                { icon: 'lucide:zap', label: 'Listrik', val: product?.Daya_Listrik + 'W' },
+                { icon: 'lucide:maximize', label: 'L. Tanah', val: product?.Luas_Tanah + 'm²' },
+                { icon: 'lucide:home', label: 'L. Bangunan', val: product?.Luas_Bangunan + 'm²' }
+              ]"
+              :key="idx"
+              class="flex flex-col items-center py-3 rounded-lg border border-default-100 hover:bg-default-50 transition-colors"
+            >
+              <Icon :icon="spec.icon" class="size-4 text-primary mb-1.5" />
+              <span class="text-[9px] uppercase font-bold text-default-400">{{ spec.label }}</span>
+              <span class="text-sm font-bold text-default-800">{{ spec.val }}</span>
             </div>
-          </h4>
-        </div>
-
-        <h6 class="mb-3 text-[15px] font-semibold text-default-800">Spesifikasi Utama</h6>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <div class="p-3 border rounded-lg border-default-200 flex flex-col items-center gap-1">
-            <Icon icon="lucide:bed" class="size-5 text-primary"></Icon>
-            <span class="text-xs text-default-500">K. Tidur</span>
-            <span class="font-bold text-default-800">{{ product?.Jumlah_Kamar_Tidur }}</span>
-          </div>
-          <div class="p-3 border rounded-lg border-default-200 flex flex-col items-center gap-1">
-            <Icon icon="lucide:bath" class="size-5 text-primary"></Icon>
-            <span class="text-xs text-default-500">K. Mandi</span>
-            <span class="font-bold text-default-800">{{ product?.Jumlah_Kamar_Mandi }}</span>
-          </div>
-          <div class="p-3 border rounded-lg border-default-200 flex flex-col items-center gap-1">
-            <Icon icon="lucide:layers" class="size-5 text-primary"></Icon>
-            <span class="text-xs text-default-500">Jml Lantai</span>
-            <span class="font-bold text-default-800">{{ product?.Jumlah_Lantai }} Lantai</span>
-          </div>
-          <div class="p-3 border rounded-lg border-default-200 flex flex-col items-center gap-1">
-            <Icon icon="lucide:zap" class="size-5 text-primary"></Icon>
-            <span class="text-xs text-default-500">Daya Listrik</span>
-            <span class="font-bold text-default-800">{{ product?.Daya_Listrik }} Watt</span>
-          </div>
-          <div class="p-3 border rounded-lg border-default-200 flex flex-col items-center gap-1">
-            <Icon icon="lucide:maximize" class="size-5 text-primary"></Icon>
-            <span class="text-xs text-default-500">L. Tanah</span>
-            <span class="font-bold text-default-800">{{ product?.Luas_Tanah }} m²</span>
-          </div>
-          <div class="p-3 border rounded-lg border-default-200 flex flex-col items-center gap-1">
-            <Icon icon="lucide:home" class="size-5 text-primary"></Icon>
-            <span class="text-xs text-default-500">L. Bangunan</span>
-            <span class="font-bold text-default-800">{{ product?.Luas_Bangunan }} m²</span>
           </div>
         </div>
 
-        <div class="mt-5">
-          <h6 class="card-title mb-3">Deskripsi Properti:</h6>
-          <p class="mb-2 text-sm text-default-600">{{ product?.Keterangan }}</p>
-          <div v-if="product?.Akses_Jalan?.length" class="text-default-600 text-sm italic">
-            <b>Dekat dengan Fasilitas Umum:</b>
-            <ul class="list-disc ms-5 mt-1 font-normal">
-              <li v-for="(access, idx) in product?.Akses_Jalan" :key="idx">
-                {{ access }}
-              </li>
-            </ul>
-          </div>
+        <div class="mb-8 p-5 bg-default-50/50 rounded-xl border-s-4 border-primary">
+          <h6 class="text-xs font-bold text-default-800 uppercase tracking-widest mb-2">Deskripsi Lengkap</h6>
+          <p class="text-sm text-default-600 leading-relaxed">{{ product?.Keterangan }}</p>
         </div>
 
-        <div class="mt-8">
-          <h6 class="card-title mb-3 font-bold underline">Spesifikasi Lengkap:</h6>
-          <div class="overflow-x-auto">
-            <table class="w-full">
-              <tbody>
-                <tr class="border-b border-default-100">
-                  <th class="px-3 py-2.5 font-semibold text-start text-sm w-64 text-default-500">Tipe Properti</th>
-                  <td class="px-3 py-2.5 text-sm text-default-700">{{ product?.Tipe }}</td>
+        <div class="mt-10">
+          <h6 class="text-xs font-bold text-default-800 uppercase tracking-widest mb-4">Akses</h6>
+          <div class="overflow-hidden border border-default-100 rounded-xl">
+            <table class="w-full text-sm">
+              <tbody class="divide-y divide-default-100">
+                <tr v-for="(akses, idx) in product?.Akses_Jalan" :key="idx" class="hover:bg-default-50/50 transition-colors group">
+                  <td class="px-5 py-3 text-default-800 flex items-center gap-3">
+                    <span class="size-1.5 rounded-full bg-primary/40 group-hover:bg-primary transition-colors"></span>
+                    {{ akses }}
+                  </td>
                 </tr>
-                <tr class="border-b border-default-100">
-                  <th class="px-3 py-2.5 font-semibold text-start w-64 text-default-500 text-sm">Sertifikat</th>
-                  <td class="px-3 py-2.5 text-sm text-default-700 font-bold">{{ product?.Jenis_Sertifikat }}</td>
+
+                <tr v-if="!product?.Akses_Jalan || product.Akses_Jalan.length === 0">
+                  <td class="px-5 py-4 text-default-400 italic text-center">Informasi akses jalan tidak tersedia</td>
                 </tr>
-                <tr class="border-b border-default-100">
-                  <th class="px-3 py-2.5 font-semibold text-start w-64 text-default-500 text-sm">Carport</th>
-                  <td class="px-3 py-2.5 text-sm text-default-700">{{ product?.Jumlah_Carpot }} Mobil</td>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="mt-10">
+          <h6 class="text-xs font-bold text-default-800 uppercase tracking-widest mb-4">Informasi Tambahan</h6>
+          <div class="overflow-hidden border border-default-100 rounded-xl">
+            <table class="w-full text-sm">
+              <tbody class="divide-y divide-default-100">
+                <tr class="hover:bg-default-50/50 transition-colors">
+                  <td class="px-5 py-3 font-semibold text-default-500 bg-default-50/30 w-1/3 italic">Tipe Unit</td>
+                  <td class="px-5 py-3 text-default-800">{{ product?.Tipe }}</td>
                 </tr>
-                <tr v-if="product?.Status_Transaksi.includes('Sewa') && product?.minimal_sewa != 0" class="border-b border-default-100">
-                  <th class="px-3 py-2.5 font-semibold text-start w-64 text-default-500 text-sm">Minimal Sewa</th>
-                  <td class="px-3 py-2.5 text-sm text-default-700">{{ product?.minimal_sewa + ' ' + product?.Satuan_Minimal_Sewa }}</td>
+                <tr class="hover:bg-default-50/50 transition-colors">
+                  <td class="px-5 py-3 font-semibold text-default-500 bg-default-50/30 w-1/3 italic">Legalitas</td>
+                  <td class="px-5 py-3 text-primary font-bold">{{ product?.Jenis_Sertifikat }}</td>
+                </tr>
+                <tr v-if="product?.minimal_sewa && product?.minimal_sewa > 0" class="hover:bg-default-50/50 transition-colors">
+                  <td class="px-5 py-3 font-semibold text-default-500 bg-default-50/30 w-1/3 italic">Minimal Sewa</td>
+                  <td class="px-5 py-3 text-default-800 font-medium">{{ product?.minimal_sewa }} {{ product?.Satuan_Minimal_Sewa }}</td>
                 </tr>
               </tbody>
             </table>

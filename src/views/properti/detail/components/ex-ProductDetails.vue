@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import avatar2 from '@/assets/images/user/avatar-2.png'
 import { RouterLink } from 'vue-router'
 import type { Product } from '../index.vue'
 
@@ -47,23 +46,9 @@ const formatCurrency = (value: number) => {
             <Icon icon="lucide:map-pin" class="size-4 text-primary"></Icon>
             <span class="font-medium">{{ product?.Alamat }}</span>
           </li>
-          <!-- <li>Diposting: <span class="font-medium text-sm">10 Maret, 2026</span></li> -->
         </ul>
 
-        <!-- <div class="flex flex-wrap items-center gap-3 mb-4 border-b border-dashed border-default-200 pb-4">
-          <div class="flex items-center gap-2 text-yellow-500">
-            <Icon icon="lucide:star" class="size-4 fill-yellow-500"></Icon>
-            <Icon icon="lucide:star" class="size-4 fill-yellow-500"></Icon>
-            <Icon icon="lucide:star" class="size-4 fill-yellow-500"></Icon>
-            <Icon icon="lucide:star" class="size-4 fill-yellow-500"></Icon>
-            <Icon icon="lucide:star" class="size-4 fill-yellow-500"></Icon>
-            <div class="text-default-800 text-sm"><h6>(5.0)</h6></div>
-          </div>
-          <div class="text-default-800 text-sm"><h6>24 Terjual di Area ini</h6></div>
-        </div> -->
-
         <div class="mb-6">
-          <!-- <p class="mb-1 text-primary text-sm font-medium italic">Estimasi Cicilan Rp 12jt/bln</p> -->
           <h4 v-if="product" class="text-default-900 font-bold text-2xl">
             {{ product?.Harga_Jual2 == 0 ? formatCurrency(product.Harga_Jual1) : formatCurrency(product.Harga_Jual2) }}
             <div v-if="product?.Harga_Jual2 != 0">
@@ -148,77 +133,7 @@ const formatCurrency = (value: number) => {
             </table>
           </div>
         </div>
-
-        <!-- <h6 class="mt-8 mb-3 card-title border-t pt-5">Diskusi & Review Unit</h6>
-        <div class="grid lg:grid-cols-3 grid-cols-1 gap-5">
-          <div class="col-span-1">
-            <div class="card-body border border-dashed border-default-200 rounded-md">
-              <div class="text-center">
-                <h5 class="mb-2 text-base font-semibold text-default-800">Rating Agen</h5>
-                <span class="px-3.5 py-1.5 text-default-500 inline-flex gap-3 text-xs font-medium rounded-full border bg-default-100 border-default-200">
-                  <span class="flex items-center gap-2 text-yellow-500">
-                    <Icon icon="lucide:star" class="size-3 fill-yellow-500"></Icon>
-                    <Icon icon="lucide:star" class="size-3 fill-yellow-500"></Icon>
-                    <Icon icon="lucide:star" class="size-3 fill-yellow-500"></Icon>
-                    <Icon icon="lucide:star" class="size-3 fill-yellow-500"></Icon>
-                    <Icon icon="lucide:star" class="size-3 fill-yellow-500"></Icon>
-                  </span>
-                  (5.0 / 5)
-                </span>
-                <p class="mt-2 text-[13px] text-default-500">Berdasarkan 120 Transaksi</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="lg:col-span-2 col-span-1">
-            <div class="flex justify-between items-center gap-5">
-              <h6 class="text-default-800 font-semibold text-[15px]">Pertanyaan Calon Pembeli</h6>
-              <button class="text-white btn btn-sm btn-primary">Tanya Agen</button>
-            </div>
-
-            <div class="mt-3">
-              <div class="flex justify-between items-center gap-5">
-                <div class="flex gap-3 items-center">
-                  <img :src="avatar2" alt="" class="h-10 rounded-full" />
-                  <div>
-                    <h6 class="card-title font-semibold text-sm">Andi Wijaya</h6>
-                    <p class="text-[12px] text-default-500">14 Jan, 2024</p>
-                  </div>
-                </div>
-              </div>
-              <p class="text-default-600 text-sm mt-2 italic">"Apakah unit ini sudah termasuk kanopi untuk carport-nya?"</p>
-              <div class="mt-2 pl-4 border-l-2 border-primary/30">
-                <p class="text-xs font-semibold text-primary">Respon Agen:</p>
-                <p class="text-xs text-default-500">"Halo Pak Andi, untuk unit tipe ini kanopi sudah termasuk dalam paket promo Smart Home."</p>
-              </div>
-            </div>
-          </div>
-        </div> -->
       </div>
     </div>
-
-    <!-- <div class="card mt-8">
-      <div class="card-header border-b border-default-200 px-6 py-4">
-        <h4 class="text-lg font-semibold text-default-800 flex items-center gap-2">
-          <Icon icon="lucide:message-square" class="size-5 text-primary" />
-          Diskusi & Komentar Properti
-        </h4>
-      </div>
-
-      <div class="card-body p-6">
-        <div class="bg-default-50 p-4 rounded-xl border border-default-200">
-          <h6 class="text-sm font-semibold text-default-800 mb-3">Tinggalkan Pesan:</h6>
-          <div class="relative">
-            <textarea rows="3" placeholder="Tanyakan detail unit atau negosiasi di sini..." class="w-full border border-default-200 rounded-lg p-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none"></textarea>
-          </div>
-          <div class="flex justify-end mt-3">
-            <button class="btn bg-primary text-white px-5 py-2 rounded-lg flex items-center gap-2 text-sm font-semibold hover:bg-blue-600 transition-all">
-              <Icon icon="lucide:send" class="size-4" />
-              Kirim Komentar
-            </button>
-          </div>
-        </div>
-      </div>
-    </div> -->
   </div>
 </template>

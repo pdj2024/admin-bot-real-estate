@@ -1,0 +1,21 @@
+[
+  { "id": "1301", "province_id": "13", "name": "Kabupaten Kepulauan Mentawai" },
+  { "id": "1302", "province_id": "13", "name": "Kabupaten Pesisir Selatan" },
+  { "id": "1303", "province_id": "13", "name": "Kabupaten Solok" },
+  { "id": "1304", "province_id": "13", "name": "Kabupaten Sijunjung" },
+  { "id": "1305", "province_id": "13", "name": "Kabupaten Tanah Datar" },
+  { "id": "1306", "province_id": "13", "name": "Kabupaten Padang Pariaman" },
+  { "id": "1307", "province_id": "13", "name": "Kabupaten Agam" },
+  { "id": "1308", "province_id": "13", "name": "Kabupaten Lima Puluh Kota" },
+  { "id": "1309", "province_id": "13", "name": "Kabupaten Pasaman" },
+  { "id": "1310", "province_id": "13", "name": "Kabupaten Solok Selatan" },
+  { "id": "1311", "province_id": "13", "name": "Kabupaten Dharmasraya" },
+  { "id": "1312", "province_id": "13", "name": "Kabupaten Pasaman Barat" },
+  { "id": "1371", "province_id": "13", "name": "Kota Padang" },
+  { "id": "1372", "province_id": "13", "name": "Kota Solok" },
+  { "id": "1373", "province_id": "13", "name": "Kota Sawah Lunto" },
+  { "id": "1374", "province_id": "13", "name": "Kota Padang Panjang" },
+  { "id": "1375", "province_id": "13", "name": "Kota Bukittinggi" },
+  { "id": "1376", "province_id": "13", "name": "Kota Payakumbuh" },
+  { "id": "1377", "province_id": "13", "name": "Kota Pariaman" }
+]
