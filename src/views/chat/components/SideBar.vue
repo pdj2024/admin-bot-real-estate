@@ -1,3 +1,59 @@
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { Icon } from '@iconify/vue'
+import simplebar from 'simplebar-vue'
+import logo from '@/assets/images/logo-sm.png'
+import user1 from '@/assets/images/user/user-1.jpg'
+import user2 from '@/assets/images/user/user-2.jpg'
+import user3 from '@/assets/images/user/user-3.jpg'
+import user4 from '@/assets/images/user/user-4.jpg'
+import avatar10 from '@/assets/images/user/avatar-10.png'
+import avatar8 from '@/assets/images/user/avatar-8.png'
+import avatar1 from '@/assets/images/user/avatar-1.png'
+import avatar5 from '@/assets/images/user/avatar-5.png'
+import { RouterLink } from 'vue-router'
+import api from '@/services/axios'
+
+const Chats = ref<chat[]>([])
+
+interface chat {
+  Room_Id : string
+  Room_Name : string
+  Room_Type : string
+  Username_Lawan : string
+  Id_Lawan : string
+  ID_Media_Lawan : string
+  No_Id_Media_Lawan : string
+  Created_At : string | null
+  Last_Message_At : Date
+  Last_Message : string
+  Status : string
+  User_Ids : string[]
+  Count_Status_Sent : number
+  List_Id_Message_Sent : string[]
+  Count_Status_Received : number
+  List_Id_Message_Received : string[]
+}
+
+const fetchData = async () => {
+  try {
+    const { data } = await api.get('/api/chat/getRooms?orderby=Last_Message_At', {
+      headers: { 'X-Jenis-User': 'Admin' }
+    })
+    Chats.value = data.Data
+    console.log(Chats)
+  } catch (err: any) {
+    console.error('DATA:', err.response?.data)
+    console.error('STATUS:', err.response?.status)
+    console.error('MESSAGE:', err.message)
+  }
+}
+
+onMounted(async () => {
+  await fetchData()
+})
+</script>
+
 <template>
   <div class="lg:border-e border-default-200">
     <div id="hs-offcanvas-left" class="hs-overlay [--auto-close:lg] lg:block lg:translate-x-0 lg:static lg:end-auto lg:bottom-0 w-80 hs-overlay-open:translate-x-0 -translate-x-full transition-all duration-300 transform h-full hidden fixed top-0 start-0 bottom-0 overflow-hidden z-60" role="dialog" tabindex="-1" aria-label="Sidebar">
@@ -16,7 +72,18 @@
               <p class="mb-1 text-cyan-900 text-sm">Perlu Balasan</p>
             </div>
             <div class="bg-cyan-100">
-              <RouterLink to="" class="flex gap-3 py-2 px-4 bg-cyan-300">
+              <RouterLink to="" v-for="(chat, idx) in Chats"  class="flex gap-3 py-2 px-4 bg-default-150">
+                <div class="relative flex items-center justify-center font-semibold rounded-full size-9 bg-default-200">
+                  <img :src="user2" alt="" class="rounded-full w-9 h-9" />
+                  <span class="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-default-50 rounded-full bg-danger"></span>
+                </div>
+                <div class="flex-grow">
+                  <h6 class="mb-1 text-default-800 font-semibold text-sm">{{ chat.User_Ids }}</h6>
+                  <p class="text-xs truncate text-default-500">Baik, terima kasih mbak</p>
+                </div>
+                <small class="text-xs text-default-500">02:57 PM</small>
+              </RouterLink>
+              <!-- <RouterLink to="" class="flex gap-3 py-2 px-4 bg-cyan-300">
                 <div class="relative flex items-center justify-center font-semibold rounded-full size-9 bg-default-200">
                   <img :src="user2" alt="" class="rounded-full w-9 h-9" />
                   <span class="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-default-50 rounded-full bg-danger"></span>
@@ -48,7 +115,7 @@
                   <p class="text-xs truncate text-default-500">Apa sudah ada barangnya?</p>
                 </div>
                 <small class="text-xs text-default-500">Yesterday</small>
-              </RouterLink>
+              </RouterLink> -->
             </div>
             <div class="px-5 pt-2">
               <p class="mb-1 text-default-500 text-sm">Riwayat Percakapan</p>
@@ -151,18 +218,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { Icon } from '@iconify/vue'
-import simplebar from 'simplebar-vue'
-import logo from '@/assets/images/logo-sm.png'
-import user1 from '@/assets/images/user/user-1.jpg'
-import user2 from '@/assets/images/user/user-2.jpg'
-import user3 from '@/assets/images/user/user-3.jpg'
-import user4 from '@/assets/images/user/user-4.jpg'
-import avatar10 from '@/assets/images/user/avatar-10.png'
-import avatar8 from '@/assets/images/user/avatar-8.png'
-import avatar1 from '@/assets/images/user/avatar-1.png'
-import avatar5 from '@/assets/images/user/avatar-5.png'
-import { RouterLink } from 'vue-router'
-</script>

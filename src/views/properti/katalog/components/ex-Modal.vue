@@ -10,14 +10,16 @@ const panjang = ref('')
 const lebar = ref('')
 const photos = ref<File[]>([])
 const extensionsPhotos = ref<string[]>([])
-const previewPhotos = ref<string[]>([])
+const previewPhotos = ref<MediaItem[]>([])
 const selectedFiles = ref<File[]>([])
+const mediaIdsLists = ref<string[]>([])
 const provinces = ref<Province[]>([])
 const cities = ref<City[]>([])
 const dropdownProvinceRef = ref<HTMLElement | null>(null)
 const dropdownCityRef = ref<HTMLElement | null>(null)
 const scrollContainer = ref<HTMLElement | null>(null)
 
+const isLoading = ref(false)
 const openProvince = ref(false)
 const openCity = ref(false)
 const selectedProvinceId = ref('')
@@ -33,6 +35,16 @@ const props = defineProps<{
 
 const emit = defineEmits(['update:showModal', 'success', 'close'])
 
+interface MediaUrl {
+  Url: string | null
+  Expired_At: Date
+  IsCompressed: false
+  ContentType: string
+  ThumbUrl: string | null
+  Size: number
+  Id_Media: string
+}
+
 interface RealEstateForm {
   No_Id: string
   Nama_Produk: string
@@ -41,28 +53,30 @@ interface RealEstateForm {
   Tipe: string
   Tipe_Ukuran: string
   Jenis_Sertifikat: string
-  Luas_Tanah: number | null
-  Luas_Bangunan: number | null
+  Luas_Tanah: number
+  Luas_Bangunan: number
   Jumlah_Lantai: number
-  Jumlah_Kamar_Tidur: number | null
-  Jumlah_Kamar_Mandi: number | null
-  Jumlah_Carpot: number | null
+  Jumlah_Kamar_Tidur: number
+  Jumlah_Kamar_Mandi: number
+  Jumlah_Carpot: number
   Daya_Listrik: number
   Status_Display: string
   Status_Properti: string
   Status_Transaksi: string[]
+  Flag_Sewa: 'Ya' | 'Tidak'
   Ada_Minimal_Sewa?: boolean
-  Minimal_Sewa: number
-  Satuan_Minimal_Sewa: string | null
-  Harga_Jual1: number | null
-  Harga_Jual2: number | null
-  Harga_Sewa1: number | null
-  Harga_Sewa2: number | null
+  Minimal_Sewa: number | null
+  Satuan_Minimal_Sewa: 'Bulan' | 'Tahun' | ''
+  Harga_Jual1: number
+  Harga_Jual2: number
+  Harga_Sewa1: number
+  Harga_Sewa2: number
   Keterangan: string
   Slug: string
   Area: string
   Akses_Jalan: string[]
   File_Image: string[]
+  MediaUrls: MediaUrl[]
 }
 
 interface Province {
@@ -73,6 +87,23 @@ interface Province {
 interface City {
   id: string
   name: string
+}
+
+interface UploadTicket {
+  ExpireAt: Date
+  ObjectName: string
+  UploadUrl: string
+}
+
+interface MediaItem {
+  Url: string | null
+  Expired_At: string
+  IsCompressed: boolean
+  ContentType: string
+  ThumbUrl: string | null
+  Size: number
+  Id_Media: string
+  No_Id_Media: string
 }
 
 const specs = [
@@ -90,28 +121,30 @@ const defaultForm = (): RealEstateForm => ({
   Tipe: 'Rumah',
   Tipe_Ukuran: '',
   Jenis_Sertifikat: '',
-  Luas_Tanah: null,
-  Luas_Bangunan: null,
+  Luas_Tanah: 0,
+  Luas_Bangunan: 0,
   Jumlah_Lantai: 1,
-  Jumlah_Kamar_Tidur: null,
-  Jumlah_Kamar_Mandi: null,
-  Jumlah_Carpot: null,
+  Jumlah_Kamar_Tidur: 0,
+  Jumlah_Kamar_Mandi: 0,
+  Jumlah_Carpot: 0,
   Daya_Listrik: 1300,
   Status_Display: 'Aktif',
   Status_Properti: 'Tersedia',
   Status_Transaksi: ['Jual'],
+  Flag_Sewa: 'Tidak',
   Ada_Minimal_Sewa: false,
   Minimal_Sewa: 0,
-  Satuan_Minimal_Sewa: null,
-  Harga_Jual1: null,
-  Harga_Jual2: null,
-  Harga_Sewa1: null,
-  Harga_Sewa2: null,
+  Satuan_Minimal_Sewa: 'Tahun',
+  Harga_Jual1: 0,
+  Harga_Jual2: 0,
+  Harga_Sewa1: 0,
+  Harga_Sewa2: 0,
   Keterangan: '',
   Slug: '',
   Area: '',
   Akses_Jalan: [],
-  File_Image: []
+  File_Image: [],
+  MediaUrls: []
 })
 
 const form = ref<RealEstateForm>(defaultForm())
@@ -128,6 +161,7 @@ watch(
   () => props.showModal,
   (newVal) => {
     if (newVal) {
+      console.log('Masuk')
       if (props.itemData) {
         form.value = { ...props.itemData }
 
@@ -138,12 +172,16 @@ watch(
         }
 
         if (props.itemData.File_Image) {
-          const baseUrl = 'http://26.75.164.107:270/'
-          const fullImageUrl = props.itemData.File_Image.startsWith('http') ? props.itemData.File_Image : baseUrl + props.itemData.File_Image
-
-          previewPhotos.value = [fullImageUrl]
+          console.log(props.itemData.MediaUrls)
+          previewPhotos.value = props.itemData.MediaUrls
         } else {
           previewPhotos.value = []
+        }
+
+        if (props.itemData.Minimal_Sewa != null && props.itemData.Minimal_Sewa > 0) {
+          form.value.Ada_Minimal_Sewa = true
+        } else {
+          form.value.Ada_Minimal_Sewa = false
         }
       } else {
         form.value = defaultForm()
@@ -184,7 +222,7 @@ const selectCity = (c: City) => {
 }
 const getProvince = async () => {
   try {
-    const { data } = await axios.get('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json')
+    const { data } = await axios.get('/region/provinces.json')
     provinces.value = data
   } catch (err) {
     console.error(err)
@@ -193,7 +231,7 @@ const getProvince = async () => {
 
 const getCity = async (id: string | number) => {
   try {
-    const { data } = await axios.get('https://www.emsifa.com/api-wilayah-indonesia/api/regencies/' + id + '.json')
+    const { data } = await axios.get('/region/regencies/' + id + '.json')
     cities.value = data
   } catch (err) {
     console.error(err)
@@ -237,9 +275,20 @@ const handlePhoto = (event: Event) => {
     const reader = new FileReader()
     reader.onload = (e) => {
       if (typeof e.target?.result === 'string') {
-        previewPhotos.value.push(e.target.result)
+        previewPhotos.value.push({
+          Id_Media: e.target.result,
+          No_Id_Media: 'new_upload',
+          Url: null,
+          Expired_At: '',
+          IsCompressed: false,
+          ContentType: file.type,
+          ThumbUrl: null,
+          Size: file.size
+        })
+
         extensionsPhotos.value.push(file.name.split('.').pop()?.toLowerCase() || '')
         photos.value.push(file)
+
         nextTick(() => {
           scrollToRight()
         })
@@ -252,6 +301,7 @@ const handlePhoto = (event: Event) => {
 }
 
 const removePhoto = (index: number) => {
+  form.value.File_Image?.splice(index, 1)
   photos.value.splice(index, 1)
   extensionsPhotos.value.splice(index, 1)
   previewPhotos.value.splice(index, 1)
@@ -264,7 +314,7 @@ watch(
     if (!newStatus.includes('Sewa')) {
       form.value.Ada_Minimal_Sewa = false
       form.value.Minimal_Sewa = 0
-      form.value.Satuan_Minimal_Sewa = null
+      form.value.Satuan_Minimal_Sewa = ''
     }
   }
 )
@@ -299,26 +349,6 @@ const handleClickOutside = (e: MouseEvent) => {
   }
 }
 
-const uploadImage = async (e: Event) => {
-  const file = (e.target as HTMLInputElement).files?.[0]
-  if (!file) return
-
-  const uploadUrl =
-    'https://storage.googleapis.com/real-estate-bot/uploads/adm_1/fb0ec29f-ea5e-44bb-8081-c2ed58e734f0.jpg?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=storage-access%40bejobot.iam.gserviceaccount.com%2F20260316%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260316T075306Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=d09011d482c2dd0fb14dc8972ec646a08a6a889489a3d6be606d74f785383e9bd2b19ee321b4fa3dab4a40b7aa87038f5c5b03911135901eb20bce34ca507f57d9e7c6c0d069a3326c785490b35ae7f422c269a33369fbbb673634861cac6e659b7f6fed43b031899a1cc232358ed2e37a8748e3e0e0e82baba4e327881ba8c894014df32a143c6f64dfe1f1be7f7e666898ba4b5f3bab934601f758f080bdcef9218ff1e913df809a1b76b0696ec3d80a6cbcefb4ede3ab19806343545254b9a8decd3dba4aae4f6cf4d6f4b39d8d9f425337fb3eb8a6d42610237d0f2ce080192ca74896c41db1cbcfa3e25e6fa80dbe43c77cbc598f9ab99b0f422c95a46c'
-
-  try {
-    await api.put(uploadUrl, file, {
-      headers: {
-        'Content-Type': file.type
-      }
-    })
-
-    console.log('Upload berhasil')
-  } catch (err) {
-    console.error('Upload gagal', err)
-  }
-}
-
 const reqUploadUrl = async () => {
   const url = '/api/mediacloud/req-upload-url-batch'
 
@@ -333,34 +363,143 @@ const reqUploadUrl = async () => {
         'X-Jenis-User': 'admin'
       }
     })
-
-    console.log('Response Data:', data)
-
     return data
-
   } catch (err) {
     console.error('Request upload URL gagal:', err)
     throw err
   }
 }
 
+const sendMedia = async (uploadUrl: string, media: File) => {
+  if (!media || !(media instanceof File)) {
+    console.error('sendMedia: Objek media tidak valid atau undefined')
+    return null
+  }
+
+  try {
+    const response = await axios.put(uploadUrl, media, {
+      headers: {
+        'Content-Type': media.type // Aman sekarang
+      }
+    })
+    return response.data
+  } catch (err) {
+    console.log('Detail Media Error:', media)
+    console.error('Gagal mengunggah biner ke Google Cloud:', err)
+    throw err
+  }
+}
+
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
+}
+
+const handleInputCurrency = (event: Event, field: 'Harga_Jual1' | 'Harga_Jual2' | 'Harga_Sewa1' | 'Harga_Sewa2') => {
+  const input = event.target as HTMLInputElement
+
+  const numericString = input.value.replace(/\D/g, '')
+
+  if (!numericString) {
+    form.value[field] = 0
+    input.value = ''
+    return
+  }
+
+  const pureNumber = parseInt(numericString, 10)
+
+  form.value[field] = pureNumber
+
+  input.value = formatCurrency(pureNumber)
+}
+
+const confirmMediaBatch = async (filesMetadata: any[]) => {
+  try {
+    const url = '/api/mediacloud/confirm-upload-batch'
+    const { data } = await api.post(
+      url,
+      { files: filesMetadata },
+      {
+        headers: { 'X-Jenis-User': 'admin' }
+      }
+    )
+    console.log(data)
+    return data.MediaIds
+  } catch (err) {
+    console.error('Gagal konfirmasi batch:', err)
+    throw err
+  }
+}
+
 const submitForm = async () => {
+  if (isLoading.value) return
+
   const isEdit = !!form.value.No_Id
-  const url = isEdit ? `/api/realEstate/update/${form.value.No_Id}` : '/api/realEstate/create'
-  const method = isEdit ? 'put' : 'post'
 
   confirm(`Apakah Anda yakin ingin ${isEdit ? 'mengubah' : 'menambah'} data ini?`, async () => {
-    // try {
-    //   await api[method](url, form.value)
+    isLoading.value = true
 
-    //   success(`Data berhasil ${isEdit ? 'diperbarui' : 'disimpan'}!`)
-    //   emit('success') // Refresh tabel di parent
-    //   emit('update:showModal', false) // Tutup modal
-    // } catch (err) {
-    //   fail('Terjadi kesalahan saat menyimpan data.')
-    // }
-    reqUploadUrl
-    console.log(form.value)
+    try {
+      const targetUrl = isEdit ? `/api/realEstate/update?no_id=${form.value.No_Id}` : '/api/realEstate/create'
+      let finalMediaIds: string[] = []
+
+      // 1. Validasi Foto sebelum proses
+      if (photos.value && photos.value.length > 0) {
+        // Ambil tiket sesuai jumlah foto yang ada
+        const uploadTickets = await reqUploadUrl()
+
+        // Pastikan kita hanya memproses sebanyak jumlah minimum antara tiket dan foto
+        // Ini untuk mencegah 'undefined' jika jumlahnya tidak sinkron
+        const validProcessCount = Math.min(uploadTickets.length, photos.value.length)
+        const activePhotos = photos.value.slice(0, validProcessCount)
+        const activeTickets = uploadTickets.slice(0, validProcessCount)
+
+        // 2. Upload biner ke Cloud (Google Cloud Storage)
+        await Promise.all(activeTickets.map((ticket: any, index: number) => sendMedia(ticket.UploadUrl, activePhotos[index])))
+
+        // 3. Konfirmasi Batch ke Database Media
+        const resIds = await confirmMediaBatch(
+          activeTickets.map((ticket: any, index: number) => ({
+            id_kategori: null,
+            uploader_id: localStorage.getItem('no_id'),
+            fileName: activePhotos[index].name,
+            objectName: ticket.ObjectName,
+            original_size: activePhotos[index].size,
+            content_type: activePhotos[index].type // Aman, tidak akan undefined lagi
+          }))
+        )
+
+        finalMediaIds = resIds
+      }
+
+      // 4. Gabungkan foto lama (jika edit) dengan foto baru
+      const combinedPhotos = [...new Set([...(form.value.File_Image || []), ...finalMediaIds])]
+
+      // 5. Siapkan Payload
+      const payload = {
+        ...form.value,
+        File_Image: combinedPhotos,
+        Flag_Sewa: form.value.Status_Transaksi?.includes('Sewa') ? 'Ya' : 'Tidak'
+      }
+
+      // Hapus properti yang tidak perlu dikirim ke API backend (seperti MediaUrls hasil fetch)
+      const { MediaUrls, ...cleanPayload } = payload
+
+      console.log('FINAL PAYLOAD:', cleanPayload)
+
+      // 6. Eksekusi API
+      await api[isEdit ? 'put' : 'post'](targetUrl, cleanPayload, {
+        headers: { 'X-Jenis-User': 'admin' }
+      })
+
+      success(`Data berhasil disimpan!`)
+      emit('success')
+      emit('update:showModal', false)
+    } catch (err: any) {
+      console.error('Submit Error:', err)
+      fail(err.response?.data?.message || err.message || 'Gagal menyimpan data.')
+    } finally {
+      isLoading.value = false
+    }
   })
 }
 
@@ -384,12 +523,19 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 
       <div class="px-6 py-3 overflow-y-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div class="space-y-5">
-          <div class="col-span-2 space-y-2 !mb-3">
-            <label class="label block">Detail Gambar</label>
-
+          <div class="field" v-if="form.No_Id && form.Status_Properti == 'Tersedia'">
+            <div class="toggle-box mt-2">
+              <span class="flex items-center gap-2 text-xs font-bold text-slate-600 uppercase"> <Icon icon="lucide:power" /> {{ form.Status_Display }} </span>
+              <button @click="form.Status_Display = form.Status_Display === 'Aktif' ? 'Nonaktif' : 'Aktif'" class="toggle" :class="form.Status_Display === 'Aktif' ? 'toggle-active' : ''">
+                <span class="toggle-circle" :class="form.Status_Display === 'Aktif' ? 'translate-x-6' : ''"></span>
+              </button>
+            </div>
+          </div>
+          <div class="col-span-2 space-y-2 !mb-3" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
+            <label class="label block" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">Gambar Produk</label>
             <div ref="scrollContainer" class="preview-container flex flex-nowrap gap-3 overflow-x-auto pb-2 custom-scroll">
-              <div v-for="(img, i) in previewPhotos" :key="i" class="preview-box relative size-24 flex-shrink-0">
-                <img :src="img" class="size-full object-cover rounded-xl border border-slate-200" />
+              <div v-if="previewPhotos.length >= 1" v-for="(img, i) in previewPhotos" :key="i" class="preview-box relative size-24 flex-shrink-0">
+                <img :src="img.Id_Media" class="size-full object-cover rounded-xl border border-slate-200" />
                 <button @click="removePhoto(i)" class="preview-delete">✕</button>
               </div>
 
@@ -399,18 +545,33 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
                 <input type="file" multiple hidden @change="handlePhoto" accept="image/*" />
               </label>
 
-              <div v-if="!previewPhotos.length" class="flex-shrink-0 text-slate-300 text-[10px] italic flex items-center px-2">Belum ada foto terpilih</div>
+              <div v-if="!previewPhotos.length" class="flex-shrink-0 text-slate-500 text-[10px] italic flex items-center px-2">Belum ada foto terpilih</div>
             </div>
           </div>
-          <div class="field">
-            <label class="label flex justify-between"> Nama Properti </label>
-            <div class="relative">
-              <Icon icon="lucide:house" class="field-icon" />
-              <input v-model="form.Nama_Produk" placeholder="Nama Perumahan, Apartement, Resort" class="field-input" />
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="field" :class="{ inactive: form.Status_Display !== 'Aktif' }">
+              <label class="label">Tipe Properti</label>
+              <div class="relative">
+                <select v-model="form.Tipe" class="field-input !pl-4 w-full appearance-none">
+                  <option value="Rumah">Rumah</option>
+                  <option value="Apartemen">Apartemen</option>
+                  <option value="Villa">Villa</option>
+                  <option value="Mansion">Mansion</option>
+                </select>
+                <Icon icon="lucide:chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 size-4 pointer-events-none text-slate-400" />
+              </div>
+            </div>
+
+            <div class="md:col-span-2 field" :class="{ inactive: form.Status_Display !== 'Aktif' }">
+              <label class="label">Nama Properti</label>
+              <div class="relative">
+                <Icon icon="lucide:house" class="field-icon" />
+                <input v-model="form.Nama_Produk" placeholder="Contoh: The Sapphire Sky Mansion" class="field-input w-full" />
+              </div>
             </div>
           </div>
 
-          <div class="field" ref="dropdownRef">
+          <div class="field" ref="dropdownRef" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
             <label class="label flex justify-between">
               Area & Alamat
               <label class="flex items-center gap-1 cursor-pointer text-[10px] text-slate-500">
@@ -470,7 +631,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
             </div>
           </div>
 
-          <div class="bg-slate-50 p-4 rounded-2xl space-y-4 border border-slate-100">
+          <div class="bg-slate-50 p-4 rounded-2xl space-y-4 border border-slate-100" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
             <div class="flex items-center gap-4 border-b border-slate-200 pb-2">
               <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Opsi Transaksi</span>
               <div class="flex gap-4">
@@ -485,51 +646,62 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
                 </label>
 
                 <label v-if="form.Status_Transaksi.includes('Sewa')" class="flex items-center gap-2 text-xs font-bold cursor-pointer">
-                  <input type="checkbox" value="Minimal_Sewa" v-model="form.Ada_Minimal_Sewa" class="accent-primary" />
+                  <input type="checkbox" v-model="form.Ada_Minimal_Sewa" class="accent-primary" />
                   MIN SEWA
                 </label>
               </div>
             </div>
 
             <div v-if="form.Status_Transaksi.includes('Jual')" class="grid grid-cols-2 gap-3">
-              <div class="field">
+              <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
                 <label class="label !text-slate-500">Harga Jual Normal (Rp)</label>
-                <input v-model="form.Harga_Jual1" type="number" class="field-input !pl-4" placeholder="Harga awal" />
+                <input type="text" :value="form.Harga_Jual1 ? formatCurrency(form.Harga_Jual1) : ''" @input="handleInputCurrency($event, 'Harga_Jual1')" class="field-input !pl-4" placeholder="Harga awal" />
               </div>
-              <div class="field">
+
+              <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
                 <label class="label !text-blue-600">Harga Jual Diskon (Rp)</label>
-                <input v-model="form.Harga_Jual2" type="number" class="field-input !pl-4 border-emerald-200 focus:border-emerald-500" placeholder="Setelah diskon" />
+                <input type="text" :value="form.Harga_Jual2 ? formatCurrency(form.Harga_Jual2) : ''" @input="handleInputCurrency($event, 'Harga_Jual2')" class="field-input !pl-4 focus:border-emerald-500" :class="form.Harga_Jual2 > 0 && form.Harga_Jual2 >= form.Harga_Jual1 ? '!border-red-500 focus:!border-red-500' : 'border-emerald-200'" placeholder="Setelah diskon" />
+                <span v-if="form.Harga_Jual2 > 0 && form.Harga_Jual2 >= form.Harga_Jual1" class="text-xs text-red-500 mt-1 inline-block font-medium"> ⚠️ Harga diskon harus lebih kecil dari harga normal. </span>
               </div>
             </div>
 
-            <div v-if="form.Status_Transaksi.includes('Sewa')" class="grid grid-cols-2 gap-3">
-              <div class="field">
+            <div v-if="form.Status_Transaksi.includes('Sewa')" class="grid grid-cols-2 gap-3 mt-3">
+              <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
                 <label class="label !text-slate-500">Harga Sewa Normal (Rp)</label>
-                <input v-model="form.Harga_Sewa1" type="number" class="field-input !pl-4" placeholder="Harga awal" />
+
+                <div class="flex items-center gap-2">
+                  <input type="text" :value="form.Harga_Sewa1 ? formatCurrency(form.Harga_Sewa1) : ''" @input="handleInputCurrency($event, 'Harga_Sewa1')" class="field-input !pl-4 w-full" placeholder="Harga awal" />
+                  <span class="text-slate-500 font-medium whitespace-nowrap">/{{ form.Satuan_Minimal_Sewa || 'Tahun' }}</span>
+                </div>
               </div>
-              <div class="field">
+
+              <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
                 <label class="label !text-blue-600">Harga Sewa Diskon (Rp)</label>
-                <input v-model="form.Harga_Sewa2" type="number" class="field-input !pl-4 border-blue-200 focus:border-blue-500" placeholder="Setelah diskon" />
+                <div class="flex items-center gap-2">
+                  <input type="text" :value="form.Harga_Sewa2 ? formatCurrency(form.Harga_Sewa2) : ''" @input="handleInputCurrency($event, 'Harga_Sewa2')" class="field-input !pl-4 focus:border-blue-500" :class="form.Harga_Sewa2 > 0 && form.Harga_Sewa2 >= form.Harga_Sewa1 ? '!border-red-500 focus:!border-red-500' : 'border-blue-200'" placeholder="Setelah diskon" />
+                  <span class="text-slate-500 font-medium whitespace-nowrap">/{{ form.Satuan_Minimal_Sewa || 'Tahun' }}</span>
+                </div>
+                <span v-if="form.Harga_Sewa2 > 0 && form.Harga_Sewa2 >= form.Harga_Sewa1" class="text-xs text-red-500 mt-1 inline-block font-medium"> ⚠️ Harga diskon sewa harus lebih kecil dari harga sewa normal. </span>
               </div>
             </div>
 
             <div v-if="form.Ada_Minimal_Sewa" class="grid grid-cols-2 gap-3">
-              <div class="field">
+              <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
                 <label class="label !text-slate-500">Minimal Sewa</label>
-                <input v-model="form.Minimal_Sewa" type="number" class="field-input !pl-4" placeholder="Minimal sewa" />
+                <input v-model="form.Minimal_Sewa" type="number" class="field-input !pl-4" min="0" placeholder="Minimal sewa" />
               </div>
-              <div class="field">
+              <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
                 <label class="label !text-slate-600">Satuan</label>
                 <select v-model="form.Satuan_Minimal_Sewa" class="field-input !pl-4">
                   <option value="Bulan">Bulan</option>
-                  <option value="Tahun">Tahun</option>
+                  <option value="Tahun" selected>Tahun</option>
                 </select>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="space-y-4">
+        <div class="flex flex-col gap-4 h-full" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
           <div class="field">
             <label class="label"> Url Slug </label>
             <div class="relative">
@@ -537,8 +709,9 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
               <input v-model="form.Slug" class="field-input" readonly />
             </div>
           </div>
+
           <div class="grid grid-cols-2 gap-3">
-            <div class="field">
+            <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
               <label class="label">Sertifikat</label>
               <select v-model="form.Jenis_Sertifikat" class="field-input !pl-4">
                 <option value="SHM">SHM</option>
@@ -546,7 +719,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
                 <option value="Lainnya">Lainnya</option>
               </select>
             </div>
-            <div class="field">
+            <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
               <label class="label">Dimensi (P x L)</label>
               <div class="flex gap-2 items-center">
                 <input v-model="panjang" placeholder="P" type="number" class="field-input !pl-2 text-center" />
@@ -554,10 +727,12 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
                 <input v-model="lebar" placeholder="L" type="number" class="field-input !pl-2 text-center" />
               </div>
             </div>
-            <div class="field"><label class="label">Luas Tanah (m²)</label><input v-model="form.Luas_Tanah" type="number" class="field-input !pl-4" /></div>
-            <div class="field"><label class="label">Luas Bangunan (m²)</label><input v-model="form.Luas_Bangunan" type="number" class="field-input !pl-4" /></div>
           </div>
-
+          <div class="grid grid-cols-3 gap-2">
+            <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'"><label class="label">Luas Tanah (m²)</label><input v-model="form.Luas_Tanah" type="number" class="field-input !pl-4" /></div>
+            <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'"><label class="label">Luas Bangunan (m²)</label><input v-model="form.Luas_Bangunan" type="number" class="field-input !pl-4" /></div>
+            <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'"><label class="label">Jumlah Lantai</label><input v-model="form.Jumlah_Lantai" type="number" class="field-input !pl-4" /></div>
+          </div>
           <div class="grid grid-cols-3 gap-2">
             <div v-for="s in specs" :key="s.key" class="field">
               <label class="label">{{ s.label }}</label>
@@ -565,7 +740,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
             </div>
           </div>
 
-          <div class="field">
+          <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
             <label class="label">Aksesibilitas (Contoh: 5 min ke Tol)</label>
             <div class="flex gap-2">
               <input v-model="newAkses" @keyup.enter="addAkses" placeholder="Ketik akses..." class="field-input !pl-4" />
@@ -576,16 +751,19 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
             </div>
           </div>
 
-          <div class="field">
+          <div class="field flex flex-col flex-1" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
             <label class="label">Keterangan</label>
-            <textarea v-model="form.Keterangan" class="field-input !pl-4 h-18 pt-2 resize-none" placeholder="Ceritakan keunggulan properti..."></textarea>
+            <textarea v-model="form.Keterangan" class="field-input !pl-4 pt-2 resize-none flex-1 w-full" placeholder="Ceritakan keunggulan properti..."></textarea>
           </div>
         </div>
       </div>
 
       <div class="p-5 border-t flex justify-end gap-3 bg-slate-50/50">
         <button @click="$emit('update:showModal', false)" class="px-6 py-2.5 text-sm font-bold text-slate-500 hover:bg-white rounded-xl transition-all">Batal</button>
-        <button @click="submitForm" class="px-8 py-2.5 bg-primary text-white text-sm font-black rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]">SIMPAN KATALOG</button>
+        <button :disabled="isLoading" @click="submitForm" class="px-8 py-2.5 bg-primary text-white text-sm font-black rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]">
+          <span v-if="isLoading">Sedang Mengunggah...</span>
+          <span v-else>Simpan Data</span>
+        </button>
       </div>
     </div>
   </div>
@@ -595,7 +773,13 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 @reference "@/assets/css/style.css";
 
 .label {
-  @apply block text-[11px] font-extrabold text-slate-400 uppercase mb-1.5 ml-1 tracking-wider;
+  @apply block text-[11px] font-extrabold text-slate-500 uppercase mb-1.5 ml-1 tracking-wider;
+}
+.field {
+  @apply text-slate-500;
+}
+.inactive {
+  @apply opacity-50 pointer-events-none grayscale;
 }
 .field-icon {
   @apply absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-4 pointer-events-none;
@@ -616,25 +800,33 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 transparent;
 }
-
 .custom-scroll::-webkit-scrollbar {
   height: 4px;
   width: 4px;
 }
-
 .custom-scroll::-webkit-scrollbar-track {
   background: transparent;
 }
-
 .custom-scroll::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 20px;
 }
-
 .custom-scroll::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
 .search-container {
   @apply sticky top-0 z-10 bg-white p-4 border-b border-slate-100;
+}
+.toggle-box {
+  @apply w-full flex items-center justify-between p-3 border border-slate-200 rounded-xl bg-slate-50/50;
+}
+.toggle {
+  @apply w-12 h-6 bg-slate-200 rounded-full relative transition-all duration-300;
+}
+.toggle-active {
+  @apply bg-primary;
+}
+.toggle-circle {
+  @apply absolute top-1 left-1 size-4 bg-white rounded-full transition-all duration-300 shadow-sm;
 }
 </style>

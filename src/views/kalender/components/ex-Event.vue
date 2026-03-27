@@ -558,10 +558,10 @@ const saveReschedule = () => {
     return
   }
 
-  if (isTimeConflict(selectedDate.value, startTime.value, endTime.value)) {
-    fail('Rentang waktu tersebut sudah terisi jadwal lain.')
-    return
-  }
+  // if (isTimeConflict(selectedDate.value, startTime.value, endTime.value)) {
+  //   fail('Rentang waktu tersebut sudah terisi jadwal lain.')
+  //   return
+  // }
 
   confirm(`Konfirmasi reschedule ke ${selectedDate.value} pkl ${startTime.value}-${endTime.value}?`, () => {
     // Jalankan proses simpan

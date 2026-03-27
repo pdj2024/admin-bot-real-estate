@@ -443,21 +443,15 @@ const submitForm = async () => {
       const targetUrl = isEdit ? `/api/realEstate/update?no_id=${form.value.No_Id}` : '/api/realEstate/create'
       let finalMediaIds: string[] = []
 
-      // 1. Validasi Foto sebelum proses
       if (photos.value && photos.value.length > 0) {
-        // Ambil tiket sesuai jumlah foto yang ada
         const uploadTickets = await reqUploadUrl()
 
-        // Pastikan kita hanya memproses sebanyak jumlah minimum antara tiket dan foto
-        // Ini untuk mencegah 'undefined' jika jumlahnya tidak sinkron
         const validProcessCount = Math.min(uploadTickets.length, photos.value.length)
         const activePhotos = photos.value.slice(0, validProcessCount)
         const activeTickets = uploadTickets.slice(0, validProcessCount)
 
-        // 2. Upload biner ke Cloud (Google Cloud Storage)
         await Promise.all(activeTickets.map((ticket: any, index: number) => sendMedia(ticket.UploadUrl, activePhotos[index])))
 
-        // 3. Konfirmasi Batch ke Database Media
         const resIds = await confirmMediaBatch(
           activeTickets.map((ticket: any, index: number) => ({
             id_kategori: null,
@@ -465,29 +459,25 @@ const submitForm = async () => {
             fileName: activePhotos[index].name,
             objectName: ticket.ObjectName,
             original_size: activePhotos[index].size,
-            content_type: activePhotos[index].type // Aman, tidak akan undefined lagi
+            content_type: activePhotos[index].type
           }))
         )
 
         finalMediaIds = resIds
       }
 
-      // 4. Gabungkan foto lama (jika edit) dengan foto baru
       const combinedPhotos = [...new Set([...(form.value.File_Image || []), ...finalMediaIds])]
 
-      // 5. Siapkan Payload
       const payload = {
         ...form.value,
         File_Image: combinedPhotos,
         Flag_Sewa: form.value.Status_Transaksi?.includes('Sewa') ? 'Ya' : 'Tidak'
       }
 
-      // Hapus properti yang tidak perlu dikirim ke API backend (seperti MediaUrls hasil fetch)
       const { MediaUrls, ...cleanPayload } = payload
 
       console.log('FINAL PAYLOAD:', cleanPayload)
 
-      // 6. Eksekusi API
       await api[isEdit ? 'put' : 'post'](targetUrl, cleanPayload, {
         headers: { 'X-Jenis-User': 'admin' }
       })

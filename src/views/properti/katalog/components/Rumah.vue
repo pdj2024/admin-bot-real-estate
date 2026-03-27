@@ -118,8 +118,10 @@ const fetchData = async () => {
       headers: { 'X-Jenis-User': 'Admin' }
     })
     products.value = data.Data
-  } catch (err) {
-    console.error(err)
+  } catch (err: any) {
+    console.error('DATA:', err.response?.data)
+    console.error('STATUS:', err.response?.status)
+    console.error('MESSAGE:', err.message)
   }
 }
 

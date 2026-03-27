@@ -11,6 +11,7 @@ interface Customer {
   UserName: string
   Nama_Display: string
   Email: string
+  Telepon: number
   Kota: string
   Status: string
   Pernah_Order?: boolean
@@ -31,6 +32,7 @@ const emit = defineEmits(['edit', 'success'])
 const columns = [
   { accessorKey: 'Nama_Display', header: 'Nama' },
   { accessorKey: 'Email', header: 'Email' },
+  { accessorKey: 'Telepon', header: 'Telepon' },
   { accessorKey: 'Kota', header: 'Kota' },
   { accessorKey: 'Status', header: 'Status' },
   { id: 'aksi', header: 'Action', enableSorting: false }
@@ -104,9 +106,10 @@ const table = useVueTable({
 const fetchData = async () => {
   try {
     const { data } = await api.get('/api/customer/getAll?orderby=Tgl_Created', {
-      headers: { 'X-Jenis-User': 'Customer' }
+      headers: { 'X-Jenis-User': 'admin' }
     })
     customers.value = data.Data
+    console.log(customers)
   } catch (err) {
     console.error('Gagal memuat data:', err)
   }
@@ -180,6 +183,10 @@ onBeforeUnmount(() => {
 
             <td class="px-4 py-3 text-sm text-gray-600">
               {{ row.original.Email }}
+            </td>
+
+            <td class="px-4 py-3 text-sm text-gray-600">
+              {{ row.original.Telepon }}
             </td>
 
             <td class="px-4 py-3 text-sm text-gray-600">
