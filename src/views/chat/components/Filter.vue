@@ -26,7 +26,7 @@
             <div class="hs-accordion-content w-full overflow-hidden transition-[height] duration-300" role="region">
               <div class="py-2 grid grid-cols-2 sm:flex sm:flex-col gap-2 sm:gap-3">
                 <label v-for="loc in ['Semua', 'DKI Jakarta', 'Jawa Barat', 'Jawa Tengah', 'Jawa Timur', 'Bali']" :key="loc" class="flex gap-2 sm:gap-3 items-center cursor-pointer">
-                  <input type="checkbox" class="rounded bg-white border-blue-500 text-blue-500 focus:ring-blue-200 form-checkbox transition-all size-4" />
+                  <input type="checkbox" class="rounded bg-white border-blue-500 text-bejo-500 focus:ring-blue-200 form-checkbox transition-all size-4" />
                   <span class="text-xs sm:text-sm text-default-700 whitespace-nowrap">
                     {{ loc }}
                   </span>

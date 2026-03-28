@@ -7,12 +7,14 @@
 
   --color-card: var(--color-white);
 
-  --color-primary: var(--color-blue-500);
+  --color-primary: #ca6d2c;
   --color-secondary: var(--color-violet-500);
   --color-success: var(--color-green-500);
   --color-info: var(--color-sky-500);
   --color-warning: var(--color-amber-500);
   --color-danger: var(--color-orange-500);
+
+  --background-image-primary-gradient: linear-gradient(135deg, #ea9455 0%, #ca6d2c 100%);
 
   --color-default-50: var(--color-zinc-50);
   --color-default-100: var(--color-zinc-100);
@@ -26,6 +28,30 @@
   --color-default-800: var(--color-zinc-800);
   --color-default-900: var(--color-zinc-900);
   --color-default-950: var(--color-zinc-950);
+
+  --color-bejo-50: #fff7ed;
+  --color-bejo-100: #ffedd5;
+  --color-bejo-200: #fed7aa;
+  --color-bejo-300: #fdba74;
+  --color-bejo-400: #fb923c;
+  --color-bejo-500: #f97316;
+  --color-bejo-600: #df7730;
+  --color-bejo-700: #c2410c;
+  --color-bejo-800: #9a3412;
+  --color-bejo-900: #7c2d12;
+  --color-bejo-1000: #431407;
+
+  --text-bejo-50: #fff7ed;
+  --text-bejo-100: #ffedd5;
+  --text-bejo-200: #fed7aa;
+  --text-bejo-300: #fdba74;
+  --text-bejo-400: #fb923c;
+  --text-bejo-500: #f97316;
+  --text-bejo-600: #df7730;
+  --text-bejo-700: #c2410c;
+  --text-bejo-800: #9a3412;
+  --text-bejo-900: #7c2d12;
+  --text-bejo-1000: #431407;
 
   --text-base--line-height: 1.1;
   --text-xl--line-height: 1.1;
@@ -50,6 +76,27 @@
 
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *, .dark, .dark *));
 
+.bg-primary {
+  @apply bg-primary-gradient;
+}
+
+.bg-primary {
+  border: none !important;
+  outline: none !important;
+  appearance: none;
+  background-color: transparent !important;
+  background-clip: padding-box;
+  text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s ease-in-out;
+}
+
+.bg-primary:hover {
+  filter: saturate(1.2) brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.5);
+}
+
 :root {
   color-scheme: light;
 }
@@ -59,7 +106,6 @@
 
   --color-body-bg: var(--color-zinc-950);
   --color-body-color: var(--color-zinc-400);
-
   --color-card: var(--color-zinc-900);
 
   --color-default-50: var(--color-zinc-950);
@@ -76,6 +122,52 @@
   --color-default-950: var(--color-zinc-50);
 
   --topbar-background: var(--color-default-100);
+
+  .bg-gray-50 {
+    background-color: var(--color-default-100) !important;
+  }
+
+  .border-gray-200,
+  .border-gray-300,
+  .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
+    border-color: var(--color-default-200) !important;
+  }
+
+  .text-gray-900 {
+    color: var(--color-default-950) !important;
+  }
+  .text-gray-800 {
+    color: var(--color-default-900) !important;
+  }
+  .text-gray-700 {
+    color: var(--color-default-800) !important;
+  }
+  .text-gray-600 {
+    color: var(--color-default-700) !important;
+  }
+  .text-gray-500 {
+    color: var(--color-default-500) !important;
+  }
+  .text-gray-400 {
+    color: var(--color-default-400) !important;
+  }
+
+  .bg-white {
+    background-color: var(--color-card) !important;
+  }
+
+  .hover\:bg-gray-50:hover,
+  .hover\:bg-gray-100:hover {
+    background-color: var(--color-default-150) !important;
+  }
+
+  .bg-gray-200 {
+    background-color: var(--color-default-300) !important;
+  }
+
+  .border-gray-100 {
+    border-color: var(--color-default-200) !important;
+  }
 }
 
 /* Light Menu */

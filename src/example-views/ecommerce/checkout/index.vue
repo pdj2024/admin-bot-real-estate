@@ -12,7 +12,7 @@
             <Icon icon="lucide:chevron-left" class="size-4"></Icon>
             Back to Cart
           </RouterLink>
-          <button type="button" class="text-[13px] py-2 px-4 rounded bg-primary text-white transition-all duration-300 hover:bg-blue-600 inline-flex items-center">
+          <button type="button" class="text-[13px] py-2 px-4 rounded bg-primary text-white transition-all duration-300 hover:bg-bejo-600 inline-flex items-center">
             Place Order
             <Icon icon="lucide:move-right" class="size-4 ms-1"></Icon>
           </button>

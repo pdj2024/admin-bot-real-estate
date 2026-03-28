@@ -14,7 +14,7 @@
             <h4 class="mb-2 text-purple-500 dark:text-white text-xl font-semibold">OPPS, PAGE NOT FOUND</h4>
             <p class="mb-6 text-base text-default-500">It will be as straightforward as Occidental; in fact, it will be just like Occidental to an English speaker.</p>
             <RouterLink to="/">
-              <button type="button" class="bg-primary text-white hover:bg-blue-600 rounded text-[13px] py-2 px-4 inline-flex items-center">
+              <button type="button" class="bg-primary text-white hover:bg-bejo-600 rounded text-[13px] py-2 px-4 inline-flex items-center">
                 <Icon icon="lucide:home" class="size-3 me-1"></Icon>
                 Back to Home
               </button>

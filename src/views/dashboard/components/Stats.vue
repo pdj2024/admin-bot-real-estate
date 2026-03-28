@@ -1,119 +1,54 @@
+<script setup lang="ts">
+import { Icon } from '@iconify/vue'
+const operasionalData = [
+  { label: 'Chat Aktif', value: '12', icon: 'lucide:message-square', bgColor: 'bg-primary/10', iconColor: 'text-primary' },
+  { label: 'Janji Temu Hari Ini', value: '5', icon: 'lucide:calendar-clock', bgColor: 'bg-info/10', iconColor: 'text-info' },
+  { label: 'Total Database', value: '1.2k', icon: 'lucide:users', bgColor: 'bg-success/10', iconColor: 'text-success' },
+]
+
+const propertyStats = [
+  { label: 'Tersedia', value: '24', icon: 'lucide:home', bg: 'bg-emerald-500/10', color: 'text-emerald-500' },
+  { label: 'Terjual', value: '150', icon: 'lucide:badge-check', bg: 'bg-blue-500/10', color: 'text-blue-500' },
+  { label: 'Tersewa', value: '89', icon: 'lucide:key', bg: 'bg-amber-500/10', color: 'text-amber-500' },
+  { label: 'Total Unit', value: '263', icon: 'lucide:layers', bg: 'bg-slate-500/10', color: 'text-slate-500' },
+]
+</script>
+
 <template>
-  <div class="flex items-center md:justify-between flex-wrap gap-2 mb-2 print:hidden">
-    <h4 class="text-default-900 text-lg font-semibold">Operasional</h4>
-    <div class="md:flex hidden items-center gap-2 text-sm font-semibold">
-      <RouterLink to="" class="btn btn-sm border-0 text-primary/90 hover:text-primary"
-        >Kelola
-        <Icon icon="lucide:move-right" class="ms-1 size-4"></Icon>
-      </RouterLink>
-    </div>
+  <div class="flex items-center justify-between mb-4">
+    <h4 class="text-default-900 text-lg font-bold">Ringkasan Operasional</h4>
   </div>
-  <div class="grid lg:grid-cols-2 md:grid-cols-2 grid-cols-1 gap-5">
-    <div class="card pt-2 pb-4">
-      <div class="card-header pb-2">
-        <div>
-          <p class="text-sm text-default-500">Jumlah Admin Aktif</p>
-          <h2 class="text-default-1000 font-semibold text-lg"><span data-target="2">2</span></h2>
+  <div class="grid lg:grid-cols-3 md:grid-cols-3 grid-cols-1 gap-5 mb-8">
+    <div v-for="(item, idx) in operasionalData" :key="idx" class="card bg-card border-default-200">
+      <div class="card-body p-5">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-default-500 font-medium">{{ item.label }}</p>
+            <h2 class="text-2xl font-black text-default-900">{{ item.value }}</h2>
+          </div>
+          <div :class="`size-12 rounded-xl flex items-center justify-center ${item.bgColor}`">
+            <Icon :icon="item.icon" :class="`size-6 ${item.iconColor}`" />
+          </div>
         </div>
-        <div class="flex items-center justify-center rounded-full size-10 bg-primary/10">
-          <Icon icon="lucide:headset" class="size-6 text-primary"></Icon>
-        </div>
-      </div>
-      <div class="card-body px-5 pb-0 pt-2">
-        <h5 class="text-default-500 font-normal">
-          <span class="font-semibold text-lg text-red-600" data-target="2">2</span>&nbsp;Tidak Aktif
-        </h5>
-      </div>
-    </div>
-    <div class="card pt-2 pb-4">
-      <div class="card-header pb-2">
-        <div>
-          <p class="text-sm text-default-500">Jumlah Pelanggan Aktif</p>
-          <h2 class="text-default-1000 font-semibold text-lg"><span data-target="23">23</span></h2>
-        </div>
-        <div class="flex items-center justify-center rounded-full size-10 bg-primary/10">
-          <Icon icon="lucide:users" class="size-6 text-primary"></Icon>
-        </div>
-      </div>
-      <div class="card-body px-5 pb-0 pt-2">
-        <h5 class="text-default-500 font-normal">
-          <span class="font-semibold text-lg text-red-600" data-target="4">4</span>&nbsp;Tidak Aktif
-        </h5>
-      </div>
-    </div>
-    <div class="card pt-2 pb-4">
-      <div class="card-header pb-2">
-        <div>
-          <p class="text-sm text-default-500">Jumlah Sesi Chat Aktif</p>
-          <h2 class="text-default-1000 font-semibold text-lg"><span data-target="12">12</span></h2>
-        </div>
-        <div class="flex items-center justify-center rounded-full size-10 bg-primary/10">
-          <Icon icon="lucide:message-circle-more" class="size-6 text-primary"></Icon>
-        </div>
-      </div>
-      <div class="card-body px-5 pb-0 pt-2">
-        <h5 class="text-default-500 font-normal">
-          <span class="font-semibold text-lg text-red-600" data-target="2">2</span>&nbsp;Tidak Aktif
-        </h5>
       </div>
     </div>
   </div>
 
-  <div class="flex items-center md:justify-between flex-wrap gap-2 mt-6 mb-2 print:hidden">
-    <h4 class="text-default-900 text-lg font-semibold">Penjualan</h4>
-    <div class="md:flex hidden items-center gap-2 text-sm font-semibold">
-      <RouterLink to="" class="btn btn-sm border-0 text-primary/90 hover:text-primary"
-        >Kelola
-        <Icon icon="lucide:move-right" class="ms-1 size-4"></Icon>
-      </RouterLink>
-    </div>
-  </div>
+  <h4 class="text-default-900 text-lg font-bold mb-4">Status Properti</h4>
   <div class="grid lg:grid-cols-4 md:grid-cols-2 grid-cols-1 gap-5">
-    <div class="card">
-      <div class="card-body">
-        <div class="flex items-center justify-center mx-auto rounded-full size-14 bg-primary/10">
-          <Icon icon="lucide:wallet-2" class="size-6 text-primary"></Icon>
+    <div v-for="(stat, idx) in propertyStats" :key="idx" class="card border-default-200 bg-card">
+      <div class="card-body p-5">
+        <div class="flex items-center gap-4">
+          <div :class="`size-12 rounded-lg flex items-center justify-center ${stat.bg}`">
+            <Icon :icon="stat.icon" :class="`size-6 ${stat.color}`" />
+          </div>
+          <div>
+            <h5 class="text-xl font-black text-default-900">{{ stat.value }}</h5>
+            <p class="text-[10px] uppercase font-bold tracking-wider text-default-500">{{ stat.label }}</p>
+          </div>
         </div>
-        <h5 class="mt-4 text-center mb-2 text-default-800 font-semibold text-lg">Rp <span data-target="23.6">23.6</span>&nbsp;Jt</h5>
-        <p class="text-center text-sm text-default-500">Total Pendapatan</p>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-body">
-        <div class="flex items-center justify-center mx-auto rounded-full size-14 bg-info/10">
-          <Icon icon="lucide:package" class="size-6 text-info"></Icon>
-        </div>
-        <h5 class="mt-4 text-center mb-2 text-default-800 font-semibold text-lg">
-          <span data-target="13,461">2.312</span>
-        </h5>
-        <p class="text-center text-sm text-default-500">Total Pesanan</p>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-body">
-        <div class="flex items-center justify-center mx-auto rounded-full size-14 bg-success/10">
-          <Icon icon="lucide:truck" class="size-6 text-success"></Icon>
-        </div>
-        <h5 class="mt-4 text-center mb-2 text-default-800 font-semibold text-lg">
-          <span data-target="17,150">350</span>
-        </h5>
-        <p class="text-center text-sm text-default-500">Pesanan Terkirim</p>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-body">
-        <div class="flex items-center justify-center mx-auto rounded-full size-14 bg-danger/10">
-          <Icon icon="lucide:package-x" class="size-6 text-danger"></Icon>
-        </div>
-        <h5 class="mt-4 text-center mb-2 text-default-800 font-semibold text-lg">
-          <span data-target="15">15</span>
-        </h5>
-        <p class="text-center text-sm text-default-500">Pesanan Batal</p>
       </div>
     </div>
   </div>
 </template>
 
-<script setup lang="ts">
-import { Icon } from '@iconify/vue'
-</script>

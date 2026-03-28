@@ -13,7 +13,7 @@
           <div class="mt-8 text-center">
             <h4 class="mb-2 text-purple-500 dark:text-white text-xl font-semibold">We're Temporarily Offline</h4>
             <p class="mb-6 text-base text-default-500">We can't display these images as you're currently not connected to the internet. Once you're back online, please refresh the page or click the button below.</p>
-            <button type="button" onclick="window.location.href=window.location.href" class="bg-primary text-white hover:bg-blue-600 rounded text-[13px] py-2 px-4 inline-flex items-center">
+            <button type="button" onclick="window.location.href=window.location.href" class="bg-primary text-white hover:bg-bejo-600 rounded text-[13px] py-2 px-4 inline-flex items-center">
               <Icon icon="lucide:refresh-ccw" class="size-3 me-1"></Icon>
               Refresh
             </button>

@@ -1,42 +1,37 @@
 <template>
   <Vertical>
-    <PageTitle title="Dashboards" subtitle="Menu Utama" />
-    <div class="grid lg:grid-cols-3 grid-cols-1 gap-5 mb-5">
-      <div class="lg:col-span-2 col-span-1">
-        <WelcomeCard />
-        <Stats />
-        <SalesRevenue />
+    <PageTitle subtitle="Dashboard" title="Property Management Overview" />
+
+    <Transition name="fade" mode="out-in">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-8 space-y-6">
+          <WelcomeCard />
+          <Stats />
+          <RecentAppointments />
+        </div>
+
+        <div class="lg:col-span-4 space-y-6">
+          <OrderStats title="Statistik Properti" />
+          <TrafficResources title="Sumber Leads" />
+          <CustomerService title="Tim Pemasaran" />
+        </div>
       </div>
-      <div>
-        <OrderStat />
-        <TrafficResources />
-      </div>
-    </div>
-
-    <div class="grid lg:grid-cols-3 grid-cols-1 gap-5 mb-5"></div>
-
-    <ProductOrder />
-
-    <div class="grid lg:grid-cols-4 grid-cols-1 gap-5">
-      <CustomerService />
-      <SalesMonth />
-      <SellingProduct />
-      <Audience />
-    </div>
+    </Transition>
   </Vertical>
 </template>
 
 <script setup lang="ts">
+import { Icon } from '@iconify/vue'
 import PageTitle from '@/components/PageTitle.vue'
 import Vertical from '@/layouts/vertical.vue'
-import Audience from './components/Audience.vue'
 import CustomerService from './components/CustomerService.vue'
-import OrderStat from './components/OrderStat.vue'
-import ProductOrder from './components/ProductOrder.vue'
-import SalesMonth from './components/SalesMonth.vue'
-import SalesRevenue from './components/SalesRevenue .vue'
-import SellingProduct from './components/SellingProduct.vue'
+import RecentAppointments from './components/RecentAppointments.vue'
 import Stats from './components/Stats.vue'
 import TrafficResources from './components/TrafficResources.vue'
 import WelcomeCard from './components/WelcomeCard.vue'
+import Audience from './components/Audience.vue'
+import OrderStat from './components/OrderStat.vue'
+import SalesMonth from './components/SalesMonth.vue'
+import LeadConversion from './components/LeadConversion.vue'
+import SellingProduct from './components/SellingProduct.vue'
 </script>

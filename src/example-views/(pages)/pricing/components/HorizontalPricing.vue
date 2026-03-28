@@ -48,7 +48,7 @@
               <div class="text-white">
                 <p class="text-primary text-sm mb-4">Per Month</p>
                 <p class="text-primary text-2xl font-bold mb-4">$29.99</p>
-                <button type="button" class="py-1.5 px-4 w-full bg-blue-600 rounded-md">Buy Now</button>
+                <button type="button" class="py-1.5 px-4 w-full bg-bejo-600 rounded-md">Buy Now</button>
               </div>
             </div>
           </div>

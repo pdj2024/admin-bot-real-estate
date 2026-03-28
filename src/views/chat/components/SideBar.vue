@@ -15,25 +15,51 @@ import { RouterLink } from 'vue-router'
 import api from '@/services/axios'
 
 const Chats = ref<chat[]>([])
+const emit = defineEmits<{
+  (e: 'select-chat', id: string): void
+}>()
+
+const selectChat = (id: string) => {
+  emit('select-chat', id)
+  console.log(id)
+}
 
 interface chat {
-  Room_Id : string
-  Room_Name : string
-  Room_Type : string
-  Username_Lawan : string
-  Id_Lawan : string
-  ID_Media_Lawan : string
-  No_Id_Media_Lawan : string
-  Created_At : string | null
-  Last_Message_At : Date
-  Last_Message : string
-  Status : string
-  User_Ids : string[]
-  Count_Status_Sent : number
-  List_Id_Message_Sent : string[]
-  Count_Status_Received : number
-  List_Id_Message_Received : string[]
+  Room_Id: string
+  Room_Name: string
+  Room_Type: string
+  Username_Lawan: string
+  Id_Lawan: string
+  ID_Media_Lawan: string
+  No_Id_Media_Lawan: string
+  Created_At: string | null
+  Last_Message_At: Date
+  Last_Message: string
+  Status: string
+  User_Ids: string[]
+  Count_Status_Sent: number
+  List_Id_Message_Sent: string[]
+  Count_Status_Received: number
+  List_Id_Message_Received: string[]
 }
+
+const getDateChat = (date: any) => {
+  if (!date) return '';
+  const d = new Date(date);
+  const today = new Date().setHours(0, 0, 0, 0);
+  const target = new Date(d).setHours(0, 0, 0, 0);
+  const diffDays = (today - target) / 86400000;
+
+  if (diffDays === 0) {
+    return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  if (diffDays === 1) return 'Kemarin';
+
+  return new Intl.DateTimeFormat('id-ID', {
+    day: '2-digit', month: '2-digit', year: '2-digit'
+  }).format(d);
+};
 
 const fetchData = async () => {
   try {
@@ -41,7 +67,6 @@ const fetchData = async () => {
       headers: { 'X-Jenis-User': 'Admin' }
     })
     Chats.value = data.Data
-    console.log(Chats)
   } catch (err: any) {
     console.error('DATA:', err.response?.data)
     console.error('STATUS:', err.response?.status)
@@ -67,21 +92,21 @@ onMounted(async () => {
               </div>
             </div>
           </div>
-          <simplebar class="lg:h-[calc(100vh-310px)] h-[calc(100vh-125px)]" data-simplebar>
+          <simplebar class="lg:h-[calc(100vh-250px)] h-[calc(100vh-125px)]" data-simplebar>
             <div class="px-5 mb-1">
               <p class="mb-1 text-cyan-900 text-sm">Perlu Balasan</p>
             </div>
             <div class="bg-cyan-100">
-              <RouterLink to="" v-for="(chat, idx) in Chats"  class="flex gap-3 py-2 px-4 bg-default-150">
+              <RouterLink to="" v-for="(chat, idx) in Chats" @click="selectChat(chat.Room_Id)" class="flex gap-3 py-2 px-4 bg-default-150 cursor-pointer" >
                 <div class="relative flex items-center justify-center font-semibold rounded-full size-9 bg-default-200">
                   <img :src="user2" alt="" class="rounded-full w-9 h-9" />
                   <span class="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-default-50 rounded-full bg-danger"></span>
                 </div>
                 <div class="flex-grow">
-                  <h6 class="mb-1 text-default-800 font-semibold text-sm">{{ chat.User_Ids }}</h6>
-                  <p class="text-xs truncate text-default-500">Baik, terima kasih mbak</p>
+                  <h6 class="mb-1 text-default-800 font-semibold text-sm">{{ chat.Room_Id }}</h6>
+                  <p class="text-xs truncate text-default-500">{{ chat.Last_Message }}</p>
                 </div>
-                <small class="text-xs text-default-500">02:57 PM</small>
+                <small class="text-xs text-default-500">{{ getDateChat(chat.Last_Message_At) }}</small>
               </RouterLink>
               <!-- <RouterLink to="" class="flex gap-3 py-2 px-4 bg-cyan-300">
                 <div class="relative flex items-center justify-center font-semibold rounded-full size-9 bg-default-200">
@@ -117,7 +142,7 @@ onMounted(async () => {
                 <small class="text-xs text-default-500">Yesterday</small>
               </RouterLink> -->
             </div>
-            <div class="px-5 pt-2">
+            <!-- <div class="px-5 pt-2">
               <p class="mb-1 text-default-500 text-sm">Riwayat Percakapan</p>
             </div>
             <div class="bg-default-100">
@@ -211,7 +236,7 @@ onMounted(async () => {
                   <p class="text-xs truncate text-default-500">UI / UX Designer</p>
                 </div>
               </RouterLink>
-            </div>
+            </div> -->
           </simplebar>
         </div>
       </div>

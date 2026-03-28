@@ -1,16 +1,16 @@
-/*  
+/*
 _calendar.css
 */
 
 :root .fc {
   --fc-border-color: var(--color-default-200);
   --fc-non-business-color: var(--color-default-100);
-  --fc-button-bg-color: var(--color-primary);
-  --fc-button-border-color: var(--color-primary);
-  --fc-button-hover-bg-color: var(--color-primary);
-  --fc-button-hover-border-color: var(--color-primary);
-  --fc-button-active-bg-color: var(--color-primary);
-  --fc-button-active-border-color: var(--color-primary);
+  --fc-button-bg-color: var(--gradient-primary);
+  --fc-button-border-color: var(--gradient-primary);
+  --fc-button-hover-bg-color: var(--gradient-primary);
+  --fc-button-hover-border-color: var(--gradient-primary);
+  --fc-button-active-bg-color: var(--gradient-primary);
+  --fc-button-active-border-color: var(--gradient-primary);
   --fc-neutral-bg-color: var(--color-default-300);
   --fc-neutral-text-color: var(--color-default-700);
   --fc-page-bg-color: #fff;

@@ -45,8 +45,8 @@
         </RouterLink>
         <img :src="logomodern" alt="" class="mx-auto rounded-xl block object-cover w-md" />
         <div class="mt-10 tetx-center">
-          <h3 class="mb-3 text-blue-50 text-2xl font-semibold text-center">Tools For Crafting Your Business's Brand Identity</h3>
-          <p class="text-blue-300 text-base w-2xl text-center">Unlock the potential of our versatile branding tools, designed to empower your business in shaping a distinctive and impactful brand. Elevate your business's image and leave a lasting impression with our comprehensive branding solutions.</p>
+          <h3 class="mb-3 text-bejo-50 text-2xl font-semibold text-center">Tools For Crafting Your Business's Brand Identity</h3>
+          <p class="text-bejo-300 text-base w-2xl text-center">Unlock the potential of our versatile branding tools, designed to empower your business in shaping a distinctive and impactful brand. Elevate your business's image and leave a lasting impression with our comprehensive branding solutions.</p>
         </div>
       </div>
     </div>

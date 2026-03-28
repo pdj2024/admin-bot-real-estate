@@ -52,7 +52,7 @@
                   </td>
                   <td class="px-3.5 py-2.5 text-start">
                     <span class="inline-flex justify-start gap-2.5">
-                      <RouterLink to="" class="btn size-8 bg-default-100 hover:bg-blue-100 text-default-600 hover:text-primary">
+                      <RouterLink to="" class="btn size-8 bg-default-100 hover:bg-bejo-100 text-default-600 hover:text-primary">
                         <Icon icon="lucide:pencil" class="size-4"></Icon>
                       </RouterLink>
                       <RouterLink to="" class="btn size-8 bg-default-100 hover:bg-red-100 text-default-600 hover:text-danger">

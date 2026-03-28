@@ -14,7 +14,7 @@
             </div>
             <div class="flex gap-2">
               <button class="bg-purple-600 text-white btn hover:bg-purple-700">Download</button>
-              <button class="bg-primary text-nowrap text-white btn hover:bg-blue-600" onclick="window.print()"><Icon icon="lucide:save" class="size-4 text-white"></Icon>Save & Draft</button>
+              <button class="bg-primary text-nowrap text-white btn hover:bg-bejo-600" onclick="window.print()"><Icon icon="lucide:save" class="size-4 text-white"></Icon>Save & Draft</button>
               <div class="hs-dropdown relative inline-flex">
                 <button type="button" class="hs-dropdown-toggle btn size-9.5 bg-default-200 hover:bg-default-600 text-default-500 hover:text-white" aria-haspopup="menu" aria-expanded="false" aria-label="Dropdown" hs-dropdown-placement="bottom-end">
                   <Icon icon="lucide:ellipsis" class="iconify size-4"></Icon>

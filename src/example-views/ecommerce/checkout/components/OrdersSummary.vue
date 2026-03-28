@@ -62,7 +62,7 @@
         <span class="text-default-800 text-sm">$988.09</span>
       </div>
       <div class="mt-4">
-        <button type="button" class="text-[13px] py-2 px-4 rounded bg-primary text-white transition-all duration-300 hover:bg-blue-600 inline-flex justify-center w-full items-center">
+        <button type="button" class="text-[13px] py-2 px-4 rounded bg-primary text-white transition-all duration-300 hover:bg-bejo-600 inline-flex justify-center w-full items-center">
           Place Order
           <Icon icon="lucide:move-right" class="size-4 ms-1.5"></Icon>
         </button>

@@ -110,7 +110,7 @@ const specs = [
   { key: 'Jumlah_Kamar_Tidur', label: 'Jml Kamar', icon: 'lucide:bed' },
   { key: 'Jumlah_Kamar_Mandi', label: 'Jml KM', icon: 'lucide:bath' },
   { key: 'Jumlah_Carpot', label: 'Carport', icon: 'lucide:car' },
-  { key: 'Daya_Listrik', label: 'Daya Listrik (W)' },
+  { key: 'Daya_Listrik', label: 'Daya Listrik (W)' }
 ] as const
 
 // --- State Management ---
@@ -503,10 +503,18 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 </script>
 
 <template>
+  <Transition 
+    enter-active-class="transition duration-300 ease-out" 
+    enter-from-class="opacity-0" 
+    enter-to-class="opacity-100" 
+    leave-active-class="transition duration-200 ease-in" 
+    leave-from-class="opacity-100" 
+    leave-to-class="opacity-0"
+  >
   <div v-if="showModal" class="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-    <div class="bg-white w-full max-w-5xl rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div class="bg-card w-full max-w-5xl rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
       <div class="flex justify-between items-center p-5 border-b">
-        <h2 class="text-xl font-extrabold text-slate-800">{{ form.No_Id ? 'Edit' : 'Tambah' }} Properti</h2>
+        <h2 class="text-xl font-extrabold text-default-900">{{ form.No_Id ? 'Edit' : 'Tambah' }} Properti</h2>
         <button @click="$emit('update:showModal', false)" class="p-2 hover:bg-red-50 rounded-full text-slate-400 hover:text-red-500">
           <Icon icon="lucide:x" class="size-6" />
         </button>
@@ -566,7 +574,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
             <label class="label flex justify-between">
               Area & Alamat
               <label class="flex items-center gap-1 cursor-pointer text-[10px] text-slate-500">
-                <input type="checkbox" v-model="form.Hide_alamat" class="size-3 rounded" />
+                <input type="checkbox" v-model="form.Hide_alamat" class="size-3 rounded form-checkbox" />
                 Sembunyikan Alamat?
               </label>
             </label>
@@ -578,7 +586,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
                     <Icon icon="lucide:chevron-down" class="size-4 text-slate-400" />
                   </div>
 
-                  <div v-if="openProvince" class="absolute bottom-full left-0 mb-1 w-full max-w-[420px] max-h-62 z-[9999] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col">
+                  <div v-if="openProvince" class="absolute bottom-full left-0 mb-1 w-full max-w-[420px] max-h-62 z-[9999] bg-card rounded-2xl shadow-2xl border border-slate-200 flex flex-col">
                     <div class="px-4 py-2 border-b bg-slate-50">
                       <div class="relative">
                         <Icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
@@ -599,7 +607,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
                     <Icon icon="lucide:chevron-down" class="size-4 text-slate-400" />
                   </div>
 
-                  <div v-if="openCity" class="absolute bottom-full left-0 mb-1 w-full max-w-[420px] max-h-62 z-[9999] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col">
+                  <div v-if="openCity" class="absolute bottom-full left-0 mb-1 w-full max-w-[420px] max-h-62 z-[9999] bg-card rounded-2xl shadow-2xl border border-slate-200 flex flex-col">
                     <div class="px-4 py-2 border-b bg-slate-50">
                       <div class="relative">
                         <Icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
@@ -622,22 +630,22 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
             </div>
           </div>
 
-          <div class="bg-slate-50 p-4 rounded-2xl space-y-4 border border-slate-100" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
+          <div class="bg-default-50 p-4 rounded-2xl space-y-4 border border-slate-100" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
             <div class="flex items-center gap-4 border-b border-slate-200 pb-2">
               <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Opsi Transaksi</span>
               <div class="flex gap-4">
                 <label class="flex items-center gap-2 text-xs font-bold cursor-pointer">
-                  <input type="checkbox" value="Jual" v-model="form.Status_Transaksi" class="accent-primary" />
+                  <input type="checkbox" value="Jual" v-model="form.Status_Transaksi" class="form-checkbox" />
                   JUAL
                 </label>
 
                 <label class="flex items-center gap-2 text-xs font-bold cursor-pointer">
-                  <input type="checkbox" value="Sewa" v-model="form.Status_Transaksi" class="accent-primary" />
+                  <input type="checkbox" value="Sewa" v-model="form.Status_Transaksi" class="form-checkbox" />
                   SEWA
                 </label>
 
                 <label v-if="form.Status_Transaksi.includes('Sewa')" class="flex items-center gap-2 text-xs font-bold cursor-pointer">
-                  <input type="checkbox" v-model="form.Ada_Minimal_Sewa" class="accent-primary" />
+                  <input type="checkbox" v-model="form.Ada_Minimal_Sewa" class="form-checkbox" />
                   MIN SEWA
                 </label>
               </div>
@@ -650,7 +658,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
               </div>
 
               <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
-                <label class="label !text-blue-600">Harga Jual Diskon (Rp)</label>
+                <label class="label !text-bejo-600">Harga Jual Diskon (Rp)</label>
                 <input type="text" :value="form.Harga_Jual2 ? formatCurrency(form.Harga_Jual2) : ''" @input="handleInputCurrency($event, 'Harga_Jual2')" class="field-input !pl-4 focus:border-emerald-500" :class="form.Harga_Jual2 > 0 && form.Harga_Jual2 >= form.Harga_Jual1 ? '!border-red-500 focus:!border-red-500' : 'border-emerald-200'" placeholder="Setelah diskon" />
                 <span v-if="form.Harga_Jual2 > 0 && form.Harga_Jual2 >= form.Harga_Jual1" class="text-xs text-red-500 mt-1 inline-block font-medium"> ⚠️ Harga diskon harus lebih kecil dari harga normal. </span>
               </div>
@@ -667,7 +675,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
               </div>
 
               <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
-                <label class="label !text-blue-600">Harga Sewa Diskon (Rp)</label>
+                <label class="label !text-bejo-600">Harga Sewa Diskon (Rp)</label>
                 <div class="flex items-center gap-2">
                   <input type="text" :value="form.Harga_Sewa2 ? formatCurrency(form.Harga_Sewa2) : ''" @input="handleInputCurrency($event, 'Harga_Sewa2')" class="field-input !pl-4 focus:border-blue-500" :class="form.Harga_Sewa2 > 0 && form.Harga_Sewa2 >= form.Harga_Sewa1 ? '!border-red-500 focus:!border-red-500' : 'border-blue-200'" placeholder="Setelah diskon" />
                   <span class="text-slate-500 font-medium whitespace-nowrap">/{{ form.Satuan_Minimal_Sewa || 'Tahun' }}</span>
@@ -738,7 +746,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
               <button @click="addAkses" class="bg-slate-800 text-white px-3 rounded-xl"><Icon icon="lucide:plus" /></button>
             </div>
             <div class="flex flex-wrap gap-2 mt-2">
-              <span v-for="(a, i) in form.Akses_Jalan" :key="i" class="bg-white border text-[10px] font-bold px-2 py-1 rounded-lg flex items-center gap-1"> {{ a }} <Icon @click="form.Akses_Jalan.splice(i, 1)" icon="lucide:x" class="text-red-500 cursor-pointer" /> </span>
+              <span v-for="(a, i) in form.Akses_Jalan" :key="i" class="bg-card border text-[10px] font-bold px-2 py-1 rounded-lg flex items-center gap-1"> {{ a }} <Icon @click="form.Akses_Jalan.splice(i, 1)" icon="lucide:x" class="text-red-500 cursor-pointer" /> </span>
             </div>
           </div>
 
@@ -749,8 +757,8 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
         </div>
       </div>
 
-      <div class="p-5 border-t flex justify-end gap-3 bg-slate-50/50">
-        <button @click="$emit('update:showModal', false)" class="px-6 py-2.5 text-sm font-bold text-slate-500 hover:bg-white rounded-xl transition-all">Batal</button>
+      <div class="p-5 border-t flex justify-end gap-3 bg-default-50/50">
+        <button @click="$emit('update:showModal', false)" class="px-6 py-2.5 text-sm font-bold text-slate-500 hover:bg-card rounded-xl transition-all">Batal</button>
         <button :disabled="isLoading" @click="submitForm" class="px-8 py-2.5 bg-primary text-white text-sm font-black rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]">
           <span v-if="isLoading">Sedang Mengunggah...</span>
           <span v-else>Simpan Data</span>
@@ -758,6 +766,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
       </div>
     </div>
   </div>
+  </Transition>
 </template>
 
 <style scoped>
@@ -776,7 +785,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
   @apply absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-4 pointer-events-none;
 }
 .field-input {
-  @apply w-full border border-slate-200 rounded-xl py-2 pl-9 pr-4 text-sm bg-white focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none;
+  @apply w-full border border-slate-200 rounded-xl py-2 pl-9 pr-4 text-sm bg-card focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none;
 }
 .preview-delete {
   @apply absolute top-1 right-1 bg-red-500 text-white rounded-full size-4 flex items-center justify-center text-xs shadow-lg;
@@ -806,7 +815,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
   background: #94a3b8;
 }
 .search-container {
-  @apply sticky top-0 z-10 bg-white p-4 border-b border-slate-100;
+  @apply sticky top-0 z-10 bg-card p-4 border-b border-slate-100;
 }
 .toggle-box {
   @apply w-full flex items-center justify-between p-3 border border-slate-200 rounded-xl bg-slate-50/50;
@@ -818,6 +827,6 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
   @apply bg-primary;
 }
 .toggle-circle {
-  @apply absolute top-1 left-1 size-4 bg-white rounded-full transition-all duration-300 shadow-sm;
+  @apply absolute top-1 left-1 size-4 bg-card rounded-full transition-all duration-300 shadow-sm;
 }
 </style>

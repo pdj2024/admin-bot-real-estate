@@ -659,7 +659,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
               </div>
 
               <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
-                <label class="label !text-blue-600">Harga Jual Diskon (Rp)</label>
+                <label class="label !text-bejo-600">Harga Jual Diskon (Rp)</label>
                 <input type="text" :value="form.Harga_Jual2 ? formatCurrency(form.Harga_Jual2) : ''" @input="handleInputCurrency($event, 'Harga_Jual2')" class="field-input !pl-4 focus:border-emerald-500" :class="form.Harga_Jual2 > 0 && form.Harga_Jual2 >= form.Harga_Jual1 ? '!border-red-500 focus:!border-red-500' : 'border-emerald-200'" placeholder="Setelah diskon" />
                 <span v-if="form.Harga_Jual2 > 0 && form.Harga_Jual2 >= form.Harga_Jual1" class="text-xs text-red-500 mt-1 inline-block font-medium"> ⚠️ Harga diskon harus lebih kecil dari harga normal. </span>
               </div>
@@ -676,7 +676,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
               </div>
 
               <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
-                <label class="label !text-blue-600">Harga Sewa Diskon (Rp)</label>
+                <label class="label !text-bejo-600">Harga Sewa Diskon (Rp)</label>
                 <div class="flex items-center gap-2">
                   <input type="text" :value="form.Harga_Sewa2 ? formatCurrency(form.Harga_Sewa2) : ''" @input="handleInputCurrency($event, 'Harga_Sewa2')" class="field-input !pl-4 focus:border-blue-500" :class="form.Harga_Sewa2 > 0 && form.Harga_Sewa2 >= form.Harga_Sewa1 ? '!border-red-500 focus:!border-red-500' : 'border-blue-200'" placeholder="Setelah diskon" />
                   <span class="text-slate-500 font-medium whitespace-nowrap">/{{ form.Satuan_Minimal_Sewa || 'Tahun' }}</span>

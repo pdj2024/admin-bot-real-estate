@@ -16,13 +16,9 @@
         </div>
       </div>
       <div class="flex items-center gap-3">
-        <LanguageDropdown />
-
         <ThemeToggler />
 
-        <NotificationDropdown />
-
-        <CustomizerToggler />
+        <!-- <NotificationDropdown /> -->
 
         <UserProfile />
       </div>
@@ -32,8 +28,6 @@
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import CustomizerToggler from './components/CustomizerToggler.vue'
-import LanguageDropdown from './components/LanguageDropdown.vue'
 import NotificationDropdown from './components/NotificationDropdown.vue'
 import ThemeToggler from './components/ThemeToggler.vue'
 import UserProfile from './components/UserProfile.vue'

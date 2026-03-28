@@ -1,57 +1,73 @@
 <template>
   <div class="col-span-1">
-    <div class="card mb-5">
-      <div class="card-header">
-        <h6 class="card-title">Traffic Resources</h6>
-        <RouterLink to="" class="btn btn-sm border-0 text-primary/90 hover:text-primary"
-          >View Status
-          <Icon icon="lucide:move-right" class="ms-1 size-4"></Icon>
+    <div class="card mb-6 bg-card border-default-200">
+      <div class="card-header border-b border-default-100 flex justify-between items-center">
+        <h6 class="card-title text-default-900 font-bold text-sm uppercase tracking-wider">Sumber Calon Pembeli</h6>
+        <RouterLink to="" class="text-[10px] font-black text-primary uppercase hover:underline flex items-center gap-1">
+          Analitik
+          <Icon icon="lucide:move-right" class="size-3"></Icon>
         </RouterLink>
       </div>
       <div class="card-body">
-        <div class="grid md:grid-cols-12 grid-cols-1">
-          <div class="rounded-md md:col-span-7 col-span-1">
-            <VueApexCharts type="radialBar" height="222" :options="initTrafficResources" dir="rtl" :series="initTrafficResourceseries" />
+        <div class="grid md:grid-cols-12 grid-cols-1 items-center">
+          <div class="md:col-span-7 col-span-1">
+            <VueApexCharts type="radialBar" height="220" :options="initTrafficResources" :series="initTrafficResourceseries" />
           </div>
           <div class="md:col-span-5 col-span-1">
-            <div class="flex flex-col gap-3">
-              <div class="flex items-center gap-2">
-                <div class="bg-green-500 size-3" style="clip-path: polygon(50% 0%, 0% 100%, 100% 100%)"></div>
-                <p class="text-green-500">Search Engine (22%)</p>
+            <div class="flex flex-col gap-4">
+              <div class="flex flex-col">
+                <div class="flex items-center gap-2 mb-1">
+                  <div class="bg-sky-500 size-2 rounded-full"></div>
+                  <p class="text-[11px] font-bold text-default-600 uppercase">Iklan Berbayar</p>
+                </div>
+                <h4 class="text-sm font-black text-default-900 ml-4">44%</h4>
               </div>
-              <div class="flex items-center gap-2">
-                <div class="bg-purple-500 size-3" style="clip-path: polygon(50% 0%, 0% 100%, 100% 100%)"></div>
-                <p class="text-purple-500">Referral (34%)</p>
+              <div class="flex flex-col">
+                <div class="flex items-center gap-2 mb-1">
+                  <div class="bg-yellow-500 size-2 rounded-full"></div>
+                  <p class="text-[11px] font-bold text-default-600 uppercase">Media Sosial</p>
+                </div>
+                <h4 class="text-sm font-black text-default-900 ml-4">34%</h4>
               </div>
-              <div class="flex items-center gap-2">
-                <div class="bg-sky-500 size-3" style="clip-path: polygon(50% 0%, 0% 100%, 100% 100%)"></div>
-                <p class="text-sky-500">Direct (44%)</p>
+              <div class="flex flex-col">
+                <div class="flex items-center gap-2 mb-1">
+                  <div class="bg-emerald-500 size-2 rounded-full"></div>
+                  <p class="text-[11px] font-bold text-default-600 uppercase">Organik/SEO</p>
+                </div>
+                <h4 class="text-sm font-black text-default-900 ml-4">22%</h4>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <div class="card">
-      <div class="card-body">
-        <div class="flex items-center justify-between mb-2">
-          <h5 class="text-lg text-default-900 font-semibold">
-            <span data-target="1596">1,596</span>
-          </h5>
-          <span class="px-2.5 py-0.5 text-xs rounded border bg-transparent border-danger/50 text-danger flex items-center gap-1">
-            <Icon icon="lucide:trending-down" class="size-3"></Icon>
-            6.8%
-          </span>
+
+    <div class="card bg-card border-default-200">
+      <div class="card-body p-5">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <p class="text-[10px] font-bold text-default-500 uppercase tracking-widest mb-1">Capaian Closing</p>
+            <h5 class="text-2xl text-default-900 font-black">
+              1,596 <span class="text-xs font-medium text-default-400">/ 2.0k Unit</span>
+            </h5>
+          </div>
+          <div class="text-right">
+            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold bg-danger/10 text-danger border border-danger/20">
+              <Icon icon="lucide:trending-down" class="size-3"></Icon>
+              6.8%
+            </span>
+          </div>
         </div>
-        <h6 class="font-semibold text-default-900">Monthly Orders Goal (20000+)</h6>
-        <div>
-          <div class="flex items-center justify-between mt-5 mb-2">
-            <p class="text-default-500 text-sm">Total Orders</p>
-            <h6 class="mb-0 text-primary">85%</h6>
+        
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <p class="text-xs font-bold text-default-600 uppercase">Progres Tahunan</p>
+            <h6 class="text-xs font-black text-primary">85%</h6>
           </div>
-          <div class="w-full bg-default-200 rounded-full h-2.54">
-            <div class="bg-primary h-2.5 rounded-full" style="width: 85%"></div>
+          <div class="w-full bg-default-100 rounded-full h-2 overflow-hidden">
+            <div class="bg-primary h-full rounded-full transition-all duration-1000 shadow-[0_0_8px_rgba(43,127,255,0.4)]" style="width: 85%"></div>
           </div>
+          <p class="text-[10px] text-default-400 italic">Dibutuhkan 404 unit lagi untuk mencapai target Q4</p>
         </div>
       </div>
     </div>
