@@ -1,14 +1,16 @@
 <template>
   <aside id="app-menu" class="app-menu">
-    <RouterLink to="/" class="logo-box sticky top-0 flex min-h-topbar-height items-center justify-start px-6 backdrop-blur-xs">
-      <div class="logo-light">
-        <img :src="lightlogo" class="logo-lg h-6" alt="Light logo" />
-        <img :src="logo" class="logo-sm h-6" alt="Small logo" />
-      </div>
-      <div class="logo-dark">
-        <img :src="darklogo" class="logo-lg h-6" alt="Dark logo" />
-        <img :src="logo" class="logo-sm h-6" alt="Small logo" />
-      </div>
+    <RouterLink to="/" class="logo-box sticky top-0 flex min-h-topbar-height items-center justify-start ps-5 pe-4 backdrop-blur-xs">
+      <center>
+        <div class="logo-light">
+          <img :src="lightlogo" class="logo-lg h-6" alt="Light logo" />
+          <img :src="logo" class="logo-sm h-6" alt="Small logo" />
+        </div>
+        <div class="logo-dark">
+          <img :src="darklogo" class="logo-lg h-6" alt="Dark logo" />
+          <img :src="logo" class="logo-sm h-6" alt="Small logo" />
+        </div>
+      </center>
     </RouterLink>
 
     <div class="absolute top-0 end-5 flex h-topbar items-center justify">

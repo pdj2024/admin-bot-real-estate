@@ -1,3 +1,14 @@
+<template>
+  <Vertical>
+    <div class="card overflow-hidden">
+      <div class="flex">
+        <SideBar @select-chat="handleSelectChat" />
+        <ChatContent :roomId="selectedRoomId" />
+      </div>
+    </div>
+  </Vertical>
+</template>
+
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import Vertical from '@/layouts/vertical.vue'
@@ -11,17 +22,3 @@ const handleSelectChat = (id: string) => {
   selectedRoomId.value = id
 }
 </script>
-
-<template>
-  <Vertical>
-    <PageTitle subtitle="Menu Utama" title="Chat" />
-
-    <div class="card overflow-hidden">
-  <div class="flex h-[80vh] items-stretch">
-    <SideBar @select-chat="handleSelectChat" class="w-1/3 border-e" />
-    <ChatContent :roomId="selectedRoomId" class="ms-3 flex-grow" />
-  </div>
-</div>
-  </Vertical>
-</template>
-

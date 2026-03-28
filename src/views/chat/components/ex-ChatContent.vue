@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, nextTick, computed, watch } from 'vue'
 import { Icon } from '@iconify/vue'
+import { confirm, success, fail } from '@/utils/sweet-alert'
+import { RouterLink } from 'vue-router'
 import type { CalendarOptions, EventClickArg } from '@fullcalendar/core'
 import type { DateClickArg } from '@fullcalendar/interaction'
+
 import simplebar from 'simplebar-vue'
 import user2 from '@/assets/images/user/user-2.jpg'
 import Filter from './Filter.vue'
@@ -12,9 +15,7 @@ import timeGridPlugin from '@fullcalendar/timegrid'
 import listPlugin from '@fullcalendar/list'
 import interactionPlugin from '@fullcalendar/interaction'
 import idLocale from '@fullcalendar/core/locales/id'
-
-import { confirm, success, fail } from '@/utils/sweet-alert'
-import { RouterLink } from 'vue-router'
+import api from '@/services/axios'
 import ChatBubble from './ChatBubble.vue'
 
 const referensi1 = 'https://media.dekoruma.com/article/2018/09/22102609/Denah-Rumah-Minimalis-Berukuran-Mungi.jpg?resize=1000%2C682&ssl=1'
@@ -24,8 +25,103 @@ const rumah2 = 'https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?q=8
 const rumah3 = 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=600&auto=format&fit=crop'
 
 const chatContainer = ref()
+const menuRef = ref<HTMLElement | null>(null)
+const etalaseRef = ref<HTMLElement | null>(null)
+const appointmentFormRef = ref<HTMLElement | null>(null)
+const tukarCSRef = ref<HTMLElement | null>(null)
+const filterRef = ref<any | null>(null)
+const scheduleRef = ref<HTMLElement | null>(null)
+const containerRef = ref<HTMLElement | null>(null)
 
-// Data Dummy Rumah
+const openMenu = ref(false)
+const openEtalase = ref(false)
+const openAppointment = ref(false)
+const openAppointmentForm = ref(false)
+const openTukarCS = ref(false)
+const openFilter = ref(false)
+const openSchedule = ref(false)
+const isMobile = ref(false)
+const messages = ref([])
+const chats = ref([])
+const isLoading = ref(false)
+
+const props = defineProps<{
+  roomId: string | null
+}>()
+
+interface Product {
+  name: string
+  image: string
+  type: string
+  buildingSize: number
+  landSize: number
+  floors: number
+  price: string
+  location: string
+  bed: number
+  bath: number
+  car: number
+}
+
+interface Appointment {
+  date: string
+  time: string
+  location: string
+  customerName: string
+  customerPhone: string
+  salesName: string
+  salesPhone: string
+  image: string
+  propertyName: string
+  type: number
+  buildingSize: number
+  landSize: number
+  floors: number
+  carport: number
+  bed: number
+  bath: number
+}
+
+interface BubbleMessage {
+  text?: string
+  images?: string[]
+  product?: Product[]
+  barrier?: string
+  appointment?: Appointment[]
+}
+
+interface Chat {
+  type: 'user' | 'ai' | 'cs' | 'system'
+  avatar?: string
+  message: BubbleMessage[]
+  dateTime: string
+}
+
+const fetchChatContent = async (id: string) => {
+  isLoading.value = true
+  try {
+    const response = await api.get(`/api/chat/getAll?room_id=${id}`, {
+      headers: { 'X-Jenis-User': 'Admin' }
+    })
+    chats.value = response.data.Data
+    console.log('Isi', chats)
+  } catch (error) {
+    console.error('Gagal memuat chat:', error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+watch(
+  () => props.roomId,
+  (newId) => {
+    if (newId) {
+      fetchChatContent(newId)
+    }
+  },
+  { immediate: true }
+)
+
 const catalogues = ref([
   {
     name: 'Griya Modern Cluster',
@@ -124,24 +220,6 @@ const catalogues = ref([
     colorClass: 'rose'
   }
 ])
-
-const menuRef = ref<HTMLElement | null>(null)
-const etalaseRef = ref<HTMLElement | null>(null)
-const appointmentFormRef = ref<HTMLElement | null>(null)
-const tukarCSRef = ref<HTMLElement | null>(null)
-const filterRef = ref<any | null>(null)
-const scheduleRef = ref<HTMLElement | null>(null)
-
-const openMenu = ref(false)
-const openEtalase = ref(false)
-const openAppointment = ref(false)
-const openAppointmentForm = ref(false)
-const openTukarCS = ref(false)
-const openFilter = ref(false)
-const openSchedule = ref(false)
-const isMobile = ref(false)
-
-const containerRef = ref<HTMLElement | null>(null)
 
 const handleClickOutside = (event: MouseEvent) => {
   const target = event.target as Node
@@ -469,359 +547,6 @@ const formatRupiah = (price: string | number): string => {
   return 'Rp ' + number.toLocaleString('id-ID')
 }
 
-interface Product {
-  name: string
-  image: string
-  type: string
-  buildingSize: number
-  landSize: number
-  floors: number
-  price: string
-  location: string
-  bed: number
-  bath: number
-  car: number
-}
-
-interface Appointment {
-  date: string
-  time: string
-  location: string
-  customerName: string
-  customerPhone: string
-  salesName: string
-  salesPhone: string
-  image: string
-  propertyName: string
-  type: number
-  buildingSize: number
-  landSize: number
-  floors: number
-  carport: number
-  bed: number
-  bath: number
-}
-
-interface BubbleMessage {
-  text?: string
-  images?: string[]
-  product?: Product[]
-  barrier?: string
-  appointment?: Appointment[]
-}
-
-interface Chat {
-  type: 'user' | 'ai' | 'cs' | 'system'
-  avatar?: string
-  message: BubbleMessage[]
-  dateTime: string
-}
-
-const chats = ref<Chat[]>([
-  {
-    type: 'user',
-    avatar: user2,
-    message: [
-      {
-        text: 'Hi saya ingin mencari rumah, apa bisa dibantu rumah yang cocok untuk saya?'
-      }
-    ],
-    dateTime: '16.20'
-  },
-  {
-    type: 'ai',
-    message: [
-      {
-        text: 'Hi! Anda datang di waktu yang tepat. Silahkan deskripsikan rumah yang Anda cari'
-      }
-    ],
-    dateTime: '16.22'
-  },
-  {
-    type: 'user',
-    avatar: user2,
-    message: [
-      {
-        text: 'Saya butuh rumah yang cocok untuk keluarga kecil'
-      },
-      {
-        images: [referensi1, referensi2]
-      },
-      {
-        text: 'Berisi 3 kamar untuk 4 orang dan usahakan memiliki 2 kamar mandi'
-      },
-      {
-        text: 'Kalau ada yang dekat masjid dan taman'
-      }
-    ],
-    dateTime: '16.24'
-  },
-  {
-    type: 'ai',
-    message: [
-      {
-        text: 'Baik, saya mengerti kendala yang kamu alami. Berikut saya sarankan beberapa pilihan rumah yang mungkin sesuai dengan keinginan Anda'
-      },
-      {
-        product: [
-          {
-            image: rumah1,
-            name: 'Griya Modern Cluster',
-            location: 'Sidoarjo, Jawa Timur',
-            type: '36',
-            buildingSize: 36,
-            landSize: 60,
-            bed: 2,
-            bath: 1,
-            car: 1,
-            floors: 1,
-            price: formatRupiah(545000000)
-          },
-          {
-            image: rumah2,
-            name: 'Modern House Emerald',
-            location: 'Malang, Jawa Timur',
-            type: '45',
-            buildingSize: 45,
-            landSize: 84,
-            bed: 2,
-            bath: 1,
-            car: 1,
-            floors: 1,
-            price: formatRupiah(785000000)
-          },
-          {
-            image: rumah3,
-            name: 'Premium Skyline Villa',
-            location: 'Surabaya, Jawa Timur',
-            type: '70',
-            buildingSize: 70,
-            landSize: 120,
-            bed: 3,
-            bath: 2,
-            car: 2,
-            floors: 2,
-            price: formatRupiah(1250000000)
-          }
-        ]
-      }
-    ],
-    dateTime: '16.28'
-  },
-  {
-    type: 'user',
-    avatar: user2,
-    message: [
-      {
-        text: 'Wah pilihan yang banyak sekali, saya jadi bingung 😭'
-      }
-    ],
-    dateTime: '16.32'
-  },
-  {
-    type: 'system',
-    message: [
-      {
-        barrier: 'Tersambung dengan CS Maya'
-      }
-    ],
-    dateTime: '16.38'
-  },
-  {
-    type: 'cs',
-    message: [
-      {
-        text: 'Mohon maaf atas kendala yang bapak alami, bisa disampaikan kriteria rumah yang ingin Bapak cari?'
-      }
-    ],
-    dateTime: '16.42'
-  },
-  {
-    type: 'user',
-    avatar: user2,
-    message: [
-      {
-        text: 'Saya ingin Saya mau cari rumah yang cocok untuk 4 orang dengan 3 kamar dan 2 toilet, kalau bisa yang dekat dengan masjid dan kamar mandi'
-      }
-    ],
-    dateTime: '16.44'
-  },
-  {
-    type: 'cs',
-    message: [
-      {
-        text: 'Mohon maaf sebelumnya dengan siapa saya bicara?'
-      }
-    ],
-    dateTime: '16.45'
-  },
-  {
-    type: 'user',
-    avatar: user2,
-    message: [
-      {
-        text: 'Budi'
-      }
-    ],
-    dateTime: '16.45'
-  },
-  {
-    type: 'cs',
-    message: [
-      {
-        text: 'Baik Bapak Budi, menjawab persoalan bapak. Kami ada referensi unit yang cocok dengan kriteria Bapak, berlokasi di Surabaya dan merupakan prumahan elit di surabaya timur.'
-      },
-      {
-        product: [
-          {
-            image: rumah3,
-            name: 'Premium Skyline Villa',
-            location: 'Surabaya, Jawa Timur',
-            type: '70',
-            buildingSize: 70,
-            landSize: 120,
-            bed: 3,
-            bath: 2,
-            car: 2,
-            floors: 2,
-            price: formatRupiah(1250000000)
-          }
-        ]
-      },
-      {
-        text: 'Bagaimana bapak, tertarik dengan unitnya? Atau Bapak ingin lihat lebih detail terkait unit kami?'
-      }
-    ],
-    dateTime: '16.46'
-  },
-  {
-    type: 'user',
-    avatar: user2,
-    message: [
-      {
-        text: 'Ya, sepertinya menarik. Bisakah saya lihat unitnya?'
-      }
-    ],
-    dateTime: '16.49'
-  },
-  {
-    type: 'cs',
-    message: [
-      {
-        text: 'Wah tentu sangat bisa, Bapak tinggal sebutkan bersedia untuk visit langung ke unit kami kapan dan akan saya buatkan jadwalnya'
-      }
-    ],
-    dateTime: '16.52'
-  },
-  {
-    type: 'user',
-    avatar: user2,
-    message: [
-      {
-        text: 'Tanggal 30 Februari, bisa mbak?'
-      }
-    ],
-    dateTime: '16.54'
-  },
-  {
-    type: 'cs',
-    message: [
-      {
-        text: 'Baik Bapak, saya konfirmasi kembali untuk detail visit unit telah saya buatkan A/N Bapak Budi dan akan dilayani oleh tim sales kami Bapak Andi, dengan detail sebagai berikut. Apakah ada perubahan?'
-      },
-      {
-        appointment: [
-          {
-            date: 'Kamis, 30 Februari 2026',
-            time: '13:00',
-            location: 'Jl. Kertajaya Indah no. 32, Surabaya',
-            customerName: 'Budi Susanto',
-            customerPhone: '0873849242934',
-            salesName: 'Andi Permata',
-            salesPhone: '0898372844223',
-            image: 'https://media.dekoruma.com/article/2024/10/30201434/Model-Rumah-Modern-Minimalis.jpg?resize=800%2C600&ssl=1',
-            propertyName: 'Green Lake Residence',
-            type: 60,
-            buildingSize: 60,
-            landSize: 90,
-            floors: 2,
-            carport: 1,
-            bed: 3,
-            bath: 2
-          }
-        ]
-      }
-    ],
-    dateTime: '16.56'
-  },
-  {
-    type: 'user',
-    avatar: user2,
-    message: [
-      {
-        text: 'Tidak mbak, sudah benar'
-      }
-    ],
-    dateTime: '16.58'
-  },
-  {
-    type: 'cs',
-    message: [
-      {
-        text: 'Baik Bapak Budi terima kasih atas konfirmasinya. Adakah hal lain yang ingin Bapak tanyakan?'
-      }
-    ],
-    dateTime: '17.00'
-  },
-  {
-    type: 'user',
-    avatar: user2,
-    message: [
-      {
-        text: 'Tidak ada mbak, sudah terjawab'
-      }
-    ],
-    dateTime: '17.02'
-  },
-  {
-    type: 'cs',
-    message: [
-      {
-        text: 'Baik Bapak Budi jika tidak ada pertanyaan, terima kasih telah menghubungi kami. Jika ada hal lain yang dibutuhkan di kemudian hari, jangan ragu untuk menghubungi kami kembali. Selamat beraktivitas'
-      }
-    ],
-    dateTime: '17.04'
-  },
-  {
-    type: 'system',
-    message: [
-      {
-        barrier: 'Obrolan dengan CS Maya berakhir'
-      }
-    ],
-    dateTime: '17.05'
-  },
-  {
-    type: 'user',
-    avatar: user2,
-    message: [
-      {
-        text: 'Baik, terima kasih mbak'
-      }
-    ],
-    dateTime: '17.06'
-  },
-  {
-    type: 'ai',
-    message: [
-      {
-        text: 'Dengan senang hati'
-      }
-    ],
-    dateTime: '17.06'
-  }
-])
-
 onMounted(() => {
   isMobile.value = window.innerWidth < 640
   document.addEventListener('click', handleClickOutside)
@@ -841,7 +566,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="w-full border-e border-default-200 rounded">
+  <div v-if="roomId" class="w-full border-e border-default-200 rounded">
     <div class="card-body bg-default-100">
       <div class="gap-3 flex justify-between">
         <div class="flex gap-3.5 items-center">
@@ -852,7 +577,7 @@ onBeforeUnmount(() => {
             <img :src="user2" alt="" class="h-10 rounded-full" />
           </div>
           <div>
-            <h6 class="text-default-800 mb-1 font-bold text-sm">Budi Galangan</h6>
+            <h6 class="text-default-800 mb-1 font-bold text-sm">{{ roomId }}</h6>
             <p class="text-xs text-default-500">Hi There! I'm using Whatsapp</p>
           </div>
         </div>
@@ -867,6 +592,7 @@ onBeforeUnmount(() => {
     <!-- <chatContent /> -->
     <simplebar ref="chatContainer" class="h-[calc(100vh-340px)]">
       <div class="flex flex-col gap-5 px-5 py-3">
+        {{ chats }}
         <ChatBubble v-for="(chat, i) in chats" :key="i" :chat="chat" />
       </div>
     </simplebar>
@@ -1119,6 +845,15 @@ onBeforeUnmount(() => {
           <Filter v-if="openFilter" @close="openFilter = false" ref="filterRef" class="z-[45] bg-white sm:shadow-none fixed left-1/2 bottom-12 -translate-x-1/2 w-[92vw] max-w-[390px] sm:fixed sm:right-20 sm:bottom-10 sm:left-auto sm:translate-x-0 sm:max-w-[700px] rounded-2xl shadow-xl p-4 max-h-[80vh] overflow-y-auto custom-scrollbar" />
         </div>
       </div>
+    </div>
+  </div>
+  <div v-else class="w-full h-full flex items-center justify-center border-e border-default-200 rounded">
+    <div class="flex flex-col items-center justify-center text-center p-6">
+      <Icon icon="lucide:message-square" class="size-16 mb-4 text-default-300"></Icon>
+
+      <h4 class="text-xl font-semibold text-default-700">Pilih Pesan</h4>
+
+      <p class="text-sm text-default-400 mt-2 max-w-xs">Silakan pilih percakapan di samping untuk mulai melihat pesan.</p>
     </div>
   </div>
 </template>

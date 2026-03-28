@@ -104,7 +104,7 @@ const fetchChatContent = async (id: string) => {
       headers: { 'X-Jenis-User': 'Admin' }
     })
     chats.value = response.data.Data
-    console.log('Isi', chats)
+    console.log("Isi", chats)
   } catch (error) {
     console.error('Gagal memuat chat:', error)
   } finally {
@@ -592,7 +592,7 @@ onBeforeUnmount(() => {
     <!-- <chatContent /> -->
     <simplebar ref="chatContainer" class="h-[calc(100vh-340px)]">
       <div class="flex flex-col gap-5 px-5 py-3">
-        {{ chats }}
+     {{ chats }}
         <ChatBubble v-for="(chat, i) in chats" :key="i" :chat="chat" />
       </div>
     </simplebar>
