@@ -32,7 +32,7 @@ const { inputRef } = useFlatpickr({
           <h4 class="text-2xl font-black text-default-900">68% <span class="text-xs text-info font-normal">Sangat Baik</span></h4>
         </div>
       </div>
-      <VueApexCharts type="area" height="300" :options="chartOptions" :series="chartSeries" />
+      <!-- <VueApexCharts type="area" height="300" :options="chartOptions" :series="chartSeries" /> -->
     </div>
   </div>
 </template>
