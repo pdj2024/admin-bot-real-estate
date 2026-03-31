@@ -3,29 +3,26 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import type { Product } from '../index.vue'
 
-defineProps<{
+const props = defineProps<{
   product: Product | null
 }>()
-
-const propertyImages = [
-  'https://cpanel-blog.smsperkasa.com/wp-content/uploads/2024/08/Rumah-dengan-Pintu-Kayu-Besar-min-1024x1024.png',
-  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRXjgXfMWMKSFVuYwVigFxclgv927Kmb4LBDg&s',
-  'https://cdn0-production-images-kly.akamaized.net/7x_hjv7tRV0CpDxrItZkZye-xq0=/500x500/smart/filters:quality(75):strip_icc()/kly-media-production/medias/5385959/original/055496800_1760949483-desain_rumah_1_lantai_sederhana__4_.jpg',
-  'https://www.emporioarchitect.com/img/blog/ide-desain-rumah-mewah-untuk-anda-130125013838148646.jpg',
-  'https://static.promediateknologi.id/crop/0x28:1143x716/0x0/webp/photo/p2/239/2025/02/06/desain-rumah-minimalis-tahun-2024-1452919504.jpg'
-]
 
 const currentIndex = ref(0)
 let timer: any = null
 
-// --- Navigasi ---
 const nextSlide = () => {
-  currentIndex.value = currentIndex.value >= propertyImages.length - 1 ? 0 : currentIndex.value + 1
+  const totalImages = props.product?.MediaUrls?.length || 0
+  if (totalImages > 0) {
+    currentIndex.value = currentIndex.value >= totalImages - 1 ? 0 : currentIndex.value + 1
+  }
   resetTimer()
 }
 
 const prevSlide = () => {
-  currentIndex.value = currentIndex.value <= 0 ? propertyImages.length - 1 : currentIndex.value - 1
+  const totalImages = props.product?.MediaUrls?.length || 0
+  if (totalImages > 0) {
+    currentIndex.value = currentIndex.value <= 0 ? totalImages - 1 : currentIndex.value - 1
+  }
   resetTimer()
 }
 
@@ -34,7 +31,6 @@ const goToSlide = (i: number) => {
   resetTimer()
 }
 
-// --- Swipe Logic Mobile ---
 let startX = 0
 const handleTouchStart = (e: TouchEvent) => {
   startX = e.touches[0].clientX
@@ -47,7 +43,6 @@ const handleTouchEnd = (e: TouchEvent) => {
   }
 }
 
-// --- Timer Auto-Slide ---
 const startTimer = () => {
   timer = setInterval(nextSlide, 5000)
 }
@@ -56,9 +51,29 @@ const resetTimer = () => {
   startTimer()
 }
 
+const shareProduct = async () => {
+  const shareData = {
+    title: props.product?.Nama_Produk || 'Lihat properti ini',
+    text: `Cek ${props.product?.Nama_Produk} di area ${props.product?.Area}.`,
+    url: window.location.href
+  }
+
+  try {
+    if (navigator.share) {
+      await navigator.share(shareData)
+    } else {
+      await navigator.clipboard.writeText(shareData.url)
+      alert('Tautan berhasil disalin ke clipboard!')
+    }
+  } catch (err) {
+    console.error('Batal membagikan atau terjadi kesalahan:', err)
+  }
+}
+
 onMounted(() => startTimer())
 onUnmounted(() => clearInterval(timer))
 </script>
+
 <template>
   <div class="col-span-1">
     <div class="sticky top-24">
@@ -72,16 +87,18 @@ onUnmounted(() => clearInterval(timer))
       <div class="card mb-4 border-none shadow-sm bg-white overflow-hidden rounded-xl">
         <div class="card-body p-4 relative">
           <div class="relative overflow-hidden mb-4 rounded-lg h-[350px] md:h-[420px] group bg-default-50 shadow-inner" @touchstart="handleTouchStart" @touchend="handleTouchEnd">
-            <div v-if="product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia')" class="absolute inset-0 flex items-center justify-center z-30 pointer-events-none p-6">
-              <div class="text-white px-6 py-3 rounded-xl transform -rotate-6 font-black tracking-[0.15em] uppercase italic text-xl md:text-2xl backdrop-blur-md bg-black/40 shadow-2xl border border-white/10 select-none">
-                {{ product.Status_Properti != 'Tersedia' ? product.Status_Properti : product.Status_Display }}
+            <div v-if="product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia')" class="absolute inset-0 bg-black/40 backdrop-grayscale-[60%] z-[5] pointer-events-none transition-all duration-500"></div>
+
+            <div v-if="product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia')" class="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
+              <div class="px-2 py-1 bg-black/30 backdrop-blur-md rounded-xl border border-white/10 shadow-2xl transform transition-transform duration-500 group-hover:scale-110">
+                <span class="text-xs md:text-sm font-black uppercase tracking-widest text-white/90">
+                  {{ product.Status_Display !== 'Aktif' ? 'Nonaktif' : product.Status_Properti }}
+                </span>
               </div>
             </div>
 
-            <div v-if="product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia')" class="absolute inset-0 z-20 bg-white/10 backdrop-blur-[1px] cursor-not-allowed"></div>
-
-            <div :class="['h-full w-full transition-all duration-700 ease-out', product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia') ? 'grayscale opacity-60' : 'group-hover:scale-105']">
-              <img :src="product?.MediaUrls[currentIndex].Id_Media" class="w-full h-full object-cover" alt="Property Image" />
+            <div class="h-full w-full transition-all duration-700 ease-out group-hover:scale-105">
+              <img :src="product?.MediaUrls[currentIndex]?.Id_Media" class="w-full h-full object-cover" alt="Property Image" />
             </div>
 
             <button @click="prevSlide" class="absolute left-3 top-1/2 -translate-y-1/2 size-11 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-lg text-white border border-white/20 opacity-0 group-hover:opacity-100 transition-all z-10 hover:bg-primary hover:border-primary">
@@ -97,22 +114,20 @@ onUnmounted(() => clearInterval(timer))
           </div>
 
           <div class="grid grid-cols-2 gap-3 relative">
-            <div v-if="product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia')" class="absolute inset-0 z-10 cursor-not-allowed"></div>
-
-            <a href="#" :class="['flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-bold text-sm tracking-wide transition-all shadow-sm', product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia') ? 'bg-default-100 text-default-400' : 'bg-primary text-white hover:bg-primary-600 hover:shadow-primary/20']">
+            <a href="#" class="flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-bold text-sm tracking-wide transition-all shadow-sm bg-primary text-white hover:bg-primary-600 hover:shadow-primary/20">
               <Icon icon="lucide:headset" class="size-4"></Icon>
               Hubungi Kami
             </a>
 
-            <a href="#" :class="['flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-bold text-sm tracking-wide transition-all shadow-sm border', product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia') ? 'border-default-100 text-default-300' : 'border-default-200 text-default-700 hover:bg-default-50 hover:border-default-300']">
+            <button type="button" @click.prevent="shareProduct" class="flex w-full items-center justify-center gap-2 py-3 px-4 rounded-lg font-bold text-sm tracking-wide transition-all shadow-sm border border-default-200 text-default-700 hover:bg-default-50 hover:border-default-300">
               <Icon icon="lucide:share-2" class="size-4"></Icon>
               Bagikan
-            </a>
+            </button>
           </div>
         </div>
       </div>
 
-      <div :class="['card border-none shadow-sm bg-white rounded-xl overflow-hidden transition-all duration-500', product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia') ? 'grayscale opacity-60' : '']">
+      <div class="card border-none shadow-sm bg-white rounded-xl overflow-hidden transition-all duration-500">
         <div class="p-4 flex justify-between items-center">
           <div class="flex items-center gap-2 text-default-600">
             <div class="bg-primary/10 p-1.5 rounded-md">
