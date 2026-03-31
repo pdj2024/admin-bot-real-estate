@@ -10,7 +10,7 @@
         <input type="text" id="email" class="form-input" placeholder="Enter Username or email" style="padding: 0 12px" />
       </div>
       <div class="mb-4">
-        <RouterLink to="/basic-auth/reset-pass" class="text-primary font-medium text-sm mb-2 float-end">Forgot Password ?</RouterLink>
+        <RouterLink to="" class="text-primary font-medium text-sm mb-2 float-end">Forgot Password ?</RouterLink>
         <label for="Password" class="block font-medium text-default-900 text-sm mb-2">Password</label>
         <input type="text" id="Password" class="form-input" placeholder="Enter Password" style="padding: 0 12px" />
       </div>

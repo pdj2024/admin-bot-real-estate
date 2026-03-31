@@ -2,7 +2,7 @@
   <div class="col-span-1">
     <div class="card mb-6 bg-card border-default-200">
       <div class="card-header border-b border-default-100 flex justify-between items-center">
-        <h6 class="card-title text-default-900 font-bold text-sm uppercase tracking-wider">Sumber Calon Pembeli</h6>
+        <h6 class="card-title text-default-900 font-bold text-sm uppercase tracking-wider">Total Properti</h6>
         <RouterLink to="" class="text-[10px] font-black text-primary uppercase hover:underline flex items-center gap-1">
           Analitik
           <Icon icon="lucide:move-right" class="size-3"></Icon>
@@ -18,21 +18,21 @@
               <div class="flex flex-col">
                 <div class="flex items-center gap-2 mb-1">
                   <div class="bg-sky-500 size-2 rounded-full"></div>
-                  <p class="text-[11px] font-bold text-default-600 uppercase">Iklan Berbayar</p>
+                  <p class="text-[11px] font-bold text-default-600 uppercase">Rumah</p>
                 </div>
                 <h4 class="text-sm font-black text-default-900 ml-4">44%</h4>
               </div>
               <div class="flex flex-col">
                 <div class="flex items-center gap-2 mb-1">
                   <div class="bg-yellow-500 size-2 rounded-full"></div>
-                  <p class="text-[11px] font-bold text-default-600 uppercase">Media Sosial</p>
+                  <p class="text-[11px] font-bold text-default-600 uppercase">Apartemen</p>
                 </div>
                 <h4 class="text-sm font-black text-default-900 ml-4">34%</h4>
               </div>
               <div class="flex flex-col">
                 <div class="flex items-center gap-2 mb-1">
                   <div class="bg-emerald-500 size-2 rounded-full"></div>
-                  <p class="text-[11px] font-bold text-default-600 uppercase">Organik/SEO</p>
+                  <p class="text-[11px] font-bold text-default-600 uppercase">Gedung Usaha</p>
                 </div>
                 <h4 class="text-sm font-black text-default-900 ml-4">22%</h4>
               </div>

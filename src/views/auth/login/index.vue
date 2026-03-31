@@ -24,6 +24,8 @@ const handleLogin = async () => {
 
     if (data.StatusCode === 200) {
       localStorage.setItem('no_id', data.No_Id)
+      localStorage.setItem('nama_display', data.Nama_Display)
+      localStorage.setItem('role_user', data.Role_User)
       localStorage.setItem('token', data.token)
       localStorage.setItem('refreshToken', data.refreshToken)
 
@@ -70,7 +72,7 @@ onMounted(() => {
         <input type="text" id="email" name="email" v-model="form.Email" class="form-input" placeholder="Masukkan Email" style="padding: 0 12px" />
       </div>
       <div class="mb-4">
-        <RouterLink to="/basic-auth/reset-pass" class="text-primary font-medium text-sm mb-2 float-end">Lupa Password ?</RouterLink>
+        <RouterLink to="" class="text-primary font-medium text-sm mb-2 float-end">Lupa Password ?</RouterLink>
         <label for="Password" class="block font-medium text-default-900 text-sm mb-2">Password</label>
         <input type="password" id="Password" name="password" v-model="form.Password" class="form-input" placeholder="Masukkan Password" style="padding: 0 12px" />
       </div>

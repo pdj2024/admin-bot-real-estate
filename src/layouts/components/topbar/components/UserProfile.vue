@@ -1,10 +1,14 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { Icon } from '@iconify/vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { logout } from '@/services/auth'
 import { confirm, success } from '@/utils/sweet-alert'
 
 const router = useRouter()
+
+const namaDisplay = ref(localStorage.getItem('nama_display') || '');
+const roleUser = ref(localStorage.getItem('role_user') || '');
 
 const handleLogout = () => {
   confirm('Apakah Anda ingin keluar?', () => {
@@ -21,7 +25,7 @@ const handleLogout = () => {
     </button>
     <div class="hs-dropdown-menu min-w-48" role="menu" aria-orientation="vertical" aria-labelledby="hs-dropdown-with-icons">
       <div class="p-2">
-        <h6 class="mb-2 text-default-500">Welcome to Tailwick</h6>
+        <h6 class="mb-2 text-default-500">Hai, Selamat Datang</h6>
         <RouterLink to="" class="flex gap-3">
           <div class="relative inline-block">
             <RouterLink to="" class="flex items-center justify-center text-sm font-semibold rounded-full size-10 bg-default-200">
@@ -31,27 +35,13 @@ const handleLogout = () => {
             <span class="-top-1 -end-1 absolute w-2.5 h-2.5 bg-green-400 border-2 border-white rounded-full"></span>
           </div>
           <div>
-            <h6 class="mb-1 text-sm font-semibold text-default-800">Maya</h6>
-            <p class="text-default-500">Admin 1</p>
+            <h6 class="mb-1 text-sm font-semibold text-default-800">{{ namaDisplay }}</h6>
+            <p class="text-default-500">{{ roleUser }}</p>
           </div>
         </RouterLink>
       </div>
       <div class="border-t border-t-default-200 -mx-2 my-2"></div>
       <div class="flex flex-col gap-y-1">
-        <RouterLink class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded" to="/example/apps/email">
-          <Icon icon="lucide:mail" class="size-4"></Icon>
-          Inbox
-          <span class="size-4.5 font-semibold bg-danger rounded text-white flex items-center justify-center text-xs">15</span>
-        </RouterLink>
-        <RouterLink class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded" to="/example/apps/chat">
-          <Icon icon="lucide:messages-square" class="size-4"></Icon>
-          Chat
-        </RouterLink>
-        <!-- <RouterLink class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded" to="/pricing">
-          <Icon icon="lucide:gem" class="size-4"></Icon>
-          Upgrade Pro
-        </RouterLink> -->
-        <div class="border-t border-default-200 -mx-2 my-1"></div>
         <RouterLink @click="handleLogout()" class="flex items-center gap-x-3.5 py-1.5 font-medium px-3 text-default-600 hover:bg-default-150 rounded" to="">
           <Icon icon="lucide:log-out" class="size-4"></Icon>
           Keluar

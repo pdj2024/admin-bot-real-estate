@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, nextTick, computed, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, onUpdated, nextTick, computed, watch } from 'vue'
 import { Icon } from '@iconify/vue'
 import { confirm, success, fail } from '@/utils/sweet-alert'
 import { RouterLink } from 'vue-router'
@@ -17,6 +17,7 @@ import interactionPlugin from '@fullcalendar/interaction'
 import idLocale from '@fullcalendar/core/locales/id'
 import api from '@/services/axios'
 import ChatBubble from './ChatBubble.vue'
+import bgChat from '@/assets/images/background-chat.png'
 
 const referensi1 = 'https://media.dekoruma.com/article/2018/09/22102609/Denah-Rumah-Minimalis-Berukuran-Mungi.jpg?resize=1000%2C682&ssl=1'
 const referensi2 = 'https://arsiteknawa.co.id/wp-content/uploads/2024/09/Denah-Rumah-3-Kamar-Ukuran-7x10-1.jpg'
@@ -42,11 +43,13 @@ const openFilter = ref(false)
 const openSchedule = ref(false)
 const isMobile = ref(false)
 const messages = ref([])
-const chats = ref([])
+const chats = ref<Chat[]>([])
 const isLoading = ref(false)
 
 const props = defineProps<{
   roomId: string | null
+  username: string
+  phoneNumber: string
 }>()
 
 interface Product {
@@ -82,19 +85,23 @@ interface Appointment {
   bath: number
 }
 
-interface BubbleMessage {
-  text?: string
-  images?: string[]
-  product?: Product[]
-  barrier?: string
-  appointment?: Appointment[]
-}
-
 interface Chat {
-  type: 'user' | 'ai' | 'cs' | 'system'
-  avatar?: string
-  message: BubbleMessage[]
-  dateTime: string
+  Message_Id: string
+  Room_Id: string
+  Sender_Id: string
+  Tipe_User: string
+  Message: string
+  Jenis_Pesan: string
+  Id_Paket: string | null
+  No_Pesanan: string | null
+  Sent_At: Date
+  Edited_At?: Date | null
+  User_Ids: string[]
+  Room_Type: string
+  Status: string
+  Send_Status: string
+  No_Penawaran: string
+  Receiver_Ids: string[]
 }
 
 const fetchChatContent = async (id: string) => {
@@ -111,16 +118,6 @@ const fetchChatContent = async (id: string) => {
     isLoading.value = false
   }
 }
-
-watch(
-  () => props.roomId,
-  (newId) => {
-    if (newId) {
-      fetchChatContent(newId)
-    }
-  },
-  { immediate: true }
-)
 
 const catalogues = ref([
   {
@@ -224,23 +221,12 @@ const catalogues = ref([
 const handleClickOutside = (event: MouseEvent) => {
   const target = event.target as Node
 
-  // List semua refs yang jika diklik TIDAK boleh menutup menu/modal
-  const interactiveRefs = [
-    containerRef.value,
-    etalaseRef.value,
-    appointmentFormRef.value,
-    tukarCSRef.value,
-    scheduleRef.value,
-    filterRef.value?.$el // Untuk komponen Filter.vue
-  ]
+  const interactiveRefs = [containerRef.value, etalaseRef.value, appointmentFormRef.value, tukarCSRef.value, scheduleRef.value, filterRef.value?.$el]
 
-  // Jika klik terjadi di salah satu area di atas, jangan lakukan apa-apa
   if (interactiveRefs.some((el) => el && el.contains(target))) {
     return
   }
 
-  // Jika klik di luar semua area tersebut, tutup semua popup yang bersifat "overlay"
-  // Namun, kita beri pengecekan agar tidak menutup modal jika modal lain sedang terbuka
   if (!openFilter.value && !openAppointmentForm.value && !openSchedule.value) {
     openMenu.value = false
     openEtalase.value = false
@@ -547,9 +533,36 @@ const formatRupiah = (price: string | number): string => {
   return 'Rp ' + number.toLocaleString('id-ID')
 }
 
+const reinitPreline = async () => {
+  await nextTick()
+  if (window.HSStaticMethods && typeof window.HSStaticMethods.autoInit === 'function') {
+    window.HSStaticMethods.autoInit()
+  }
+}
+
+const openSidebar = (): void => {
+  const sidebarElement = document.querySelector<HTMLElement>('#hs-offcanvas-left')
+  if (sidebarElement && (window as any).HSOverlay) {
+    ;(window as any).HSOverlay.open(sidebarElement)
+  } else {
+    console.warn('Sidebar atau Preline HSOverlay tidak ditemukan')
+  }
+}
+
+watch(
+  () => props.roomId,
+  (newId) => {
+    if (newId) {
+      fetchChatContent(newId)
+    }
+  },
+  { immediate: true }
+)
+
 onMounted(() => {
   isMobile.value = window.innerWidth < 640
   document.addEventListener('click', handleClickOutside)
+  reinitPreline()
 
   nextTick(() => {
     const scrollEl = chatContainer.value?.$el?.querySelector('.simplebar-content-wrapper')
@@ -563,6 +576,10 @@ onMounted(() => {
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside)
 })
+
+onUpdated(() => {
+  reinitPreline()
+})
 </script>
 
 <template>
@@ -570,15 +587,19 @@ onBeforeUnmount(() => {
     <div class="card-body bg-default-100">
       <div class="gap-3 flex justify-between">
         <div class="flex gap-3.5 items-center">
-          <button class="lg:hidden size-8 rounded-md flex justify-center items-center bg-default-100" aria-haspopup="dialog" aria-expanded="false" aria-controls="hs-offcanvas-left" data-hs-overlay="#hs-offcanvas-left">
+          <button @click="openSidebar" class="lg:hidden size-8 rounded-md flex justify-center items-center bg-default-100">
             <Icon icon="lucide:chevrons-left" class="size-4 text-default-500 hover:text-primary"></Icon>
           </button>
-          <div class="rounded-full size-10 bg-default-100">
-            <img :src="user2" alt="" class="h-10 rounded-full" />
+          <div class="relative flex items-center justify-center font-semibold rounded-full size-9 bg-default-200 text-default-700">
+            <span v-if="username" class="text-sm">
+              {{ username.charAt(0).toUpperCase() }}
+            </span>
+            <Icon v-else icon="lucide:user" class="size-5 text-default-500" />
+            <span class="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-default-50 rounded-full bg-danger"></span>
           </div>
           <div>
-            <h6 class="text-default-800 mb-1 font-bold text-sm">{{ roomId }}</h6>
-            <p class="text-xs text-default-500">Hi There! I'm using Whatsapp</p>
+            <h6 class="text-default-800 mb-1 font-bold text-sm">{{ phoneNumber }}</h6>
+            <p class="text-xs text-default-500">{{ username }}</p>
           </div>
         </div>
         <div class="flex gap-3">
@@ -589,11 +610,9 @@ onBeforeUnmount(() => {
       </div>
     </div>
     <div class="border-t border-default-200"></div>
-    <!-- <chatContent /> -->
-    <simplebar ref="chatContainer" class="h-[calc(100vh-340px)]">
+    <simplebar ref="chatContainer" class="h-[calc(100vh-340px)] bg-repeat bg-center" :style="{ backgroundImage: `url(${bgChat})`, backgroundSize: '400px' }">
       <div class="flex flex-col gap-5 px-5 py-3">
-        {{ chats }}
-        <ChatBubble v-for="(chat, i) in chats" :key="i" :chat="chat" />
+        <ChatBubble v-for="(chat, i) in chats" :idx="i" :chat="chat" :chats="chats" />
       </div>
     </simplebar>
     <div class="border-t border-default-200"></div>
@@ -847,12 +866,15 @@ onBeforeUnmount(() => {
       </div>
     </div>
   </div>
-  <div v-else class="w-full h-full flex items-center justify-center border-e border-default-200 rounded">
+  <div v-else class="relative w-full h-full min-h-[500px] flex items-center justify-center border-e border-default-200 rounded">
+    <button @click="openSidebar" class="absolute top-4 left-4 lg:hidden h-8 px-3 gap-2 rounded-md flex justify-center items-center bg-default-100">
+      <Icon icon="lucide:chevrons-left" class="size-4 text-default-500 hover:text-primary"></Icon>
+      <span class="text-sm">Lihat daftar pesan</span>
+    </button>
+
     <div class="flex flex-col items-center justify-center text-center p-6">
       <Icon icon="lucide:message-square" class="size-16 mb-4 text-default-300"></Icon>
-
       <h4 class="text-xl font-semibold text-default-700">Pilih Pesan</h4>
-
       <p class="text-sm text-default-400 mt-2 max-w-xs">Silakan pilih percakapan di samping untuk mulai melihat pesan.</p>
     </div>
   </div>

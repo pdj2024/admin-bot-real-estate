@@ -77,34 +77,39 @@ api.interceptors.response.use(
       }
 
       return new Promise((resolve, reject) => {
-        // Gunakan axios instance biasa (bukan 'api') agar tidak kena interceptor rante
         axios.post('http://26.75.164.107:270/api/auth/refresh', {
-          refreshToken: refreshToken // Sesuai permintaan body kamu
+          refreshToken: refreshToken
         })
-        .then(({ data }) => {
-          // Asumsi backend mengembalikan { token: '...', refreshToken: '...' }
-          localStorage.setItem('token', data.token)
-          if (data.refreshToken) {
-            localStorage.setItem('refreshToken', data.refreshToken)
-          }
+          .then(({ data }) => {
+            const responseData = data.Data ? data.Data : data;
 
-          // Update header Authorization untuk request selanjutnya
-          api.defaults.headers.common['Authorization'] = `Bearer ${data.token}`
-          originalRequest.headers.Authorization = `Bearer ${data.token}`
+            const newToken = responseData.token || responseData.Token;
+            const newRefreshToken = responseData.refreshToken || responseData.RefreshToken;
 
-          processQueue(null, data.token)
-          resolve(api(originalRequest))
-        })
-        .catch((err) => {
-          // Jika refresh token juga expired (gagal refresh)
-          processQueue(err, null)
-          localStorage.clear()
-          router.push('/login?expired=true')
-          reject(err)
-        })
-        .finally(() => {
-          isRefreshing = false
-        })
+            if (!newToken) {
+              throw new Error("Struktur token tidak ditemukan di response API");
+            }
+
+            localStorage.setItem('token', newToken);
+            if (newRefreshToken) {
+              localStorage.setItem('refreshToken', newRefreshToken);
+            }
+
+            api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+
+            processQueue(null, newToken);
+            resolve(api(originalRequest));
+          })
+          .catch((err) => {
+            processQueue(err, null);
+            localStorage.clear();
+            router.push('/login?expired=true');
+            reject(err);
+          })
+          .finally(() => {
+            isRefreshing = false;
+          })
       })
     }
 

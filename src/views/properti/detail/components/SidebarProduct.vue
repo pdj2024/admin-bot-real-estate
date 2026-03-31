@@ -101,7 +101,7 @@ onUnmounted(() => clearInterval(timer))
 
             <a href="#" :class="['flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-bold text-sm tracking-wide transition-all shadow-sm', product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia') ? 'bg-default-100 text-default-400' : 'bg-primary text-white hover:bg-primary-600 hover:shadow-primary/20']">
               <Icon icon="lucide:headset" class="size-4"></Icon>
-              Hubungi Agen
+              Hubungi Kami
             </a>
 
             <a href="#" :class="['flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-bold text-sm tracking-wide transition-all shadow-sm border', product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia') ? 'border-default-100 text-default-300' : 'border-default-200 text-default-700 hover:bg-default-50 hover:border-default-300']">

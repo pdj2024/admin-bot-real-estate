@@ -6,20 +6,28 @@ import ChatContent from './components/ChatContent.vue'
 import SideBar from './components/SideBar.vue'
 
 const selectedRoomId = ref<string | null>(null)
+const selectedUsername = ref<string>('')
+const selectedPhone = ref<string>('')
 
 const handleSelectChat = (id: string) => {
   selectedRoomId.value = id
+}
+const handleUsername = (name: string) => {
+  selectedUsername.value = name
+}
+const handlePhone = (phone: string) => {
+  selectedPhone.value = phone
 }
 </script>
 
 <template>
   <Vertical>
-    <PageTitle subtitle="Menu Utama" title="Chat" />
+    <PageTitle subtitle="Utama" title="Chat" />
 
     <div class="card overflow-hidden">
-      <div class="flex h-[80vh] items-stretch">
-        <SideBar @select-chat="handleSelectChat" class="w-1/3 border-e" />
-        <ChatContent :roomId="selectedRoomId" class="ms-3 flex-grow" />
+      <div class="flex">
+        <SideBar @select_chat="handleSelectChat" @username="handleUsername" @phone_number="handlePhone" />
+        <ChatContent :roomId="selectedRoomId" :username="selectedUsername" :phoneNumber="selectedPhone" />
       </div>
     </div>
   </Vertical>

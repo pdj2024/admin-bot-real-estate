@@ -16,8 +16,7 @@ const formatCurrency = (value: number) => {
 
 <template>
   <div class="lg:col-span-2 col-span-1">
-    <div :class="['card relative transition-all duration-500 border-none shadow-sm hover:shadow-md bg-white rounded-xl overflow-hidden', product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia') ? 'grayscale opacity-70 select-none' : '']">
-      <div v-if="product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia')" class="absolute inset-0 z-50 bg-white/20 backdrop-blur-[1px] cursor-not-allowed"></div>
+    <div class="card relative transition-all duration-500 border-none shadow-sm hover:shadow-md bg-white rounded-xl overflow-hidden">
 
       <div class="card-body p-6">
         <div class="flex justify-between items-center mb-4">
@@ -65,12 +64,12 @@ const formatCurrency = (value: number) => {
           <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             <div
               v-for="(spec, idx) in [
+                { icon: 'lucide:land-plot', label: 'L. Tanah', val: product?.Luas_Tanah + ' m²' },
+                { icon: 'lucide:home', label: 'L. Bangunan', val: product?.Luas_Bangunan + ' m²' },
+                { icon: 'lucide:layers', label: 'Lantai', val: product?.Jumlah_Lantai },
                 { icon: 'lucide:bed', label: 'K. Tidur', val: product?.Jumlah_Kamar_Tidur },
                 { icon: 'lucide:bath', label: 'K. Mandi', val: product?.Jumlah_Kamar_Mandi },
-                { icon: 'lucide:layers', label: 'Lantai', val: product?.Jumlah_Lantai },
-                { icon: 'lucide:zap', label: 'Listrik', val: product?.Daya_Listrik + 'W' },
-                { icon: 'lucide:maximize', label: 'L. Tanah', val: product?.Luas_Tanah + 'm²' },
-                { icon: 'lucide:home', label: 'L. Bangunan', val: product?.Luas_Bangunan + 'm²' }
+                { icon: 'lucide:car', label: 'Carport', val: product?.Jumlah_Carpot}
               ]"
               :key="idx"
               class="flex flex-col items-center py-3 rounded-lg border border-default-100 hover:bg-default-50 transition-colors"
@@ -112,11 +111,15 @@ const formatCurrency = (value: number) => {
             <table class="w-full text-sm">
               <tbody class="divide-y divide-default-100">
                 <tr class="hover:bg-default-50/50 transition-colors">
+                  <td class="px-5 py-3 font-semibold text-default-500 bg-default-50/30 w-1/3 italic">Daya Listrik</td>
+                  <td class="px-5 py-3 text-default-800">{{ product?.Daya_Listrik.toLocaleString('id-ID') }} Watt</td>
+                </tr>
+                <tr class="hover:bg-default-50/50 transition-colors">
                   <td class="px-5 py-3 font-semibold text-default-500 bg-default-50/30 w-1/3 italic">Tipe Unit</td>
                   <td class="px-5 py-3 text-default-800">{{ product?.Tipe }}</td>
                 </tr>
                 <tr class="hover:bg-default-50/50 transition-colors">
-                  <td class="px-5 py-3 font-semibold text-default-500 bg-default-50/30 w-1/3 italic">Legalitas</td>
+                  <td class="px-5 py-3 font-semibold text-default-500 bg-default-50/30 w-1/3 italic">Sertifikat</td>
                   <td class="px-5 py-3 text-primary font-bold">{{ product?.Jenis_Sertifikat }}</td>
                 </tr>
                 <tr v-if="product?.minimal_sewa && product?.minimal_sewa > 0" class="hover:bg-default-50/50 transition-colors">

@@ -72,6 +72,17 @@
   --sidenav-item-font-size: 14px;
 
   --topbar-background: var(--color-white);
+
+  --fc-button-bg-color: var(--color-bejo-500);
+  --fc-button-border-color: var(--color-bejo-500);
+  
+  --fc-button-hover-bg-color: var(--color-bejo-600);
+  --fc-button-hover-border-color: var(--color-bejo-600);
+  
+  --fc-button-active-bg-color: var(--color-bejo-700);
+  --fc-button-active-border-color: var(--color-bejo-700);
+  
+  --fc-button-text-color: var(--text-bejo-50);
 }
 
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *, .dark, .dark *));

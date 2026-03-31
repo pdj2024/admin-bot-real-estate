@@ -136,11 +136,6 @@ const toggleDropdown = (id: string) => {
 const updateStatusTransaksi = async (product: any, newStatus: string) => {
   confirm(`Apakah Anda yakin ingin mengubah status menjadi ${newStatus}?`, async () => {
     try {
-      if (newStatus === 'Tersedia') {
-        product.Status_Display = 'Aktif'
-      } else {
-        product.Status_Display = 'Nonaktif'
-      }
       product.Status_Properti = newStatus
       await api.put('/api/realEstate/update?no_id=' + product.No_Id, product, {
         headers: { 'X-Jenis-User': 'admin' }
@@ -197,7 +192,6 @@ const deleteProduct = async (data: Product) => {
       success('Berhasil hapus produk')
     } catch (err: any) {
       console.log(err.message)
-      // console.error('Error:', err.response?.data || err.Message)
       fail('Gagal menghapus data')
     }
   })
@@ -253,8 +247,18 @@ onMounted(async () => {
     </div>
 
     <div class="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
-      <div v-for="row in table.getRowModel().rows" :key="row.id" class="card group flex flex-col h-full rounded-2xl overflow-hidden border transition-all duration-500 hover:-translate-y-1 relative" :class="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia' ? 'bg-default-100 border-default-200 opacity-75 grayscale-[30%]' : 'bg-card border-default-150 hover:border-primary/30 hover:shadow-lg'">
+      <div v-for="row in table.getRowModel().rows" :key="row.id" class="card group flex flex-col h-full rounded-2xl overflow-hidden border transition-all duration-500 hover:-translate-y-1 relative bg-card border-default-150 hover:border-primary/30 hover:shadow-lg">
         <div class="relative h-60 overflow-hidden">
+          <div v-if="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia'" class="absolute inset-0 bg-black/40 backdrop-grayscale-[60%] z-[5] pointer-events-none transition-all duration-500"></div>
+
+          <div v-if="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia'" class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+            <div class="px-6 py-3 bg-black/30 backdrop-blur-md rounded-xl border border-white/10 shadow-2xl transform transition-transform duration-500 group-hover:scale-110">
+              <span class="text-2xl font-black uppercase tracking-widest text-white/90">
+                {{ row.original.Status_Display != 'Aktif' ? 'Nonaktif' : row.original.Status_Properti }}
+              </span>
+            </div>
+          </div>
+
           <img v-if="row.original.MediaUrls.length >= 1" :src="row.original.MediaUrls[0].Id_Media" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
           <div v-else class="w-full h-full bg-default-100 flex flex-col items-center justify-center">
             <Icon icon="lucide:image" class="size-16 text-default-300" />
@@ -263,12 +267,12 @@ onMounted(async () => {
           <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
 
           <div class="absolute top-4 left-4 flex flex-col gap-2 z-10">
-            <span class="backdrop-blur-md text-white text-[10px] uppercase tracking-widest font-bold px-2.5 py-1 rounded-md shadow-sm w-fit bg-emerald-500/90" :class="row.original.Status_Properti != 'Tersedia' ? 'bg-red-500/80' : 'bg-emerald-500/80'">
-              {{ row.original.Status_Properti }}
+            <span class="w-fit bg-bejo-600/70 backdrop-blur-md text-white text-[10px] uppercase tracking-widest font-bold px-2.5 py-1 rounded-md shadow-md border border-bejo-300/40">
+              {{ row.original.Status_Display != 'Aktif' ? 'Nonaktif' : row.original.Status_Properti }}
             </span>
-            
+
             <div class="flex flex-wrap gap-1.5">
-              <span v-for="(trans, i) in row.original.Status_Transaksi" :key="i" class="backdrop-blur-md bg-indigo-600/80 text-white text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-md">
+              <span v-for="(trans, i) in row.original.Status_Transaksi" :key="i" class="bg-black/50 backdrop-blur-md text-bejo-100 text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-md border border-bejo-700/60 shadow-sm">
                 {{ trans }}
               </span>
             </div>
@@ -301,26 +305,37 @@ onMounted(async () => {
 
           <div class="grid grid-cols-2 gap-3 rounded-xl p-3 mb-5 border border-default-100 bg-default-50/50">
             <div class="flex items-center gap-2">
-              <Icon icon="lucide:home" class="size-3.5 text-default-400" />
-              <span class="text-xs font-bold text-default-600">LB {{ row.original.Luas_Bangunan }}m²</span>
+              <Icon icon="lucide:land-plot" class="size-3.5 text-default-400" />
+              <span class="text-xs font-bold text-default-600">LT {{ row.original.Luas_Tanah }} m²</span>
             </div>
             <div class="flex items-center gap-2">
-              <Icon icon="lucide:land-plot" class="size-3.5 text-default-400" />
-              <span class="text-xs font-bold text-default-600">LT {{ row.original.Luas_Tanah }}m²</span>
+              <Icon icon="lucide:home" class="size-3.5 text-default-400" />
+              <span class="text-xs font-bold text-default-600">LB {{ row.original.Luas_Bangunan }} m²</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <Icon icon="lucide:layers" class="size-3.5 text-default-400" />
+              <span class="text-xs font-bold text-default-600">{{ row.original.Jumlah_Lantai }} Lantai</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <Icon icon="lucide:car" class="size-3.5 text-default-400" />
+              <span class="text-xs font-bold text-default-600">{{ row.original.Jumlah_Carpot }} Mobil</span>
             </div>
             <div class="flex items-center gap-2">
               <Icon icon="lucide:bed" class="size-3.5 text-default-400" />
               <span class="text-xs font-bold text-default-600">{{ row.original.Jumlah_Kamar_Tidur }} Kamar</span>
             </div>
             <div class="flex items-center gap-2">
-              <Icon icon="lucide:car" class="size-3.5 text-default-400" />
-              <span class="text-xs font-bold text-default-600">{{ row.original.Jumlah_Carpot }} Mobil</span>
+              <Icon icon="lucide:bath" class="size-3.5 text-default-400" />
+              <span class="text-xs font-bold text-default-600">{{ row.original.Jumlah_Kamar_Mandi }} Kamar</span>
             </div>
           </div>
 
           <div class="mt-auto pt-4 border-t border-default-100 flex flex-col gap-2">
             <div v-if="row.original.Harga_Sewa1 > 0" class="flex flex-col">
-              <span class="text-[9px] font-black text-default-400 uppercase tracking-widest mb-0.5">Harga Sewa</span>
+              <span class="text-[9px] font-black text-default-400 uppercase tracking-widest mb-0.5">
+                Harga Sewa
+                <span v-if="row.original.Minimal_Sewa && row.original.Minimal_Sewa > 0">(min. {{ row.original.Minimal_Sewa + ' ' + row.original.Satuan_Minimal_Sewa }})</span>
+              </span>
               <div class="flex items-baseline gap-1.5">
                 <span class="text-base font-black text-default-900">
                   {{ formatCurrency(row.original.Harga_Sewa2 > 0 ? row.original.Harga_Sewa2 : row.original.Harga_Sewa1) }}
@@ -347,6 +362,9 @@ onMounted(async () => {
             </button>
             <div v-show="activeDropdownId === row.id" class="absolute right-0 bottom-11 z-[100] min-w-[180px] bg-card p-1.5 shadow-2xl border border-default-100 rounded-xl animate-in slide-in-from-bottom-2 duration-200">
               <button @click="updateStatusTransaksi(row.original, 'Terjual')" v-if="row.original.Status_Transaksi.includes('Jual') && row.original.Status_Properti != 'Terjual'" class="dropdown-item-custom hover:bg-emerald-500/10 hover:text-emerald-500"><Icon icon="lucide:badge-check" class="size-4" /> Sudah Terjual</button>
+              <button @click="updateStatusTransaksi(row.original, 'Tersewa')" v-if="row.original.Status_Transaksi.includes('Sewa') && row.original.Status_Properti != 'Tersewa'" class="dropdown-item-custom hover:bg-emerald-500/10 hover:text-emerald-500"><Icon icon="lucide:badge-check" class="size-4" /> Sudah Tersewa</button>
+              <button @click="updateStatusTransaksi(row.original, 'Tersedia')" v-if="row.original.Status_Transaksi.includes('Jual') && row.original.Status_Properti == 'Terjual'" class="dropdown-item-custom hover:bg-emerald-500/10 hover:text-emerald-500"><Icon icon="lucide:badge-check" class="size-4" /> Batal Terjual</button>
+              <button @click="updateStatusTransaksi(row.original, 'Tersedia')" v-if="row.original.Status_Transaksi.includes('Sewa') && row.original.Status_Properti == 'Tersewa'" class="dropdown-item-custom hover:bg-emerald-500/10 hover:text-emerald-500"><Icon icon="lucide:badge-check" class="size-4" /> Batal Tersewa</button>
               <button @click="openEditModal(row.original)" class="dropdown-item-custom hover:bg-primary/10 hover:text-primary"><Icon icon="lucide:pencil" class="size-4" /> Edit</button>
               <button @click="deleteProduct(row.original)" class="dropdown-item-custom text-red-500 hover:bg-red-500/10"><Icon icon="lucide:trash-2" class="size-4" /> Hapus</button>
             </div>
@@ -369,11 +387,7 @@ onMounted(async () => {
       </nav>
     </div>
 
-    <Modal 
-      v-model:showModal="isModalOpen" 
-      :itemData="selectedItem" 
-      @success="fetchData" 
-    />
+    <Modal v-model:showModal="isModalOpen" :itemData="selectedItem" @success="fetchData" />
   </div>
 </template>
 
@@ -396,7 +410,6 @@ onMounted(async () => {
   @apply bg-primary text-white border-primary shadow-md shadow-primary/20;
 }
 
-/* Penyesuaian Dark Mode spesifik untuk Card */
 :where([data-theme='dark']) .card {
   @apply bg-zinc-900 border-zinc-800 shadow-none;
 }

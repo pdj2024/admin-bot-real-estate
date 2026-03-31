@@ -44,14 +44,9 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4 pt-2">
+        <div class="grid grid-cols-1 gap-4 pt-2">
           <div class="bg-default-50 p-2 rounded-lg">
-            <p class="text-[10px] uppercase tracking-wider text-default-400">Customer</p>
-            <p class="text-sm font-medium text-default-800">{{ props.appointment.customerName }}</p>
-            <p class="text-[12px] text-default-600">{{ props.appointment.customerPhone }}</p>
-          </div>
-          <div class="bg-default-50 p-2 rounded-lg">
-            <p class="text-[10px] uppercase tracking-wider text-default-400">Salesman</p>
+            <p class="text-[10px] uppercase tracking-wider text-default-400">Nama Agen</p>
             <p class="text-sm font-medium text-default-800">{{ props.appointment.salesName }}</p>
             <p class="text-[12px] text-default-600">{{ props.appointment.salesPhone }}</p>
           </div>

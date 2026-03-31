@@ -5,14 +5,10 @@ import { success } from '@/utils/sweet-alert'
 
 let refreshInterval: ReturnType<typeof setInterval> | null = null;
 
-/**
- * Cek apakah token sudah expired atau akan expired dalam 1 menit
- */
 export const isTokenExpired = (token: string | null): boolean => {
   if (!token) return true;
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
-    // Toleransi 60 detik sebelum benar-benar expired
     return (payload.exp * 1000) < (Date.now() + 60000);
   } catch {
     return true;
@@ -35,25 +31,38 @@ export const performRefresh = async () => {
   if (!refreshToken) return;
 
   try {
-    console.log("REFRESH TOKEN AWAL:", refreshToken);
+    console.log("Melakukan refresh token secara otomatis")
     const { data } = await axios.post('http://26.75.164.107:270/api/auth/refresh', {
       refreshToken: refreshToken
     });
 
-    console.log(data)
-    localStorage.setItem('token', data.token);
-    if (data.refreshToken) {
-      localStorage.setItem('refreshToken', data.refreshToken);
+    const responseData = data.Data ? data.Data : data;
+    const newToken = responseData.token || responseData.Token;
+    const newRefreshToken = responseData.refreshToken || responseData.RefreshToken;
+
+    if (!newToken) throw new Error("Token gagal di-parse");
+
+    localStorage.setItem('token', newToken);
+    if (newRefreshToken) {
+      localStorage.setItem('refreshToken', newRefreshToken);
+      console.log("Berhasil mendapatkan token secara otomatis")
+
     }
 
-    api.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
+    api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+  } catch (err: any) {
+    console.error("Gagal memperbarui token:", err.message);
 
-    console.log("Token otomatis diperbarui (Silent Refresh Success)");
-  } catch (err) {
-    console.error("Gagal memperbarui token secara otomatis", err);
+    if (err.response && err.response.data) {
+      console.error("Detail isi error 400 dari server:", err.response.data);
+    }
+
+    if (err.response && (err.response.status === 400 || err.response.status === 401)) {
+      console.warn("Sesi benar-benar mati, memaksa pengguna keluar.");
+      logout();
+    }
   }
 }
-
 export const startSilentRefresh = () => {
   if (refreshInterval) clearInterval(refreshInterval);
 

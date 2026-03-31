@@ -2,38 +2,32 @@
 import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import simplebar from 'simplebar-vue'
-import logo from '@/assets/images/logo-sm.png'
-import user1 from '@/assets/images/user/user-1.jpg'
-import user2 from '@/assets/images/user/user-2.jpg'
-import user3 from '@/assets/images/user/user-3.jpg'
-import user4 from '@/assets/images/user/user-4.jpg'
-import avatar10 from '@/assets/images/user/avatar-10.png'
-import avatar8 from '@/assets/images/user/avatar-8.png'
-import avatar1 from '@/assets/images/user/avatar-1.png'
-import avatar5 from '@/assets/images/user/avatar-5.png'
 import { RouterLink } from 'vue-router'
 import api from '@/services/axios'
 
-const Chats = ref<chat[]>([])
-const emit = defineEmits<{
-  (e: 'select-chat', id: string): void
+// Tambahkan props untuk menerima ID chat yang sedang aktif
+const props = defineProps<{
+  activeRoomId: string | null
 }>()
 
-const selectChat = (id: string) => {
-  emit('select-chat', id)
-  console.log(id)
-}
-
-interface chat {
+export interface Chat {
   Room_Id: string
   Room_Name: string
   Room_Type: string
+  Username_User: string
+  Id_User: string
+  Id_Media_User: string
+  No_Id_Media_User: string
+  Tipe_User: string
+  Telepon_User: string
   Username_Lawan: string
   Id_Lawan: string
-  ID_Media_Lawan: string
+  Id_Media_Lawan: string
   No_Id_Media_Lawan: string
+  Tipe_User_Lawan: string
+  Telepon_User_Lawan: string
   Created_At: string | null
-  Last_Message_At: Date
+  Last_Message_At: string | Date
   Last_Message: string
   Status: string
   User_Ids: string[]
@@ -43,34 +37,57 @@ interface chat {
   List_Id_Message_Received: string[]
 }
 
+const Chats = ref<Chat[]>([])
+
+const emit = defineEmits<{
+  (e: 'select_chat', id: string): void
+  (e: 'username', username: string): void
+  (e: 'phone_number', phoneNumber: string): void
+}>()
+
+const selectChat = (id: string, username: string, phoneNumber: string) => {
+  emit('select_chat', id)
+  emit('username', username)
+  emit('phone_number', phoneNumber)
+  closeSidebar()
+}
+
 const getDateChat = (date: any) => {
-  if (!date) return '';
-  const d = new Date(date);
-  const today = new Date().setHours(0, 0, 0, 0);
-  const target = new Date(d).setHours(0, 0, 0, 0);
-  const diffDays = (today - target) / 86400000;
+  if (!date) return ''
+  const d = new Date(date)
+  const today = new Date().setHours(0, 0, 0, 0)
+  const target = new Date(d).setHours(0, 0, 0, 0)
+  
+  // PERBAIKAN: Gunakan Math.round agar pembagian hari konsisten
+  const diffDays = Math.round((today - target) / 86400000)
 
   if (diffDays === 0) {
-    return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
   }
-
-  if (diffDays === 1) return 'Kemarin';
+  if (diffDays === 1) return 'Kemarin'
 
   return new Intl.DateTimeFormat('id-ID', {
-    day: '2-digit', month: '2-digit', year: '2-digit'
-  }).format(d);
-};
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit'
+  }).format(d)
+}
+
+const closeSidebar = (): void => {
+  const sidebarElement = document.querySelector<HTMLElement>('#hs-offcanvas-left')
+  if (sidebarElement && (window as any).HSOverlay) {
+    ;(window as any).HSOverlay.close(sidebarElement)
+  }
+}
 
 const fetchData = async () => {
   try {
-    const { data } = await api.get('/api/chat/getRooms?orderby=Last_Message_At', {
+    const { data } = await api.get('/api/chat/getRooms?user_id=' + localStorage.getItem('no_id') + '&orderby=Last_Message_At', {
       headers: { 'X-Jenis-User': 'Admin' }
     })
     Chats.value = data.Data
   } catch (err: any) {
-    console.error('DATA:', err.response?.data)
-    console.error('STATUS:', err.response?.status)
-    console.error('MESSAGE:', err.message)
+    console.error('ERROR DATA:', err)
   }
 }
 
@@ -82,163 +99,54 @@ onMounted(async () => {
 <template>
   <div class="lg:border-e border-default-200">
     <div id="hs-offcanvas-left" class="hs-overlay [--auto-close:lg] lg:block lg:translate-x-0 lg:static lg:end-auto lg:bottom-0 w-80 hs-overlay-open:translate-x-0 -translate-x-full transition-all duration-300 transform h-full hidden fixed top-0 start-0 bottom-0 overflow-hidden z-60" role="dialog" tabindex="-1" aria-label="Sidebar">
-      <div class="card rounded-none shadow-none relative flex flex-row h-full max-h-full overflow-hidden divide-x divide-default-200">
-        <div class="w-80">
-          <div class="card-body">
-            <div class="mt-5 relative">
-              <input type="email" class="ps-11 block w-full form-input form-input-sm" placeholder="Search for...." />
-              <div class="absolute inset-y-0 start-0 flex items-center ps-4">
-                <Icon icon="lucide:search" class="size-3.5 flex items-center text-default-500"></Icon>
+      <div class="bg-white relative flex flex-col h-full overflow-hidden">
+        
+        <div class="p-4 border-b border-default-100">
+          <div class="relative">
+            <input type="text" class="ps-10 block w-full form-input form-input-sm bg-default-100 rounded-lg border-none" placeholder="Cari pesan..." />
+            <div class="absolute inset-y-0 start-0 flex items-center ps-3">
+              <Icon icon="lucide:search" class="size-4 text-default-400"></Icon>
+            </div>
+          </div>
+        </div>
+
+        <simplebar class="h-full" data-simplebar>
+          <div class="px-4 py-2 border-b border-default-100">
+            <p class="text-xs font-semibold text-primary uppercase tracking-wider">Perlu Balasan</p>
+          </div>
+          
+          <div class="flex flex-col">
+            <div 
+              v-for="(chat, idx) in Chats" 
+              :key="idx" 
+              @click="selectChat(chat.Room_Id, chat.Username_Lawan, chat.Telepon_User_Lawan)" 
+              class="flex gap-3 py-3 px-4 cursor-pointer transition-all border-b border-default-50"
+              :class="activeRoomId === chat.Room_Id ? 'bg-primary/5 border-r-4 border-r-primary' : 'hover:bg-default-50 bg-white'"
+            >
+              <div class="relative flex-shrink-0 flex items-center justify-center font-bold rounded-full size-10 text-white"
+                   :class="activeRoomId === chat.Room_Id ? 'bg-primary' : 'bg-default-300'">
+                <span v-if="chat.Username_Lawan" class="text-sm">
+                  {{ chat.Username_Lawan.substring(0, 2).toUpperCase() }}
+                </span>
+                <Icon v-else icon="lucide:user" class="size-5" />
+                <span class="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-white rounded-full bg-danger"></span>
+              </div>
+              
+              <div class="flex-grow min-w-0">
+                <div class="flex justify-between items-center mb-0.5">
+                  <h6 class="text-default-900 font-semibold text-sm truncate pr-2">
+                    {{ chat.Username_Lawan || chat.Telepon_User_Lawan }}
+                  </h6>
+                  <small class="text-[10px] text-default-400 whitespace-nowrap">{{ getDateChat(chat.Last_Message_At) }}</small>
+                </div>
+                <p class="text-xs truncate" :class="activeRoomId === chat.Room_Id ? 'text-default-700 font-medium' : 'text-default-500'">
+                  {{ chat.Last_Message }}
+                </p>
               </div>
             </div>
           </div>
-          <simplebar class="lg:h-[calc(100vh-250px)] h-[calc(100vh-125px)]" data-simplebar>
-            <div class="px-5 mb-1">
-              <p class="mb-1 text-cyan-900 text-sm">Perlu Balasan</p>
-            </div>
-            <div class="bg-cyan-100">
-              <RouterLink to="" v-for="(chat, idx) in Chats" @click="selectChat(chat.Room_Id)" class="flex gap-3 py-2 px-4 bg-default-150 cursor-pointer" >
-                <div class="relative flex items-center justify-center font-semibold rounded-full size-9 bg-default-200">
-                  <img :src="user2" alt="" class="rounded-full w-9 h-9" />
-                  <span class="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-default-50 rounded-full bg-danger"></span>
-                </div>
-                <div class="flex-grow">
-                  <h6 class="mb-1 text-default-800 font-semibold text-sm">{{ chat.Room_Id }}</h6>
-                  <p class="text-xs truncate text-default-500">{{ chat.Last_Message }}</p>
-                </div>
-                <small class="text-xs text-default-500">{{ getDateChat(chat.Last_Message_At) }}</small>
-              </RouterLink>
-              <!-- <RouterLink to="" class="flex gap-3 py-2 px-4 bg-cyan-300">
-                <div class="relative flex items-center justify-center font-semibold rounded-full size-9 bg-default-200">
-                  <img :src="user2" alt="" class="rounded-full w-9 h-9" />
-                  <span class="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-default-50 rounded-full bg-danger"></span>
-                </div>
-                <div class="flex-grow">
-                  <h6 class="mb-1 text-default-800 font-semibold text-sm">Budi Galangan</h6>
-                  <p class="text-xs truncate text-default-500">Baik, terima kasih mbak</p>
-                </div>
-                <small class="text-xs text-default-500">02:57 PM</small>
-              </RouterLink>
-              <RouterLink to="" class="flex gap-3 py-2 px-4 hover:bg-default-150">
-                <div class="relative flex items-center justify-center font-semibold rounded-full size-9 bg-default-200">
-                  <img :src="avatar5" alt="" class="rounded-full w-9 h-9" />
-                  <span class="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-default-50 rounded-full bg-green-500"></span>
-                </div>
-                <div class="flex-grow">
-                  <h6 class="mb-1 text-default-800 font-semibold text-sm">Yanti Warung</h6>
-                  <p class="text-xs truncate text-default-500">Saya ingin gula pasir 1 ton ...</p>
-                </div>
-                <small class="text-xs text-default-500">2min ago</small>
-              </RouterLink>
-              <RouterLink to="" class="flex gap-3 py-2 px-4 hover:bg-default-150">
-                <div class="relative flex items-center justify-center font-semibold rounded-full size-9 bg-default-200">
-                  <img :src="avatar1" alt="" class="rounded-full w-9 h-9" />
-                  <span class="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-default-50 rounded-full bg-green-500"></span>
-                </div>
-                <div class="flex-grow">
-                  <h6 class="mb-1 text-default-800 font-semibold text-sm">Yuda Katering</h6>
-                  <p class="text-xs truncate text-default-500">Apa sudah ada barangnya?</p>
-                </div>
-                <small class="text-xs text-default-500">Yesterday</small>
-              </RouterLink> -->
-            </div>
-            <!-- <div class="px-5 pt-2">
-              <p class="mb-1 text-default-500 text-sm">Riwayat Percakapan</p>
-            </div>
-            <div class="bg-default-100">
-              <RouterLink to="" class="flex gap-3 py-2 px-4 hover:bg-default-150">
-                <div class="relative flex items-center justify-center font-semibold rounded-full size-9 bg-default-200">
-                  <img :src="user1" alt="" class="rounded-full w-9 h-9" />
-                  <span class="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-default-50 rounded-full bg-default-500"></span>
-                </div>
-                <div class="">
-                  <h6 class="mb-1 text-default-800 font-semibold text-sm">Mama Burhan</h6>
-                  <p class="text-xs truncate text-default-500">Hi There! I'm using Whatsapp</p>
-                </div>
-              </RouterLink>
-              <RouterLink to="" class="flex gap-3 py-2 px-4 hover:bg-default-150">
-                <div class="relative flex items-center justify-center font-semibold rounded-full size-9 bg-default-200">
-                  <img :src="avatar5" alt="" class="rounded-full w-9 h-9" />
-                  <span class="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-default-50 rounded-full bg-danger"></span>
-                </div>
-                <div class="">
-                  <h6 class="mb-1 text-default-800 font-semibold text-sm">Mita Jubaedah</h6>
-                  <p class="text-xs truncate text-default-500">Hi There! I'm using Whatsapp</p>
-                </div>
-              </RouterLink>
-              <RouterLink to="" class="flex gap-3 py-2 px-4 hover:bg-default-150">
-                <div class="relative flex items-center justify-center font-semibold rounded-full size-9 bg-default-200">
-                  RD
-                  <span class="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-default-50 rounded-full bg-green-500"></span>
-                </div>
-                <div class="">
-                  <h6 class="mb-1 text-default-800 font-semibold text-sm">Ronald D'Clincton</h6>
-                  <p class="text-xs truncate text-default-500">Hi There! I'm using Whatsapp</p>
-                </div>
-              </RouterLink>
-              <RouterLink to="" class="flex gap-3 py-2 px-4 hover:bg-default-150">
-                <div class="relative flex items-center justify-center font-semibold rounded-full size-9 bg-default-200">
-                  <img :src="user3" alt="" class="rounded-full w-9 h-9" />
-                  <span class="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-default-50 rounded-full bg-default-950"></span>
-                </div>
-                <div class="">
-                  <h6 class="mb-1 text-default-800 font-semibold text-sm">Jaqueline Hammes</h6>
-                  <p class="text-xs truncate text-default-500">Angular Developer</p>
-                </div>
-              </RouterLink>
-              <RouterLink to="" class="flex gap-3 py-2 px-4 hover:bg-default-150">
-                <div class="relative flex items-center justify-center font-semibold rounded-full size-9 bg-default-200">
-                  <img :src="avatar8" alt="" class="rounded-full w-9 h-9" />
-                  <span class="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-default-50 rounded-full bg-default-950"></span>
-                </div>
-                <div class="">
-                  <h6 class="mb-1 text-default-800 font-semibold text-sm">Andrea Pesina</h6>
-                  <p class="text-xs truncate text-default-500">Laravel Developer</p>
-                </div>
-              </RouterLink>
-              <RouterLink to="" class="flex gap-3 py-2 px-4 hover:bg-default-150">
-                <div class="relative flex items-center justify-center font-semibold rounded-full size-9 bg-default-200">
-                  <img :src="avatar10" alt="" class="rounded-full w-9 h-9" />
-                  <span class="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-default-50 rounded-full bg-green-500"></span>
-                </div>
-                <div class="">
-                  <h6 class="mb-1 text-default-800 font-semibold text-sm">Bernard Pereira</h6>
-                  <p class="text-xs truncate text-default-500">Web Designer</p>
-                </div>
-              </RouterLink>
-              <RouterLink to="" class="flex gap-3 py-2 px-4 hover:bg-default-150">
-                <div class="relative flex items-center justify-center font-semibold rounded-full size-9 bg-default-200">
-                  <img :src="user4" alt="" class="rounded-full w-9 h-9" />
-                  <span class="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-default-50 rounded-full bg-default-950"></span>
-                </div>
-                <div class="">
-                  <h6 class="mb-1 text-default-800 font-semibold text-sm">William Jones</h6>
-                  <p class="text-xs truncate text-default-500">Project Manager</p>
-                </div>
-              </RouterLink>
-              <RouterLink to="" class="flex gap-3 py-2 px-4 hover:bg-default-150">
-                <div class="relative flex items-center justify-center font-semibold rounded-full size-9 bg-default-200">
-                  <img :src="user2" alt="" class="rounded-full w-9 h-9" />
-                  <span class="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-default-50 rounded-full bg-default-500"></span>
-                </div>
-                <div class="">
-                  <h6 class="mb-1 text-default-800 font-semibold text-sm">Aurore Maggio</h6>
-                  <p class="text-xs truncate text-default-500">React Developer</p>
-                </div>
-              </RouterLink>
-              <RouterLink to="" class="flex gap-3 py-2 px-4 hover:bg-default-150">
-                <div class="relative flex items-center justify-center font-semibold rounded-full size-9 bg-default-200">
-                  LP
-                  <span class="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-default-50 rounded-full bg-green-500"></span>
-                </div>
-                <div class="">
-                  <h6 class="mb-1 text-default-800 font-semibold text-sm">Mark Walton</h6>
-                  <p class="text-xs truncate text-default-500">UI / UX Designer</p>
-                </div>
-              </RouterLink>
-            </div> -->
-          </simplebar>
-        </div>
+        </simplebar>
+
       </div>
     </div>
   </div>

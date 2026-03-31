@@ -1,34 +1,3 @@
-<template>
-  <div :class="calendarColClass">
-    <div class="card">
-      <div class="card-body">
-        <FullCalendar ref="fullCalendarRef" :options="calendarOptions" />
-      </div>
-    </div>
-  </div>
-</template>
-
-<style scoped>
-.fc {
-  max-width: 100%;
-}
-
-.fc-toolbar-title {
-  font-size: 16px;
-}
-
-.fc-daygrid-day-frame {
-  min-height: 90px;
-}
-
-@media (max-width: 640px) {
-  .fc-toolbar {
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-}
-</style>
-
 <script setup lang="ts">
 import FullCalendar from '@fullcalendar/vue3'
 import dayGridPlugin from '@fullcalendar/daygrid'
@@ -363,3 +332,34 @@ onMounted(() => {
   refreshCalendar()
 })
 </script>
+
+<template>
+  <div :class="calendarColClass">
+    <div class="card">
+      <div class="card-body">
+        <FullCalendar ref="fullCalendarRef" :options="calendarOptions" />
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.fc {
+  max-width: 100%;
+}
+
+.fc-toolbar-title {
+  font-size: 16px;
+}
+
+.fc-daygrid-day-frame {
+  min-height: 90px;
+}
+
+@media (max-width: 640px) {
+  .fc-toolbar {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}
+</style>

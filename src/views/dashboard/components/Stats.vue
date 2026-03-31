@@ -1,9 +1,27 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { Icon } from '@iconify/vue'
+import api from '@/services/axios'
+
+// const chats = ref([])
+
+// const fetchData = async () => {
+//   try {
+//     const { data } = await api.get('/api/chat/getRooms?user_id='+localStorage.getItem('no_id')+'&orderby=Last_Message_At', {
+//       headers: { 'X-Jenis-User': 'Admin' }
+//     })
+//     products.value = data.Data
+//   } catch (err: any) {
+//     console.error('DATA:', err.response?.data)
+//     console.error('STATUS:', err.response?.status)
+//     console.error('MESSAGE:', err.message)
+//   }
+// }
+
 const operasionalData = [
-  { label: 'Chat Aktif', value: '12', icon: 'lucide:message-square', bgColor: 'bg-primary/10', iconColor: 'text-primary' },
+  { label: 'Chat Aktif Hari Ini', value: '12', icon: 'lucide:message-square', bgColor: 'bg-primary/10', iconColor: 'text-primary' },
   { label: 'Janji Temu Hari Ini', value: '5', icon: 'lucide:calendar-clock', bgColor: 'bg-info/10', iconColor: 'text-info' },
-  { label: 'Total Database', value: '1.2k', icon: 'lucide:users', bgColor: 'bg-success/10', iconColor: 'text-success' },
+  { label: 'Total Agen Properti', value: '52', icon: 'lucide:users', bgColor: 'bg-success/10', iconColor: 'text-success' },
 ]
 
 const propertyStats = [

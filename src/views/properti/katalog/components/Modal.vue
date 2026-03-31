@@ -320,11 +320,10 @@ watch(
   }
 )
 
-// --- Logic Slug & Submit ---
 watch(
-  [() => form.value.Nama_Produk, () => form.value.Luas_Bangunan],
+  [() => form.value.Tipe, () => form.value.Nama_Produk, () => form.value.Luas_Bangunan],
 
-  ([newNama, newLuas]) => {
+  ([newTipe, newNama, newLuas]) => {
     if (!newNama) {
       form.value.Slug = ''
       return
@@ -336,7 +335,7 @@ watch(
       .replace(/\s+/g, '-')
       .replace(/[^\w\-]+/g, '')
 
-    form.value.Slug = `${form.value.Tipe.toLowerCase()}-${baseSlug}-${newLuas || 0}`
+    form.value.Slug = `${newTipe.toLowerCase()}-${baseSlug}-${newLuas || 0}`
   },
   { immediate: true }
 )
@@ -503,12 +502,12 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 </script>
 
 <template>
-  <Transition 
-    enter-active-class="transition duration-300 ease-out" 
-    enter-from-class="opacity-0" 
-    enter-to-class="opacity-100" 
-    leave-active-class="transition duration-200 ease-in" 
-    leave-from-class="opacity-100" 
+  <Transition
+    enter-active-class="transition duration-300 ease-out"
+    enter-from-class="opacity-0"
+    enter-to-class="opacity-100"
+    leave-active-class="transition duration-200 ease-in"
+    leave-from-class="opacity-100"
     leave-to-class="opacity-0"
   >
   <div v-if="showModal" class="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -522,7 +521,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 
       <div class="px-6 py-3 overflow-y-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div class="space-y-5">
-          <div class="field" v-if="form.No_Id && form.Status_Properti == 'Tersedia'">
+          <div class="field" v-if="form.No_Id">
             <div class="toggle-box mt-2">
               <span class="flex items-center gap-2 text-xs font-bold text-slate-600 uppercase"> <Icon icon="lucide:power" /> {{ form.Status_Display }} </span>
               <button @click="form.Status_Display = form.Status_Display === 'Aktif' ? 'Nonaktif' : 'Aktif'" class="toggle" :class="form.Status_Display === 'Aktif' ? 'toggle-active' : ''">

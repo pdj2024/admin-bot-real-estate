@@ -12,7 +12,7 @@ import dashboard from '@/assets/images/dashboard.png'
           Kelola listing, pantau interaksi pelanggan, dan jadwalkan janji temu hari ini dengan lebih mudah.
         </p>
         <div class="flex gap-3">
-           <RouterLink to="/katalog" class="btn bg-primary-gradient text-white border-0 shadow-lg shadow-primary/20">
+           <RouterLink to="/properti/katalog" class="btn bg-primary-gradient text-white border-0 shadow-lg shadow-primary/20">
             <Icon icon="lucide:layout-grid" class="me-2 size-4" /> Kelola Katalog
           </RouterLink>
           <RouterLink to="/chat" class="btn bg-white/10 text-white hover:bg-white/20 backdrop-blur-md border-0">
