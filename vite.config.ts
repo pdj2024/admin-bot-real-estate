@@ -16,4 +16,15 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
+
+  server: {
+    allowedHosts: [
+      'wabotui.padajaya.biz.id'
+    ]
+  },
+  preview: {
+    allowedHosts: [
+      'wabotui.padajaya.biz.id'
+    ]
+  }
 })
