@@ -1,6 +1,6 @@
 <template>
   <Vertical>
-    <PageTitle subtitle="Dashboard" title="Property Management Overview" />
+    <PageTitle subtitle="Dashboard" title="Dashboard" />
 
     <Transition name="fade" mode="out-in">
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">

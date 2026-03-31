@@ -32,8 +32,10 @@ export const performRefresh = async () => {
 
   try {
     console.log("Melakukan refresh token secara otomatis")
-    const { data } = await axios.post('http://26.75.164.107:270/api/auth/refresh', {
+    const { data } = await api.post('/api/auth/refresh', {
       refreshToken: refreshToken
+    }, {
+      headers: { 'X-Jenis-User': 'Admin' }
     });
 
     const responseData = data.Data ? data.Data : data;
