@@ -96,7 +96,7 @@ const getDateChat = (date: any): string => {
         <div v-if="chat.Message" class="px-4 py-2.5 rounded-2xl text-sm relative transition-colors" :class="bubbleStyle">
           <span class="break-words leading-relaxed" v-html="chat.Message"></span>
 
-          <div v-if="chat.Tipe_User === 'ai'" class="ai-indicator mt-2 pt-1.5 border-t border-amber-200/60 flex items-center gap-1.5 text-[10px] font-semibold text-amber-700 transition-colors">
+          <div v-if="chat.Tipe_User === 'admin' && chat.Sender_Id === 'adm_bot'" class="ai-indicator mt-2 pt-1.5 border-t border-amber-200/60 flex items-center gap-1.5 text-[10px] font-semibold text-amber-700 transition-colors">
             <Icon icon="lucide:bot" class="size-3.5" />
             Asisten AI
           </div>
@@ -109,10 +109,10 @@ const getDateChat = (date: any): string => {
       </div>
 
       <div v-if="!isCustomer" class="flex items-end flex-shrink-0 mb-1">
-        <div v-if="chat.Tipe_User === 'admin' || chat.Tipe_User === 'cs'" class="avatar-admin relative flex items-center justify-center rounded-full size-7 bg-primary/20 text-primary border border-white shadow-sm transition-colors">
+        <div v-if="chat.Tipe_User === 'admin' && chat.Sender_Id != 'adm_bot'" class="avatar-admin relative flex items-center justify-center rounded-full size-7 bg-primary/20 text-primary border border-white shadow-sm transition-colors">
           <Icon icon="lucide:headset" class="size-3.5" />
         </div>
-        <div v-else-if="chat.Tipe_User === 'ai'" class="avatar-ai relative flex items-center justify-center rounded-full size-7 bg-amber-100 text-amber-600 border border-white shadow-sm font-bold text-[9px] transition-colors">AI</div>
+        <div v-else-if="chat.Tipe_User === 'admin' && chat.Sender_Id === 'adm_bot'" class="avatar-ai relative flex items-center justify-center rounded-full size-7 bg-amber-100 text-amber-600 border border-white shadow-sm font-bold text-[9px] transition-colors">AI</div>
       </div>
     </div>
   </div>

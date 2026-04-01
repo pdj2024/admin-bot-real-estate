@@ -1,7 +1,6 @@
-import axios from 'axios'
 import api from './axios'
 import router from '@/router'
-import { success } from '@/utils/sweet-alert'
+import { success, fail } from '@/utils/sweet-alert'
 
 let refreshInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -15,11 +14,24 @@ export const isTokenExpired = (token: string | null): boolean => {
   }
 }
 
-export const logout = async () => {
+export const logout = async (newLogin: boolean) => {
   stopSilentRefresh();
-  localStorage.clear();
-  await router.push('/login');
-  success("Berhasil keluar, sampai jumpa lagi");
+  const currentPath = router.currentRoute.value.fullPath;
+  localStorage.removeItem('token');
+  localStorage.removeItem('refreshToken');
+  localStorage.removeItem('no_id');
+  localStorage.removeItem('role_user');
+  localStorage.removeItem('nama_display');
+  if (newLogin == true) {
+    await router.push('/login');
+    success("Berhasil keluar, sampai jumpa lagi")
+  } else {
+    await router.push({
+      path: '/login',
+      query: { redirect: currentPath }
+    });
+    fail("Sesi habis, harap login kembali");
+  }
 }
 
 export const getToken = () => localStorage.getItem('token');
@@ -32,11 +44,10 @@ export const performRefresh = async () => {
 
   try {
     console.log("Melakukan refresh token secara otomatis")
-    const { data } = await api.post('/api/auth/refresh', {
-      refreshToken: refreshToken
-    }, {
-      headers: { 'X-Jenis-User': 'Admin' }
-    });
+    const { data } = await api.post('/api/auth/refresh',
+      { refreshToken: refreshToken },
+      { headers: { 'X-Jenis-User': 'admin' } }
+    );
 
     const responseData = data.Data ? data.Data : data;
     const newToken = responseData.token || responseData.Token;
@@ -61,10 +72,11 @@ export const performRefresh = async () => {
 
     if (err.response && (err.response.status === 400 || err.response.status === 401)) {
       console.warn("Sesi benar-benar mati, memaksa pengguna keluar.");
-      logout();
+      logout(false);
     }
   }
 }
+
 export const startSilentRefresh = () => {
   if (refreshInterval) clearInterval(refreshInterval);
 

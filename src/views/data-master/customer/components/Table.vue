@@ -140,9 +140,6 @@ const handleDelete = async (Customer: Customer) => {
 
 defineExpose({ fetchData })
 
-/* =============================================================================
-   LIFECYCLE
-============================================================================= */
 onMounted(() => {
   fetchData()
   document.addEventListener('click', handleClickOutside)
@@ -154,9 +151,9 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="flex flex-col rounded-lg border border-gray-200 bg-white shadow-sm">
-    <div class="overflow-x-auto">
-      <table class="min-w-full divide-y divide-gray-200">
+  <div class="flex flex-col rounded-xl border border-default-200 bg-card shadow-sm">
+    <div class="overflow-x-auto lg:overflow-visible">
+      <table class="min-w-full divide-y divide-default-200">
         <thead class="bg-gray-50">
           <tr v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
             <th v-for="header in headerGroup.headers" :key="header.id" class="px-4 py-3 text-start text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -210,7 +207,7 @@ onBeforeUnmount(() => {
               </button>
 
               <div v-if="openDropdownId === row.original.No_Id" class="fixed right-4 mt-1 w-40 bg-white shadow-lg border border-gray-100 rounded-lg p-1 z-50">
-                <RouterLink :to="`/Customer/${row.original.No_Id}`" class="dropdown-item"> <Icon icon="lucide:eye" class="size-4" /> Detail </RouterLink>
+                <!-- <RouterLink :to="`/Customer/${row.original.No_Id}`" class="dropdown-item"> <Icon icon="lucide:eye" class="size-4" /> Detail </RouterLink> -->
                 <button @click="handleEdit(row.original)" class="dropdown-item w-full text-left"><Icon icon="lucide:edit" class="size-4" /> Edit</button>
                 <div class="my-1 border-t border-gray-100"></div>
                 <button @click="handleDelete(row.original)" class="dropdown-item w-full text-left text-red-600 hover:bg-red-50 hover:text-red-700"><Icon icon="lucide:trash-2" class="size-4" /> Hapus</button>

@@ -90,6 +90,9 @@ const fetchData = async () => {
     const { data } = await api.get('/api/chat/getRooms?user_id=' + localStorage.getItem('no_id') + '&orderby=Last_Message_At', {
       headers: { 'X-Jenis-User': 'Admin' }
     })
+    // const { data } = await api.get('/api/chat/getRooms?user_id=cus_7&orderby=Last_Message_At', {
+    //   headers: { 'X-Jenis-User': 'Admin' }
+    // })
     Chats.value = data.Data
     console.log(Chats)
   } catch (err: any) {
@@ -122,19 +125,29 @@ onMounted(async () => {
               <p class="mb-1 text-cyan-900 text-sm">Perlu Balasan</p>
             </div>
             <div class="bg-cyan-100">
-              <RouterLink to="" v-for="(chat, idx) in Chats" @click="selectChat(chat.Room_Id, chat.Username_Lawan, chat.Telepon_User_Lawan)" class="flex gap-3 py-2 px-4 bg-default-150 cursor-pointer">
-                <div class="relative flex items-center justify-center font-semibold rounded-full size-9 bg-default-200 text-default-700">
+              <RouterLink to="" v-for="(chat, idx) in Chats" :key="idx" @click="selectChat(chat.Room_Id, chat.Username_User, chat.Telepon_User)" class="flex items-center gap-3 py-3 px-4 bg-default-150 cursor-pointer border-b border-default-100 last:border-0">
+                <div class="relative shrink-0 flex items-center justify-center font-semibold rounded-full size-10 bg-default-200 text-default-700">
                   <span v-if="chat.Username_Lawan" class="text-sm">
                     {{ chat.Username_Lawan.charAt(0).toUpperCase() }}
                   </span>
                   <Icon v-else icon="lucide:user" class="size-5 text-default-500" />
-                  <span class="absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-default-50 rounded-full bg-danger"></span>
+                  <span class="absolute bottom-0 right-0 w-3 h-3 border-2 border-default-50 rounded-full bg-danger"></span>
                 </div>
-                <div class="flex-grow">
-                  <h6 class="mb-1 text-default-800 font-semibold text-sm">{{ chat.Telepon_User_Lawan }}</h6>
-                  <p class="text-xs truncate text-default-500">{{ chat.Last_Message }}</p>
+
+                <div class="flex-grow min-w-0">
+                  <div class="flex items-center justify-between gap-2 mb-0.5">
+                    <h6 class="text-default-800 font-bold text-sm truncate uppercase">
+                      {{ chat.Telepon_User }} {{ chat.Room_Id }}
+                    </h6>
+                    <small class="text-[10px] text-default-400 shrink-0 font-medium">
+                      {{ getDateChat(chat.Last_Message_At) }}
+                    </small>
+                  </div>
+
+                  <p class="text-xs truncate text-default-500 leading-relaxed">
+                    {{ chat.Last_Message }}
+                  </p>
                 </div>
-                <small class="text-xs text-default-500">{{ getDateChat(chat.Last_Message_At) }}</small>
               </RouterLink>
             </div>
           </simplebar>

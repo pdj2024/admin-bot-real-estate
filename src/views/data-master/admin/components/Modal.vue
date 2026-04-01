@@ -59,18 +59,16 @@ const handleSubmit = async () => {
       const method = isEdit ? 'put' : 'post'
 
       await api[method](url, form, {
-        headers: { 'X-Jenis-User': 'admin' }
+        headers: { 'X-Jenis-User': 'Admin' }
       })
 
       success(isEdit ? 'Berhasil memperbarui data' : 'Berhasil menambah admin')
       emit('success')
       handleClose()
     } catch (err: any) {
-      console.error('Full Error Object:', err)
-
-      const serverErrorMessage = err.response?.data?.Error || err.response?.data?.message
-
-      fail(serverErrorMessage || 'Terjadi kesalahan sistem (500)')
+      console.log('Isi Respon Server:', err.response?.data)
+      const detailError = err.response?.data?.Message || err.response?.data?.message || err.response?.data?.error || err.message
+      fail(`Akses Ditolak: ${detailError}`)
     } finally {
       emit('success')
     }

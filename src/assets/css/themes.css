@@ -14,8 +14,6 @@
   --color-warning: var(--color-amber-500);
   --color-danger: var(--color-orange-500);
 
-  --background-image-primary-gradient: linear-gradient(135deg, #ea9455 0%, #ca6d2c 100%);
-
   --color-default-50: var(--color-zinc-50);
   --color-default-100: var(--color-zinc-100);
   --color-default-150: var(--color-zinc-100);
@@ -29,29 +27,31 @@
   --color-default-900: var(--color-zinc-900);
   --color-default-950: var(--color-zinc-950);
 
-  --color-bejo-50: #fff7ed;
-  --color-bejo-100: #ffedd5;
-  --color-bejo-200: #fed7aa;
-  --color-bejo-300: #fdba74;
-  --color-bejo-400: #fb923c;
-  --color-bejo-500: #f97316;
-  --color-bejo-600: #df7730;
-  --color-bejo-700: #c2410c;
-  --color-bejo-800: #9a3412;
-  --color-bejo-900: #7c2d12;
-  --color-bejo-1000: #431407;
+  --background-image-primary-gradient: linear-gradient(135deg, #ea9455 0%, #ca6d2c 100%);
 
-  --text-bejo-50: #fff7ed;
-  --text-bejo-100: #ffedd5;
-  --text-bejo-200: #fed7aa;
-  --text-bejo-300: #fdba74;
-  --text-bejo-400: #fb923c;
-  --text-bejo-500: #f97316;
-  --text-bejo-600: #df7730;
-  --text-bejo-700: #c2410c;
-  --text-bejo-800: #9a3412;
-  --text-bejo-900: #7c2d12;
-  --text-bejo-1000: #431407;
+  --color-bejo-50: #fef5ed;
+  --color-bejo-100: #fce8d4;
+  --color-bejo-200: #f8d0a5;
+  --color-bejo-300: #f2b26e;
+  --color-bejo-400: #ea8e3e;
+  --color-bejo-500: #df7a24;
+  --color-bejo-600: #ca6d2c;
+  --color-bejo-700: #a75526;
+  --color-bejo-800: #854323;
+  --color-bejo-900: #6b371f;
+  --color-bejo-1000: #3b1d0e;
+
+  --text-bejo-50: #fef5ed;
+  --text-bejo-100: #fce8d4;
+  --text-bejo-200: #f8d0a5;
+  --text-bejo-300: #f2b26e;
+  --text-bejo-400: #ea8e3e;
+  --text-bejo-500: #df7a24;
+  --text-bejo-600: #ca6d2c;
+  --text-bejo-700: #a75526;
+  --text-bejo-800: #854323;
+  --text-bejo-900: #6b371f;
+  --text-bejo-1000: #3b1d0e;
 
   --text-base--line-height: 1.1;
   --text-xl--line-height: 1.1;
@@ -75,13 +75,13 @@
 
   --fc-button-bg-color: var(--color-bejo-500);
   --fc-button-border-color: var(--color-bejo-500);
-  
+
   --fc-button-hover-bg-color: var(--color-bejo-600);
   --fc-button-hover-border-color: var(--color-bejo-600);
-  
+
   --fc-button-active-bg-color: var(--color-bejo-700);
   --fc-button-active-border-color: var(--color-bejo-700);
-  
+
   --fc-button-text-color: var(--text-bejo-50);
 }
 
@@ -186,10 +186,10 @@ html[data-theme='light'],
 html[data-sidenav-color='light'] {
   --sidenav-background: var(--color-white);
   --sidenav-item-color: var(--color-zinc-600);
-  --sidenav-item-active-color: theme(backgroundColor.primary);
-  --sidenav-item-active-bg: theme(backgroundColor.primary/10%);
-  --sidenav-item-hover-color: theme(backgroundColor.primary);
-  --sidenav-item-hover-bg: theme(backgroundColor.primary/10%);
+  --sidenav-item-active-color: var(--color-primary);
+  --sidenav-item-active-bg: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  --sidenav-item-hover-color: var(--color-primary);
+  --sidenav-item-hover-bg: color-mix(in srgb, var(--color-primary) 10%, transparent);
 }
 
 /* Dark Menu (Dark Mode) */

@@ -1,15 +1,12 @@
 <template>
   <aside id="app-menu" class="app-menu">
     <RouterLink to="/" class="logo-box sticky top-0 flex min-h-topbar-height items-center justify-start ps-5 pe-4 backdrop-blur-xs">
-      <div class="text-center w-full">
-        <div class="logo-light">
-          <img :src="lightlogo" class="logo-lg h-6 inline-block" alt="Light logo" />
-          <img :src="logo" class="logo-sm h-6 inline-block" alt="Small logo" />
-        </div>
-        <div class="logo-dark">
-          <img :src="darklogo" class="logo-lg h-6 inline-block" alt="Dark logo" />
-          <img :src="logo" class="logo-sm h-6 inline-block" alt="Small logo" />
-        </div>
+      <div class="flex items-center gap-2.5 w-full overflow-hidden">
+        <img :src="logo" class="h-7 w-auto shrink-0" alt="Logo Icon" />
+
+        <span class="font-bold text-[14px] text-gray-800 truncate transition-colors duration-300">
+          {{ appName }}
+        </span>
       </div>
     </RouterLink>
 
@@ -28,9 +25,8 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
 import { Icon } from '@iconify/vue'
-import darklogo from '@/assets/images/logo-dark.png'
-import lightlogo from '@/assets/images/logo-light.png'
 import logo from '@/assets/images/logo-sm.png'
 import { useLayout } from '@/stores/layout'
 import AppMenu from './components/AppMenu.vue'
@@ -38,9 +34,42 @@ import simplebar from 'simplebar-vue'
 import { RouterLink } from 'vue-router'
 
 const { layout, setSideNavSize } = useLayout()
+const appName = ref('Rumah Bejo')
+const STORAGE_KEY = 'app_local_settings'
+
+const loadAppName = () => {
+  const storedData = localStorage.getItem(STORAGE_KEY)
+  if (storedData) {
+    const config = JSON.parse(storedData)
+    if (config.appName) {
+      appName.value = config.appName
+    }
+    if (config.sidenavSize) {
+      setSideNavSize(config.sidenavSize)
+    }
+  }
+}
+
+onMounted(() => {
+  loadAppName()
+  window.addEventListener('app-settings-changed', loadAppName)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('app-settings-changed', loadAppName)
+})
 
 const toggleSidebar = () => {
   if (window.innerWidth <= 768) return
-  setSideNavSize(layout.sidenav.size === 'hover-active' ? 'hover' : 'hover-active')
+  const newSize = layout.sidenav.size === 'hover-active' ? 'hover' : 'hover-active'
+  setSideNavSize(newSize)
+
+  const storedData = localStorage.getItem(STORAGE_KEY)
+  if (storedData) {
+    const config = JSON.parse(storedData)
+    config.sidenavSize = newSize
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(config))
+    window.dispatchEvent(new Event('app-settings-changed'))
+  }
 }
 </script>

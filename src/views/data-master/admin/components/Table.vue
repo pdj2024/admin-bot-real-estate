@@ -113,8 +113,8 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="flex flex-col rounded-xl border border-default-200 bg-card shadow-sm overflow-hidden">
-    <div class="overflow-x-auto">
+  <div class="flex flex-col rounded-xl border border-default-200 bg-card shadow-sm">
+    <div class="overflow-x-auto lg:overflow-visible">
       <table class="min-w-full divide-y divide-default-200">
         <thead class="bg-default-50">
           <tr v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
@@ -170,7 +170,7 @@ onBeforeUnmount(() => {
               </button>
 
               <div v-if="openDropdownId === row.original.No_Id" class="absolute right-5 mt-2 w-44 bg-card shadow-xl border border-default-200 rounded-xl p-1.5 z-[100] animate-in fade-in zoom-in duration-150">
-                <RouterLink :to="`/admin/${row.original.No_Id}`" class="dropdown-item"> <Icon icon="lucide:eye" class="size-4" /> Detail Admin </RouterLink>
+                <!-- <RouterLink :to="" class="dropdown-item"> <Icon icon="lucide:eye" class="size-4" /> Detail Admin </RouterLink> -->
                 <button @click="emit('edit', row.original)" class="dropdown-item w-full"><Icon icon="lucide:edit-3" class="size-4" /> Edit Data</button>
                 <div class="my-1.5 border-t border-default-100"></div>
                 <button @click="handleDelete(row.original)" class="dropdown-item w-full text-red-500 hover:bg-red-500/10 hover:text-red-600"><Icon icon="lucide:trash-2" class="size-4" /> Hapus Admin</button>

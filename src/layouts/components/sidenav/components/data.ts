@@ -45,4 +45,10 @@ export const menuItems: MenuItemType[] = [
       { key: 'data-customer', label: 'Customer', url: '/data/customer' },
     ]
   },
+  {
+    key: 'pengaturan',
+    label: 'Pengaturan',
+    icon: 'lucide:settings-2',
+    url: '/pengaturan'
+  },
 ]

@@ -239,7 +239,7 @@ onMounted(async () => {
           </Transition>
         </div>
 
-        <button @click="openAddModal" class="btn btn-sm bg-primary text-white hover:bg-primary-600 shadow-md shadow-primary/20">
+        <button @click="openAddModal" class="btn btn-sm bg-primary-gradient text-white hover:bg-primary-800 shadow-md shadow-primary/20">
           <Icon icon="lucide:plus" class="size-4 me-1" />
           Tambah Properti
         </button>

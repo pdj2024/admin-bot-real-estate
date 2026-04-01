@@ -95,6 +95,15 @@ const router = createRouter({
       },
       component: () => import('@/views/data-master/customer/index.vue')
     },
+    {
+      path: '/pengaturan',
+      name: 'Pengaturan',
+      meta: {
+        title: 'Pengaturan',
+        requiresAuth: true
+      },
+      component: () => import('@/views/pengaturan/index.vue')
+    },
   ]
 })
 
@@ -103,7 +112,7 @@ router.beforeEach((to, from, next) => {
   const refreshToken = localStorage.getItem('refreshToken');
 
   const hasTokens = !!token && token !== 'undefined' &&
-                    !!refreshToken && refreshToken !== 'undefined';
+    !!refreshToken && refreshToken !== 'undefined';
 
   const isTokenValid = hasTokens && !isTokenExpired(token);
 

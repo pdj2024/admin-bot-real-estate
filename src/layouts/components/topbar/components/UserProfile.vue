@@ -12,7 +12,7 @@ const roleUser = ref(localStorage.getItem('role_user') || '');
 
 const handleLogout = () => {
   confirm('Apakah Anda ingin keluar?', () => {
-    logout()
+    logout(true)
   })
 }
 </script>

@@ -51,11 +51,9 @@ const resetForm = () => {
   })
 }
 
-// Pantau perubahan data edit
 watch(
   () => props.editData,
   (newVal) => {
-    // console.log('Data yang diterima Modal:', newVal)
     if (newVal) {
       Object.assign(form, newVal)
     } else {
@@ -75,16 +73,16 @@ const handleSubmit = async () => {
       const method = isEdit ? 'put' : 'post'
 
       await api[method](url, form, {
-        headers: { 'X-Jenis-User': 'customer' }
+        headers: { 'X-Jenis-User': 'Admin' }
       })
 
       success(isEdit ? 'Berhasil memperbarui data' : 'Berhasil menambah customer')
       emit('success')
       handleClose()
     } catch (err: any) {
-      console.log(err)
-      console.error(err)
-      fail(err.response?.data?.Message || 'Terjadi kesalahan pada server')
+      console.log('Isi Respon Server:', err.response?.data)
+      const detailError = err.response?.data?.Message || err.response?.data?.message || err.response?.data?.error || err.message
+      fail(`Akses Ditolak: ${detailError}`)
     } finally {
       emit('success')
     }

@@ -27,7 +27,7 @@ const handlePhone = (phone: string) => {
     <div class="card overflow-hidden">
       <div class="flex h-[calc(100vh-180px)] min-h-[500px]">
         <SideBar :active-room-id="selectedRoomId" @select_chat="handleSelectChat" @username="handleUsername" @phone_number="handlePhone" />
-        <ChatContent :roomId="selectedRoomId" :username="selectedUsername" :phoneNumber="selectedPhone" />
+        <ChatContent :roomId="selectedRoomId" :username="selectedUsername" :phoneNumber="selectedPhone"/>
       </div>
     </div>
   </Vertical>

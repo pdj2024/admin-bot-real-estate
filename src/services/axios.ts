@@ -69,7 +69,6 @@ api.interceptors.response.use(
 
       const refreshToken = localStorage.getItem('refreshToken')
 
-      // Jika tidak ada refreshToken di storage, langsung tendang ke login
       if (!refreshToken) {
         localStorage.clear()
         router.push('/login?expired=true')
@@ -77,9 +76,15 @@ api.interceptors.response.use(
       }
 
       return new Promise((resolve, reject) => {
-        axios.post('http://26.75.164.107:270/api/auth/refresh', {
-          refreshToken: refreshToken
-        })
+        const jenisUser = localStorage.getItem('role_user') || 'customer';
+
+        axios.post('http://26.75.164.107:270/api/auth/refresh',
+          {
+            refreshToken: refreshToken
+          },
+          {
+            headers: { 'X-Jenis-User': jenisUser }
+          })
           .then(({ data }) => {
             const responseData = data.Data ? data.Data : data;
 
