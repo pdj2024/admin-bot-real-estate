@@ -2,20 +2,19 @@ import axios from 'axios'
 import router from '@/router'
 
 const api = axios.create({
-  baseURL: 'http://26.75.164.107:270',
+  // baseURL: 'http://26.75.164.107:270',
+  baseURL: 'https://wabotapi.padajaya.biz.id',
   headers: {
     'Content-Type': 'application/json'
   }
 })
 
-// --- Logic Refresh Token ---
 let isRefreshing = false
 let failedQueue: any[] = []
 
 export const isTokenExpired = (token: string) => {
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
-    // Beri toleransi 30 detik sebelum benar-benar expired
     return (payload.exp * 1000) < (Date.now() + 30000);
   } catch {
     return true;

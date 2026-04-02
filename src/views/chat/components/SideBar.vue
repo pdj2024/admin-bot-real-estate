@@ -87,12 +87,12 @@ const closeSidebar = (): void => {
 
 const fetchData = async () => {
   try {
-    const { data } = await api.get('/api/chat/getRooms?user_id=' + localStorage.getItem('no_id') + '&orderby=Last_Message_At', {
-      headers: { 'X-Jenis-User': 'Admin' }
-    })
-    // const { data } = await api.get('/api/chat/getRooms?user_id=cus_7&orderby=Last_Message_At', {
+    // const { data } = await api.get('/api/chat/getRooms?user_id=' + localStorage.getItem('no_id') + '&orderby=Last_Message_At', {
     //   headers: { 'X-Jenis-User': 'Admin' }
     // })
+    const { data } = await api.get('/api/chat/getRooms?user_id=cus_7&orderby=Last_Message_At', {
+      headers: { 'X-Jenis-User': 'Admin' }
+    })
     Chats.value = data.Data
     console.log(Chats)
   } catch (err: any) {

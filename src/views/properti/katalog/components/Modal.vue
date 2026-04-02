@@ -529,8 +529,8 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
               </button>
             </div>
           </div>
-          <div class="col-span-2 space-y-2 !mb-3" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
-            <label class="label block" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">Gambar Produk</label>
+          <div class="col-span-2 space-y-2 !mb-3">
+            <label class="label block">Gambar Produk</label>
             <div ref="scrollContainer" class="preview-container flex flex-nowrap gap-3 overflow-x-auto pb-2 custom-scroll">
               <div v-if="previewPhotos.length >= 1" v-for="(img, i) in previewPhotos" :key="i" class="preview-box relative size-24 flex-shrink-0">
                 <img :src="img.Id_Media" class="size-full object-cover rounded-xl border border-slate-200" />
@@ -547,7 +547,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
             </div>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div class="field" :class="{ inactive: form.Status_Display !== 'Aktif' }">
+            <div class="field">
               <label class="label">Tipe Properti</label>
               <div class="relative">
                 <select v-model="form.Tipe" class="field-input !pl-4 w-full appearance-none">
@@ -560,7 +560,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
               </div>
             </div>
 
-            <div class="md:col-span-2 field" :class="{ inactive: form.Status_Display !== 'Aktif' }">
+            <div class="md:col-span-2 field">
               <label class="label">Nama Properti</label>
               <div class="relative">
                 <Icon icon="lucide:house" class="field-icon" />
@@ -569,7 +569,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
             </div>
           </div>
 
-          <div class="field" ref="dropdownRef" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
+          <div class="field" ref="dropdownRef">
             <label class="label flex justify-between">
               Area & Alamat
               <label class="flex items-center gap-1 cursor-pointer text-[10px] text-slate-500">
@@ -629,7 +629,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
             </div>
           </div>
 
-          <div class="bg-default-50 p-4 rounded-2xl space-y-4 border border-slate-100" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
+          <div class="bg-default-50 p-4 rounded-2xl space-y-4 border border-slate-100">
             <div class="flex items-center gap-4 border-b border-slate-200 pb-2">
               <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Opsi Transaksi</span>
               <div class="flex gap-4">
@@ -651,12 +651,12 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
             </div>
 
             <div v-if="form.Status_Transaksi.includes('Jual')" class="grid grid-cols-2 gap-3">
-              <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
+              <div class="field">
                 <label class="label !text-slate-500">Harga Jual Normal (Rp)</label>
                 <input type="text" :value="form.Harga_Jual1 ? formatCurrency(form.Harga_Jual1) : ''" @input="handleInputCurrency($event, 'Harga_Jual1')" class="field-input !pl-4" placeholder="Harga awal" />
               </div>
 
-              <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
+              <div class="field">
                 <label class="label !text-bejo-600">Harga Jual Diskon (Rp)</label>
                 <input type="text" :value="form.Harga_Jual2 ? formatCurrency(form.Harga_Jual2) : ''" @input="handleInputCurrency($event, 'Harga_Jual2')" class="field-input !pl-4 focus:border-emerald-500" :class="form.Harga_Jual2 > 0 && form.Harga_Jual2 >= form.Harga_Jual1 ? '!border-red-500 focus:!border-red-500' : 'border-emerald-200'" placeholder="Setelah diskon" />
                 <span v-if="form.Harga_Jual2 > 0 && form.Harga_Jual2 >= form.Harga_Jual1" class="text-xs text-red-500 mt-1 inline-block font-medium"> ⚠️ Harga diskon harus lebih kecil dari harga normal. </span>
@@ -664,7 +664,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
             </div>
 
             <div v-if="form.Status_Transaksi.includes('Sewa')" class="grid grid-cols-2 gap-3 mt-3">
-              <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
+              <div class="field">
                 <label class="label !text-slate-500">Harga Sewa Normal (Rp)</label>
 
                 <div class="flex items-center gap-2">
@@ -673,7 +673,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
                 </div>
               </div>
 
-              <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
+              <div class="field">
                 <label class="label !text-bejo-600">Harga Sewa Diskon (Rp)</label>
                 <div class="flex items-center gap-2">
                   <input type="text" :value="form.Harga_Sewa2 ? formatCurrency(form.Harga_Sewa2) : ''" @input="handleInputCurrency($event, 'Harga_Sewa2')" class="field-input !pl-4 focus:border-blue-500" :class="form.Harga_Sewa2 > 0 && form.Harga_Sewa2 >= form.Harga_Sewa1 ? '!border-red-500 focus:!border-red-500' : 'border-blue-200'" placeholder="Setelah diskon" />
@@ -684,11 +684,11 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
             </div>
 
             <div v-if="form.Ada_Minimal_Sewa" class="grid grid-cols-2 gap-3">
-              <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
+              <div class="field">
                 <label class="label !text-slate-500">Minimal Sewa</label>
                 <input v-model="form.Minimal_Sewa" type="number" class="field-input !pl-4" min="0" placeholder="Minimal sewa" />
               </div>
-              <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
+              <div class="field">
                 <label class="label !text-slate-600">Satuan</label>
                 <select v-model="form.Satuan_Minimal_Sewa" class="field-input !pl-4">
                   <option value="Bulan">Bulan</option>
@@ -699,7 +699,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
           </div>
         </div>
 
-        <div class="flex flex-col gap-4 h-full" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
+        <div class="flex flex-col gap-4 h-full">
           <div class="field">
             <label class="label"> Url Slug </label>
             <div class="relative">
@@ -709,7 +709,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
           </div>
 
           <div class="grid grid-cols-2 gap-3">
-            <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
+            <div class="field">
               <label class="label">Sertifikat</label>
               <select v-model="form.Jenis_Sertifikat" class="field-input !pl-4">
                 <option value="SHM">SHM</option>
@@ -717,7 +717,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
                 <option value="Lainnya">Lainnya</option>
               </select>
             </div>
-            <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
+            <div class="field">
               <label class="label">Dimensi (P x L)</label>
               <div class="flex gap-2 items-center">
                 <input v-model="panjang" placeholder="P" type="number" class="field-input !pl-2 text-center" />
@@ -727,9 +727,9 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
             </div>
           </div>
           <div class="grid grid-cols-3 gap-2">
-            <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'"><label class="label">Luas Tanah (m²)</label><input v-model="form.Luas_Tanah" type="number" class="field-input !pl-4" /></div>
-            <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'"><label class="label">Luas Bangunan (m²)</label><input v-model="form.Luas_Bangunan" type="number" class="field-input !pl-4" /></div>
-            <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'"><label class="label">Jumlah Lantai</label><input v-model="form.Jumlah_Lantai" type="number" class="field-input !pl-4" /></div>
+            <div class="field"><label class="label">Luas Tanah (m²)</label><input v-model="form.Luas_Tanah" type="number" class="field-input !pl-4" /></div>
+            <div class="field"><label class="label">Luas Bangunan (m²)</label><input v-model="form.Luas_Bangunan" type="number" class="field-input !pl-4" /></div>
+            <div class="field"><label class="label">Jumlah Lantai</label><input v-model="form.Jumlah_Lantai" type="number" class="field-input !pl-4" /></div>
           </div>
           <div class="grid grid-cols-4 gap-2">
             <div v-for="s in specs" :key="s.key" class="field">
@@ -738,7 +738,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
             </div>
           </div>
 
-          <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
+          <div class="field">
             <label class="label">Aksesibilitas (Contoh: 5 min ke Tol)</label>
             <div class="flex gap-2">
               <input v-model="newAkses" @keyup.enter="addAkses" placeholder="Ketik akses..." class="field-input !pl-4" />
@@ -749,7 +749,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
             </div>
           </div>
 
-          <div class="field flex flex-col flex-1" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
+          <div class="field flex flex-col flex-1">
             <label class="label">Keterangan</label>
             <textarea v-model="form.Keterangan" class="field-input !pl-4 pt-2 resize-none flex-1 w-full" placeholder="Ceritakan keunggulan properti..."></textarea>
           </div>

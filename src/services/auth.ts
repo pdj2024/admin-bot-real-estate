@@ -3,6 +3,7 @@ import router from '@/router'
 import { success, fail } from '@/utils/sweet-alert'
 
 let refreshInterval: ReturnType<typeof setInterval> | null = null;
+let isRefreshing = false;
 
 export const isTokenExpired = (token: string | null): boolean => {
   if (!token) return true;
@@ -14,18 +15,18 @@ export const isTokenExpired = (token: string | null): boolean => {
   }
 }
 
-export const logout = async (newLogin: boolean) => {
+export const logout = async (isManual: boolean = true) => {
   stopSilentRefresh();
   const currentPath = router.currentRoute.value.fullPath;
-  localStorage.removeItem('token');
-  localStorage.removeItem('refreshToken');
-  localStorage.removeItem('no_id');
-  localStorage.removeItem('role_user');
-  localStorage.removeItem('nama_display');
-  if (newLogin == true) {
+
+  // Bersihkan semua
+  localStorage.clear();
+
+  if (isManual) {
     await router.push('/login');
-    success("Berhasil keluar, sampai jumpa lagi")
+    success("Berhasil keluar, sampai jumpa lagi");
   } else {
+    // Simpan path asal agar setelah login balik lagi ke sini
     await router.push({
       path: '/login',
       query: { redirect: currentPath }
@@ -36,46 +37,57 @@ export const logout = async (newLogin: boolean) => {
 
 export const getToken = () => localStorage.getItem('token');
 export const getRefreshToken = () => localStorage.getItem('refreshToken');
-export const isAuthenticated = () => !!localStorage.getItem('token');
 
 export const performRefresh = async () => {
+  if (isRefreshing) return; // Cegah double call
+  isRefreshing = true;
+
   const refreshToken = getRefreshToken();
-  if (!refreshToken) return;
+  if (!refreshToken) {
+    isRefreshing = false;
+    return logout(false);
+  }
 
   try {
-    console.log("Melakukan refresh token secara otomatis")
     const { data } = await api.post('/api/auth/refresh',
-      { refreshToken: refreshToken },
+      { refreshToken },
       { headers: { 'X-Jenis-User': 'admin' } }
     );
 
-    const responseData = data.Data ? data.Data : data;
+    const responseData = data.Data || data;
     const newToken = responseData.token || responseData.Token;
     const newRefreshToken = responseData.refreshToken || responseData.RefreshToken;
 
-    if (!newToken) throw new Error("Token gagal di-parse");
+    if (!newToken) throw new Error("Token format invalid");
 
     localStorage.setItem('token', newToken);
-    if (newRefreshToken) {
-      localStorage.setItem('refreshToken', newRefreshToken);
-      console.log("Berhasil mendapatkan token secara otomatis")
-
-    }
+    if (newRefreshToken) localStorage.setItem('refreshToken', newRefreshToken);
 
     api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+
+    console.log("Token diperbarui otomatis");
+    return newToken;
   } catch (err: any) {
-    console.error("Gagal memperbarui token:", err.message);
-
-    if (err.response && err.response.data) {
-      console.error("Detail isi error 400 dari server:", err.response.data);
-    }
-
-    if (err.response && (err.response.status === 400 || err.response.status === 401)) {
-      console.warn("Sesi benar-benar mati, memaksa pengguna keluar.");
-      logout(false);
-    }
+    console.error("Refresh Token Gagal:", err.message);
+    logout(false);
+    throw err;
+  } finally {
+    isRefreshing = false;
   }
 }
+
+export const setupAxiosInterceptors = () => {
+  api.interceptors.request.use(async (config) => {
+    const token = getToken();
+    if (token && isTokenExpired(token) && !config.url?.includes('/refresh')) {
+      const newToken = await performRefresh();
+      if (newToken) config.headers.Authorization = `Bearer ${newToken}`;
+    } else if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  }, (error) => Promise.reject(error));
+};
 
 export const startSilentRefresh = () => {
   if (refreshInterval) clearInterval(refreshInterval);
@@ -85,7 +97,7 @@ export const startSilentRefresh = () => {
     if (token && isTokenExpired(token)) {
       await performRefresh();
     }
-  }, 60000);
+  }, 30000);
 };
 
 export const stopSilentRefresh = () => {

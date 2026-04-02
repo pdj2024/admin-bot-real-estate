@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, watch, onMounted } from 'vue'
 import PageTitle from '@/components/PageTitle.vue'
 import Vertical from '@/layouts/vertical.vue'
-import SettingsForm from './components/SettingsForm.vue'
-import SettingsPreview from './components/SettingsPreview.vue'
 import { useLayout } from '@/stores/layout'
 import { success } from '@/utils/sweet-alert'
-const { setTheme } = useLayout()
+import SettingsForm from './components/SettingsForm.vue'
+import SettingsPreview from './components/SettingsPreview.vue'
+
+import { generateDynamicPalette } from '@/utils/theme'
 
 export interface AppSettings {
   appName: string
@@ -15,6 +16,8 @@ export interface AppSettings {
   colorSecondary: string
   sidenavSize: 'default' | 'hover' | 'hover-active' | 'sm' | 'md' | 'offcanvas' | 'hidden'
 }
+
+const { setSideNavSize, setTheme } = useLayout()
 
 const settings = reactive<AppSettings>({
   appName: 'Rumah Bejo',
@@ -27,13 +30,10 @@ const settings = reactive<AppSettings>({
 const isSaved = ref(false)
 const STORAGE_KEY = 'app_local_settings'
 
-const { setSideNavSize } = useLayout()
-
 const applyToDOM = (config: AppSettings) => {
   const root = document.documentElement
 
   setSideNavSize(config.sidenavSize)
-
   root.setAttribute('data-sidenav-size', config.sidenavSize)
 
   if (config.theme === 'dark') {
@@ -52,7 +52,20 @@ const applyToDOM = (config: AppSettings) => {
     '--background-image-primary-gradient',
     `linear-gradient(135deg, ${config.colorPrimary} 0%, ${config.colorSecondary} 100%)`
   )
+
+  // --- INJEKSI PALET WARNA DINAMIS ---
+  const dynamicPalette = generateDynamicPalette(config.colorPrimary)
+  Object.entries(dynamicPalette).forEach(([shade, hexValue]) => {
+    // Terapkan --color-bejo-50 hingga 1000 secara otomatis
+    root.style.setProperty(`--color-bejo-${shade}`, hexValue as string)
+    root.style.setProperty(`--text-bejo-${shade}`, hexValue as string)
+  })
 }
+
+// Watcher agar setiap kali user mengubah warna di Form, Preview & DOM langsung berubah (Real-time)
+watch(settings, (newSettings) => {
+  applyToDOM(newSettings)
+}, { deep: true })
 
 onMounted(() => {
   const storedData = localStorage.getItem(STORAGE_KEY)

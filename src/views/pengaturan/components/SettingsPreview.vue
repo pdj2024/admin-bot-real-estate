@@ -25,7 +25,7 @@ watch(
       isPinned.value = false
     }
 
-    if (newVal === 'hidden' || newVal === 'offcanvas') {
+    if (newVal === 'offcanvas') {
       isToggledOpen.value = false
     } else {
       isToggledOpen.value = true

@@ -9,6 +9,7 @@ const router = useRouter()
 
 const namaDisplay = ref(localStorage.getItem('nama_display') || '');
 const roleUser = ref(localStorage.getItem('role_user') || '');
+const noId = ref(localStorage.getItem('no_id') || '');
 
 const handleLogout = () => {
   confirm('Apakah Anda ingin keluar?', () => {
@@ -36,7 +37,8 @@ const handleLogout = () => {
           </div>
           <div>
             <h6 class="mb-1 text-sm font-semibold text-default-800">{{ namaDisplay }}</h6>
-            <p class="text-default-500">{{ roleUser }}</p>
+            <!-- <p class="text-default-500">{{ roleUser }}</p> -->
+            <p class="text-default-500">{{ noId }}</p>
           </div>
         </RouterLink>
       </div>

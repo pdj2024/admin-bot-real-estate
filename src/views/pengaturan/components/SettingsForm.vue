@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import type { PropType } from 'vue'
 import type { AppSettings } from '../index.vue'
+const storedData = localStorage.getItem('app_local_settings')
+if(storedData){
+const config = JSON.parse(storedData)
+console.log(config)
+}
 
 const props = defineProps({
   settings: {
@@ -44,8 +49,8 @@ const emit = defineEmits(['save', 'reset'])
       <div class="p-6 space-y-6">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-3">Tipe Sidebar</label>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <label v-for="size in ['default', 'hover', 'hover-active', 'sm', 'md', 'offcanvas', 'hidden']" :key="size" class="relative cursor-pointer">
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <label v-for="size in ['default', 'hover', 'hover-active', 'sm', 'md', 'offcanvas']" :key="size" class="relative cursor-pointer">
               <input type="radio" v-model="settings.sidenavSize" :value="size" class="peer sr-only" />
 
               <div
