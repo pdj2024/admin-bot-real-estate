@@ -49,6 +49,7 @@ const handleLogin = async () => {
       fail('Email atau Password yang Anda masukkan salah')
     }
   } catch (err) {
+    console.log(err)
     fail('Email atau Password yang Anda masukkan salah')
   }
 }
