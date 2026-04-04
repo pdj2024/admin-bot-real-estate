@@ -52,7 +52,7 @@ const sidebarWidth = computed(() => {
   if (size === 'offcanvas') return isToggledOpen.value ? 'var(--spacing-sidenav-width)' : '0px'
   if (size === 'hover') return isHovered.value ? 'var(--spacing-sidenav-width)' : 'var(--spacing-sidenav-width-sm)'
   if (size === 'hover-active') return 'var(--spacing-sidenav-width)'
-  if (size === 'sm' || size === 'compact') return `var(--spacing-sidenav-width-${size})`
+  if (size === 'sm') return `var(--spacing-sidenav-width-${size})`
 
   return isToggledOpen.value ? 'var(--spacing-sidenav-width)' : '0px'
 })
