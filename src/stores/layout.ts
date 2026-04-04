@@ -17,7 +17,18 @@ const INIT_STATE: LayoutType = {
 export const useLayout = defineStore('layout', () => {
   const layout = ref<LayoutType>({ ...INIT_STATE })
   const systemTheme = useSystemTheme()
+
+  // --- CUSTOMIZER STATE & ACTIONS (Ditambahkan kembali) ---
   const isCustomizerOpen = ref(false)
+  const toggleCustomizer = () => {
+    isCustomizerOpen.value = !isCustomizerOpen.value
+  }
+  const customizer = { isCustomizerOpen, toggleCustomizer }
+
+  const setSideNavColor = (nColor: SideNavType['color'], persist = true) => {
+    toggleAttribute('data-sidenav-color', nColor)
+    if (persist) layout.value.sidenav = { ...layout.value.sidenav, color: nColor }
+  }
 
   const setSideNavSize = (nSize: SideNavType['size'], persist = true) => {
     toggleAttribute('data-sidenav-size', nSize)
@@ -77,15 +88,26 @@ export const useLayout = defineStore('layout', () => {
     layout.value.position = nPos
   }
 
+  // --- RESET ACTION (Ditambahkan kembali) ---
+  const reset = () => {
+    setTheme(INIT_STATE.theme)
+    setSideNavColor(INIT_STATE.sidenav.color)
+    setSideNavSize(INIT_STATE.sidenav.size)
+    setPosition(INIT_STATE.position)
+  }
+
   return {
     layout,
+    setSideNavColor,
     setSideNavSize,
     toggleMobileMenu,
     closeAllMenus,
     setTheme,
     setPosition,
     init,
-    isCustomizerOpen
+    isCustomizerOpen,
+    customizer, // Di-return agar index.vue tidak error
+    reset       // Di-return agar index.vue tidak error
   }
 }, {
   persist: {
