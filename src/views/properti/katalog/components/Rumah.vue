@@ -290,8 +290,24 @@ onMounted(async () => {
           <div class="flex items-start gap-1.5 text-primary mb-2">
             <Icon icon="lucide:map-pin" class="size-3.5 mt-0.5" />
             <div class="flex flex-col">
-              <span class="text-[11px] font-bold uppercase tracking-wider text-primary">{{ row.original.Area }}</span>
-              <p v-if="!row.original.Hide_alamat" class="text-[10px] font-medium text-default-500 line-clamp-1">{{ row.original.Alamat }}</p>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-primary">{{ row.original.Area[0] }}</span>
+              <p class="text-[10px] font-medium text-default-500 line-clamp-1">
+                <span v-if="!row.original.Hide_alamat">{{
+                  (row.original.Alamat || '')
+                    .split(' ')
+                    .filter(
+                      (kata) =>
+                        !(row.original.Area[0] || '')
+                          .toLowerCase()
+                          .replace(/[^a-z0-9\s]/g, '')
+                          .split(/\s+/)
+                          .includes(kata.toLowerCase().replace(/[^a-z0-9]/g, ''))
+                    )
+                    .join(' ')
+                    .replace(/[,.\s]+$/, '')
+                }}</span>
+                <span v-if="row.original.Area[1]"> ({{ row.original.Area[1] }})</span>
+              </p>
             </div>
           </div>
 
