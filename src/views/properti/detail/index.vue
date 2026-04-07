@@ -12,7 +12,6 @@ import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const slug = route.params.slug
-console.log(slug)
 
 interface MediaUrl {
   Url: string | null
@@ -68,7 +67,6 @@ const fetchData = async () => {
       headers: { 'X-Jenis-User': 'Admin' }
     })
     product.value = data.Data[0]
-    console.log(product.value)
   } catch (err) {
     console.error(err)
   }
@@ -85,7 +83,7 @@ onMounted(async () => {
 <template>
   <Vertical>
     <PageTitle subtitle="Kelola" title="Detail" />
-    <div class="grid lg:grid-cols-3 grid-cols-1 lg:gap-5">
+    <div class="grid lg:grid-cols-3 grid-cols-1 gap-5">
       <SidebarProduct :product="product" />
       <ProductDetails :product="product" />
     </div>

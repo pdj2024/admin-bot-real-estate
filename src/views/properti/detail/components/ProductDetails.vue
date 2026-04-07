@@ -17,7 +17,6 @@ const formatCurrency = (value: number) => {
 <template>
   <div class="lg:col-span-2 col-span-1">
     <div class="card relative transition-all duration-500 border-none shadow-sm hover:shadow-md bg-white rounded-xl overflow-hidden">
-
       <div class="card-body p-6">
         <div class="flex justify-between items-center mb-4">
           <div class="flex items-center gap-2">
@@ -35,7 +34,10 @@ const formatCurrency = (value: number) => {
           </h5>
           <div class="flex items-center gap-2 text-default-500">
             <Icon icon="lucide:map-pin" class="size-4 text-primary" />
-            <span class="text-sm font-medium">{{ product?.Alamat }}</span>
+            <span class="text-sm font-medium">
+              {{ product?.Alamat }}
+              <span v-if="product?.Area[1] != null"> ({{ product?.Area[1] }}) </span>
+            </span>
           </div>
         </div>
 
@@ -69,7 +71,7 @@ const formatCurrency = (value: number) => {
                 { icon: 'lucide:layers', label: 'Lantai', val: product?.Jumlah_Lantai },
                 { icon: 'lucide:bed', label: 'K. Tidur', val: product?.Jumlah_Kamar_Tidur },
                 { icon: 'lucide:bath', label: 'K. Mandi', val: product?.Jumlah_Kamar_Mandi },
-                { icon: 'lucide:car', label: 'Carport', val: product?.Jumlah_Carpot}
+                { icon: 'lucide:car', label: 'Carport', val: product?.Jumlah_Carpot }
               ]"
               :key="idx"
               class="flex flex-col items-center py-3 rounded-lg border border-default-100 hover:bg-default-50 transition-colors"

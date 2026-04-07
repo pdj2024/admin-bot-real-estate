@@ -29,7 +29,6 @@ const props = defineProps<{
 
 const isCustomer = computed(() => props.chat.Tipe_User === 'customer')
 
-// Menambahkan penanda class (bubble-customer, bubble-admin, dll) agar mudah ditarget oleh CSS
 const bubbleStyle = computed(() => {
   switch (props.chat.Tipe_User) {
     case 'customer':
@@ -44,7 +43,6 @@ const bubbleStyle = computed(() => {
   }
 })
 
-// Menambahkan penanda class untuk warna waktu
 const timeColor = computed(() => {
   if (props.chat.Tipe_User === 'ai') return 'time-color-ai text-amber-600/80'
   return 'time-color-default text-default-400'
@@ -85,6 +83,12 @@ const getDateChat = (date: any): string => {
       </span>
     </div>
 
+    <div v-if="chat.Message.includes('_X7#mQ9!vW2_')" class="w-full my-5 flex items-center justify-center">
+      <span class="divider-tanggal px-4 py-1.5 bg-white border border-default-200 rounded-full text-default-500 text-[11px] font-bold shadow-sm capitalize tracking-wide transition-colors">
+        {{ (chat.Message || '').replace('_X7#mQ9!vW2_', ' ') }}
+      </span>
+    </div>
+
     <div class="flex gap-3 w-full mt-1" :class="isCustomer ? 'justify-start' : 'justify-end'">
       <div v-if="isCustomer" class="flex items-end flex-shrink-0 mb-1">
         <div class="avatar-customer relative flex items-center justify-center rounded-full size-7 bg-default-200 text-default-500 border border-white shadow-sm transition-colors">
@@ -93,7 +97,7 @@ const getDateChat = (date: any): string => {
       </div>
 
       <div class="flex flex-col max-w-[85%] lg:max-w-[70%]" :class="isCustomer ? 'items-start' : 'items-end'">
-        <div v-if="chat.Message" class="px-4 py-2.5 rounded-2xl text-sm relative transition-colors" :class="bubbleStyle">
+        <div v-if="!chat.Message.includes('_X7#mQ9!vW2_')" class="px-4 py-2.5 rounded-2xl text-sm relative transition-colors" :class="bubbleStyle">
           <span class="break-words leading-relaxed" v-html="chat.Message"></span>
 
           <div v-if="chat.Tipe_User === 'admin' && chat.Sender_Id === 'adm_bot'" class="ai-indicator mt-2 pt-1.5 border-t border-amber-200/60 flex items-center gap-1.5 text-[10px] font-semibold text-amber-700 transition-colors">
@@ -103,12 +107,19 @@ const getDateChat = (date: any): string => {
 
           <div class="flex justify-end items-center mt-1 gap-1 text-[10px] font-medium transition-colors" :class="timeColor">
             {{ new Date(chat.Sent_At).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }}
-            <Icon v-if="!isCustomer" icon="lucide:check-check" class="size-3" />
+
+            <template v-if="!isCustomer">
+              <Icon v-if="chat.Send_Status === 'pending'" icon="lucide:clock" class="size-3 opacity-70" />
+
+              <Icon v-else-if="chat.Send_Status === 'failed'" icon="lucide:circle-alert" class="size-3 text-red-500" />
+
+              <Icon v-else icon="lucide:check-check" class="size-3" />
+            </template>
           </div>
         </div>
       </div>
 
-      <div v-if="!isCustomer" class="flex items-end flex-shrink-0 mb-1">
+      <div v-if="!isCustomer && !chat.Message.includes('_X7#mQ9!vW2_')" class="flex items-end flex-shrink-0 mb-1">
         <div v-if="chat.Tipe_User === 'admin' && chat.Sender_Id != 'adm_bot'" class="avatar-admin relative flex items-center justify-center rounded-full size-7 bg-primary/20 text-primary border border-white shadow-sm transition-colors">
           <Icon icon="lucide:headset" class="size-3.5" />
         </div>

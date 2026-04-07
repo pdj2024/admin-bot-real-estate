@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import type { Product } from '../index.vue'
 
@@ -8,6 +8,8 @@ const props = defineProps<{
 }>()
 
 const currentIndex = ref(0)
+const videoMap = ref<Record<string, boolean>>({})
+
 let timer: any = null
 
 const nextSlide = () => {
@@ -70,7 +72,40 @@ const shareProduct = async () => {
   }
 }
 
-onMounted(() => startTimer())
+const currentMediaUrl = computed(() => {
+  return props.product?.MediaUrls?.[currentIndex.value]?.Id_Media || ''
+})
+
+const checkVideo = async (url: string) => {
+  try {
+    const response = await fetch(url, { method: 'HEAD' })
+    const contentType = response.headers.get('content-type')
+    return contentType?.includes('video') ?? false
+  } catch (err) {
+    console.error('Gagal mengecek tipe file', err)
+    return false
+  }
+}
+
+watch(
+  () => props.product?.MediaUrls,
+  async (mediaList) => {
+    if (!mediaList) return
+
+    for (const item of mediaList) {
+      const url = item.Id_Media
+      if (!url || videoMap.value[url] !== undefined) continue
+
+      // cache hasilnya
+      videoMap.value[url] = await checkVideo(url)
+    }
+  },
+  { immediate: true, deep: true }
+)
+
+onMounted(() => {
+  startTimer()
+})
 onUnmounted(() => clearInterval(timer))
 </script>
 
@@ -98,7 +133,14 @@ onUnmounted(() => clearInterval(timer))
             </div>
 
             <div class="h-full w-full transition-all duration-700 ease-out group-hover:scale-105">
-              <img :src="product?.MediaUrls[currentIndex]?.Id_Media" class="w-full h-full object-cover" alt="Property Image" />
+              <!-- VIDEO -->
+              <video preload="metadata" v-if="videoMap[currentMediaUrl] === true" :src="currentMediaUrl" class="w-full h-full object-cover" autoplay muted loop playsinline></video>
+
+              <!-- IMAGE -->
+              <img v-else-if="videoMap[currentMediaUrl] === false" :src="currentMediaUrl" class="w-full h-full object-cover" />
+
+              <!-- LOADING -->
+              <div v-else class="w-full h-full bg-gray-200 animate-pulse"></div>
             </div>
 
             <button @click="prevSlide" class="absolute left-3 top-1/2 -translate-y-1/2 size-11 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-lg text-white border border-white/20 opacity-0 group-hover:opacity-100 transition-all z-10 hover:bg-primary hover:border-primary">
@@ -127,13 +169,22 @@ onUnmounted(() => clearInterval(timer))
         </div>
       </div>
 
-      <div class="card border-none shadow-sm bg-white rounded-xl overflow-hidden transition-all duration-500">
+      <div class="card border-none shadow-sm bg-white rounded-xl overflow-hidden transition-all duration-500 mb-3">
         <div class="p-4 flex justify-between items-center">
           <div class="flex items-center gap-2 text-default-600">
             <div class="bg-primary/10 p-1.5 rounded-md">
               <Icon icon="lucide:map-pin" class="size-4 text-primary"></Icon>
             </div>
-            <span class="text-sm font-bold tracking-tighter">{{ product?.Area || 'Lokasi Terdaftar' }}</span>
+
+            <div class="flex flex-col">
+              <span class="text-sm font-bold tracking-tighter">
+                {{ product?.Area[0] }}
+              </span>
+              <span v-if="product?.Area[1] != null" class="text-xs font-medium">
+              {{ console.log(product?.Area[1]) }}
+                ({{ product?.Area[1] }})
+              </span>
+            </div>
           </div>
           <button class="text-[12px] font-black text-primary hover:text-primary-700 tracking-widest border-b border-primary/20">Lihat Area</button>
         </div>

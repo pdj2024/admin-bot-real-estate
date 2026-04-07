@@ -37,9 +37,6 @@ const openTukarCS = ref(false)
 const openFilter = ref(false)
 const openSchedule = ref(false)
 const isMobile = ref(false)
-const messages = ref([])
-const chats = ref<Chat[]>([])
-const isLoading = ref(false)
 const sendChatContent = ref('')
 const catalogues = ref<Catalogue[]>(catalogueData)
 const events = ref<CalendarEvent[]>(calendarEvents)
@@ -50,22 +47,14 @@ const props = defineProps<{
   roomId: string | null
   username: string
   phoneNumber: string
+  activeTab: string
+  chats: Chat[]
 }>()
 
-const fetchChatContent = async (id: string) => {
-  isLoading.value = true
-  try {
-    const response = await api.get(`/api/chat/getAll?room_id=${id}`, {
-      headers: { 'X-Jenis-User': 'Admin' }
-    })
-    chats.value = response.data.Data
-    console.log('Isi', chats)
-  } catch (error) {
-    console.error('Gagal memuat chat:', error)
-  } finally {
-    isLoading.value = false
-  }
-}
+const emit = defineEmits<{
+  (e: 'chatTakeOver'): void
+  (e: 'clearRoom'): void
+}>()
 
 const handleClickOutside = (event: MouseEvent) => {
   const target = event.target as Node
@@ -153,9 +142,7 @@ const saveAppointment = () => {
 }
 
 const endChat = () => {
-  confirm('Ingin mengakhiri percakapan Budi?', () => {
-    success('Berhasil mengakhiri percakapan')
-  })
+  takeOverChat(true)
 }
 
 const tukarCS = (text: string) => {
@@ -202,35 +189,97 @@ const scrollToBottom = async () => {
   }, 100)
 }
 
-const sendChat = async () => {
-  if (!sendChatContent.value.trim()) return
+const sendChat = async (type: string) => {
+  if (!type.includes('system') && !sendChatContent.value.trim()) return
 
   const myId = localStorage.getItem('no_id') || ''
   const role = localStorage.getItem('role_user') || ''
+  const username = localStorage.getItem('nama_display') || ''
 
   const now = new Date()
   const sentAt = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 19)
 
   let currentUserIds: string[] = []
-  if (chats.value && chats.value.length > 0) {
-    currentUserIds = [...chats.value[chats.value.length - 1].User_Ids]
+
+  if (props.chats && props.chats.length > 0) {
+    const lastChat = props.chats[props.chats.length - 1]
+    // Cek apakah User_Ids ada dan bisa di-iterasi (is array)
+    if (lastChat.User_Ids && Array.isArray(lastChat.User_Ids)) {
+      currentUserIds = [...lastChat.User_Ids]
+    } else {
+      // Jika tidak ada di pesan terakhir, gunakan ID Anda sendiri sebagai awal
+      currentUserIds = [myId]
+    }
+  } else {
+    currentUserIds = [myId]
   }
 
+  // Pastikan ID Anda ada di dalam list
   if (myId && !currentUserIds.includes(myId)) {
     currentUserIds.push(myId)
   }
 
+  let formattedPhone = props.phoneNumber.replace(/\D/g, '')
+  if (formattedPhone.startsWith('0')) {
+    formattedPhone = '62' + formattedPhone.substring(1)
+  }
+
+  console.log(props)
   if (props.roomId) {
+    var messageText
+    if (type === 'system_masuk') {
+      messageText = username + '_X7#mQ9!vW2_Bergabung'
+    } else if (type === 'system_keluar') {
+      messageText = username + '_X7#mQ9!vW2_Keluar'
+    } else {
+      messageText = sendChatContent.value
+    }
+
+    console.log(type, type === 'system_keluar', messageText)
+
+    const tempIndex = props.chats.length
+
+    props.chats.push({
+      Message: messageText,
+      Sent_At: sentAt,
+      Sender_Id: myId,
+      Tipe_User: role,
+      Jenis_Pesan: type.includes('system') ? 'system' : 'text',
+      Send_Status: 'pending',
+      Room_Id: props.roomId,
+      User_Ids: currentUserIds,
+      Username_User: username,
+      Telepon_User: myId
+    } as unknown as Chat)
+
+    sendChatContent.value = ''
+    scrollToBottom()
+
     try {
+      if (!type.includes('system')) {
+        await api.post(
+          '/api/waha/send-text',
+          {
+            ChatId: formattedPhone + '@s.whatsapp.net',
+            ReplyTo: null,
+            Text: messageText,
+            LinkPreview: true,
+            LinkPreviewHighQuality: false,
+            Session: 'session_OtpWaha'
+          },
+          { headers: { 'X-Jenis-User': 'admin' } }
+        )
+      }
+
       await api.post(
         '/api/chat/create',
         {
           Chat: {
-            Jenis_Pesan: 'text',
+            Jenis_Pesan: type.includes('system') ? 'system' : 'text',
             Sent_At: sentAt,
             Sender_Id: myId,
             Tipe_User: role,
-            Message: sendChatContent.value,
+            Message: messageText,
             Id_Paket: null,
             No_Pesanan: null,
             No_Penawaran: null,
@@ -239,38 +288,61 @@ const sendChat = async () => {
           Room_Id: props.roomId,
           User_Ids: currentUserIds
         },
-        {
-          headers: { 'X-Jenis-User': 'admin' }
-        }
+        { headers: { 'X-Jenis-User': 'admin' } }
       )
-      sendChatContent.value = ''
-      fetchChatContent(props.roomId)
-    } catch (err: any) {
-      console.error('error 1:', err.message)
 
-      if (err.response && err.response.data) {
-        console.error('error 2:', err.response.data)
+      if (props.chats[tempIndex]) {
+        props.chats[tempIndex].Send_Status = 'send'
       }
 
-      if (err.response && (err.response.status === 400 || err.response.status === 401)) {
-        console.warn('warn.')
+      type === 'system_keluar' ? emit('clearRoom') : ''
+    } catch (err: any) {
+      console.error('Gagal mengirim chat:', err.response?.data || err.message)
+
+      if (props.chats[tempIndex]) {
+        props.chats[tempIndex].Send_Status = 'failed'
       }
     }
   }
 }
 
-watch(
-  () => props.roomId,
-  (newId) => {
-    if (newId) {
-      fetchChatContent(newId)
+const takeOverChat = async (status: boolean) => {
+  confirm(status == false ? 'Apakah Anda yakin ingin mengambil alih percakapan ini?' : 'Apakah Anda ingin mengakhiri percakapan ini?', async () => {
+    try {
+      await api.post(
+        '/api/chat/toggle-bot',
+        {
+          customer_phone: props.phoneNumber,
+          admin_id: localStorage.getItem('no_id'),
+          status_bot: status
+        },
+        {
+          headers: { 'X-Jenis-User': 'admin' }
+        }
+      )
+      if (status == false) {
+        sendChat('system_masuk')
+        success('Percakapan berhasil diambil alih')
+      } else {
+        sendChat('system_keluar')
+        success('Percakapan telah diakhiri')
+      }
+      emit('chatTakeOver')
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.Message || ''
+      if (errorMessage.includes('Percakapan ini sudah diambil alih')) {
+        fail('Percakapan ini sudah diambil alih Admin lain')
+        emit('chatTakeOver')
+      } else {
+        fail('Ambil alih percakapan gagal')
+        console.error('Error take over:', err.response?.data || err.message)
+      }
     }
-  },
-  { immediate: true }
-)
+  })
+}
 
 watch(
-  chats,
+  () => props.chats,
   () => {
     scrollToBottom()
   },
@@ -281,13 +353,7 @@ onMounted(() => {
   isMobile.value = window.innerWidth < 640
   document.addEventListener('click', handleClickOutside)
   reinitPreline()
-
   scrollToBottom()
-console.log('token')
-  console.log(localStorage.getItem('token'))
-console.log('refreshToken')
-  console.log(localStorage.getItem('refreshToken'))
-
 })
 
 onBeforeUnmount(() => {
@@ -334,7 +400,7 @@ onUpdated(() => {
     </simplebar>
 
     <div class="p-3 bg-white border-t border-default-200">
-      <div class="flex gap-2 items-center bg-default-50 border border-default-200 p-2 rounded-2xl focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
+      <div v-if="activeTab !== 'semua'" class="flex gap-2 items-center bg-default-50 border border-default-200 p-2 rounded-2xl focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
         <div class="relative" ref="dropdownRef">
           <button @click.stop="openMenu = !openMenu" class="btn rounded-xl size-10 bg-transparent text-default-500 hover:bg-default-200 hover:text-default-800 transition-colors">
             <Icon icon="lucide:plus" class="size-5"></Icon>
@@ -361,18 +427,26 @@ onUpdated(() => {
           </div>
         </div>
 
-        <input type="text" v-model="sendChatContent" @keyup.enter="sendChat()" class="flex-grow bg-transparent border-none focus:ring-0 text-sm px-2 w-full" placeholder="Ketik pesan di sini..." />
+        <input type="text" v-model="sendChatContent" @keyup.enter="sendChat('text')" class="flex-grow bg-transparent border-none focus:ring-0 text-sm px-2 w-full" placeholder="Ketik pesan di sini..." />
 
         <div ref="containerRef" class="flex items-center gap-2 relative">
           <button class="btn size-9 rounded-xl bg-transparent text-default-500 hover:bg-default-200 hover:text-default-800">
             <Icon icon="lucide:image" class="size-4"></Icon>
           </button>
-          <button @click="sendChat()" class="btn rounded-xl px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-medium flex items-center gap-2 transition-colors">
+          <button @click="sendChat('text')" class="btn rounded-xl px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-medium flex items-center gap-2 transition-colors">
             <span class="hidden sm:inline text-sm">Kirim</span>
             <Icon icon="lucide:send" class="size-4"></Icon>
           </button>
         </div>
       </div>
+
+      <div v-else class="w-full">
+        <button @click="takeOverChat(false)" class="w-full py-3.5 bg-bejo-500 hover:bg-bejo-600 text-white font-semibold rounded-xl flex justify-center items-center gap-2 shadow-sm transition-colors">
+          <Icon icon="lucide:message-circle-plus" class="size-5" />
+          <span>Ambil Alih Percakapan</span>
+        </button>
+      </div>
+
       <div v-if="openEtalase || openAppointment" ref="etalaseRef" class="z-[60] fixed bottom-20 left-1/2 -translate-x-1/2 w-[95vw] sm:w-[850px] sm:bottom-24 sm:right-5 sm:left-auto sm:translate-x-0 bg-white rounded-2xl shadow-2xl p-4 border border-default-100">
         <div class="flex items-center justify-between mb-4 px-2">
           <h4 v-if="openEtalase" class="text-default-900 font-bold text-base">Pilih Etalase</h4>

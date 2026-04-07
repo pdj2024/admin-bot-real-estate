@@ -1,9 +1,11 @@
 import axios from 'axios'
 import router from '@/router'
 
+const baseURL =  'https://wabotapi.padajaya.biz.id'
+
 const api = axios.create({
   // baseURL: 'http://26.75.164.107:270',
-  baseURL: 'https://wabotapi.padajaya.biz.id',
+  baseURL: baseURL,
   headers: {
     'Content-Type': 'application/json'
   }

@@ -58,6 +58,7 @@ export interface Appointment {
 }
 
 export interface Chat {
+  // ==== EXISTING ====
   Message_Id: string
   Room_Id: string
   Sender_Id: string
@@ -74,6 +75,28 @@ export interface Chat {
   Send_Status: string
   No_Penawaran: string
   Receiver_Ids: string[]
+
+  Room_Name?: string
+  Username_User?: string
+  Nama_Display_User?: string
+  Id_User?: string
+  Id_Media_User?: string
+  No_Id_Media_User?: string
+  Telepon_User?: string
+  Username_Lawan?: string
+  Nama_Display_Lawan?: string
+  Id_Lawan?: string
+  Id_Media_Lawan?: string
+  No_Id_Media_Lawan?: string
+  Tipe_User_Lawan?: string
+  Telepon_User_Lawan?: string
+  Created_At?: Date | null
+  Last_Message_At?: Date | string
+  Last_Message?: string
+  Count_Status_Sent?: number
+  List_Id_Message_Sent?: string[]
+  Count_Status_Received?: number
+  List_Id_Message_Received?: string[]
 }
 
 export const catalogueData: Catalogue[] = [
