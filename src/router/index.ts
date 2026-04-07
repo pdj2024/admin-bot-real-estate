@@ -15,14 +15,35 @@ const router = createRouter({
       component: () => import('@/views/auth/login/index.vue')
     },
 
-    // Role Admin
+    // Guest
     {
       path: '/',
-      redirect: '/dashboard/',
+      redirect: '/katalog',
       meta: {
-        requiresAuth: true
+        requiresAuth: false
       }
     },
+    {
+      path: '/katalog',
+      name: 'Katalog Properti',
+      meta: {
+        title: 'Katalog Properti',
+        requiresAuth: false
+      },
+      component: () => import('@/views/properti/katalog/index.vue')
+    },
+    {
+      path: '/detail/:slug',
+      name: 'Detail properti',
+      meta: {
+        title: 'Detail properti',
+        requiresAuth: false
+      },
+      component: () => import('@/views/properti/detail/index.vue')
+    },
+
+
+    // Role Admin
     {
       path: '/dashboard',
       name: 'Dashboard',
@@ -52,7 +73,7 @@ const router = createRouter({
     },
     {
       path: '/properti/katalog',
-      name: 'Katalog Properti',
+      name: 'Admin Katalog Properti',
       meta: {
         title: 'Katalog Properti',
         requiresAuth: true
@@ -61,7 +82,7 @@ const router = createRouter({
     },
     {
       path: '/properti/detail/:slug',
-      name: 'Detail properti',
+      name: 'Admin Detail properti',
       meta: {
         title: 'Detail properti',
         requiresAuth: true

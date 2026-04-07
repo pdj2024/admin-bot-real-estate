@@ -166,17 +166,16 @@ defineExpose({
             <div v-else>
               <div v-if="activeTab === 'semua'">
                 <div v-if="Chats.length === 0" class="text-center py-10 text-sm text-slate-400">Tidak ada obrolan ditemukan.</div>
-
                 <div v-else>
                   <RouterLink to="" v-for="(chat, idx) in Chats" :key="'semua-' + idx" @click="selectChat(chat.Room_Id, chat.Room_Name, chat.Telepon_User_Lawan)" class="flex items-center gap-3 py-3 px-4 bg-white cursor-pointer border-b border-slate-100 hover:bg-[var(--color-bejo-50)] transition-colors group">
                     <div class="relative shrink-0 flex items-center justify-center font-semibold rounded-full size-10 bg-slate-100 text-slate-600 group-hover:bg-white transition-colors">
-                      <span v-if="chat.Username_Lawan" class="text-sm">{{ chat.Username_Lawan.charAt(0).toUpperCase() }}</span>
+                      <span v-if="chat.Room_Name" class="text-sm">{{ chat.Room_Name.charAt(0).toUpperCase() }}</span>
                       <Icon v-else icon="lucide:user" class="size-5 text-slate-400" />
                       <span class="absolute bottom-0 right-0 w-3 h-3 border-2 border-white rounded-full bg-[var(--color-bejo-500)]"></span>
                     </div>
                     <div class="flex-grow min-w-0">
                       <div class="flex items-center justify-between gap-2 mb-0.5">
-                        <h6 class="text-slate-800 font-bold text-sm truncate uppercase">{{ chat.Username_Lawan != '' ? (chat.Username_Lawan || '').replace('_' + chat.Telepon_User_Lawan, '') : chat.Telepon_User_Lawan }}</h6>
+                        <h6 class="text-slate-800 font-bold text-sm truncate uppercase">{{ chat.Room_Name.toUpperCase() }}</h6>
                         <small class="text-[10px] text-slate-400 shrink-0 font-medium">{{ getDateChat(chat.Last_Message_At) }}</small>
                       </div>
                       <p class="text-xs truncate text-slate-500 leading-relaxed capitalized">{{ chat.Last_Message.replace('_X7#mQ9!vW2_', ' ') }}</p>

@@ -533,7 +533,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
                 <label class="size-24 border-2 border-dashed border-slate-200 rounded-xl flex flex-shrink-0 flex-col items-center justify-center cursor-pointer hover:bg-slate-50 hover:border-primary/50 transition-all text-slate-400 group">
                   <Icon icon="lucide:plus" class="size-6 group-hover:text-primary transition-colors" />
                   <span class="text-[10px] font-bold mt-1 group-hover:text-primary">TAMBAH</span>
-                  <input type="file" multiple hidden @change="handlePhoto" accept="image/*" />
+                  <input type="file" multiple hidden @change="handlePhoto" accept="image/*,video/*" />
                 </label>
 
                 <div v-if="!previewPhotos.length" class="flex-shrink-0 text-slate-500 text-[10px] italic flex items-center px-2">Belum ada foto terpilih</div>

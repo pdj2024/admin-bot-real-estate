@@ -5,31 +5,57 @@ import type { Product } from '../index.vue'
 
 const props = defineProps<{
   product: Product | null
+  isAdmin: boolean
 }>()
 
 const currentIndex = ref(0)
 const videoMap = ref<Record<string, boolean>>({})
-
 let timer: any = null
 
-const nextSlide = () => {
-  const totalImages = props.product?.MediaUrls?.length || 0
-  if (totalImages > 0) {
-    currentIndex.value = currentIndex.value >= totalImages - 1 ? 0 : currentIndex.value + 1
+const nextSlide = (isAuto = false) => {
+  const totalMedia = props.product?.MediaUrls?.length || 0
+  if (totalMedia <= 1) return
+  if (isAuto && videoMap.value[currentMediaUrl.value]) {
+    return
   }
+  currentIndex.value = (currentIndex.value + 1 + totalMedia) % totalMedia
   resetTimer()
 }
 
 const prevSlide = () => {
-  const totalImages = props.product?.MediaUrls?.length || 0
-  if (totalImages > 0) {
-    currentIndex.value = currentIndex.value <= 0 ? totalImages - 1 : currentIndex.value - 1
-  }
+  const totalMedia = props.product?.MediaUrls?.length || 0
+  if (totalMedia <= 1) return
+  currentIndex.value = (currentIndex.value - 1 + totalMedia) % totalMedia
   resetTimer()
 }
 
 const goToSlide = (i: number) => {
   currentIndex.value = i
+  resetTimer()
+}
+
+const preloadNextMedia = (index: number) => {
+  const nextIndex = (index + 1) % (props.product?.MediaUrls?.length || 1)
+  const nextUrl = props.product?.MediaUrls?.[nextIndex]?.Id_Media
+
+  if (nextUrl) {
+    const isVideo = checkMediaType(nextUrl)
+    if (isVideo) {
+      const video = document.createElement('video')
+      video.src = nextUrl
+      video.preload = 'auto'
+    } else {
+      const img = new Image()
+      img.src = nextUrl
+    }
+  }
+}
+
+const handleVideoEnded = () => {
+  const totalMedia = props.product?.MediaUrls?.length || 0
+  if (totalMedia <= 1) return
+  currentIndex.value = (currentIndex.value + 1) % totalMedia
+
   resetTimer()
 }
 
@@ -41,12 +67,12 @@ const handleTouchEnd = (e: TouchEvent) => {
   const endX = e.changedTouches[0].clientX
   const diff = startX - endX
   if (Math.abs(diff) > 50) {
-    diff > 0 ? nextSlide() : prevSlide()
+    diff > 0 ? nextSlide(true) : prevSlide()
   }
 }
 
 const startTimer = () => {
-  timer = setInterval(nextSlide, 5000)
+  timer = setInterval(() => nextSlide(true), 5000)
 }
 const resetTimer = () => {
   clearInterval(timer)
@@ -59,7 +85,6 @@ const shareProduct = async () => {
     text: `Cek ${props.product?.Nama_Produk} di area ${props.product?.Area}.`,
     url: window.location.href
   }
-
   try {
     if (navigator.share) {
       await navigator.share(shareData)
@@ -68,40 +93,36 @@ const shareProduct = async () => {
       alert('Tautan berhasil disalin ke clipboard!')
     }
   } catch (err) {
-    console.error('Batal membagikan atau terjadi kesalahan:', err)
+    console.error('Gagal membagikan:', err)
   }
+}
+
+const checkMediaType = (url: string) => {
+  if (!url) return false
+  return /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(url)
 }
 
 const currentMediaUrl = computed(() => {
   return props.product?.MediaUrls?.[currentIndex.value]?.Id_Media || ''
 })
 
-const checkVideo = async (url: string) => {
-  try {
-    const response = await fetch(url, { method: 'HEAD' })
-    const contentType = response.headers.get('content-type')
-    return contentType?.includes('video') ?? false
-  } catch (err) {
-    console.error('Gagal mengecek tipe file', err)
-    return false
-  }
-}
-
 watch(
   () => props.product?.MediaUrls,
-  async (mediaList) => {
+  (mediaList) => {
     if (!mediaList) return
-
-    for (const item of mediaList) {
+    mediaList.forEach((item) => {
       const url = item.Id_Media
-      if (!url || videoMap.value[url] !== undefined) continue
-
-      // cache hasilnya
-      videoMap.value[url] = await checkVideo(url)
-    }
+      if (url) {
+        videoMap.value[url] = checkMediaType(url)
+      }
+    })
   },
-  { immediate: true, deep: true }
+  { immediate: true }
 )
+
+watch(currentIndex, (newIndex) => {
+  preloadNextMedia(newIndex)
+})
 
 onMounted(() => {
   startTimer()
@@ -113,7 +134,7 @@ onUnmounted(() => clearInterval(timer))
   <div class="col-span-1">
     <div class="sticky top-24">
       <div class="mb-5">
-        <RouterLink to="/properti/katalog" class="inline-flex items-center text-xs font-bold uppercase tracking-widest text-default-500 hover:text-primary transition-all group">
+        <RouterLink :to="isAdmin ? '/properti/katalog' : '/katalog'" class="inline-flex items-center text-xs font-bold uppercase tracking-widest text-default-500 hover:text-primary transition-all group">
           <Icon icon="lucide:arrow-left" class="size-4 me-2 transition-transform group-hover:-translate-x-1" />
           Kembali ke Katalog
         </RouterLink>
@@ -123,7 +144,6 @@ onUnmounted(() => clearInterval(timer))
         <div class="card-body p-4 relative">
           <div class="relative overflow-hidden mb-4 rounded-lg h-[350px] md:h-[420px] group bg-default-50 shadow-inner" @touchstart="handleTouchStart" @touchend="handleTouchEnd">
             <div v-if="product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia')" class="absolute inset-0 bg-black/40 backdrop-grayscale-[60%] z-[5] pointer-events-none transition-all duration-500"></div>
-
             <div v-if="product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia')" class="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
               <div class="px-2 py-1 bg-black/30 backdrop-blur-md rounded-xl border border-white/10 shadow-2xl transform transition-transform duration-500 group-hover:scale-110">
                 <span class="text-xs md:text-sm font-black uppercase tracking-widest text-white/90">
@@ -132,35 +152,30 @@ onUnmounted(() => clearInterval(timer))
               </div>
             </div>
 
-            <div class="h-full w-full transition-all duration-700 ease-out group-hover:scale-105">
-              <!-- VIDEO -->
-              <video preload="metadata" v-if="videoMap[currentMediaUrl] === true" :src="currentMediaUrl" class="w-full h-full object-cover" autoplay muted loop playsinline></video>
+            <div class="h-full w-full transition-all duration-700 ease-out group-hover:scale-105 will-change-transform transform-gpu">
+              <video v-if="videoMap[currentMediaUrl]" :key="currentMediaUrl" :src="currentMediaUrl" class="w-full h-full object-cover" autoplay muted playsinline preload="auto" @ended="handleVideoEnded" :loop="false"></video>
 
-              <!-- IMAGE -->
-              <img v-else-if="videoMap[currentMediaUrl] === false" :src="currentMediaUrl" class="w-full h-full object-cover" />
+              <img v-else-if="videoMap[currentMediaUrl] === false" :key="currentMediaUrl + 'img'" :src="currentMediaUrl" class="w-full h-full object-cover" loading="eager" />
 
-              <!-- LOADING -->
               <div v-else class="w-full h-full bg-gray-200 animate-pulse"></div>
             </div>
-
             <button @click="prevSlide" class="absolute left-3 top-1/2 -translate-y-1/2 size-11 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-lg text-white border border-white/20 opacity-0 group-hover:opacity-100 transition-all z-10 hover:bg-primary hover:border-primary">
               <Icon icon="lucide:chevron-left" class="size-6"></Icon>
             </button>
-            <button @click="nextSlide" class="absolute right-3 top-1/2 -translate-y-1/2 size-11 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-lg text-white border border-white/20 opacity-0 group-hover:opacity-100 transition-all z-10 hover:bg-primary hover:border-primary">
+            <button @click="nextSlide(false)" class="absolute right-3 top-1/2 -translate-y-1/2 size-11 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-lg text-white border border-white/20 opacity-0 group-hover:opacity-100 transition-all z-10 hover:bg-primary hover:border-primary">
               <Icon icon="lucide:chevron-right" class="size-6"></Icon>
             </button>
 
             <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10 bg-black/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
-              <button v-for="(_, index) in product?.MediaUrls.length" :key="index" @click="goToSlide(index)" class="size-1.5 rounded-full transition-all duration-300" :class="currentIndex === index ? 'bg-primary w-5' : 'bg-white/50'"></button>
+              <button v-for="(_, index) in product?.MediaUrls?.length" :key="index" @click="goToSlide(index)" class="size-1.5 rounded-full transition-all duration-300" :class="currentIndex === index ? 'bg-primary w-5' : 'bg-white/50'"></button>
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-3 relative">
-            <a href="#" class="flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-bold text-sm tracking-wide transition-all shadow-sm bg-primary text-white hover:bg-primary-600 hover:shadow-primary/20">
+            <a href="https://wa.me/62895353837000" class="flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-bold text-sm tracking-wide transition-all shadow-sm bg-primary text-white hover:bg-primary-600 hover:shadow-primary/20">
               <Icon icon="lucide:headset" class="size-4"></Icon>
               Hubungi Kami
             </a>
-
             <button type="button" @click.prevent="shareProduct" class="flex w-full items-center justify-center gap-2 py-3 px-4 rounded-lg font-bold text-sm tracking-wide transition-all shadow-sm border border-default-200 text-default-700 hover:bg-default-50 hover:border-default-300">
               <Icon icon="lucide:share-2" class="size-4"></Icon>
               Bagikan
@@ -175,15 +190,11 @@ onUnmounted(() => clearInterval(timer))
             <div class="bg-primary/10 p-1.5 rounded-md">
               <Icon icon="lucide:map-pin" class="size-4 text-primary"></Icon>
             </div>
-
             <div class="flex flex-col">
               <span class="text-sm font-bold tracking-tighter">
                 {{ product?.Area[0] }}
               </span>
-              <span v-if="product?.Area[1] != null" class="text-xs font-medium">
-              {{ console.log(product?.Area[1]) }}
-                ({{ product?.Area[1] }})
-              </span>
+              <!-- <span v-if="product?.Area && product.Area[1]" class="text-xs font-medium"> ({{ product.Area[1] }}) </span> -->
             </div>
           </div>
           <button class="text-[12px] font-black text-primary hover:text-primary-700 tracking-widest border-b border-primary/20">Lihat Area</button>
@@ -192,3 +203,14 @@ onUnmounted(() => clearInterval(timer))
     </div>
   </div>
 </template>
+
+<style scoped>
+video, img {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.animate-pulse {
+  animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+</style>

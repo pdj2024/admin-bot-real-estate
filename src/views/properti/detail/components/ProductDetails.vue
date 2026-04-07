@@ -5,9 +5,8 @@ import type { Product } from '../index.vue'
 
 defineProps<{
   product: Product | null
+  isAdmin: boolean
 }>()
-
-const router = useRouter()
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)

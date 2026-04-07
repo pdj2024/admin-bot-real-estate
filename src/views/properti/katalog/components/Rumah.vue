@@ -15,6 +15,10 @@ const selectedItem = ref<Product | null>(null)
 const sorting = ref<SortingState>([])
 const selectedSort = ref('Terbaru')
 
+const props = defineProps<{
+  isAdmin: boolean
+}>()
+
 interface MediaUrl {
   Url: string | null
   Expired_At: Date
@@ -239,7 +243,7 @@ onMounted(async () => {
           </Transition>
         </div>
 
-        <button @click="openAddModal" class="btn btn-sm bg-primary-gradient text-white hover:bg-primary-800 shadow-md shadow-primary/20">
+        <button v-if="isAdmin" @click="openAddModal" class="btn btn-sm bg-primary-gradient text-white hover:bg-primary-800 shadow-md shadow-primary/20">
           <Icon icon="lucide:plus" class="size-4 me-1" />
           Tambah Properti
         </button>
@@ -312,7 +316,7 @@ onMounted(async () => {
           </div>
 
           <h6 class="text-lg text-default-900 font-black transition-colors line-clamp-1 mb-1 leading-tight group-hover:text-primary">
-            <RouterLink :to="`/properti/detail/${row.original.Slug}`">{{ row.original.Nama_Produk }}</RouterLink>
+            <RouterLink :to="isAdmin ? `/properti/detail/${row.original.Slug}` : `/detail/${row.original.Slug}`">{{ row.original.Nama_Produk }}</RouterLink>
           </h6>
 
           <p class="text-[12px] font-medium text-default-400 mb-4">
@@ -372,7 +376,7 @@ onMounted(async () => {
             </div>
           </div>
 
-          <div class="absolute bottom-5 right-5 z-20">
+          <div v-if="isAdmin" class="absolute bottom-5 right-5 z-20">
             <button type="button" @click.stop="toggleDropdown(row.id)" class="size-9 flex items-center justify-center rounded-xl bg-default-100 text-default-600 hover:bg-primary hover:text-white transition-all">
               <Icon icon="lucide:more-vertical" class="size-5" />
             </button>
@@ -403,7 +407,7 @@ onMounted(async () => {
       </nav>
     </div>
 
-    <Modal v-model:showModal="isModalOpen" :itemData="selectedItem" @success="fetchData" />
+    <Modal v-if="isAdmin" v-model:showModal="isModalOpen" :itemData="selectedItem" @success="fetchData" />
   </div>
 </template>
 

@@ -1,14 +1,13 @@
 <script setup lang="ts">
-import { onMounted, ref, nextTick } from 'vue'
-import { Icon } from '@iconify/vue'
-import avatar2 from '@/assets/images/user/avatar-2.png'
+import { onMounted, ref, nextTick, computed } from 'vue'
+import { isTokenExpired } from '@/services/axios'
+import { useRoute } from 'vue-router'
 import { RouterLink } from 'vue-router'
 import api from '@/services/axios'
 import Vertical from '@/layouts/vertical.vue'
 import SidebarProduct from './components/SidebarProduct.vue'
 import ProductDetails from './components/ProductDetails.vue'
 import PageTitle from '@/components/PageTitle.vue'
-import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const slug = route.params.slug
@@ -72,6 +71,19 @@ const fetchData = async () => {
   }
 }
 
+const isLoggedIn = computed(() => {
+  const token = localStorage.getItem('token')
+  const refreshToken = localStorage.getItem('refreshToken')
+
+  const hasTokens = !!token && token !== 'undefined' && !!refreshToken && refreshToken !== 'undefined'
+
+  return hasTokens && !isTokenExpired(token) && route.path.startsWith('/properti/detail')
+})
+
+const isAdmin = computed(() => {
+  return localStorage.getItem('role_user') == 'admin' && route.path.startsWith('/properti/detail')
+})
+
 onMounted(async () => {
   await fetchData()
   nextTick(() => {
@@ -81,12 +93,17 @@ onMounted(async () => {
 </script>
 
 <template>
-  <Vertical>
+  <Vertical v-if="isLoggedIn">
     <PageTitle subtitle="Kelola" title="Detail" />
     <div class="grid lg:grid-cols-3 grid-cols-1 gap-5">
-      <SidebarProduct :product="product" />
-      <ProductDetails :product="product" />
+      <SidebarProduct :product="product" :isAdmin="isAdmin"/>
+      <ProductDetails :product="product" :isAdmin="isAdmin"/>
     </div>
   </Vertical>
+
+  <div v-else class="grid lg:grid-cols-3 grid-cols-1 gap-5 p-10">
+      <SidebarProduct :product="product" :isAdmin="isAdmin"/>
+      <ProductDetails :product="product" :isAdmin="isAdmin"/>
+    </div>
 </template>
 
