@@ -99,6 +99,13 @@ export interface Chat {
   List_Id_Message_Received?: string[]
 }
 
+export interface PreviewImage {
+  id: string;
+  url: string;
+  file: File;
+  caption: string;
+}
+
 export const catalogueData: Catalogue[] = [
   {
     name: 'Griya Modern Cluster',

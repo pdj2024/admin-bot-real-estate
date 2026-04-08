@@ -18,7 +18,7 @@ import bgChatDark from '@/assets/images/background-chat-dark.png'
 
 import simplebar from 'simplebar-vue'
 import Filter from './Filter.vue'
-import { type Catalogue, type CalendarEvent, type Appointment, type Chat, catalogueData, calendarEvents } from './data'
+import { type Catalogue, type CalendarEvent, type Appointment, type Chat, type PreviewImage, calendarEvents } from './data'
 
 const menuRef = ref<HTMLElement | null>(null)
 const etalaseRef = ref<HTMLElement | null>(null)
@@ -37,14 +37,25 @@ const openTukarCS = ref(false)
 const openFilter = ref(false)
 const openSchedule = ref(false)
 const isMobile = ref(false)
+const changeUsername = ref(false)
 const sendChatContent = ref('')
-const catalogues = ref<Catalogue[]>(catalogueData)
+
+const username = defineModel<string>('username')
+// const catalogues = ref<Catalogue[]>(catalogueData)
 const events = ref<CalendarEvent[]>(calendarEvents)
 const bgLightUrl = `url(${bgChat})`
 const bgDarkUrl = `url(${bgChatDark})`
 
+const isPreviewMode = computed(() => previewImages.value.length > 0)
+const isPreviewOpen = ref(false)
+const previewImages = ref<PreviewImage[]>([])
+const activeIndex = ref(0)
+const activeImage = computed(() => previewImages.value[activeIndex.value])
+const addMoreInput = ref<HTMLInputElement | null>(null)
+
 const props = defineProps<{
   roomId: string | null
+  idLawan: string
   username: string
   phoneNumber: string
   activeTab: string
@@ -54,6 +65,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'chatTakeOver'): void
   (e: 'clearRoom'): void
+  (e: 'usernameChange', value: string): void
 }>()
 
 const handleClickOutside = (event: MouseEvent) => {
@@ -189,7 +201,7 @@ const scrollToBottom = async () => {
   }, 100)
 }
 
-const sendChat = async (type: string) => {
+const sendChat = async (type: string, url?: string) => {
   if (!type.includes('system') && !sendChatContent.value.trim()) return
 
   const myId = localStorage.getItem('no_id') || ''
@@ -203,18 +215,15 @@ const sendChat = async (type: string) => {
 
   if (props.chats && props.chats.length > 0) {
     const lastChat = props.chats[props.chats.length - 1]
-    // Cek apakah User_Ids ada dan bisa di-iterasi (is array)
     if (lastChat.User_Ids && Array.isArray(lastChat.User_Ids)) {
       currentUserIds = [...lastChat.User_Ids]
     } else {
-      // Jika tidak ada di pesan terakhir, gunakan ID Anda sendiri sebagai awal
       currentUserIds = [myId]
     }
   } else {
     currentUserIds = [myId]
   }
 
-  // Pastikan ID Anda ada di dalam list
   if (myId && !currentUserIds.includes(myId)) {
     currentUserIds.push(myId)
   }
@@ -240,11 +249,11 @@ const sendChat = async (type: string) => {
     const tempIndex = props.chats.length
 
     props.chats.push({
-      Message: messageText,
+      Message: type == "system_image" ? url : messageText,
       Sent_At: sentAt,
       Sender_Id: myId,
       Tipe_User: role,
-      Jenis_Pesan: type.includes('system') ? 'system' : 'text',
+      Jenis_Pesan: type.includes('system') ? type : 'text',
       Send_Status: 'pending',
       Room_Id: props.roomId,
       User_Ids: currentUserIds,
@@ -275,11 +284,11 @@ const sendChat = async (type: string) => {
         '/api/chat/create',
         {
           Chat: {
-            Jenis_Pesan: type.includes('system') ? 'system' : 'text',
+            Jenis_Pesan: type.includes('system') ? type : 'text',
             Sent_At: sentAt,
             Sender_Id: myId,
             Tipe_User: role,
-            Message: messageText,
+            Message: type == "system_image" ? url : messageText,
             Id_Paket: null,
             No_Pesanan: null,
             No_Penawaran: null,
@@ -341,6 +350,150 @@ const takeOverChat = async (status: boolean) => {
   })
 }
 
+const saveUsername = async () => {
+  try {
+    const config = { headers: { 'X-Jenis-User': 'admin' } }
+    const url = `/api/customer/getAll?no_id=${props.idLawan}`
+
+    const res = await api.get(url, config)
+
+    const customerData = res.data.Data[0]
+
+    await api.put(
+      `/api/customer/update?no_id=${props.idLawan}`,
+      {
+        ...customerData,
+        UserName: username.value
+      },
+      config
+    )
+    emit('usernameChange', username.value!)
+    changeUsername.value = false
+  } catch (err: any) {
+    const errorMsg = err.response?.data?.Message || err.message || 'Terjadi kesalahan sistem'
+    console.error('Error Detail:', errorMsg)
+    alert(errorMsg)
+  }
+}
+
+const chooseImages = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (!target.files || target.files.length === 0) return
+
+  const newFiles = Array.from(target.files).map((file) => ({
+    id: crypto.randomUUID(),
+    file: file,
+    url: URL.createObjectURL(file),
+    caption: ''
+  }))
+
+  previewImages.value = newFiles
+  activeIndex.value = 0
+
+  isPreviewOpen.value = true
+
+  target.value = ''
+}
+
+const triggerAddMore = () => {
+  addMoreInput.value?.click()
+}
+
+const createPreviewItems = (fileList: FileList | null): PreviewImage[] => {
+  if (!fileList) return []
+
+  return Array.from(fileList).map((file) => ({
+    id: crypto.randomUUID(),
+    file: file,
+    url: URL.createObjectURL(file),
+    caption: ''
+  }))
+}
+
+const handleAddMore = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const newImages = createPreviewItems(target.files)
+
+  previewImages.value = [...previewImages.value, ...newImages]
+  target.value = ''
+  if (newImages.length > 0) {
+    activeIndex.value = previewImages.value.length - newImages.length
+  }
+}
+
+const closePreview = () => {
+  previewImages.value.forEach((img) => URL.revokeObjectURL(img.url))
+  previewImages.value = []
+  activeIndex.value = 0
+}
+
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = reject
+  })
+}
+
+const sendImages = async () => {
+  const config = { headers: { 'X-Jenis-User': 'admin' } }
+  console.log('Mengirim data gambar beserta caption:')
+
+  try {
+    const payloads = await Promise.all(
+      previewImages.value.map(async (item) => {
+        const base64String = await fileToBase64(item.file)
+
+        return {
+          PhoneNumber: props.phoneNumber + '@s.whatsapp.net',
+          FileUrl: base64String,
+          FileName: item.file.name,
+          MimeType: item.file.type,
+          Caption: item.caption
+        }
+      })
+    )
+
+    for (const item of payloads) {
+      await api.post('/api/waha/send-image', item, config)
+      sendChat('system_image', item.Caption+"_"+item.FileUrl)
+    }
+
+    closePreview()
+  } catch (error) {
+    console.error('Terjadi kesalahan saat mengirim gambar:', error)
+  }
+}
+
+const setInitialFiles = (fileList: FileList) => {
+  previewImages.value.forEach((item) => URL.revokeObjectURL(item.url))
+  previewImages.value = createPreviewItems(fileList)
+}
+
+const removeImage = (index: number) => {
+  URL.revokeObjectURL(previewImages.value[index].url)
+  previewImages.value.splice(index, 1)
+  if (previewImages.value.length === 0) {
+    closePreview()
+  } else if (activeIndex.value >= index) {
+    activeIndex.value = Math.max(0, activeIndex.value - 1)
+  }
+}
+
+defineExpose({ setInitialFiles })
+
+watch(
+  () => props.roomId,
+  (newRoomId, oldRoomId) => {
+    if (newRoomId !== oldRoomId) {
+      changeUsername.value = false
+      previewImages.value = []
+      closePreview()
+    }
+  }
+)
+
 watch(
   () => props.chats,
   () => {
@@ -381,7 +534,21 @@ onUpdated(() => {
         </div>
 
         <div>
-          <h6 class="text-default-900 mb-0.5 font-bold text-base capitalize">{{ username || phoneNumber }}</h6>
+          <h6 class="text-default-900 mb-0.5 font-bold text-base capitalize flex items-center gap-2">
+            <span v-if="changeUsername" class="flex items-center gap-2">
+              <!-- <input v-model="username" type="text" class="border rounded px-1 text-sm font-normal normal-case" placeholder="Username..." /> -->
+              <input v-model="username" placeholder="Username..." class="w-full border border-slate-200 rounded-xl py-2 pl-3 pr-3 text-sm bg-card focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none" />
+              <button @click="saveUsername" class="text-xs bg-primary text-white px-3 py-2 rounded">simpan</button>
+            </span>
+
+            <span v-else class="flex items-center gap-1 cursor-pointer" @click="changeUsername = true">
+              {{ username || phoneNumber }}
+              <div class="group relative inline-block">
+                <Icon icon="lucide:pencil" class="size-4 text-default-600 inline cursor-pointer"></Icon>
+                <span class="invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity absolute top-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 text-xs text-white bg-gray-800 rounded whitespace-nowrap"> Ubah nama kontak </span>
+              </div>
+            </span>
+          </h6>
           <p v-if="username" class="text-xs font-medium text-default-500">{{ phoneNumber }}</p>
         </div>
       </div>
@@ -393,14 +560,71 @@ onUpdated(() => {
       </div>
     </div>
 
-    <simplebar ref="chatContainer" class="flex-grow bg-repeat bg-center h-0 bg-chat">
+    <div v-if="isPreviewMode" class="flex-grow bg-bejo-50 min-h-0 relative flex flex-col overflow-hidden group">
+      <div class="shrink-0 h-14 flex items-center px-4 z-5">
+        <button @click="closePreview" class="size-9 flex items-center justify-center rounded-full text-bejo-600 hover:bg-bejo-300 transition-colors bg-white/50 backdrop-blur-sm">
+          <Icon icon="lucide:x" class="size-6"></Icon>
+        </button>
+      </div>
+
+      <div v-if="activeImage" class="flex-grow flex flex-col min-h-0 h-full mb-2">
+        <div class="flex-grow w-full flex items-center justify-center min-h-0 overflow-hidden px-0 sm:px-2">
+          <img :src="activeImage.url" :alt="'Preview ' + activeIndex" class="w-full h-full max-h-[75vh] object-contain rounded-xl transition-all duration-300" />
+        </div>
+
+        <div class="shrink-0 w-full px-4 mt-3 mb-1">
+          <div class="max-w-2xl mx-auto relative">
+            <input v-model="activeImage.caption" type="text" placeholder="Tambahkan keterangan..." class="w-full bg-white/80 backdrop-blur text-bejo-900 text-sm rounded-2xl px-10 py-2.5 border border-bejo-100 focus:ring-0 placeholder:text-bejo-400 shadow-md" />
+            <div class="absolute inset-y-0 start-0 flex items-center ps-4 text-bejo-500">
+              <Icon icon="lucide:text-initial" class="size-5"></Icon>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="previewImages.length > 0" class="shrink-0 w-full bg-bejo-100 grid grid-cols-[1fr_auto] items-center border-t border-bejo-200">
+        <div class="overflow-x-auto minimal-scrollbar w-full">
+          <div class="flex items-center gap-4 w-max px-4 py-6">
+            <div v-for="(item, index) in previewImages" :key="item.id" @click="activeIndex = index" class="relative size-16 shrink-0 rounded-xl cursor-pointer transition-all duration-300" :class="activeIndex === index ? 'scale-110 ring-4 ring-bejo-500 z-10' : 'ring-2 ring-transparent opacity-80 hover:opacity-100'">
+              <img :src="item.url" class="w-full h-full object-cover rounded-lg" />
+
+              <button @click.stop="removeImage(index)" class="absolute -top-2 -right-2 size-5 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md z-20 hover:bg-red-600">
+                <Icon icon="lucide:x" class="size-3.5 stroke-[3]"></Icon>
+              </button>
+            </div>
+
+            <button @click="triggerAddMore" class="size-16 shrink-0 border-2 border-dashed border-bejo-400 rounded-xl flex flex-col items-center justify-center text-bejo-500 bg-white hover:bg-bejo-50 transition-colors">
+              <Icon icon="lucide:plus" class="size-6" />
+              <span class="text-[9px] font-bold mt-1 uppercase">Tambah</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="px-4 border-l border-bejo-200 h-full flex items-center justify-center">
+          <button @click="sendImages" class="bg-green-500 hover:bg-green-600 text-white rounded-xl px-5 py-3 font-bold flex items-center gap-2 transition-all active:scale-95 shadow-md">
+            <span class="hidden sm:inline text-sm">Kirim</span>
+            <Icon icon="lucide:send" class="size-4"></Icon>
+          </button>
+        </div>
+      </div>
+
+      <div v-else class="flex-grow flex flex-col items-center justify-center text-bejo-500">
+        <Icon icon="lucide:image" class="size-16 mb-4 opacity-30"></Icon>
+        <h4 class="font-bold text-bejo-700">Tidak ada gambar</h4>
+        <p class="text-xs mt-1">Silahkan pilih gambar kembali</p>
+      </div>
+
+      <input type="file" ref="addMoreInput" multiple hidden accept="image/*" @change="handleAddMore" />
+    </div>
+
+    <simplebar ref="chatContainer" class="flex-grow bg-repeat bg-center h-0 bg-chat" :class="{ hidden: isPreviewMode }">
       <div class="flex flex-col gap-4 px-5 py-6">
         <ChatBubble v-for="(chat, i) in chats" :key="i" :idx="i" :chat="chat" :chats="chats" />
       </div>
     </simplebar>
 
-    <div class="p-3 bg-white border-t border-default-200">
-      <div v-if="activeTab !== 'semua'" class="flex gap-2 items-center bg-default-50 border border-default-200 p-2 rounded-2xl focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
+    <div class="p-3 bg-white border-t border-default-200" :class="{ hidden: isPreviewMode }">
+      <div v-if="activeTab != 'semua'" class="flex gap-2 items-center bg-default-50 border border-default-200 p-2 rounded-2xl focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
         <div class="relative" ref="dropdownRef">
           <button @click.stop="openMenu = !openMenu" class="btn rounded-xl size-10 bg-transparent text-default-500 hover:bg-default-200 hover:text-default-800 transition-colors">
             <Icon icon="lucide:plus" class="size-5"></Icon>
@@ -430,9 +654,10 @@ onUpdated(() => {
         <input type="text" v-model="sendChatContent" @keyup.enter="sendChat('text')" class="flex-grow bg-transparent border-none focus:ring-0 text-sm px-2 w-full" placeholder="Ketik pesan di sini..." />
 
         <div ref="containerRef" class="flex items-center gap-2 relative">
-          <button class="btn size-9 rounded-xl bg-transparent text-default-500 hover:bg-default-200 hover:text-default-800">
+          <label class="btn size-9 rounded-xl bg-transparent text-default-500 hover:bg-default-200 hover:text-default-800">
             <Icon icon="lucide:image" class="size-4"></Icon>
-          </button>
+            <input type="file" multiple hidden @change="chooseImages" accept="image/*" />
+          </label>
           <button @click="sendChat('text')" class="btn rounded-xl px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-medium flex items-center gap-2 transition-colors">
             <span class="hidden sm:inline text-sm">Kirim</span>
             <Icon icon="lucide:send" class="size-4"></Icon>
@@ -471,7 +696,7 @@ onUpdated(() => {
 
         <div class="overflow-y-auto max-h-[55vh] px-2 custom-scrollbar">
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
-            <div class="card overflow-hidden group border border-default-100 shadow-sm hover:shadow-md transition-all duration-300" v-for="(item, idx) in catalogues" :key="idx">
+            <!-- <div class="card overflow-hidden group border border-default-100 shadow-sm hover:shadow-md transition-all duration-300" v-for="(item, idx) in catalogues" :key="idx">
               <div class="card-body p-0 relative overflow-hidden h-36">
                 <img :src="item.image" alt="rumah" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                 <span class="absolute top-2 start-2 bg-primary text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase"> TERSEDIA </span>
@@ -524,7 +749,7 @@ onUpdated(() => {
                   </div>
                 </div>
               </div>
-            </div>
+            </div> -->
           </div>
         </div>
       </div>
@@ -627,14 +852,44 @@ onUpdated(() => {
 </template>
 
 <style scoped>
+@reference "@/assets/css/style.css";
+
 .bg-chat {
   background-image: v-bind(bgLightUrl);
   background-size: 400px;
 }
 
-/* Menggunakan selector yang terbukti berhasil di proyek Anda */
 :where([data-theme='dark']) .bg-chat {
   background-image: v-bind(bgDarkUrl);
   background-size: 400px;
+}
+
+.minimal-scrollbar {
+  -webkit-overflow-scrolling: touch; /* Optimasi swipe iOS */
+  scrollbar-width: thin; /* Untuk Firefox */
+  scrollbar-color: var(--color-bejo-300, #d1d5db) transparent;
+}
+
+.minimal-scrollbar::-webkit-scrollbar {
+  height: 5px;
+}
+
+.minimal-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  margin-inline: 20px;
+}
+
+.minimal-scrollbar::-webkit-scrollbar-thumb {
+  border-radius: 20px;
+  @apply bg-bejo-400;
+}
+
+.minimal-scrollbar:active::-webkit-scrollbar-thumb,
+.minimal-scrollbar:hover::-webkit-scrollbar-thumb {
+  @apply bg-bejo-500;
+}
+
+.snap-start {
+  scroll-snap-align: start;
 }
 </style>

@@ -1,166 +1,168 @@
 <template>
-  <div v-if="props.openAppointment" class="col-span-1">
-    <div ref="appointmentRef" class="max-w-sm mx-auto bg-white rounded-2xl shadow-lg border border-default-100 overflow-hidden my-4">
-      <div class="bg-indigo-600 px-4 py-3 flex justify-between items-center">
-        <h3 class="text-white font-semibold text-sm flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          Detail Janji Temu
-        </h3>
-        <button @click.stop="$emit('close')" class="text-white text-sm font-bold hover:text-gray-200">✕</button>
-      </div>
-
-      <div class="p-5 space-y-4">
-        <div class="flex justify-between items-center border-b border-default-50 pb-3">
-          <div>
-            <p class="text-[10px] uppercase tracking-wider text-default-400">Tanggal</p>
-            <p class="text-sm font-bold text-default-800">
-              {{
-                new Date(props.appointment.start).toLocaleDateString('id-ID', {
-                  weekday: 'long',
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric'
-                })
-              }}
-            </p>
-          </div>
-          <div class="text-right">
-            <p class="text-[10px] uppercase tracking-wider text-default-400">Waktu</p>
-            <p class="text-sm font-bold text-indigo-600">{{ new Date(props.appointment.start).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }} - {{ new Date(props.appointment.end).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }} WIB</p>
-          </div>
-        </div>
-
-        <div>
-          <p class="text-[10px] uppercase tracking-wider text-default-400 mb-1">Lokasi Unit</p>
-          <div class="flex gap-2 items-start">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+  <div>
+    <div v-if="props.openAppointment" class="col-span-1">
+      <div ref="appointmentRef" class="max-w-sm mx-auto bg-white rounded-2xl shadow-lg border border-default-100 overflow-hidden my-4">
+        <div class="bg-indigo-600 px-4 py-3 flex justify-between items-center">
+          <h3 class="text-white font-semibold text-sm flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <p class="text-sm text-default-700 leading-relaxed">
-              {{ props.appointment.location }}
-            </p>
+            Detail Janji Temu
+          </h3>
+          <button @click.stop="$emit('close')" class="text-white text-sm font-bold hover:text-gray-200">✕</button>
+        </div>
+
+        <div class="p-5 space-y-4">
+          <div class="flex justify-between items-center border-b border-default-50 pb-3">
+            <div>
+              <p class="text-[10px] uppercase tracking-wider text-default-400">Tanggal</p>
+              <p class="text-sm font-bold text-default-800">
+                {{
+                  new Date(props.appointment.start).toLocaleDateString('id-ID', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                  })
+                }}
+              </p>
+            </div>
+            <div class="text-right">
+              <p class="text-[10px] uppercase tracking-wider text-default-400">Waktu</p>
+              <p class="text-sm font-bold text-indigo-600">{{ new Date(props.appointment.start).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }} - {{ new Date(props.appointment.end).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }} WIB</p>
+            </div>
+          </div>
+
+          <div>
+            <p class="text-[10px] uppercase tracking-wider text-default-400 mb-1">Lokasi Unit</p>
+            <div class="flex gap-2 items-start">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+              </svg>
+              <p class="text-sm text-default-700 leading-relaxed">
+                {{ props.appointment.location }}
+              </p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 gap-4 pt-2">
+            <div class="bg-default-50 p-2 rounded-lg">
+              <p class="text-[10px] uppercase tracking-wider text-default-400">Nama Agen</p>
+              <p class="text-sm font-medium text-default-800">{{ props.appointment.salesName }}</p>
+              <p class="text-[12px] text-default-600">{{ props.appointment.salesPhone }}</p>
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <div class="flex gap-3 items-center">
+              <img :src="props.appointment.image" alt="rumah" class="w-20 h-16 object-cover rounded-lg bg-gray-100" />
+              <div class="flex-1">
+                <p class="text-[10px] uppercase tracking-wider text-default-400 mb-1">Nama Properti</p>
+                <p class="text-sm font-medium text-default-800">{{ props.appointment.propertyName }}</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 text-xs text-default-700">
+              <div class="bg-default-50 p-2 rounded-lg text-center">
+                <p class="uppercase tracking-wider text-[10px] text-default-400 mb-1">Tipe</p>
+                <p class="font-medium">{{ props.appointment.type }}</p>
+              </div>
+              <div class="bg-default-50 p-2 rounded-lg text-center">
+                <p class="uppercase tracking-wider text-[10px] text-default-400 mb-1">LB / LT</p>
+                <p class="font-medium">{{ props.appointment.buildingSize }}m² / {{ props.appointment.landSize }}m²</p>
+              </div>
+              <div class="bg-default-50 p-2 rounded-lg text-center">
+                <p class="uppercase tracking-wider text-[10px] text-default-400 mb-1">Lantai</p>
+                <p class="font-medium">{{ props.appointment.floors }} lt</p>
+              </div>
+              <div class="bg-default-50 p-2 rounded-lg text-center">
+                <p class="uppercase tracking-wider text-[10px] text-default-400 mb-1">Carport</p>
+                <p class="font-medium">{{ props.appointment.carport }}</p>
+              </div>
+              <div class="bg-default-50 p-2 rounded-lg text-center">
+                <p class="uppercase tracking-wider text-[10px] text-default-400 mb-1">KT</p>
+                <p class="font-medium">{{ props.appointment.bedrooms }}</p>
+              </div>
+              <div class="bg-default-50 p-2 rounded-lg text-center">
+                <p class="uppercase tracking-wider text-[10px] text-default-400 mb-1">WC</p>
+                <p class="font-medium">{{ props.appointment.bathrooms }}</p>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="grid grid-cols-1 gap-4 pt-2">
-          <div class="bg-default-50 p-2 rounded-lg">
-            <p class="text-[10px] uppercase tracking-wider text-default-400">Nama Agen</p>
-            <p class="text-sm font-medium text-default-800">{{ props.appointment.salesName }}</p>
-            <p class="text-[12px] text-default-600">{{ props.appointment.salesPhone }}</p>
-          </div>
-        </div>
-
-        <div class="space-y-3">
-          <div class="flex gap-3 items-center">
-            <img :src="props.appointment.image" alt="rumah" class="w-20 h-16 object-cover rounded-lg bg-gray-100" />
-            <div class="flex-1">
-              <p class="text-[10px] uppercase tracking-wider text-default-400 mb-1">Nama Properti</p>
-              <p class="text-sm font-medium text-default-800">{{ props.appointment.propertyName }}</p>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-3 gap-2 text-xs text-default-700">
-            <div class="bg-default-50 p-2 rounded-lg text-center">
-              <p class="uppercase tracking-wider text-[10px] text-default-400 mb-1">Tipe</p>
-              <p class="font-medium">{{ props.appointment.type }}</p>
-            </div>
-            <div class="bg-default-50 p-2 rounded-lg text-center">
-              <p class="uppercase tracking-wider text-[10px] text-default-400 mb-1">LB / LT</p>
-              <p class="font-medium">{{ props.appointment.buildingSize }}m² / {{ props.appointment.landSize }}m²</p>
-            </div>
-            <div class="bg-default-50 p-2 rounded-lg text-center">
-              <p class="uppercase tracking-wider text-[10px] text-default-400 mb-1">Lantai</p>
-              <p class="font-medium">{{ props.appointment.floors }} lt</p>
-            </div>
-            <div class="bg-default-50 p-2 rounded-lg text-center">
-              <p class="uppercase tracking-wider text-[10px] text-default-400 mb-1">Carport</p>
-              <p class="font-medium">{{ props.appointment.carport }}</p>
-            </div>
-            <div class="bg-default-50 p-2 rounded-lg text-center">
-              <p class="uppercase tracking-wider text-[10px] text-default-400 mb-1">KT</p>
-              <p class="font-medium">{{ props.appointment.bedrooms }}</p>
-            </div>
-            <div class="bg-default-50 p-2 rounded-lg text-center">
-              <p class="uppercase tracking-wider text-[10px] text-default-400 mb-1">WC</p>
-              <p class="font-medium">{{ props.appointment.bathrooms }}</p>
-            </div>
-          </div>
+        <div class="px-5 py-3 bg-default-50 flex gap-2">
+          <button @click="closeModal" class="flex-1 text-xs font-semibold py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition">Batal</button>
+          <button @click.stop="openReschedule = true" class="flex-1 text-xs font-semibold py-2 rounded-md border bg-green-500 text-white hover:bg-green-600 transition">Re-Schedule</button>
         </div>
       </div>
-
-      <div class="px-5 py-3 bg-default-50 flex gap-2">
-        <button @click="closeModal" class="flex-1 text-xs font-semibold py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition">Batal</button>
-        <button @click.stop="openReschedule = true" class="flex-1 text-xs font-semibold py-2 rounded-md border bg-green-500 text-white hover:bg-green-600 transition">Re-Schedule</button>
-      </div>
-    </div>
-  </div>
-
-  <div v-if="openReschedule" ref="rescheduleRef" class="z-40 fixed bottom-30 left-1/2 -translate-x-1/2 w-[95vw] sm:w-[650px] sm:bottom-5 sm:right-95 sm:left-auto sm:translate-x-0 bg-white rounded-2xl shadow-2xl py-4 border border-default-100">
-    <div class="flex items-center justify-between mb-4 px-6">
-      <h4 class="text-default-900 font-bold text-base">Pilih Jadwal Baru</h4>
-      <button @click.stop="openReschedule = false" class="text-default-400 hover:text-default-900 transition-all">
-        <Icon icon="lucide:x" class="size-5" />
-      </button>
-    </div>
-    <div class="px-4">
-      <FullCalendar ref="fullCalendarRef" :options="calendarOptions" />
-    </div>
-  </div>
-
-  <div v-if="openRescheduleForm" ref="rescheduleFormRef" class="z-50 fixed bottom-55 left-1/2 -translate-x-1/2 w-[95vw] sm:w-[350px] sm:bottom-30 sm:right-95 sm:left-auto sm:translate-x-0 bg-white rounded-2xl shadow-2xl p-4 border border-default-100">
-    <div class="flex items-center justify-between mb-4 px-2">
-      <h4 class="text-default-900 font-bold text-base">Form Reschedule</h4>
-      <button @click.stop="((openRescheduleForm = false), (isPopup = false))" class="text-default-400 hover:text-default-900 transition-all">
-        <Icon icon="lucide:x" class="size-5" />
-      </button>
     </div>
 
-    <div class="grid grid-cols-1 gap-4 px-2">
-      <div>
-        <label class="text-xs text-default-500 mb-1 block"> Nama Customer </label>
-        <input type="text" class="form-input w-full bg-gray-50" :value="props.appointment.customerName" disabled />
+    <div v-if="openReschedule" ref="rescheduleRef" class="z-40 fixed bottom-30 left-1/2 -translate-x-1/2 w-[95vw] sm:w-[650px] sm:bottom-5 sm:right-95 sm:left-auto sm:translate-x-0 bg-white rounded-2xl shadow-2xl py-4 border border-default-100">
+      <div class="flex items-center justify-between mb-4 px-6">
+        <h4 class="text-default-900 font-bold text-base">Pilih Jadwal Baru</h4>
+        <button @click.stop="openReschedule = false" class="text-default-400 hover:text-default-900 transition-all">
+          <Icon icon="lucide:x" class="size-5" />
+        </button>
       </div>
-      <div>
-        <label class="text-xs text-default-500 mb-1 block"> Nama Salesman </label>
-        <input type="text" class="form-input w-full bg-gray-50" :value="props.appointment.salesName" disabled />
+      <div class="px-4">
+        <FullCalendar ref="fullCalendarRef" :options="calendarOptions" />
       </div>
     </div>
-    <div class="grid grid-cols-1 gap-4 px-2">
-      <div>
-        <label class="text-xs text-default-500 mb-1 block">Tanggal Terpilih</label>
-        <input type="date" class="form-input w-full bg-gray-50 cursor-not-allowed" v-model="selectedDate" readonly />
+
+    <div v-if="openRescheduleForm" ref="rescheduleFormRef" class="z-50 fixed bottom-55 left-1/2 -translate-x-1/2 w-[95vw] sm:w-[350px] sm:bottom-30 sm:right-95 sm:left-auto sm:translate-x-0 bg-white rounded-2xl shadow-2xl p-4 border border-default-100">
+      <div class="flex items-center justify-between mb-4 px-2">
+        <h4 class="text-default-900 font-bold text-base">Form Reschedule</h4>
+        <button @click.stop="((openRescheduleForm = false), (isPopup = false))" class="text-default-400 hover:text-default-900 transition-all">
+          <Icon icon="lucide:x" class="size-5" />
+        </button>
       </div>
-      <div class="grid grid-cols-2 gap-3">
+
+      <div class="grid grid-cols-1 gap-4 px-2">
         <div>
-          <label class="text-xs text-default-500 mb-1 block">Jam Mulai</label>
-          <input type="time" v-model="startTime" class="form-input w-full" :class="{ 'border-red-500': scheduleError }" />
+          <label class="text-xs text-default-500 mb-1 block"> Nama Customer </label>
+          <input type="text" class="form-input w-full bg-gray-50" :value="props.appointment.customerName" disabled />
         </div>
         <div>
-          <label class="text-xs text-default-500 mb-1 block">Jam Selesai</label>
-          <input type="time" v-model="endTime" class="form-input w-full" :class="{ 'border-red-500': scheduleError }" />
+          <label class="text-xs text-default-500 mb-1 block"> Nama Salesman </label>
+          <input type="text" class="form-input w-full bg-gray-50" :value="props.appointment.salesName" disabled />
+        </div>
+      </div>
+      <div class="grid grid-cols-1 gap-4 px-2">
+        <div>
+          <label class="text-xs text-default-500 mb-1 block">Tanggal Terpilih</label>
+          <input type="date" class="form-input w-full bg-gray-50 cursor-not-allowed" v-model="selectedDate" readonly />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs text-default-500 mb-1 block">Jam Mulai</label>
+            <input type="time" v-model="startTime" class="form-input w-full" :class="{ 'border-red-500': scheduleError }" />
+          </div>
+          <div>
+            <label class="text-xs text-default-500 mb-1 block">Jam Selesai</label>
+            <input type="time" v-model="endTime" class="form-input w-full" :class="{ 'border-red-500': scheduleError }" />
+          </div>
+        </div>
+
+        <div v-if="scheduleError" class="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-600 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+          </svg>
+          <p class="text-xs text-red-700 font-medium">{{ scheduleError }}</p>
+        </div>
+
+        <div v-else-if="startTime && endTime" class="bg-green-50 border border-green-200 rounded-lg p-3 flex items-start gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-green-600 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+          </svg>
+          <p class="text-xs text-green-700 font-medium">Jadwal tersedia untuk dipilih.</p>
         </div>
       </div>
 
-      <div v-if="scheduleError" class="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-600 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-        </svg>
-        <p class="text-xs text-red-700 font-medium">{{ scheduleError }}</p>
+      <div class="flex justify-end gap-2 mt-6 px-2">
+        <button @click.stop="((openRescheduleForm = false), (isPopup = false))" class="btn bg-default-200 hover:bg-default-300 text-default-700">Batal</button>
+        <button @click="saveReschedule" class="btn bg-green-500 hover:bg-green-600 text-white">Simpan Jadwal</button>
       </div>
-
-      <div v-else-if="startTime && endTime" class="bg-green-50 border border-green-200 rounded-lg p-3 flex items-start gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-green-600 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-        </svg>
-        <p class="text-xs text-green-700 font-medium">Jadwal tersedia untuk dipilih.</p>
-      </div>
-    </div>
-
-    <div class="flex justify-end gap-2 mt-6 px-2">
-      <button @click.stop="((openRescheduleForm = false), (isPopup = false))" class="btn bg-default-200 hover:bg-default-300 text-default-700">Batal</button>
-      <button @click="saveReschedule" class="btn bg-green-500 hover:bg-green-600 text-white">Simpan Jadwal</button>
     </div>
   </div>
 </template>

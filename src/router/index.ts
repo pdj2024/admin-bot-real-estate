@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { isTokenExpired } from '@/services/axios';
+import { isTokenExpired } from '@/services/auth';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -132,25 +132,18 @@ router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token');
   const refreshToken = localStorage.getItem('refreshToken');
 
-  const hasTokens = !!token && token !== 'undefined' &&
-    !!refreshToken && refreshToken !== 'undefined';
+  const hasTokens = !!token && token !== 'undefined' && !!refreshToken && refreshToken !== 'undefined';
 
-  const isTokenValid = hasTokens && !isTokenExpired(token);
-
-  if (to.path === '/login' && isTokenValid) {
-    next({ name: 'Dashboard' });
+  if (to.path === '/login' && hasTokens && !isTokenExpired(token)) {
+    return next({ name: 'Dashboard' });
   }
-  else if (to.meta.requiresAuth && !isTokenValid) {
-    if (hasTokens && !isTokenValid) {
-      localStorage.clear();
+
+  if (to.meta.requiresAuth) {
+    if (!hasTokens) {
+      return next({ name: 'Login', query: { redirect: to.fullPath } });
     }
-
-    next({
-      name: 'Login',
-      query: { redirect: to.fullPath }
-    });
-  }
-  else {
+    next();
+  } else {
     next();
   }
 });

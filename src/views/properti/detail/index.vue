@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, nextTick, computed } from 'vue'
-import { isTokenExpired } from '@/services/axios'
+import { isTokenExpired } from '@/services/auth'
 import { useRoute } from 'vue-router'
 import { RouterLink } from 'vue-router'
 import api from '@/services/axios'

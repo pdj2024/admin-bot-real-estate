@@ -15,7 +15,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { isTokenExpired } from '@/services/axios'
+import { isTokenExpired } from '@/services/auth'
 import { useRoute } from 'vue-router'
 
 import PageTitle from '@/components/PageTitle.vue'

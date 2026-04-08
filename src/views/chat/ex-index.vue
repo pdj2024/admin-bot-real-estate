@@ -141,7 +141,7 @@ onBeforeUnmount(() => {
 
     <div class="card overflow-hidden">
       <div class="flex h-[calc(100vh-180px)] min-h-[500px]">
-        <SideBar ref="sidebarRef" :active-room-id="selectedRoomId" @select_chat="handleSelectChat" @username="handleUsername" @phone_number="handlePhone" @change_tab="handleTabChange" />
+        <!-- <SideBar ref="sidebarRef" :active-room-id="selectedRoomId" @select_chat="handleSelectChat" @username="handleUsername" @phone_number="handlePhone" @change_tab="handleTabChange" /> -->
 
         <!-- <ChatContent ref="chatContentRef" :roomId="selectedRoomId" :username="selectedUsername" :phoneNumber="selectedPhone" :activeTab="currentActiveTab" @chatTakeOver="handleTakeOver" @clearRoom="handleClearRoom" /> -->
       </div>

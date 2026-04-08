@@ -18,7 +18,7 @@ import bgChatDark from '@/assets/images/background-chat-dark.png'
 
 import simplebar from 'simplebar-vue'
 import Filter from './Filter.vue'
-import { type Catalogue, type CalendarEvent, type Appointment, type Chat, catalogueData, calendarEvents } from './data'
+import { type Catalogue, type CalendarEvent, type Appointment, type Chat, type PreviewImage, calendarEvents } from './data'
 
 const menuRef = ref<HTMLElement | null>(null)
 const etalaseRef = ref<HTMLElement | null>(null)
@@ -37,40 +37,33 @@ const openTukarCS = ref(false)
 const openFilter = ref(false)
 const openSchedule = ref(false)
 const isMobile = ref(false)
-const messages = ref([])
-const chats = ref<Chat[]>([])
-const isLoading = ref(false)
+const changeUsername = ref(false)
 const sendChatContent = ref('')
-const catalogues = ref<Catalogue[]>(catalogueData)
+
+const username = defineModel<string>('username')
+// const catalogues = ref<Catalogue[]>(catalogueData)
 const events = ref<CalendarEvent[]>(calendarEvents)
 const bgLightUrl = `url(${bgChat})`
 const bgDarkUrl = `url(${bgChatDark})`
+const previewImages = ref<PreviewImage[]>([])
+const activeIndex = ref(0)
+const activeImage = computed(() => previewImages.value[activeIndex.value] || null)
+const addMoreInput = ref<HTMLInputElement | null>(null);
 
 const props = defineProps<{
   roomId: string | null
+  idLawan: string
   username: string
   phoneNumber: string
   activeTab: string
+  chats: Chat[]
 }>()
 
 const emit = defineEmits<{
   (e: 'chatTakeOver'): void
   (e: 'clearRoom'): void
+  (e: 'usernameChange', value: string): void
 }>()
-
-const fetchChatContent = async (id: string) => {
-  isLoading.value = true
-  try {
-    const response = await api.get(`/api/chat/getAll?room_id=${id}`, {
-      headers: { 'X-Jenis-User': 'Admin' }
-    })
-    chats.value = response.data.Data
-  } catch (error) {
-    console.error('Gagal memuat chat:', error)
-  } finally {
-    isLoading.value = false
-  }
-}
 
 const handleClickOutside = (event: MouseEvent) => {
   const target = event.target as Node
@@ -216,8 +209,16 @@ const sendChat = async (type: string) => {
   const sentAt = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 19)
 
   let currentUserIds: string[] = []
-  if (chats.value && chats.value.length > 0) {
-    currentUserIds = [...chats.value[chats.value.length - 1].User_Ids]
+
+  if (props.chats && props.chats.length > 0) {
+    const lastChat = props.chats[props.chats.length - 1]
+    if (lastChat.User_Ids && Array.isArray(lastChat.User_Ids)) {
+      currentUserIds = [...lastChat.User_Ids]
+    } else {
+      currentUserIds = [myId]
+    }
+  } else {
+    currentUserIds = [myId]
   }
 
   if (myId && !currentUserIds.includes(myId)) {
@@ -242,9 +243,9 @@ const sendChat = async (type: string) => {
 
     console.log(type, type === 'system_keluar', messageText)
 
-    const tempIndex = chats.value.length
+    const tempIndex = props.chats.length
 
-    chats.value.push({
+    props.chats.push({
       Message: messageText,
       Sent_At: sentAt,
       Sender_Id: myId,
@@ -296,16 +297,16 @@ const sendChat = async (type: string) => {
         { headers: { 'X-Jenis-User': 'admin' } }
       )
 
-      if (chats.value[tempIndex]) {
-        chats.value[tempIndex].Send_Status = 'send'
+      if (props.chats[tempIndex]) {
+        props.chats[tempIndex].Send_Status = 'send'
       }
 
       type === 'system_keluar' ? emit('clearRoom') : ''
     } catch (err: any) {
       console.error('Gagal mengirim chat:', err.response?.data || err.message)
 
-      if (chats.value[tempIndex]) {
-        chats.value[tempIndex].Send_Status = 'failed'
+      if (props.chats[tempIndex]) {
+        props.chats[tempIndex].Send_Status = 'failed'
       }
     }
   }
@@ -346,52 +347,118 @@ const takeOverChat = async (status: boolean) => {
   })
 }
 
-const handleIncomingMessage = (messageId: string, roomId: string, senderId: string, message: string, sentAt: string, editedAt: string, tipeUser: string, idPaket: string, status: string, jenisPesan: string, sendStatus: string) => {
-  if (roomId === props.roomId) {
-    const myId = localStorage.getItem('no_id') || ''
+const saveUsername = async () => {
+  try {
+    const config = { headers: { 'X-Jenis-User': 'admin' } }
+    const url = `/api/customer/getAll?no_id=${props.idLawan}`
 
-    if (senderId === myId) {
-      const pendingChat = chats.value.find((c) => c.Message === message && c.Send_Status === 'pending')
-      if (pendingChat) {
-        pendingChat.Message_Id = messageId
-      }
-      return
-    }
-    chats.value.push({
-      Message_Id: messageId,
-      Room_Id: roomId,
-      Sender_Id: senderId,
-      Message: message,
-      Sent_At: sentAt,
-      Edited_At: editedAt,
-      Tipe_User: tipeUser,
-      Id_Paket: idPaket,
-      Status: status,
-      Jenis_Pesan: jenisPesan,
-      Send_Status: sendStatus || 'send',
-      User_Ids: [],
-      Room_Type: '',
-      No_Penawaran: '',
-      No_Pesanan: null,
-      Receiver_Ids: []
-    } as unknown as Chat)
+    const res = await api.get(url, config)
 
-    scrollToBottom()
+    const customerData = res.data.Data[0]
+
+    await api.put(
+      `/api/customer/update?no_id=${props.idLawan}`,
+      {
+        ...customerData,
+        UserName: username.value
+      },
+      config
+    )
+    emit('usernameChange', username.value!)
+    changeUsername.value = false
+  } catch (err: any) {
+    const errorMsg = err.response?.data?.Message || err.message || 'Terjadi kesalahan sistem'
+    console.error('Error Detail:', errorMsg)
+    alert(errorMsg)
   }
 }
 
+const sendPhoto = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  if (!target.files || target.files.length === 0) return;
+
+  // Konversi FileList menjadi array objek PreviewFile
+  const newImages = Array.from(target.files).map(file => ({
+    id: crypto.randomUUID(),
+    file: file,
+    url: URL.createObjectURL(file), // Membuat link preview
+    caption: ''
+  }));
+
+  // Masukkan ke state preview
+  previewImages.value = newImages;
+  activeIndex.value = 0; // Fokus ke gambar pertama
+
+  // Reset input agar bisa pilih file yang sama lagi nantinya
+  target.value = '';
+};
+
+
+const triggerAddMore = () => {
+  addMoreInput.value?.click();
+};
+
+const createPreviewItems = (fileList: FileList | null): PreviewImage[] => {
+  if (!fileList) return [];
+
+  return Array.from(fileList).map(file => ({
+    id: crypto.randomUUID(),
+    file: file,
+    url: URL.createObjectURL(file),
+    caption: ''
+  }));
+};
+
+const handleAddMore = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  const newImages = createPreviewItems(target.files);
+
+  previewImages.value = [...previewImages.value, ...newImages];
+  target.value = '';
+  if (newImages.length > 0) {
+    activeIndex.value = previewImages.value.length - newImages.length;
+  }
+};
+
+const closePreview = () => {
+  previewImages.value.forEach(item => URL.revokeObjectURL(item.url));
+  previewImages.value = [];
+  activeIndex.value = 0;
+  console.log("Preview ditutup");
+};
+
+const sendImages = () => {
+  console.log("Mengirim data gambar beserta caption:");
+  const payload = previewImages.value.map(item => ({
+    fileName: item.file.name,
+    caption: item.caption
+  }));
+  console.table(payload);
+
+  // Panggil API pengiriman di sini...
+
+  // Setelah sukses, tutup preview
+  // closePreview();
+};
+
+const setInitialFiles = (fileList: FileList) => {
+    previewImages.value.forEach(item => URL.revokeObjectURL(item.url));
+    previewImages.value = createPreviewItems(fileList);
+}
+
+defineExpose({ setInitialFiles });
+
 watch(
   () => props.roomId,
-  (newId) => {
-    if (newId) {
-      fetchChatContent(newId)
+  (newRoomId, oldRoomId) => {
+    if (newRoomId !== oldRoomId) {
+      changeUsername.value = false
     }
-  },
-  { immediate: true }
+  }
 )
 
 watch(
-  chats,
+  () => props.chats,
   () => {
     scrollToBottom()
   },
@@ -412,10 +479,6 @@ onBeforeUnmount(() => {
 onUpdated(() => {
   reinitPreline()
 })
-
-defineExpose({
-  handleIncomingMessage
-})
 </script>
 
 <template>
@@ -434,7 +497,21 @@ defineExpose({
         </div>
 
         <div>
-          <h6 class="text-default-900 mb-0.5 font-bold text-base capitalize">{{ username || phoneNumber }}</h6>
+          <h6 class="text-default-900 mb-0.5 font-bold text-base capitalize flex items-center gap-2">
+            <span v-if="changeUsername" class="flex items-center gap-2">
+              <!-- <input v-model="username" type="text" class="border rounded px-1 text-sm font-normal normal-case" placeholder="Username..." /> -->
+              <input v-model="username" placeholder="Username..." class="w-full border border-slate-200 rounded-xl py-2 pl-3 pr-3 text-sm bg-card focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none" />
+              <button @click="saveUsername" class="text-xs bg-primary text-white px-3 py-2 rounded">simpan</button>
+            </span>
+
+            <span v-else class="flex items-center gap-1 cursor-pointer" @click="changeUsername = true">
+              {{ username || phoneNumber }}
+              <div class="group relative inline-block">
+                <Icon icon="lucide:pencil" class="size-4 text-default-600 inline cursor-pointer"></Icon>
+                <span class="invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity absolute top-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 text-xs text-white bg-gray-800 rounded whitespace-nowrap"> Ubah nama kontak </span>
+              </div>
+            </span>
+          </h6>
           <p v-if="username" class="text-xs font-medium text-default-500">{{ phoneNumber }}</p>
         </div>
       </div>
@@ -446,7 +523,63 @@ defineExpose({
       </div>
     </div>
 
-    <simplebar ref="chatContainer" class="flex-grow bg-repeat bg-center h-0 bg-chat">
+    <simplebar class="flex-grow bg-[#1a1a1a] h-0 relative flex flex-col overflow-hidden group">
+      <div class="absolute top-0 start-0 end-0 h-16 flex items-center px-4 z-50 bg-gradient-to-b from-black/50 to-transparent">
+        <button @click="closePreview" class="size-10 flex items-center justify-center rounded-full text-white hover:bg-white/10 transition-colors">
+          <Icon icon="lucide:x" class="size-6"></Icon>
+        </button>
+      </div>
+
+      <div v-if="activeImage" class="flex-grow flex flex-col items-center justify-center relative p-4 pb-32 pt-16 mt-6">
+        <img :src="activeImage.url" :alt="'Preview ' + activeIndex" class="max-w-full max-h-[60vh] object-contain rounded-lg shadow-xl" />
+
+        <div class="absolute bottom-28 start-1/2 -translate-x-1/2 w-full max-w-xl px-4 z-40">
+          <div class="relative">
+            <input v-model="activeImage.caption" type="text" placeholder="Tambahkan keterangan..." class="w-full bg-[#2a2a2a] text-white text-sm rounded-full px-12 py-3.5 border border-transparent focus:border-cyan-500 focus:ring-0 placeholder:text-slate-500 shadow-lg" />
+            <div class="absolute inset-y-0 start-0 flex items-center ps-4 text-slate-400">
+              <Icon icon="lucide:file-text" class="size-5"></Icon>
+            </div>
+            <div class="absolute inset-y-0 end-0 flex items-center pe-3">
+              <button class="size-8 flex items-center justify-center rounded-full text-cyan-500 hover:bg-cyan-500/10">
+                <Icon icon="lucide:smile" class="size-5"></Icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="previewImages.length > 0" class="absolute bottom-0 start-0 end-0 h-28 bg-[#222222] border-t border-slate-700/50 flex items-center px-6 z-30 shadow-[0_-4px_12px_rgba(0,0,0,0.3)]">
+        <div class="flex-grow flex items-center gap-2.5 overflow-x-auto py-2 pe-4 no-scrollbar">
+          <div v-for="(item, index) in previewImages" :key="item.id" @click="activeIndex = index" class="relative size-16 shrink-0 rounded-xl cursor-pointer transition-all duration-200" :class="activeIndex === index ? 'ring-4 ring-cyan-500 scale-105' : 'ring-2 ring-transparent hover:ring-slate-500'">
+            <img :src="item.url" class="w-full h-full object-cover rounded-lg" />
+            <div v-if="activeIndex !== index" class="absolute inset-0 bg-black/30 rounded-lg"></div>
+          </div>
+
+          <button @click="triggerAddMore" class="size-16 shrink-0 border-2 border-dashed border-slate-600 rounded-xl flex flex-col items-center justify-center text-slate-500 hover:border-cyan-500 hover:text-cyan-500 transition-colors group">
+            <Icon icon="lucide:plus" class="size-6 transition-colors" />
+            <span class="text-[9px] font-bold mt-1 uppercase tracking-wider">Tambah</span>
+          </button>
+        </div>
+
+        <div class="relative shrink-0 ms-4">
+          <button @click="sendImages" class="size-14 rounded-full bg-cyan-600 text-white flex items-center justify-center shadow-lg hover:bg-cyan-500 active:scale-95 transition-all">
+            <Icon icon="lucide:send-horizontal" class="size-6 rotate-[-15deg]"></Icon>
+          </button>
+          <div class="absolute -top-1.5 -right-1.5 size-6 rounded-full bg-cyan-100 text-cyan-800 text-xs font-bold flex items-center justify-center border-2 border-[#222222]">
+            {{ previewImages.length }}
+          </div>
+        </div>
+      </div>
+
+      <div v-else class="flex flex-col items-center justify-center h-full text-slate-500 p-10 text-center">
+        <Icon icon="lucide:image" class="size-16 mb-4 text-slate-700"></Icon>
+        <h4 class="font-bold text-slate-400">Preview Gambar</h4>
+        <p class="text-sm max-w-xs mt-1">Pilih gambar menggunakan tombol input file di komponen lain untuk melihat preview di sini.</p>
+      </div>
+
+      <input type="file" ref="addMoreInput" multiple hidden accept="image/*" @change="handleAddMore" />
+    </simplebar>
+    <simplebar ref="chatContainer" class="flex-grow bg-repeat bg-center h-0 bg-chat hidden">
       <div class="flex flex-col gap-4 px-5 py-6">
         <ChatBubble v-for="(chat, i) in chats" :key="i" :idx="i" :chat="chat" :chats="chats" />
       </div>
@@ -483,9 +616,10 @@ defineExpose({
         <input type="text" v-model="sendChatContent" @keyup.enter="sendChat('text')" class="flex-grow bg-transparent border-none focus:ring-0 text-sm px-2 w-full" placeholder="Ketik pesan di sini..." />
 
         <div ref="containerRef" class="flex items-center gap-2 relative">
-          <button class="btn size-9 rounded-xl bg-transparent text-default-500 hover:bg-default-200 hover:text-default-800">
+          <label class="btn size-9 rounded-xl bg-transparent text-default-500 hover:bg-default-200 hover:text-default-800">
             <Icon icon="lucide:image" class="size-4"></Icon>
-          </button>
+            <input type="file" multiple hidden @change="sendPhoto" accept="image/*,video/*" />
+          </label>
           <button @click="sendChat('text')" class="btn rounded-xl px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-medium flex items-center gap-2 transition-colors">
             <span class="hidden sm:inline text-sm">Kirim</span>
             <Icon icon="lucide:send" class="size-4"></Icon>
@@ -524,7 +658,7 @@ defineExpose({
 
         <div class="overflow-y-auto max-h-[55vh] px-2 custom-scrollbar">
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
-            <div class="card overflow-hidden group border border-default-100 shadow-sm hover:shadow-md transition-all duration-300" v-for="(item, idx) in catalogues" :key="idx">
+            <!-- <div class="card overflow-hidden group border border-default-100 shadow-sm hover:shadow-md transition-all duration-300" v-for="(item, idx) in catalogues" :key="idx">
               <div class="card-body p-0 relative overflow-hidden h-36">
                 <img :src="item.image" alt="rumah" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                 <span class="absolute top-2 start-2 bg-primary text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase"> TERSEDIA </span>
@@ -577,7 +711,7 @@ defineExpose({
                   </div>
                 </div>
               </div>
-            </div>
+            </div> -->
           </div>
         </div>
       </div>
@@ -685,9 +819,17 @@ defineExpose({
   background-size: 400px;
 }
 
-/* Menggunakan selector yang terbukti berhasil di proyek Anda */
 :where([data-theme='dark']) .bg-chat {
   background-image: v-bind(bgDarkUrl);
   background-size: 400px;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 </style>

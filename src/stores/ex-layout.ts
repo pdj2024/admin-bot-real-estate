@@ -1,135 +1,116 @@
 import { defineStore } from 'pinia'
-import type { LayoutThemeType, LayoutType, SideNavType, LayoutDirectionType } from '@/types/layout'
 import { ref } from 'vue'
+import type { LayoutThemeType, LayoutType, SideNavType, LayoutDirectionType } from '@/types/layout'
 import { useSystemTheme } from '@/composables/useSystemTheme'
 import { toggleAttribute } from '@/helpers/layout'
 
 const INIT_STATE: LayoutType = {
   theme: 'light',
   sidenav: {
-    size: 'default',
+    size: 'hover',
     color: 'light'
   },
   position: 'ltr-mode',
   isMobileMenuOpen: false
 }
 
-export const useLayout = defineStore(
-  'layout',
-  () => {
-    const layout = ref<LayoutType>({ ...INIT_STATE })
+export const useLayout = defineStore('layout', () => {
+  const layout = ref<LayoutType>({ ...INIT_STATE })
+  const systemTheme = useSystemTheme()
 
-    const systemTheme = useSystemTheme()
-    const isCustomizerOpen = ref(false)
-
-    /** Theme */
-    const setTheme = (nTheme: LayoutThemeType, persist = true) => {
-      const resolvedTheme = nTheme === 'system' ? systemTheme.value : nTheme
-      toggleAttribute('data-theme', resolvedTheme)
-      if (persist) layout.value.theme = nTheme
-    }
-
-    /** Sidenav Color */
-    const setSideNavColor = (nColor: SideNavType['color'], persist = true) => {
-      toggleAttribute('data-sidenav-color', nColor)
-      if (persist) layout.value.sidenav = { ...layout.value.sidenav, color: nColor }
-    }
-
-    /** Sidenav Size */
-    const setSideNavSize = (nSize: SideNavType['size'], persist = true) => {
-      toggleAttribute('data-sidenav-size', nSize)
-      if (persist) layout.value.sidenav.size = nSize
-
-      const html = document.documentElement
-
-      if (nSize === 'offcanvas') {
-        html.classList.add('sidenav-enable')
-        showBackdrop()
-      } else {
-        // Only remove sidenav-enable if mobile menu is NOT open
-        if (!layout.value.isMobileMenuOpen) {
-          html.classList.remove('sidenav-enable')
-          hideBackdrop()
-        }
-      }
-    }
-
-    /** Toggle mobile menu */
-    const toggleMobileMenu = () => {
-      layout.value.isMobileMenuOpen = !layout.value.isMobileMenuOpen
-      const html = document.documentElement
-      html.classList.toggle('sidenav-enable', layout.value.isMobileMenuOpen)
-      if (layout.value.isMobileMenuOpen) showBackdrop()
-      else hideBackdrop()
-    }
-
-    const setPosition = (nPosition: LayoutDirectionType, persist = true) => {
-      toggleAttribute('dir', nPosition === 'rtl-mode' ? 'rtl' : 'ltr')
-      if (persist) layout.value.position = nPosition
-    }
-
-    const toggleCustomizer = () => {
-      isCustomizerOpen.value = !isCustomizerOpen.value
-    }
-    const customizer = { isCustomizerOpen, toggleCustomizer }
-
-    const showBackdrop = () => {
-      if (!document.getElementById('custom-backdrop')) {
-        const backdrop = document.createElement('div')
-        backdrop.id = 'custom-backdrop'
-        backdrop.className = 'transition duration fixed inset-0 bg-default-900/50 z-40'
-        document.body.appendChild(backdrop)
-        backdrop.addEventListener('click', () => {
-          layout.value.sidenav.size = 'default'
-          document.documentElement.classList.remove('sidenav-enable')
-          hideBackdrop()
-        })
-      }
-    }
-
-    const hideBackdrop = () => {
-      const backdrop = document.getElementById('custom-backdrop')
-      if (backdrop) document.body.removeChild(backdrop)
-    }
-
-    /** Hover toggle for sidebar (for hover-active feature) */
-    const toggleHoverSidebar = () => {
-      const html = document.documentElement
-      const current = layout.value.sidenav.size
-      const newSize = current === 'hover-active' ? 'hover' : 'hover-active'
-      setSideNavSize(newSize)
-    }
-
-    const init = () => {
-      setTheme(layout.value.theme)
-      setSideNavColor(layout.value.sidenav.color)
-      setSideNavSize(layout.value.sidenav.size)
-      setPosition(layout.value.position)
-    }
-
-    const reset = () => {
-      setTheme(INIT_STATE.theme)
-      setSideNavColor(INIT_STATE.sidenav.color)
-      setSideNavSize(INIT_STATE.sidenav.size)
-      setPosition(INIT_STATE.position)
-    }
-
-    return {
-      layout,
-      setTheme,
-      setSideNavColor,
-      setSideNavSize,
-      toggleMobileMenu,
-      setPosition,
-      toggleHoverSidebar,
-      isCustomizerOpen,
-      toggleCustomizer,
-      init,
-      reset,
-      customizer
-    }
-  },
-  {
-    persist: true
+  // --- CUSTOMIZER STATE & ACTIONS (Ditambahkan kembali) ---
+  const isCustomizerOpen = ref(false)
+  const toggleCustomizer = () => {
+    isCustomizerOpen.value = !isCustomizerOpen.value
   }
-)
+  const customizer = { isCustomizerOpen, toggleCustomizer }
+
+  const setSideNavColor = (nColor: SideNavType['color'], persist = true) => {
+    toggleAttribute('data-sidenav-color', nColor)
+    if (persist) layout.value.sidenav = { ...layout.value.sidenav, color: nColor }
+  }
+
+  const setSideNavSize = (nSize: SideNavType['size'], persist = true) => {
+    toggleAttribute('data-sidenav-size', nSize)
+
+    if (persist && nSize !== 'offcanvas') {
+      layout.value.sidenav.size = nSize
+    } else {
+      layout.value.sidenav.size = nSize
+    }
+
+    const html = document.documentElement
+    if (nSize === 'offcanvas' && layout.value.isMobileMenuOpen) {
+      html.classList.add('sidenav-enable')
+    } else if (!layout.value.isMobileMenuOpen) {
+      html.classList.remove('sidenav-enable')
+    }
+  }
+
+  const toggleMobileMenu = () => {
+    layout.value.isMobileMenuOpen = !layout.value.isMobileMenuOpen
+    const html = document.documentElement
+    if (layout.value.isMobileMenuOpen) {
+      html.classList.add('sidenav-enable')
+    } else {
+      html.classList.remove('sidenav-enable')
+    }
+  }
+
+  const closeAllMenus = () => {
+    layout.value.isMobileMenuOpen = false
+    document.documentElement.classList.remove('sidenav-enable')
+
+    if (window.innerWidth <= 768) {
+      layout.value.sidenav.size = 'offcanvas'
+    }
+  }
+
+  const init = () => {
+    const html = document.documentElement
+    layout.value.isMobileMenuOpen = false
+    html.classList.remove('sidenav-enable')
+
+    toggleAttribute('data-theme', layout.value.theme)
+    toggleAttribute('data-sidenav-color', layout.value.sidenav.color)
+    toggleAttribute('data-sidenav-size', layout.value.sidenav.size)
+    toggleAttribute('dir', layout.value.position === 'rtl-mode' ? 'rtl' : 'ltr')
+  }
+
+  const setTheme = (nTheme: LayoutThemeType) => {
+    const res = nTheme === 'system' ? systemTheme.value : nTheme
+    toggleAttribute('data-theme', res)
+    layout.value.theme = nTheme
+  }
+
+  const setPosition = (nPos: LayoutDirectionType) => {
+    toggleAttribute('dir', nPos === 'rtl-mode' ? 'rtl' : 'ltr')
+    layout.value.position = nPos
+  }
+
+  // --- RESET ACTION (Ditambahkan kembali) ---
+  const reset = () => {
+    setTheme(INIT_STATE.theme)
+    setSideNavColor(INIT_STATE.sidenav.color)
+    setSideNavSize(INIT_STATE.sidenav.size)
+    setPosition(INIT_STATE.position)
+  }
+
+  return {
+    layout,
+    setSideNavColor,
+    setSideNavSize,
+    toggleMobileMenu,
+    closeAllMenus,
+    setTheme,
+    setPosition,
+    init,
+    isCustomizerOpen,
+    customizer, // Di-return agar index.vue tidak error
+    reset       // Di-return agar index.vue tidak error
+  }
+}, {
+  persist: {
+    pick: ['layout.theme', 'layout.sidenav', 'layout.position']
+  }
+})

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { Icon } from '@iconify/vue'
 import simplebar from 'simplebar-vue'
 import { RouterLink } from 'vue-router'
@@ -12,19 +12,26 @@ const activeTab = ref<'untuk_saya' | 'semua'>('untuk_saya')
 const isLoading = ref<boolean>(false)
 
 const emit = defineEmits<{
-  (e: 'select_chat', id: string): void
+  (e: 'selectChat', id: string): void
+  (e: 'idLawan', id_lawan: string): void
   (e: 'username', username: string): void
-  (e: 'phone_number', phoneNumber: string): void
-  (e: 'change_tab', tab: string): void
+  (e: 'phoneNumber', phoneNumber: string): void
+  (e: 'changeTab', tab: string): void
 }>()
 
-const selectChat = (id: string, username: string, phoneNumber: string) => {
-  emit('select_chat', id)
+const selectChat = (id: string, idLawan: string, username: string, phoneNumber: string) => {
+  emit('selectChat', id)
+  emit('idLawan', idLawan)
   emit('username', username)
-  emit('phone_number', phoneNumber)
-  emit('change_tab', activeTab.value)
+  emit('phoneNumber', phoneNumber)
+  emit('changeTab', activeTab.value)
   closeSidebar()
 }
+
+const props = defineProps<{
+  activeRoomId: string | ''
+  usernameChange: string | ''
+}>()
 
 export interface Chat {
   Room_Id: string
@@ -128,6 +135,29 @@ const refreshChatList = () => {
   fetchData(activeTab.value)
 }
 
+watch(
+  () => props.usernameChange,
+  (newVal) => {
+    if (newVal && newVal !== '') {
+      console.log('Username baru diterima di sidebar:', newVal)
+      updateSidebarUI(newVal)
+    }
+  }
+)
+
+const updateSidebarUI = (newName: string) => {
+  const updateItem = (chatList: Chat[]) => {
+    const index = chatList.findIndex((c) => c.Room_Id === props.activeRoomId)
+    if (index !== -1) {
+      chatList[index].Username_Lawan = newName
+    }
+  }
+
+  updateItem(Chats.value)
+  updateItem(chatsPerluBalasan.value)
+  updateItem(chatsPerluDihandle.value)
+}
+
 onMounted(async () => {
   fetchData(activeTab.value)
 })
@@ -167,15 +197,15 @@ defineExpose({
               <div v-if="activeTab === 'semua'">
                 <div v-if="Chats.length === 0" class="text-center py-10 text-sm text-slate-400">Tidak ada obrolan ditemukan.</div>
                 <div v-else>
-                  <RouterLink to="" v-for="(chat, idx) in Chats" :key="'semua-' + idx" @click="selectChat(chat.Room_Id, chat.Room_Name, chat.Telepon_User_Lawan)" class="flex items-center gap-3 py-3 px-4 bg-white cursor-pointer border-b border-slate-100 hover:bg-[var(--color-bejo-50)] transition-colors group">
+                  <RouterLink to="" v-for="(chat, idx) in Chats" :key="'semua-' + idx" @click="selectChat(chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan || chat.Room_Name, chat.Telepon_User_Lawan)" class="flex items-center gap-3 py-3 px-4 bg-white cursor-pointer border-b border-slate-100 hover:bg-[var(--color-bejo-50)] transition-colors group">
                     <div class="relative shrink-0 flex items-center justify-center font-semibold rounded-full size-10 bg-slate-100 text-slate-600 group-hover:bg-white transition-colors">
-                      <span v-if="chat.Room_Name" class="text-sm">{{ chat.Room_Name.charAt(0).toUpperCase() }}</span>
+                      <span v-if="chat.Room_Name" class="text-sm">{{ chat.Username_Lawan.charAt(0).toUpperCase() || chat.Room_Name.charAt(0).toUpperCase() }}</span>
                       <Icon v-else icon="lucide:user" class="size-5 text-slate-400" />
                       <span class="absolute bottom-0 right-0 w-3 h-3 border-2 border-white rounded-full bg-[var(--color-bejo-500)]"></span>
                     </div>
                     <div class="flex-grow min-w-0">
                       <div class="flex items-center justify-between gap-2 mb-0.5">
-                        <h6 class="text-slate-800 font-bold text-sm truncate uppercase">{{ chat.Room_Name.toUpperCase() }}</h6>
+                        <h6 class="text-slate-800 font-bold text-sm truncate uppercase">{{ chat.Username_Lawan.toUpperCase() || chat.Room_Name.toUpperCase() }}</h6>
                         <small class="text-[10px] text-slate-400 shrink-0 font-medium">{{ getDateChat(chat.Last_Message_At) }}</small>
                       </div>
                       <p class="text-xs truncate text-slate-500 leading-relaxed capitalized">{{ chat.Last_Message.replace('_X7#mQ9!vW2_', ' ') }}</p>
@@ -193,7 +223,7 @@ defineExpose({
                   </div>
 
                   <div class="max-h-[45vh] overflow-y-auto overscroll-contain [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 hover:[&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full">
-                    <RouterLink to="" v-for="(chat, idx) in chatsPerluBalasan" :key="'balasan-' + idx" @click="selectChat(chat.Room_Id, chat.Username_User, chat.Telepon_User)" class="flex items-center gap-3 py-3 px-4 bg-white cursor-pointer border-b border-slate-100 hover:bg-[var(--color-bejo-50)] transition-colors group">
+                    <RouterLink to="" v-for="(chat, idx) in chatsPerluBalasan" :key="'balasan-' + idx" @click="selectChat(chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan || chat.Room_Name, chat.Telepon_User_Lawan)" class="flex items-center gap-3 py-3 px-4 bg-white cursor-pointer border-b border-slate-100 hover:bg-[var(--color-bejo-50)] transition-colors group">
                       <div class="relative shrink-0 flex items-center justify-center font-semibold rounded-full size-10 bg-slate-100 text-slate-600 group-hover:bg-white transition-colors">
                         <span v-if="chat.Username_Lawan" class="text-sm">{{ chat.Username_Lawan.charAt(0).toUpperCase() }}</span>
                         <Icon v-else icon="lucide:user" class="size-5 text-slate-400" />
@@ -201,7 +231,7 @@ defineExpose({
                       </div>
                       <div class="flex-grow min-w-0">
                         <div class="flex items-center justify-between gap-2 mb-0.5">
-                          <h6 class="text-slate-800 font-bold text-sm truncate uppercase">{{ chat.Room_Id }} {{ chat.Username_Lawan != '' ? (chat.Username_Lawan || '').replace('_' + chat.Telepon_User_Lawan, '') : chat.Telepon_User_Lawan }}</h6>
+                          <h6 class="text-slate-800 font-bold text-sm truncate uppercase">{{ chat.Username_Lawan.toUpperCase() || chat.Room_Name.toUpperCase() }}</h6>
                           <small class="text-[10px] text-slate-400 shrink-0 font-medium">{{ getDateChat(chat.Last_Message_At) }}</small>
                         </div>
                         <p class="text-xs truncate text-slate-500 leading-relaxed">{{ chat.Last_Message || 'Hai' }}</p>
@@ -216,7 +246,7 @@ defineExpose({
                   </div>
 
                   <div class="max-h-[45vh] overflow-y-auto overscroll-contain [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[var(--color-bejo-200)] hover:[&::-webkit-scrollbar-thumb]:bg-[var(--color-bejo-300)] [&::-webkit-scrollbar-thumb]:rounded-full">
-                    <RouterLink to="" v-for="(chat, idx) in chatsPerluDihandle" :key="'handle-' + idx" @click="selectChat(chat.Room_Id, chat.Username_User, chat.Telepon_User)" class="flex items-center gap-3 py-3 px-4 bg-white cursor-pointer border-b border-slate-100 hover:bg-[var(--color-bejo-50)] transition-colors group">
+                    <RouterLink to="" v-for="(chat, idx) in chatsPerluDihandle" :key="'handle-' + idx" @click="selectChat(chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan || chat.Room_Name, chat.Telepon_User_Lawan)" class="flex items-center gap-3 py-3 px-4 bg-white cursor-pointer border-b border-slate-100 hover:bg-[var(--color-bejo-50)] transition-colors group">
                       <div class="relative shrink-0 flex items-center justify-center font-semibold rounded-full size-10 bg-slate-100 text-slate-600 group-hover:bg-white transition-colors">
                         <span v-if="chat.Username_Lawan" class="text-sm">{{ chat.Username_Lawan.charAt(0).toUpperCase() }}</span>
                         <Icon v-else icon="lucide:user" class="size-5 text-slate-400" />
@@ -224,7 +254,7 @@ defineExpose({
                       </div>
                       <div class="flex-grow min-w-0">
                         <div class="flex items-center justify-between gap-2 mb-0.5">
-                          <h6 class="text-slate-800 font-bold text-sm truncate uppercase">{{ chat.Room_Id }}</h6>
+                          <h6 class="text-slate-800 font-bold text-sm truncate uppercase">{{ chat.Username_Lawan.toUpperCase() || chat.Room_Name.toUpperCase() }}</h6>
                           <small class="text-[10px] text-slate-400 shrink-0 font-medium">{{ getDateChat(chat.Last_Message_At) }}</small>
                         </div>
                         <p class="text-xs truncate text-slate-500 leading-relaxed">{{ chat.Last_Message || 'Hai' }}</p>

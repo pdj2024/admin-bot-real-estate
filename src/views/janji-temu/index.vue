@@ -2,9 +2,9 @@
 import { ref, nextTick } from 'vue'
 import Vertical from '@/layouts/vertical.vue'
 import PageTitle from '@/components/PageTitle.vue'
-import Calendar from './components/Calendar.vue' // Sesuaikan path Anda
-import Event from './components/Event.vue'       // Sesuaikan path Anda
-import Table from './components/Table.vue'       // Sesuaikan path Anda
+import Calendar from './components/Calendar.vue'
+import Event from './components/Event.vue'
+import Table from './components/Table.vue'
 
 const calendarRef = ref<InstanceType<typeof Calendar> | null>(null)
 const openAppointment = ref(false)

@@ -379,7 +379,7 @@ const sendMedia = async (uploadUrl: string, media: File) => {
   try {
     const response = await axios.put(uploadUrl, media, {
       headers: {
-        'Content-Type': media.type // Aman sekarang
+        'Content-Type': media.type
       }
     })
     return response.data
