@@ -1,5 +1,6 @@
 import axios from 'axios'
 import router from '@/router'
+import { logout } from './auth';
 
 const baseURL = 'https://wabotapi.padajaya.biz.id'
 
@@ -88,7 +89,7 @@ api.interceptors.response.use(
 
             // 4. Arahkan ke login dengan menyertakan alasan error di URL (opsional)
             // Ini berguna agar di halaman login Anda bisa menampilkan pesan "Sesi Anda habis: [pesan]"
-            router.push(`/login?expired=true&reason=${encodeURIComponent(errorMessage)}`);
+            logout(false)
 
             reject(err);
           })
