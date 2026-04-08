@@ -12,7 +12,7 @@ export const isTokenExpired = (token: string | null): boolean => {
   }
 }
 
-export const logout = async (isManual?: boolean) => {
+export const logout = async (isManual: boolean) => {
   localStorage.removeItem('no_id');
   localStorage.removeItem('nama_display');
   localStorage.removeItem('role_user');
