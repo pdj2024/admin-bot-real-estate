@@ -45,7 +45,7 @@ const closeModal = () => {
   confirmCancel('Batalkan janji temu ini?', () => {
     emit('close')
     success('Janji temu dibatalkan')
-  })
+  }, () => {})
 }
 </script>
 

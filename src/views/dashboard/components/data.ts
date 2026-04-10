@@ -49,7 +49,7 @@ export const leadOptions: ApexOptions = {
     position: 'top',
     horizontalAlign: 'right',
     fontWeight: 700,
-    markers: { radius: 12 }
+    markers: { size: 6 }
   }
 }
 
