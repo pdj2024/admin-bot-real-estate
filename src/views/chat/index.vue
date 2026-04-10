@@ -272,12 +272,13 @@ onBeforeUnmount(() => {
 
 <template>
   <Vertical>
-    <div class="p-0 sm:p-4 md:p-6 md:pt-4 h-full">
+    <div class="p-0 md:p-6 md:pt-4 h-full">
       <!-- Premium Main Container -->
-      <div class="bg-white sm:rounded-[2.5rem] border border-slate-100 shadow-2xl shadow-slate-200/40 overflow-hidden">
-        <div class="flex h-[calc(100vh-120px)] sm:h-[calc(100vh-180px)] min-h-[500px]">
+      <div class="bg-white border-0 md:border border-slate-100 shadow-none md:shadow-2xl md:shadow-slate-200/40 md:rounded-[2.5rem] overflow-hidden">
+        <div class="flex h-[calc(100vh-140px)] md:h-[calc(100vh-180px)] min-h-[500px]">
           <SideBar 
             ref="sidebarRef" 
+            class="hidden lg:block shrink-0"
             :activeRoomId="selectedRoomId || ''" 
             :usernameChange="selectedUsernameChange" 
             @selectChat="handleSelectChat" 
@@ -292,7 +293,7 @@ onBeforeUnmount(() => {
 
           <ChatContent 
             ref="chatContentRef" 
-            :roomId="selectedRoomId" 
+            class="flex-1 w-full min-w-0"            :roomId="selectedRoomId" 
             :idLawan="selectedIdLawan" 
             :username="selectedUsername" 
             :phoneNumber="selectedPhone" 

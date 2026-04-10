@@ -31,7 +31,12 @@ const props = defineProps<{
   lastMessageId: string
 }>()
 
-const isCustomer = computed(() => props.chat.Tipe_User === 'customer')
+const isMe = computed(() => {
+  const role = (props.chat.Tipe_User || '').toLowerCase()
+  return role === 'admin' || role === 'ai' || role === 'cs'
+})
+
+const isCustomer = computed(() => !isMe.value)
 
 const bubbleStyle = computed(() => {
   switch (props.chat.Tipe_User) {
@@ -43,7 +48,7 @@ const bubbleStyle = computed(() => {
     case 'ai':
       return 'bubble-ai bg-white border border-amber-200 text-amber-900 shadow-xl shadow-amber-500/10 rounded-2xl rounded-br-none ring-1 ring-amber-100'
     default:
-      return 'bubble-default bg-slate-100 text-slate-600 rounded-2xl rounded-br-none'
+      return 'bubble-default bg-slate-100 text-slate-600 rounded-2xl rounded-bl-none'
   }
 })
 
@@ -148,15 +153,15 @@ watch(
       </div>
     </div>
 
-    <div class="flex gap-4 w-full mt-2 group" :class="isCustomer ? 'justify-start pl-4' : 'justify-end pr-4'">
-      <div v-if="isCustomer" class="flex items-end flex-shrink-0 mb-1 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+    <div class="flex gap-2 md:gap-4 w-full mt-2 group px-2 md:px-4" :class="isMe ? 'justify-end' : 'justify-start'">
+      <div v-if="isCustomer" class="hidden md:flex items-end flex-shrink-0 mb-1 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
         <div class="avatar-customer relative flex items-center justify-center rounded-xl size-8 bg-gradient-to-br from-slate-100 to-slate-200 text-slate-500 border-2 border-white shadow-sm">
           <Icon icon="lucide:user" class="size-4.5" />
         </div>
       </div>
 
-      <div class="flex flex-col max-w-[80%] lg:max-w-[65%]" :class="isCustomer ? 'items-start' : 'items-end'">
-        <div v-if="!chat.Message.includes('_X7#mQ9!vW2_')" class="px-5 py-3.5 rounded-2xl text-sm relative transition-all duration-300 hover:shadow-xl" :class="[bubbleStyle, isCustomer ? 'hover:-translate-x-1' : 'hover:translate-x-1']">
+      <div class="flex flex-col max-w-[85%] md:max-w-[70%]" :class="isMe ? 'items-end' : 'items-start'">
+        <div v-if="!chat.Message.includes('_X7#mQ9!vW2_')" class="px-3 py-2 md:px-5 md:py-3.5 rounded-2xl text-[13px] md:text-sm relative transition-all duration-300 hover:shadow-xl" :class="[bubbleStyle, isMe ? 'hover:translate-x-1' : 'hover:-translate-x-1']">
           <div v-if="chat.Id_Paket != null || chat.Message.includes('_data:image/')" class="mb-3 overflow-hidden rounded-xl border border-black/5 shadow-inner bg-slate-50/50">
             <img v-if="imageUrl || chat.Message.includes('_data:image/')" :src="chat.Message.includes('_data:image/') ? 'data:image/' + chat.Message.split('_data:image/')[1] : imageUrl" class="w-full h-auto object-cover max-h-72 hover:scale-105 transition-transform duration-500 cursor-pointer" />
           </div>
@@ -182,7 +187,7 @@ watch(
         </div>
       </div>
 
-      <div v-if="!isCustomer && !chat.Message.includes('_X7#mQ9!vW2_')" class="flex items-end flex-shrink-0 mb-1 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+      <div v-if="!isCustomer && !chat.Message.includes('_X7#mQ9!vW2_')" class="hidden md:flex items-end flex-shrink-0 mb-1 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
         <div v-if="chat.Tipe_User === 'admin' && chat.Sender_Id != 'adm_bot'" class="avatar-admin relative flex items-center justify-center rounded-xl size-8 bg-gradient-to-br from-cyan-400 to-cyan-500 text-white border-2 border-white shadow-lg shadow-cyan-500/20">
           <Icon icon="lucide:headset" class="size-4" />
         </div>

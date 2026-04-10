@@ -60,7 +60,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           <div class="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100 hover:border-bejo-200 hover:bg-white hover:shadow-2xl hover:shadow-bejo-600/10 transition-all duration-300 group">
             <div class="size-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-bejo-600 mb-6 group-hover:bg-bejo-500 group-hover:text-white transition-all">
-              <Icon icon="lucide:home-plus" class="size-7" />
+              <Icon icon="lucide:house-plus" class="size-7" />
             </div>
             <h3 class="text-xl font-black text-slate-900 mb-3">Jual & Beli</h3>
             <p class="text-sm font-medium text-slate-500 leading-relaxed">Listing beragam pilihan rumah, ruko, apartemen hingga kavling tanah terbaik.</p>

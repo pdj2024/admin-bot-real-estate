@@ -40,6 +40,7 @@ const openSchedule = ref(false)
 const isMobile = ref(false)
 const changeUsername = ref(false)
 const sendChatContent = ref('')
+const isSendingImage = ref(false)
 
 const username = defineModel<string>('username')
 // const catalogues = ref<Catalogue[]>(catalogueData)
@@ -443,6 +444,9 @@ const fileToBase64 = (file: File): Promise<string> => {
 }
 
 const sendImages = async () => {
+  if (isSendingImage.value) return
+  isSendingImage.value = true
+
   const config = { headers: { 'X-Jenis-User': 'admin' } }
   // console.log('Mengirim data gambar beserta caption:')
 
@@ -469,6 +473,8 @@ const sendImages = async () => {
     closePreview()
   } catch (error) {
     console.error('Terjadi kesalahan saat mengirim gambar:', error)
+  } finally {
+    isSendingImage.value = false
   }
 }
 
@@ -548,28 +554,28 @@ onUpdated(() => {
 <template>
   <div v-if="roomId" class="w-full h-full flex flex-col bg-white">
     <!-- Header: Premium Profile Section -->
-    <div class="relative overflow-hidden px-8 py-5 border-b border-slate-50 bg-white group">
+    <div class="relative z-20 px-4 py-3 md:px-8 md:py-5 border-b border-slate-50 bg-white group">
       <!-- Ambient Background Decoration -->
       <div class="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-bejo-50/50 to-transparent pointer-events-none"></div>
       <div class="absolute -right-20 -top-20 size-64 bg-bejo-100/30 rounded-full blur-3xl pointer-events-none transition-all duration-500 group-hover:scale-125"></div>
 
       <div class="relative z-10 flex justify-between items-center">
-        <div class="flex gap-5 items-center">
-          <button @click="openSidebar" class="lg:hidden size-10 rounded-xl flex justify-center items-center bg-slate-50 hover:bg-bejo-50 text-slate-500 hover:text-bejo-600 transition-all duration-300 shadow-sm">
-            <Icon icon="lucide:menu" class="size-5"></Icon>
+        <div class="flex gap-2 sm:gap-5 items-center min-w-0">
+          <button @click="openSidebar" class="lg:hidden size-9 rounded-xl flex justify-center items-center bg-slate-50 hover:bg-bejo-50 text-slate-500 hover:text-bejo-600 transition-all duration-300 shadow-sm shrink-0">
+            <Icon icon="lucide:menu" class="size-4"></Icon>
           </button>
 
-          <div class="relative flex items-center justify-center font-black rounded-2xl size-14 bg-gradient-to-br from-bejo-50 to-bejo-100/50 text-bejo-600 border border-white shadow-xl shadow-bejo-500/10">
-            <span v-if="username" class="text-lg tracking-tighter">
+          <div class="relative flex-shrink-0 flex items-center justify-center font-black rounded-2xl size-10 md:size-14 bg-gradient-to-br from-bejo-50 to-bejo-100/50 text-bejo-600 border border-white shadow-xl shadow-bejo-500/10">
+            <span v-if="username" class="text-sm md:text-lg tracking-tighter">
               {{ username.substring(0, 2).toUpperCase() }}
             </span>
-            <Icon v-else icon="lucide:user" class="size-7 text-bejo-300" />
-            <span class="absolute -bottom-1 -right-1 size-5 border-2 border-white rounded-full bg-green-500 shadow-lg shadow-green-500/20 ring-1 ring-green-500/20"></span>
+            <Icon v-else icon="lucide:user" class="size-5 md:size-7 text-bejo-300" />
+            <span class="absolute -bottom-1 -right-1 size-3.5 md:size-5 border-2 border-white rounded-full bg-green-500 shadow-lg shadow-green-500/20 ring-1 ring-green-500/20"></span>
           </div>
 
-          <div>
-            <div class="flex items-center gap-2 mb-1">
-              <h6 class="text-slate-900 font-black text-xl tracking-tight capitalize leading-none">
+          <div class="min-w-0 flex-1 overflow-hidden">
+            <div class="flex items-center gap-1.5 mb-0 md:mb-1">
+              <h6 class="text-slate-900 font-black text-xs md:text-xl tracking-tight capitalize leading-tight truncate max-w-[120px] md:max-w-none flex-1 min-w-0">
                 <template v-if="changeUsername">
                   <div class="flex items-center gap-2">
                     <input 
@@ -590,13 +596,13 @@ onUpdated(() => {
                 </template>
               </h6>
             </div>
-            <p v-if="username" class="text-xs font-black text-slate-400 uppercase tracking-widest">{{ phoneNumber }}</p>
+            <p v-if="username" class="text-[9px] md:text-xs font-black text-slate-400 uppercase tracking-widest leading-none truncate">{{ phoneNumber }}</p>
           </div>
         </div>
 
-        <div class="flex items-center gap-3">
-          <button class="size-10 rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-bejo-600 hover:border-bejo-100 hover:bg-bejo-50 hover:shadow-lg hover:shadow-bejo-500/10 transition-all duration-300 flex items-center justify-center">
-            <Icon icon="lucide:search" class="size-5"></Icon>
+        <div class="flex items-center gap-2 sm:gap-3">
+          <button class="size-9 sm:size-10 rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-bejo-600 hover:border-bejo-100 hover:bg-bejo-50 hover:shadow-lg hover:shadow-bejo-500/10 transition-all duration-300 flex items-center justify-center">
+            <Icon icon="lucide:search" class="size-4 sm:size-5"></Icon>
           </button>
           <button class="size-10 rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-slate-900 hover:border-slate-200 hover:shadow-sm transition-all duration-300 flex items-center justify-center">
             <Icon icon="lucide:more-vertical" class="size-5"></Icon>
@@ -607,14 +613,14 @@ onUpdated(() => {
 
     <div v-if="isPreviewMode" class="flex-grow bg-bejo-50 min-h-0 relative flex flex-col overflow-hidden group">
       <div class="shrink-0 h-14 flex items-center px-4 z-5">
-        <button @click="closePreview" class="size-9 flex items-center justify-center rounded-full text-bejo-600 hover:bg-bejo-300 transition-colors bg-white/50 backdrop-blur-sm">
+        <button @click="closePreview" :disabled="isSendingImage" class="size-9 flex items-center justify-center rounded-full text-bejo-600 transition-colors bg-white/50 backdrop-blur-sm" :class="isSendingImage ? 'opacity-50 cursor-not-allowed' : 'hover:bg-bejo-300'">
           <Icon icon="lucide:x" class="size-6"></Icon>
         </button>
       </div>
 
       <div v-if="activeImage" class="flex-grow flex flex-col min-h-0 h-full mb-2">
-        <div class="flex-grow w-full flex items-center justify-center min-h-0 overflow-hidden px-0 sm:px-2">
-          <img :src="activeImage.url" :alt="'Preview ' + activeIndex" class="w-full h-full max-h-[75vh] object-contain rounded-xl transition-all duration-300" />
+        <div class="flex-grow w-full flex items-center justify-center min-h-0 overflow-hidden px-4 md:px-8">
+          <img :src="activeImage.url" :alt="'Preview ' + activeIndex" class="w-full h-full max-h-[70vh] object-contain rounded-2xl transition-all duration-300 shadow-sm" />
         </div>
 
         <div class="shrink-0 w-full px-4 mt-3 mb-1">
@@ -633,12 +639,12 @@ onUpdated(() => {
             <div v-for="(item, index) in previewImages" :key="item.id" @click="activeIndex = index" class="relative size-16 shrink-0 rounded-xl cursor-pointer transition-all duration-300" :class="activeIndex === index ? 'scale-110 ring-4 ring-bejo-500 z-10' : 'ring-2 ring-transparent opacity-80 hover:opacity-100'">
               <img :src="item.url" class="w-full h-full object-cover rounded-lg" />
 
-              <button @click.stop="removeImage(index)" class="absolute -top-2 -right-2 size-5 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md z-20 hover:bg-red-600">
+              <button @click.stop="removeImage(index)" :disabled="isSendingImage" class="absolute -top-2 -right-2 size-5 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md z-20" :class="isSendingImage ? 'opacity-50 cursor-not-allowed' : 'hover:bg-red-600'">
                 <Icon icon="lucide:x" class="size-3.5 stroke-[3]"></Icon>
               </button>
             </div>
 
-            <button @click="triggerAddMore" class="size-16 shrink-0 border-2 border-dashed border-bejo-400 rounded-xl flex flex-col items-center justify-center text-bejo-500 bg-white hover:bg-bejo-50 transition-colors">
+            <button @click="triggerAddMore" :disabled="isSendingImage" class="size-16 shrink-0 border-2 border-dashed border-bejo-400 rounded-xl flex flex-col items-center justify-center text-bejo-500 bg-white transition-colors" :class="isSendingImage ? 'opacity-50 cursor-not-allowed' : 'hover:bg-bejo-50'">
               <Icon icon="lucide:plus" class="size-6" />
               <span class="text-[9px] font-bold mt-1 uppercase">Tambah</span>
             </button>
@@ -646,9 +652,10 @@ onUpdated(() => {
         </div>
 
         <div class="px-4 border-l border-bejo-200 h-full flex items-center justify-center">
-          <button @click="sendImages" class="bg-green-500 hover:bg-green-600 text-white rounded-xl px-5 py-3 font-bold flex items-center gap-2 transition-all active:scale-95 shadow-md">
-            <span class="hidden sm:inline text-sm">Kirim</span>
-            <Icon icon="lucide:send" class="size-4"></Icon>
+          <button @click="sendImages" :disabled="isSendingImage" class="bg-green-500 hover:bg-green-600 text-white rounded-xl px-5 py-3 font-bold flex items-center gap-2 transition-all shadow-md" :class="isSendingImage ? 'opacity-75 cursor-not-allowed' : 'active:scale-95'">
+            <span class="hidden sm:inline text-sm">{{ isSendingImage ? 'Mengirim...' : 'Kirim' }}</span>
+            <Icon v-if="isSendingImage" icon="lucide:loader-2" class="size-4 animate-spin"></Icon>
+            <Icon v-else icon="lucide:send" class="size-4"></Icon>
           </button>
         </div>
       </div>
@@ -666,16 +673,16 @@ onUpdated(() => {
       <!-- Ambient Overlay for Chat Board -->
       <div class="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent pointer-events-none"></div>
       
-      <div class="relative z-10 flex flex-col gap-6 px-8 py-10">
+      <div class="relative z-10 flex flex-col gap-6 px-4 py-6 sm:px-8 sm:py-10">
         <ChatBubble v-for="(chat, i) in chats" :key="i" :idx="i" :chat="chat" :chats="chats" :lastMessageId="props.lastMessageId" />
       </div>
     </simplebar>
 
-    <div class="p-3 bg-white border-t border-default-200" :class="{ hidden: isPreviewMode }">
-      <div v-if="activeTab != 'bot'" class="flex gap-4 items-center bg-slate-50 p-2.5 pl-4 rounded-[1.5rem] border border-transparent focus-within:border-bejo-500/20 focus-within:bg-white focus-within:ring-8 focus-within:ring-bejo-500/5 focus-within:shadow-xl focus-within:shadow-bejo-500/5 transition-all duration-300">
+    <div class="p-1 md:p-6 bg-white border-t border-slate-50" :class="{ hidden: isPreviewMode }">
+      <div v-if="activeTab != 'bot'" class="flex gap-1 md:gap-4 items-center bg-slate-50 p-1.5 md:p-2.5 pl-2 md:pl-4 rounded-xl md:rounded-[1.5rem] border border-transparent focus-within:border-bejo-500/20 focus-within:bg-white focus-within:ring-8 focus-within:ring-bejo-500/5 focus-within:shadow-xl focus-within:shadow-bejo-500/5 transition-all duration-300">
         <div class="relative" ref="dropdownRef">
-          <button @click.stop="openMenu = !openMenu" class="size-11 rounded-2xl bg-white border border-slate-100 text-slate-400 hover:text-bejo-600 hover:border-bejo-100 hover:shadow-lg hover:shadow-bejo-500/10 transition-all duration-300 flex items-center justify-center">
-            <Icon icon="lucide:plus" class="size-6 transition-transform duration-300" :class="{'rotate-45': openMenu}"></Icon>
+          <button @click.stop="openMenu = !openMenu" class="size-9 md:size-11 rounded-xl md:rounded-2xl bg-white border border-slate-100 text-slate-400 hover:text-bejo-600 hover:border-bejo-100 hover:shadow-lg hover:shadow-bejo-500/10 transition-all duration-300 flex items-center justify-center">
+            <Icon icon="lucide:plus" class="size-5 md:size-6 transition-transform duration-300" :class="{'rotate-45': openMenu}"></Icon>
           </button>
 
           <div v-if="openMenu" class="absolute bottom-[calc(100%+16px)] left-0 min-w-[220px] bg-white shadow-2xl shadow-slate-900/10 border border-slate-50 rounded-[1.5rem] p-2 z-50 transform origin-bottom-left transition-all animate-fade-in-up">
@@ -711,26 +718,27 @@ onUpdated(() => {
           type="text" 
           v-model="sendChatContent" 
           @keyup.enter="sendChat('text')" 
-          class="flex-grow bg-transparent border-none focus:ring-0 text-sm font-bold text-slate-700 placeholder:text-slate-400 placeholder:font-bold px-2" 
-          placeholder="Tulis pesan Anda di sini..." 
+          class="flex-1 min-w-0 bg-transparent border-none focus:ring-0 text-sm font-bold text-slate-700 placeholder:text-slate-400 placeholder:font-bold px-1 md:px-2" 
+          placeholder="Tulis pesan..." 
         />
 
-        <div ref="containerRef" class="flex items-center gap-3 relative mr-1">
-          <label class="size-11 rounded-2xl bg-white border border-slate-100 text-slate-400 hover:text-blue-600 hover:border-blue-100 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300 flex items-center justify-center cursor-pointer">
-            <Icon icon="lucide:image" class="size-6"></Icon>
+        <div ref="containerRef" class="flex-shrink-0 flex items-center gap-1 md:gap-3 relative">
+          <label class="size-8 md:size-11 rounded-xl md:rounded-2xl bg-white border border-slate-100 text-slate-400 flex-shrink-0 flex items-center justify-center cursor-pointer hover:bg-slate-50 transition-all">
+            <Icon icon="lucide:image" class="size-4.5 md:size-6"></Icon>
             <input type="file" multiple hidden @change="chooseImages" accept="image/*" />
           </label>
-          <button @click="sendChat('text')" class="h-11 px-6 rounded-2xl bg-bejo-500 hover:bg-bejo-600 text-white font-black text-xs uppercase tracking-widest flex items-center gap-3 shadow-xl shadow-bejo-500/20 active:scale-95 transition-all">
-            <span>Kirim</span>
-            <Icon icon="lucide:send" class="size-4"></Icon>
+          <button @click="sendChat('text')" class="h-8 px-3 md:px-6 rounded-xl md:rounded-2xl bg-bejo-500 hover:bg-bejo-600 text-white font-black text-[10px] md:text-xs uppercase tracking-widest flex items-center gap-1.5 md:gap-3 shadow-xl shadow-bejo-500/20 active:scale-95 transition-all flex-shrink-0">
+            <span class="hidden md:inline">Kirim</span>
+            <Icon icon="lucide:send" class="size-3.5 md:size-4"></Icon>
           </button>
         </div>
       </div>
 
       <div v-else class="w-full">
-        <button @click="takeOverChat(false)" class="w-full py-4.5 bg-gradient-to-r from-bejo-500 to-bejo-600 hover:from-bejo-600 hover:to-bejo-700 text-white font-black text-xs uppercase tracking-widest rounded-[1.5rem] flex justify-center items-center gap-3 shadow-xl shadow-bejo-500/20 active:scale-[0.98] transition-all">
-          <Icon icon="lucide:message-square-plus" class="size-5" />
-          <span>Ambil Alih Percakapan Sekarang</span>
+        <button @click="takeOverChat(false)" class="w-full py-4 sm:py-4.5 bg-gradient-to-r from-bejo-500 to-bejo-600 hover:from-bejo-600 hover:to-bejo-700 text-white font-black text-[10px] sm:text-xs uppercase tracking-widest rounded-2xl sm:rounded-[1.5rem] flex justify-center items-center gap-2 sm:gap-3 shadow-xl shadow-bejo-500/20 active:scale-[0.98] transition-all px-4">
+          <Icon icon="lucide:message-square-plus" class="size-4 sm:size-5" />
+          <span class="hidden xs:inline">Ambil Alih Percakapan</span>
+          <span class="inline xs:hidden">Ambil Alih</span>
         </button>
       </div>
 
