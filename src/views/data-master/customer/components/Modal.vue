@@ -51,6 +51,7 @@ const resetForm = () => {
   })
 }
 
+// Pantau perubahan data edit
 watch(
   () => props.editData,
   (newVal) => {
@@ -65,11 +66,11 @@ watch(
 
 const handleSubmit = async () => {
   const isEdit = !!props.editData
+  loading.value = true
 
   confirm(`Apakah data customer sudah benar?`, async () => {
     try {
       const url = isEdit ? `/api/customer/update?no_id=${form.No_Id}` : '/api/customer/create'
-
       const method = isEdit ? 'put' : 'post'
 
       await api[method](url, form, {
@@ -80,11 +81,10 @@ const handleSubmit = async () => {
       emit('success')
       handleClose()
     } catch (err: any) {
-      console.log('Isi Respon Server:', err.response?.data)
       const detailError = err.response?.data?.Message || err.response?.data?.message || err.response?.data?.error || err.message
       fail(`Akses Ditolak: ${detailError}`)
     } finally {
-      emit('success')
+      loading.value = false
     }
   })
 }
@@ -96,61 +96,90 @@ const handleClose = () => {
 </script>
 
 <template>
-  <div v-if="show" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
-    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" @click="handleClose"></div>
+  <Transition enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0" enter-to-class="opacity-100" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0">
+    <div v-if="show" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-md transition-opacity" @click="handleClose"></div>
 
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md z-10 overflow-hidden animate-in fade-in zoom-in duration-200">
-      <div class="flex items-center justify-between p-4 border-b">
-        <h3 class="text-lg font-semibold text-gray-800">
-          {{ editData ? 'Edit Data Customer' : 'Tambah Customer Baru' }}
-        </h3>
-        <button @click="handleClose" class="text-gray-400 hover:text-gray-600 transition-colors">
-          <Icon icon="lucide:x" class="size-5" />
-        </button>
+      <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md z-10 overflow-hidden border border-slate-100 animate-in fade-in zoom-in slide-in-from-bottom-8 duration-500">
+        <!-- Modal Header -->
+        <div class="relative p-6 border-b border-slate-50">
+          <div class="absolute top-0 right-0 w-32 h-32 bg-bejo-50/50 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+          
+          <div class="relative flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="size-10 rounded-2xl bg-bejo-500 text-white flex items-center justify-center">
+                <Icon :icon="editData ? 'lucide:user-cog' : 'lucide:user-plus'" class="size-5" />
+              </div>
+              <div>
+                <h3 class="text-lg font-black text-slate-900 leading-none">
+                  {{ editData ? 'Edit Customer' : 'Tambah Customer' }}
+                </h3>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
+                  {{ editData ? 'Perbarui profil data pelanggan' : 'Daftarkan data pelanggan baru' }}
+                </p>
+              </div>
+            </div>
+            <button @click="handleClose" class="size-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-50 hover:text-slate-900 transition-all">
+              <Icon icon="lucide:x" class="size-5" />
+            </button>
+          </div>
+        </div>
+
+        <!-- Modal Body -->
+        <form @submit.prevent="handleSubmit" class="p-6 md:p-8 space-y-6">
+          <div v-if="editData" class="space-y-1.5">
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">ID Customer</label>
+            <div class="h-12 w-full px-4 flex items-center bg-slate-50 border border-slate-100 rounded-2xl text-xs font-black text-slate-400 select-none">
+              {{ form.No_Id }}
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-1.5">
+              <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Username</label>
+              <input v-model="form.UserName" type="text" required class="form-input-premium" placeholder="john_doe" />
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Kota</label>
+              <input v-model="form.Kota" type="text" required class="form-input-premium" placeholder="Jakarta" />
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Nama Customer</label>
+            <input v-model="form.Nama_Display" type="text" required class="form-input-premium" placeholder="Misal: John Doe" />
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Alamat Email</label>
+            <div class="relative group">
+              <Icon icon="lucide:mail" class="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-bejo-500 transition-colors" />
+              <input v-model="form.Email" type="email" required class="form-input-premium ps-11" placeholder="customer@mail.com" />
+            </div>
+          </div>
+
+          <!-- Footer Actions -->
+          <div class="flex items-center gap-3 pt-6 border-t border-slate-50">
+            <button type="button" @click="handleClose" class="flex-1 h-12 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all">
+              Batal
+            </button>
+            <button type="submit" :disabled="loading" class="flex-[2] h-12 bg-bejo-500 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-bejo-500/20 hover:bg-bejo-600 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:grayscale disabled:scale-100">
+              <Icon v-if="loading" icon="lucide:loader-2" class="animate-spin size-4" />
+              {{ loading ? 'Memproses...' : editData ? 'Simpan' : 'Daftarkan' }}
+            </button>
+          </div>
+        </form>
       </div>
-
-      <form @submit.prevent="handleSubmit" class="p-5 space-y-4">
-        <div v-if="editData">
-          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">ID Customer</label>
-          <input v-model="form.No_Id" type="text" readonly class="form-input-custom bg-gray-50 text-gray-500 cursor-not-allowed" />
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
-          <input v-model="form.UserName" type="text" required class="form-input-custom" placeholder="Username..." />
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Nama</label>
-          <input v-model="form.Nama_Display" type="text" required class="form-input-custom" placeholder="Nama..." />
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-          <input v-model="form.Email" type="email" required class="form-input-custom" placeholder="email@mail.com" />
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Kota</label>
-          <input v-model="form.Kota" type="text" required class="form-input-custom" placeholder="Kota..." />
-        </div>
-
-        <div class="flex items-center gap-3 pt-4 border-t">
-          <button type="button" @click="handleClose" class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">Batal</button>
-          <button type="submit" :disabled="loading" class="flex-1 px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:opacity-90 disabled:opacity-50 flex items-center justify-center">
-            <Icon v-if="loading" icon="lucide:loader-2" class="animate-spin size-4 me-2" />
-            {{ loading ? 'Memproses...' : editData ? 'Simpan Perubahan' : 'Daftarkan Customer' }}
-          </button>
-        </div>
-      </form>
     </div>
-  </div>
+  </Transition>
 </template>
 
 <style scoped>
 @reference "@/assets/css/style.css";
 
-.form-input-custom {
-  @apply w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all;
+.form-input-premium {
+  @apply w-full h-12 px-4 text-xs font-bold text-slate-700 bg-slate-50 border border-slate-100 rounded-2xl 
+         focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500/50 outline-none transition-all
+         placeholder:text-slate-300 placeholder:font-bold placeholder:uppercase placeholder:tracking-widest;
 }
 </style>

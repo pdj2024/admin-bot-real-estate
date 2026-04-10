@@ -1,44 +1,70 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import { orders } from './data'
-import { RouterLink } from 'vue-router'
 const recentVisits = [
-  { customer: 'Budi Santoso', property: 'Griya Asri C2', date: '28 Mar 2026, 10:00', status: 'Dikonfirmasi', statusClass: 'bg-success/10 text-success' },
-  { customer: 'Siti Aminah', property: 'Apartemen Skyview', date: '29 Mar 2026, 14:30', status: 'Menunggu', statusClass: 'bg-warning/10 text-warning' },
+  { agent: 'Budi Pratama', email: 'budi@rumahbejo.com', unit: 'Griya Asri Cluster A-12', time: 'Besok, 10:00 AM', status: 'Dikonfirmasi', statusClass: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
+  { agent: 'Siti Aminah', email: 'siti@rumahbejo.com', unit: 'Apartemen Skyview B-05', time: '12 Apr, 14:30 PM', status: 'Menunggu', statusClass: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
+  { agent: 'Andi Wijaya', email: 'andi@rumahbejo.com', unit: 'Ruko Central Park No. 8', time: '13 Apr, 09:00 AM', status: 'Dikonfirmasi', statusClass: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
+  { agent: 'Dewi Lestari', email: 'dewi@rumahbejo.com', unit: 'Griya Asri Cluster C-02', time: '14 Apr, 16:00 PM', status: 'Dibatalkan', statusClass: 'bg-slate-500/10 text-slate-600 border-slate-500/20' },
 ]
 </script>
 
 <template>
-  <div class="card bg-card border-default-200">
-    <div class="card-header border-b border-default-200 flex justify-between items-center">
-      <h6 class="card-title font-bold">Jadwal Kunjungan Lokasi</h6>
-      <button class="text-primary text-xs font-bold">Lihat Semua</button>
+  <div class="card bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden">
+    <div class="p-8 border-b border-slate-50 flex justify-between items-center">
+      <div>
+        <h4 class="text-lg font-black text-slate-900 leading-tight">Jadwal Kunjungan Lokasi</h4>
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Agenda Site Visit Mendatang</p>
+      </div>
+      <button class="px-5 py-2.5 bg-slate-50 hover:bg-bejo-50 text-slate-600 hover:text-bejo-600 text-xs font-black uppercase tracking-widest rounded-xl transition-all border border-slate-100 hover:border-bejo-200">
+        Lihat Semua
+      </button>
     </div>
+    
     <div class="overflow-x-auto">
-      <table class="min-w-full divide-y divide-default-200">
-        <thead class="bg-default-50">
-          <tr class="text-[11px] font-bold text-default-500 uppercase tracking-wider">
-            <th class="px-6 py-4 text-left">Agen Properti</th>
-            <th class="px-6 py-4 text-left">Unit Properti</th>
-            <th class="px-6 py-4 text-left">Waktu Kunjungan</th>
-            <th class="px-4 py-4 text-center">Status</th>
+      <table class="min-w-full">
+        <thead>
+          <tr class="bg-slate-50/50 border-b border-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+            <th class="px-8 py-5 text-left">Agen Properti</th>
+            <th class="px-8 py-5 text-left">Unit Properti</th>
+            <th class="px-8 py-5 text-left">Waktu Kunjungan</th>
+            <th class="px-8 py-5 text-center">Status</th>
+            <th class="px-8 py-5 text-right font-black">Aksi</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-default-200">
-          <tr v-for="i in 5" :key="i" class="hover:bg-default-50/50 transition-colors">
-            <td class="px-6 py-4">
-              <div class="flex items-center gap-3">
-                <div class="size-8 rounded-full bg-default-200 flex items-center justify-center font-bold text-default-600 text-xs">BP</div>
-                <div class="flex flex-col">
-                  <span class="text-sm font-bold text-default-900">Budi Pratama</span>
-                  <span class="text-[10px] text-default-400">budi@email.com</span>
+        <tbody class="divide-y divide-slate-50">
+          <tr v-for="(visit, idx) in recentVisits" :key="idx" class="group hover:bg-slate-50/50 transition-all cursor-pointer">
+            <td class="px-8 py-6">
+              <div class="flex items-center gap-4">
+                <div class="size-10 rounded-2xl bg-gradient-to-br from-bejo-400 to-bejo-600 flex items-center justify-center font-black text-white text-sm shadow-lg shadow-bejo-500/20">
+                  {{ visit.agent.split(' ').map(n => n[0]).join('') }}
+                </div>
+                <div class="flex flex-col min-w-0">
+                  <span class="text-sm font-black text-slate-900 truncate">{{ visit.agent }}</span>
+                  <span class="text-[10px] font-bold text-slate-400 truncate">{{ visit.email }}</span>
                 </div>
               </div>
             </td>
-            <td class="px-6 py-4 text-sm text-default-600">Griya Asri Cluster A-12</td>
-            <td class="px-6 py-4 text-sm text-default-600">Besok, 10:00 AM</td>
-            <td class="px-4 py-4 text-center">
-              <span class="px-2 py-1 rounded-md text-[10px] font-bold uppercase bg-info/10 text-info border border-info/20">Dikonfirmasi</span>
+            <td class="px-8 py-6">
+              <div class="flex flex-col">
+                <span class="text-sm font-black text-slate-700">{{ visit.unit }}</span>
+                <span class="text-[10px] font-bold text-bejo-500 uppercase tracking-widest">Residensial</span>
+              </div>
+            </td>
+            <td class="px-8 py-6">
+              <div class="flex items-center gap-2 text-slate-600">
+                <Icon icon="lucide:clock" class="size-4 text-slate-300" />
+                <span class="text-sm font-bold">{{ visit.time }}</span>
+              </div>
+            </td>
+            <td class="px-8 py-6 text-center">
+              <span :class="`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border ${visit.statusClass}`">
+                {{ visit.status }}
+              </span>
+            </td>
+            <td class="px-8 py-6 text-right">
+              <button class="p-2.5 bg-slate-50 rounded-xl text-slate-400 hover:text-bejo-600 hover:bg-bejo-50 transition-all">
+                 <Icon icon="lucide:arrow-right" class="size-4" />
+              </button>
             </td>
           </tr>
         </tbody>

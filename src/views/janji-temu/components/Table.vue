@@ -1,223 +1,135 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { Icon } from '@iconify/vue'
-import { RouterLink } from 'vue-router'
-import api from '@/services/axios'
-import { useVueTable, FlexRender, getCoreRowModel, getPaginationRowModel, getSortedRowModel, getFilteredRowModel } from '@tanstack/vue-table'
-import { confirm, success, fail } from '@/utils/sweet-alert'
+import { useVueTable, FlexRender, getCoreRowModel, getPaginationRowModel } from '@tanstack/vue-table'
 
-interface Admin {
-  No_Id: string
-  Email: string
-  Nama_User: string
-  Role_User: string
-  Keterangan: string
-  Status: string
-  Id_Media?: string
-}
-
-const admins = ref<Admin[]>([])
-const isLoading = ref(false)
-const filter = ref('')
-const openDropdownId = ref<string | null>(null)
-const emit = defineEmits(['edit', 'success'])
+// Mock Data for Appointments Request
+const appointmentRequests = ref([
+  { id: '1', customer: 'Lina Marlina', email: 'lina@gmail.com', phone: '08123456789', property: 'Griya Asri Cluster A-12', date: '2026-04-12', time: '10:00', status: 'pending' },
+  { id: '2', customer: 'Budi Santoso', email: 'budi@yahoo.com', phone: '08778899001', property: 'Apartemen Skyview B-05', date: '2026-04-12', time: '14:30', status: 'confirmed' },
+  { id: '3', customer: 'Siti Aminah', email: 'siti@gmail.com', phone: '08212233441', property: 'Ruko Central Park No. 8', date: '2026-04-13', time: '09:00', status: 'pending' },
+  { id: '4', customer: 'Andi Wijaya', email: 'andi@outlook.com', phone: '08112233445', property: 'Griya Asri Cluster C-02', date: '2026-04-14', time: '16:00', status: 'cancelled' },
+])
 
 const columns = [
-  { accessorKey: 'Nama_User', header: 'Nama Agen' },
-  { accessorKey: 'Email', header: 'Email' },
-  { accessorKey: 'Status', header: 'No WA' },
-  { accessorKey: 'Status2', header: 'Nama Unit' },
-  { accessorKey: 'Status3', header: 'Tanggal & Waktu' },
-  { id: 'aksi', header: 'Detail', enableSorting: false }
+  { accessorKey: 'customer', header: 'Calon Pembeli' },
+  { accessorKey: 'property', header: 'Unit Properti' },
+  { accessorKey: 'date', header: 'Rencana Kunjungan' },
+  { accessorKey: 'status', header: 'Status' },
+  { id: 'aksi', header: 'Aksi' }
 ]
 
-// Helpers
-const getInitial = (name: string) => name?.charAt(0).toUpperCase() || '?'
-
-const fetchData = async () => {
-  isLoading.value = true
-  try {
-    const { data } = await api.get('', {
-      headers: { 'X-Jenis-User': 'admin' }
-    })
-    admins.value = data.Data
-  } catch (err) {
-    console.error('Gagal memuat data:', err)
-  } finally {
-    isLoading.value = false
-  }
-}
-
-const toggleStatus = async (item: Admin) => {
-  const newStatus = item.Status === 'aktif' ? 'non aktif' : 'aktif'
-  try {
-    await api.put(`/api/admin/update?no_id=${item.No_Id}`, { ...item, Status: newStatus, Id_Media: item.Id_Media || null }, { headers: { 'X-Jenis-User': 'admin' } })
-    item.Status = newStatus // Update local state for instant feedback
-    success(`Berhasil mengubah status ${item.Nama_User}`)
-    emit('success')
-  } catch (err) {
-    fail(`Gagal mengubah status ${item.Nama_User}`)
-  }
-}
-
 const table = useVueTable({
-  get data() {
-    return admins.value
-  },
+  data: appointmentRequests.value,
   columns,
-  state: {
-    get globalFilter() {
-      return filter.value
-    }
-  },
   getCoreRowModel: getCoreRowModel(),
   getPaginationRowModel: getPaginationRowModel(),
-  getSortedRowModel: getSortedRowModel(),
-  getFilteredRowModel: getFilteredRowModel(),
   initialState: { pagination: { pageSize: 5 } }
-})
-
-const toggleDropdown = (id: string) => {
-  openDropdownId.value = openDropdownId.value === id ? null : id
-}
-
-const handleClickOutside = (event: MouseEvent) => {
-  if (!(event.target as HTMLElement).closest('.action-menu')) {
-    openDropdownId.value = null
-  }
-}
-
-const handleDelete = async (admin: Admin) => {
-  confirm(`Ingin menghapus data admin milik ${admin.Nama_User}?`, async () => {
-    try {
-      await api.delete(`/api/admin/delete?no_id=${admin.No_Id}`, {
-        headers: { 'X-Jenis-User': 'admin' }
-      })
-      success('Hapus data admin berhasil')
-      fetchData() // Refresh data
-      emit('success')
-    } catch (err: any) {
-      fail(err.response?.data?.Message || 'Terjadi kesalahan pada server')
-    }
-  })
-}
-
-defineExpose({ fetchData })
-
-onMounted(() => {
-  fetchData()
-  document.addEventListener('click', handleClickOutside)
-})
-
-onBeforeUnmount(() => {
-  document.removeEventListener('click', handleClickOutside)
 })
 </script>
 
 <template>
-  <div class="flex flex-col rounded-xl border border-default-200 bg-card shadow-sm overflow-hidden">
+  <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden">
+    <div class="p-8 border-b border-slate-50 flex items-center justify-between">
+       <div>
+          <h4 class="text-lg font-black text-slate-900">Permintaan Janji Temu</h4>
+          <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Antrean Website & WhatsApp Bot</p>
+       </div>
+       <button class="px-6 py-2.5 bg-bejo-500 hover:bg-bejo-600 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-bejo-500/20">
+          Export Data
+       </button>
+    </div>
+
     <div class="overflow-x-auto">
-      <table class="min-w-full divide-y divide-default-200">
-        <thead class="bg-default-50">
+      <table class="w-full border-collapse">
+        <thead class="bg-slate-50/50">
           <tr v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
-            <th v-for="header in headerGroup.headers" :key="header.id" class="px-5 py-4 text-start text-xs font-bold text-default-600 uppercase tracking-wider">
+            <th v-for="header in headerGroup.headers" :key="header.id" class="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
               <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
             </th>
           </tr>
         </thead>
 
-        <tbody class="divide-y divide-default-200">
-          <tr v-if="isLoading">
-            <td colspan="6" class="py-20 text-center text-default-500">
-              <div class="flex justify-center items-center gap-2">
-                <Icon icon="lucide:loader-2" class="animate-spin size-5" />
-                <span>Memuat data...</span>
-              </div>
-            </td>
-          </tr>
-
-          <tr v-else-if="table.getRowModel().rows.length === 0">
-            <td colspan="6" class="py-16 text-center text-default-400 text-sm italic">Tidak ada data janji temu ditemukan.</td>
-          </tr>
-
-          <tr v-for="row in table.getRowModel().rows" :key="row.id" class="hover:bg-default-50/50 transition-colors group">
-            <td class="px-5 py-4 flex items-center gap-3">
-              <div class="size-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm border border-primary/20">
-                {{ getInitial(row.original.Nama_User) }}
-              </div>
-              <div class="flex flex-col">
-                <span class="font-bold text-default-900 leading-tight">{{ row.original.Nama_User }}</span>
-                <span class="text-xs text-default-500 font-medium">ID: {{ row.original.No_Id }}</span>
+        <tbody class="divide-y divide-slate-50">
+          <tr v-for="row in table.getRowModel().rows" :key="row.id" class="hover:bg-slate-50/30 transition-colors group">
+            <!-- Customer -->
+            <td class="px-8 py-6">
+              <div class="flex items-center gap-4">
+                <div class="size-10 rounded-xl bg-slate-900 flex items-center justify-center text-white font-black text-xs shadow-lg">
+                  {{ row.original.customer.charAt(0) }}
+                </div>
+                <div>
+                  <div class="text-sm font-black text-slate-900">{{ row.original.customer }}</div>
+                  <div class="text-[10px] font-bold text-slate-500">{{ row.original.phone }}</div>
+                </div>
               </div>
             </td>
 
-            <td class="px-5 py-4 text-sm text-default-600 font-medium">
-              {{ row.original.Email }}
+            <!-- Property -->
+            <td class="px-8 py-6">
+               <div class="text-sm font-black text-slate-700">{{ row.original.property }}</div>
+               <span class="px-2 py-0.5 bg-slate-100 text-[9px] font-black text-slate-500 rounded uppercase tracking-tighter">Residensial</span>
             </td>
 
-            <td class="px-5 py-4">
-              <div class="flex flex-col items-center gap-2">
-                <span class="text-[10px] uppercase font-black tracking-widest transition-colors" :class="row.original.Status === 'aktif' ? 'text-primary' : 'text-default-400'">
-                  {{ row.original.Status }}
-                </span>
-                <button class="toggle" :class="{ 'toggle-active': row.original.Status === 'aktif' }" @click="toggleStatus(row.original)">
-                  <span class="toggle-circle" :class="{ 'translate-x-6': row.original.Status === 'aktif' }"></span>
-                </button>
-              </div>
+            <!-- Date/Time -->
+            <td class="px-8 py-6">
+               <div class="flex items-center gap-2 text-slate-900">
+                  <Icon icon="lucide:calendar" class="size-4 text-bejo-500" />
+                  <span class="text-sm font-bold">{{ row.original.date }}</span>
+               </div>
+               <div class="flex items-center gap-2 text-slate-400 mt-1">
+                  <Icon icon="lucide:clock" class="size-3.5" />
+                  <span class="text-xs font-medium">{{ row.original.time }} WIB</span>
+               </div>
             </td>
 
-            <td class="px-5 py-4 relative action-menu">
-              <button class="size-9 rounded-lg flex items-center justify-center hover:bg-default-100 transition-all text-default-500 hover:text-default-900 border border-transparent hover:border-default-200" @click.stop="toggleDropdown(row.original.No_Id)">
-                <Icon icon="lucide:more-horizontal" class="size-5" />
-              </button>
+            <!-- Status -->
+            <td class="px-8 py-6">
+               <span 
+                class="px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest inline-flex items-center gap-1.5"
+                :class="{
+                  'bg-amber-100 text-amber-700': row.original.status === 'pending',
+                  'bg-emerald-100 text-emerald-700': row.original.status === 'confirmed',
+                  'bg-red-100 text-red-700': row.original.status === 'cancelled',
+                }"
+               >
+                  <div class="size-1.5 rounded-full" :class="{
+                    'bg-amber-500': row.original.status === 'pending',
+                    'bg-emerald-500': row.original.status === 'confirmed',
+                    'bg-red-500': row.original.status === 'cancelled',
+                  }"></div>
+                  {{ row.original.status }}
+               </span>
+            </td>
 
-              <div v-if="openDropdownId === row.original.No_Id" class="absolute right-5 mt-2 w-44 bg-card shadow-xl border border-default-200 rounded-xl p-1.5 z-[100] animate-in fade-in zoom-in duration-150">
-                <RouterLink :to="`/admin/${row.original.No_Id}`" class="dropdown-item"> <Icon icon="lucide:eye" class="size-4" /> Detail Admin </RouterLink>
-                <button @click="emit('edit', row.original)" class="dropdown-item w-full"><Icon icon="lucide:edit-3" class="size-4" /> Edit Data</button>
-                <div class="my-1.5 border-t border-default-100"></div>
-                <button @click="handleDelete(row.original)" class="dropdown-item w-full text-red-500 hover:bg-red-500/10 hover:text-red-600"><Icon icon="lucide:trash-2" class="size-4" /> Hapus Admin</button>
-              </div>
+            <!-- Aksi -->
+            <td class="px-8 py-6">
+               <div class="flex items-center gap-2">
+                  <button class="size-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-bejo-500 hover:border-bejo-200 transition-all group-hover:bg-white shadow-sm">
+                     <Icon icon="lucide:check-circle" class="size-5" />
+                  </button>
+                  <button class="size-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-red-500 hover:border-red-200 transition-all group-hover:bg-white shadow-sm">
+                     <Icon icon="lucide:x-circle" class="size-5" />
+                  </button>
+               </div>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
 
-    <div class="px-5 py-4 bg-default-50/50 border-t border-default-200 flex items-center justify-between">
-      <p class="text-xs text-default-500 font-medium">
-        Menampilkan <span class="text-default-900 font-bold">{{ table.getRowModel().rows.length }}</span> dari <span class="text-default-900 font-bold">{{ admins.length }}</span> Admin
-      </p>
-
-      <div class="flex items-center gap-2">
-        <button @click="table.previousPage()" :disabled="!table.getCanPreviousPage()" class="btn-nav">
-          <Icon icon="lucide:chevron-left" class="size-4" />
-        </button>
-
-        <div class="px-3 py-1 bg-default-100 rounded-md">
-          <span class="text-xs font-bold text-default-700"> {{ table.getState().pagination.pageIndex + 1 }} / {{ table.getPageCount() }} </span>
-        </div>
-
-        <button @click="table.nextPage()" :disabled="!table.getCanNextPage()" class="btn-nav">
-          <Icon icon="lucide:chevron-right" class="size-4" />
-        </button>
-      </div>
+    <!-- Pagination -->
+    <div class="px-8 py-6 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
+       <span class="text-xs font-bold text-slate-400">Menampilkan <span class="text-slate-900">4</span> Permintaan Teratas</span>
+       <div class="flex items-center gap-2">
+          <button class="size-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all disabled:opacity-50" disabled>
+             <Icon icon="lucide:chevron-left" class="size-4" />
+          </button>
+          <button class="size-9 rounded-xl bg-bejo-500 text-white flex items-center justify-center font-black text-xs shadow-lg shadow-bejo-500/20">1</button>
+          <button class="size-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all">
+             <Icon icon="lucide:chevron-right" class="size-4" />
+          </button>
+       </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-@reference "@/assets/css/style.css";
-
-.btn-nav {
-  @apply size-8 flex items-center justify-center rounded-lg border border-default-300 bg-card text-default-600
-         transition-all hover:bg-default-100 hover:text-default-900 disabled:opacity-30 disabled:cursor-not-allowed;
-}
-
-.dropdown-item {
-  @apply flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-default-700 rounded-lg transition-colors hover:bg-default-100;
-}
-
-.action-menu {
-  @apply relative;
-}
-</style>

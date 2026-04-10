@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { Icon } from '@iconify/vue'
-import { RouterLink } from 'vue-router'
 import api from '@/services/axios'
 import { useVueTable, FlexRender, getCoreRowModel, getPaginationRowModel, getSortedRowModel, getFilteredRowModel } from '@tanstack/vue-table'
 import { confirm, success, fail } from '@/utils/sweet-alert'
@@ -26,53 +25,72 @@ interface Customer {
 }
 
 const customers = ref<Customer[]>([])
+const isLoading = ref(false)
 const filter = ref('')
 const openDropdownId = ref<string | null>(null)
 const emit = defineEmits(['edit', 'success'])
+
 const columns = [
-  { accessorKey: 'Nama_Display', header: 'Nama' },
-  { accessorKey: 'Email', header: 'Email' },
-  { accessorKey: 'Telepon', header: 'Telepon' },
-  { accessorKey: 'Kota', header: 'Kota' },
+  { accessorKey: 'Nama_Display', header: 'Customer' },
+  { accessorKey: 'Email', header: 'Kontak' },
+  { accessorKey: 'Kota', header: 'Lokasi' },
   { accessorKey: 'Status', header: 'Status' },
   { id: 'aksi', header: 'Action', enableSorting: false }
 ]
 
+// Helpers
+const getInitial = (name: string) => name?.charAt(0).toUpperCase() || '?'
+
+const fetchData = async () => {
+  isLoading.value = true
+  try {
+    const { data } = await api.get('/api/customer/getAll?orderby=Tgl_Created', {
+      headers: { 'X-Jenis-User': 'admin' }
+    })
+    customers.value = data.Data || []
+  } catch (err) {
+    console.error('Gagal memuat data:', err)
+  } finally {
+    isLoading.value = false
+  }
+}
+
 const toggleStatus = async (item: Customer) => {
-  item.Status = item.Status === 'aktif' ? 'non aktif' : 'aktif'
-  item.Tgl_Nonaktif = item.Status === 'aktif' ? null : new Date()
+  const newStatus = item.Status === 'aktif' ? 'non aktif' : 'aktif'
+  const tglNonaktif = newStatus === 'aktif' ? null : new Date()
+  
   try {
     await api.put(
       '/api/Customer/update?no_id=' + item.No_Id,
       {
-        UserName: item.UserName,
-        Nama_Display: item.Nama_Display,
-        Email: item.Email,
-        Kota: item.Kota,
-        Status: item.Status,
-        Pernah_Order: item.Pernah_Order,
-        Saves: item.Saves,
-        Likes: item.Likes,
-        Device_Token: item.Device_Token,
-        Tgl_Created: item.Tgl_Created,
-        Tgl_Nonaktif: item.Tgl_Nonaktif,
-        Jumlah_Saves: item.Jumlah_Saves,
-        Jumlah_Likes: item.Jumlah_Likes,
-        Id_Media: item.Id_Media ? item.Id_Media : null
+        ...item,
+        Status: newStatus,
+        Tgl_Nonaktif: tglNonaktif,
+        Id_Media: item.Id_Media || null
       },
-      {
-        headers: { 'X-Jenis-User': 'Customer' }
-      }
+      { headers: { 'X-Jenis-User': 'Customer' } }
     )
+    item.Status = newStatus
+    item.Tgl_Nonaktif = tglNonaktif
     success(`Berhasil mengubah status ${item.Nama_Display}`)
-    console.log(item)
-  } catch (err) {
-    console.error('Gagal mengubah status:', err)
-    fail(`Gagal mengubah mengubah status ${item.Nama_Display}`)
-  } finally {
     emit('success')
+  } catch (err) {
+    fail(`Gagal mengubah status ${item.Nama_Display}`)
   }
 }
+
+const table = useVueTable({
+  get data() { return customers.value },
+  columns,
+  state: {
+    get globalFilter() { return filter.value }
+  },
+  getCoreRowModel: getCoreRowModel(),
+  getPaginationRowModel: getPaginationRowModel(),
+  getSortedRowModel: getSortedRowModel(),
+  getFilteredRowModel: getFilteredRowModel(),
+  initialState: { pagination: { pageSize: 5 } }
+})
 
 const toggleDropdown = (id: string) => {
   openDropdownId.value = openDropdownId.value === id ? null : id
@@ -84,56 +102,17 @@ const handleClickOutside = (event: MouseEvent) => {
   }
 }
 
-const table = useVueTable({
-  get data() {
-    return customers.value
-  },
-  columns,
-  state: {
-    get globalFilter() {
-      return filter.value
-    }
-  },
-  getCoreRowModel: getCoreRowModel(),
-  getPaginationRowModel: getPaginationRowModel(),
-  getSortedRowModel: getSortedRowModel(),
-  getFilteredRowModel: getFilteredRowModel(),
-  initialState: {
-    pagination: { pageSize: 5 }
-  }
-})
-
-const fetchData = async () => {
-  try {
-    const { data } = await api.get('/api/customer/getAll?orderby=Tgl_Created', {
-      headers: { 'X-Jenis-User': 'admin' }
-    })
-    customers.value = data.Data
-    console.log(customers)
-  } catch (err) {
-    console.error('Gagal memuat data:', err)
-  }
-}
-
-const handleEdit = (Customer: Customer) => {
-  emit('edit', Customer)
-}
-
-const handleDelete = async (Customer: Customer) => {
-  confirm(`Ingin menghapus data Customer milik ${Customer.Nama_Display}?`, async () => {
+const handleDelete = async (customer: Customer) => {
+  confirm(`Ingin menghapus data customer milik ${customer.Nama_Display}?`, async () => {
     try {
-      const url = `/api/Customer/delete?no_id=${Customer.No_Id}`
-
-      await api.delete(url, {
+      await api.delete(`/api/Customer/delete?no_id=${customer.No_Id}`, {
         headers: { 'X-Jenis-User': 'Customer' }
       })
-
-      success('Hapus data Customer berhasil')
-    } catch (err: any) {
-      console.error(err)
-      fail(err.response?.data?.Message || 'Terjadi kesalahan pada server')
-    } finally {
+      success('Hapus data customer berhasil')
+      fetchData()
       emit('success')
+    } catch (err: any) {
+      fail(err.response?.data?.Message || 'Terjadi kesalahan pada server')
     }
   })
 }
@@ -151,94 +130,161 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="flex flex-col rounded-xl border border-default-200 bg-card shadow-sm">
+  <div class="flex flex-col">
     <div class="overflow-x-auto lg:overflow-visible">
-      <table class="min-w-full divide-y divide-default-200">
-        <thead class="bg-gray-50">
+      <table class="min-w-full divide-y divide-slate-100">
+        <thead>
           <tr v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
-            <th v-for="header in headerGroup.headers" :key="header.id" class="px-4 py-3 text-start text-xs font-semibold text-gray-600 uppercase tracking-wider">
+            <th v-for="header in headerGroup.headers" :key="header.id" class="px-6 py-5 text-start text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
               <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
             </th>
           </tr>
         </thead>
 
-        <tbody class="divide-y divide-gray-200 bg-white">
-          <tr v-if="table.getRowModel().rows.length === 0">
-            <td colspan="5" class="py-12 text-center text-gray-500 text-sm">Tidak ada data customer ditemukan.</td>
+        <tbody class="divide-y divide-slate-50">
+          <tr v-if="isLoading">
+            <td colspan="5" class="py-24 text-center">
+              <div class="flex flex-col items-center gap-3">
+                <div class="size-12 rounded-2xl bg-bejo-50 flex items-center justify-center">
+                  <Icon icon="lucide:loader-2" class="animate-spin size-6 text-bejo-500" />
+                </div>
+                <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Memuat Data Customer...</span>
+              </div>
+            </td>
           </tr>
 
-          <tr v-for="row in table.getRowModel().rows" :key="row.id" class="hover:bg-gray-50 transition-colors">
-            <td class="px-4 py-3 flex items-center gap-3">
-              <div class="size-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
-                {{ row.original.Nama_Display.charAt(0).toUpperCase() }}
-              </div>
-              <div class="flex flex-col">
-                <span class="font-semibold text-gray-900 leading-tight">{{ row.original.Nama_Display }}</span>
-                <span class="text-xs text-gray-500">{{ row.original.UserName }}</span>
+          <tr v-else-if="table.getRowModel().rows.length === 0">
+            <td colspan="5" class="py-20 text-center">
+              <div class="flex flex-col items-center gap-3 opacity-40">
+                <Icon icon="lucide:users" class="size-12 text-slate-300" />
+                <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Tidak ada customer ditemukan</span>
               </div>
             </td>
+          </tr>
 
-            <td class="px-4 py-3 text-sm text-gray-600">
-              {{ row.original.Email }}
+          <tr v-for="row in table.getRowModel().rows" :key="row.id" class="hover:bg-slate-50/50 transition-all duration-300 group">
+            <td class="px-6 py-5">
+              <div class="flex items-center gap-4">
+                <div class="size-12 rounded-2xl bg-gradient-to-br from-bejo-500 to-bejo-600 text-white flex items-center justify-center font-black text-lg shadow-lg shadow-bejo-500/20 group-hover:scale-110 transition-transform duration-500">
+                  {{ getInitial(row.original.Nama_Display) }}
+                </div>
+                <div class="flex flex-col gap-0.5">
+                  <span class="font-black text-slate-900 tracking-tight group-hover:text-bejo-600 transition-colors">{{ row.original.Nama_Display }}</span>
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-black uppercase tracking-wider">@{{ row.original.UserName }}</span>
+                  </div>
+                </div>
+              </div>
             </td>
 
-            <td class="px-4 py-3 text-sm text-gray-600">
-              {{ row.original.Telepon }}
+            <td class="px-6 py-5">
+              <div class="flex flex-col gap-1">
+                <div class="flex items-center gap-2 text-slate-600 font-bold text-sm">
+                  <Icon icon="lucide:mail" class="size-3.5 text-slate-400" />
+                  {{ row.original.Email }}
+                </div>
+                <div class="flex items-center gap-2 text-slate-500 font-medium text-xs">
+                  <Icon icon="lucide:phone" class="size-3.5 text-slate-300" />
+                  {{ row.original.Telepon }}
+                </div>
+              </div>
             </td>
 
-            <td class="px-4 py-3 text-sm text-gray-600">
-              {{ row.original.Kota }}
+            <td class="px-6 py-5">
+              <div class="flex items-center gap-2 text-slate-600 font-bold text-xs">
+                <Icon icon="lucide:map-pin" class="size-3.5 text-bejo-500" />
+                {{ row.original.Kota }}
+              </div>
             </td>
 
-            <td class="px-4 py-3">
-              <div class="flex flex-col items-center gap-1.5">
-                <span class="text-[10px] uppercase font-bold tracking-tight" :class="row.original.Status === 'aktif' ? 'text-primary' : 'text-gray-400'">
-                  {{ row.original.Status }}
+            <td class="px-6 py-5">
+              <div class="flex items-center gap-4">
+                <span class="text-[10px] uppercase font-black tracking-[0.1em] transition-all min-w-[60px]" :class="row.original.Status === 'aktif' ? 'text-bejo-500' : 'text-slate-300'">
+                  {{ row.original.Status === 'aktif' ? 'Aktif' : 'Non-Aktif' }}
                 </span>
-                <button class="toggle" :class="{ 'toggle-active': row.original.Status === 'aktif' }" @click="toggleStatus(row.original)" aria-label="Toggle Status">
-                  <span class="toggle-circle" :class="{ 'translate-x-6': row.original.Status === 'aktif' }"></span>
+                <button 
+                  @click="toggleStatus(row.original)"
+                  class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-bejo-500/20"
+                  :class="row.original.Status === 'aktif' ? 'bg-bejo-500' : 'bg-slate-200'"
+                >
+                  <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out" :class="row.original.Status === 'aktif' ? 'translate-x-5' : 'translate-x-0'"></span>
                 </button>
               </div>
             </td>
 
-            <td class="px-4 py-3 relative action-menu">
-              <button class="size-8 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors text-gray-500" @click.stop="toggleDropdown(row.original.No_Id)">
-                <Icon icon="lucide:ellipsis" class="size-5" />
+            <td class="px-6 py-5 relative action-menu">
+              <button @click.stop="toggleDropdown(row.original.No_Id)" class="size-10 rounded-xl flex items-center justify-center hover:bg-slate-100 transition-all text-slate-400 hover:text-slate-900 border border-transparent hover:border-slate-200">
+                <Icon icon="lucide:more-vertical" class="size-5" />
               </button>
 
-              <div v-if="openDropdownId === row.original.No_Id" class="fixed right-4 mt-1 w-40 bg-white shadow-lg border border-gray-100 rounded-lg p-1 z-50">
-                <!-- <RouterLink :to="`/Customer/${row.original.No_Id}`" class="dropdown-item"> <Icon icon="lucide:eye" class="size-4" /> Detail </RouterLink> -->
-                <button @click="handleEdit(row.original)" class="dropdown-item w-full text-left"><Icon icon="lucide:edit" class="size-4" /> Edit</button>
-                <div class="my-1 border-t border-gray-100"></div>
-                <button @click="handleDelete(row.original)" class="dropdown-item w-full text-left text-red-600 hover:bg-red-50 hover:text-red-700"><Icon icon="lucide:trash-2" class="size-4" /> Hapus</button>
-              </div>
+              <Transition enter-active-class="transition duration-100 ease-out" enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100" leave-active-class="transition duration-75 ease-in" leave-from-class="transform scale-100 opacity-100" leave-to-class="transform scale-95 opacity-0">
+                <div v-if="openDropdownId === row.original.No_Id" class="absolute right-6 mt-2 w-48 bg-white shadow-2xl border border-slate-100 rounded-2xl p-2 z-[100]">
+                  <button @click="emit('edit', row.original)" class="dropdown-item w-full">
+                    <Icon icon="lucide:pencil" class="size-4" /> 
+                    Edit Data
+                  </button>
+                  <div class="my-1.5 border-t border-slate-50"></div>
+                  <button @click="handleDelete(row.original)" class="dropdown-item w-full text-red-500 hover:bg-red-50 hover:text-red-600">
+                    <Icon icon="lucide:trash-2" class="size-4" /> 
+                    Hapus Customer
+                  </button>
+                </div>
+              </Transition>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
 
-    <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
-      <p class="text-xs text-gray-500">
-        Menampilkan <b>{{ table.getRowModel().rows.length }}</b> dari <b>{{ customers.length }}</b> Customer
-      </p>
+    <!-- Pagination -->
+    <div class="px-6 py-5 border-t border-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+        Menampilkan 
+        <span class="text-slate-900 font-black">{{ table.getRowModel().rows.length }}</span> 
+        dari 
+        <span class="text-slate-900 font-black">{{ customers.length }}</span> 
+        Customer
+      </div>
 
-      <div class="flex items-center gap-1">
-        <button @click="table.previousPage()" :disabled="!table.getCanPreviousPage()" class="btn-nav">
+      <div class="flex items-center gap-2">
+        <button @click="table.previousPage()" :disabled="!table.getCanPreviousPage()" class="btn-pagination">
           <Icon icon="lucide:chevron-left" class="size-4" />
         </button>
 
-        <div class="flex items-center gap-1 mx-2">
-          <span class="text-xs font-medium text-gray-700"> Hal. {{ table.getState().pagination.pageIndex + 1 }} / {{ table.getPageCount() }} </span>
+        <div class="flex items-center gap-1">
+          <button v-for="n in table.getPageCount()" :key="n" @click="table.setPageIndex(n - 1)" class="btn-pagination-num" :class="table.getState().pagination.pageIndex === n - 1 ? 'active' : ''">
+            {{ n }}
+          </button>
         </div>
 
-        <button @click="table.nextPage()" :disabled="!table.getCanNextPage()" class="btn-nav">
+        <button @click="table.nextPage()" :disabled="!table.getCanNextPage()" class="btn-pagination">
           <Icon icon="lucide:chevron-right" class="size-4" />
         </button>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+@reference "@/assets/css/style.css";
+
+.btn-pagination {
+  @apply size-9 flex items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-400
+         transition-all hover:bg-slate-50 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed;
+}
+
+.btn-pagination-num {
+  @apply size-9 flex items-center justify-center rounded-xl text-xs font-black text-slate-400 hover:bg-slate-50 transition-all;
+}
+
+.btn-pagination-num.active {
+  @apply bg-bejo-500 text-white shadow-lg shadow-bejo-500/20;
+}
+
+.dropdown-item {
+  @apply flex items-center gap-3 px-3 py-2.5 text-[11px] font-black uppercase tracking-widest text-slate-600 rounded-xl transition-all hover:bg-slate-50;
+}
+</style>
 
 <style scoped>
 @reference "@/assets/css/style.css";

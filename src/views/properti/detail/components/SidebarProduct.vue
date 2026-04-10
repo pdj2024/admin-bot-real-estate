@@ -5,11 +5,11 @@ import type { Product } from '../index.vue'
 
 const props = defineProps<{
   product: Product | null
-  isAdmin: boolean
 }>()
 
 const currentIndex = ref(0)
 const videoMap = ref<Record<string, boolean>>({})
+const isVideoLoading = ref(false)
 let timer: any = null
 
 const nextSlide = (isAuto = false) => {
@@ -60,15 +60,31 @@ const handleVideoEnded = () => {
 }
 
 let startX = 0
-const handleTouchStart = (e: TouchEvent) => {
-  startX = e.touches[0].clientX
+let isDragging = false
+
+const handleDragStart = (e: TouchEvent | MouseEvent) => {
+  isDragging = true
+  startX = e instanceof TouchEvent ? e.touches[0].clientX : e.clientX
 }
-const handleTouchEnd = (e: TouchEvent) => {
-  const endX = e.changedTouches[0].clientX
+
+const handleDragEnd = (e: TouchEvent | MouseEvent) => {
+  if (!isDragging) return
+  isDragging = false
+  const endX = e instanceof TouchEvent ? e.changedTouches[0].clientX : e.clientX
   const diff = startX - endX
   if (Math.abs(diff) > 50) {
-    diff > 0 ? nextSlide(true) : prevSlide()
+    if (diff > 0) {
+      nextSlide(false)
+    } else {
+      prevSlide()
+    }
   }
+}
+
+const handleWaContact = () => {
+  const url = window.location.href
+  const text = `Halo, saya ingin menanyakan lebih lanjut mengenai properti "${props.product?.Nama_Produk}". Berikut tautannya: ${url}`
+  window.open(`https://wa.me/62895353837000?text=${encodeURIComponent(text)}`, '_blank')
 }
 
 const startTimer = () => {
@@ -122,7 +138,13 @@ watch(
 
 watch(currentIndex, (newIndex) => {
   preloadNextMedia(newIndex)
-})
+  if (videoMap.value[currentMediaUrl.value]) {
+    isVideoLoading.value = true
+  } else {
+    // Let image load event fire, default to loading
+    isVideoLoading.value = true
+  }
+}, { immediate: true })
 
 onMounted(() => {
   startTimer()
@@ -134,15 +156,15 @@ onUnmounted(() => clearInterval(timer))
   <div class="col-span-1">
     <div class="sticky top-24">
       <div class="mb-5">
-        <RouterLink :to="isAdmin ? '/properti/katalog' : '/katalog'" class="inline-flex items-center text-xs font-bold uppercase tracking-widest text-default-500 hover:text-primary transition-all group">
+        <RouterLink to="/properti/katalog" class="inline-flex items-center text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-bejo-600 transition-all group">
           <Icon icon="lucide:arrow-left" class="size-4 me-2 transition-transform group-hover:-translate-x-1" />
-          Kembali ke Katalog
+          Katalog Properti
         </RouterLink>
       </div>
 
       <div class="card mb-4 border-none shadow-sm bg-white overflow-hidden rounded-xl">
         <div class="card-body p-4 relative">
-          <div class="relative overflow-hidden mb-4 rounded-lg h-[350px] md:h-[420px] group bg-default-50 shadow-inner" @touchstart="handleTouchStart" @touchend="handleTouchEnd">
+          <div class="relative overflow-hidden mb-4 rounded-lg h-[350px] md:h-[420px] group bg-default-50 shadow-inner cursor-grab active:cursor-grabbing" @mousedown="handleDragStart" @mouseup="handleDragEnd" @mouseleave="handleDragEnd" @touchstart="handleDragStart" @touchend="handleDragEnd">
             <div v-if="product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia')" class="absolute inset-0 bg-black/40 backdrop-grayscale-[60%] z-[5] pointer-events-none transition-all duration-500"></div>
             <div v-if="product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia')" class="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
               <div class="px-2 py-1 bg-black/30 backdrop-blur-md rounded-xl border border-white/10 shadow-2xl transform transition-transform duration-500 group-hover:scale-110">
@@ -152,32 +174,36 @@ onUnmounted(() => clearInterval(timer))
               </div>
             </div>
 
-            <div class="h-full w-full transition-all duration-700 ease-out group-hover:scale-105 will-change-transform transform-gpu">
-              <video v-if="videoMap[currentMediaUrl]" :key="currentMediaUrl" :src="currentMediaUrl" class="w-full h-full object-cover" autoplay muted playsinline preload="auto" @ended="handleVideoEnded" :loop="false"></video>
+            <div class="h-full w-full transition-all duration-700 ease-out group-hover:scale-105 will-change-transform transform-gpu relative">
+              <div v-if="isVideoLoading" class="absolute inset-0 flex items-center justify-center bg-slate-100 z-20">
+                <Icon icon="lucide:loader-2" class="size-8 text-bejo-500 animate-spin" />
+              </div>
 
-              <img v-else-if="videoMap[currentMediaUrl] === false" :key="currentMediaUrl + 'img'" :src="currentMediaUrl" class="w-full h-full object-cover" loading="eager" />
+              <video v-if="videoMap[currentMediaUrl]" :key="currentMediaUrl" :src="currentMediaUrl" class="w-full h-full object-cover" autoplay muted playsinline preload="auto" @ended="handleVideoEnded" @waiting="isVideoLoading = true" @playing="isVideoLoading = false" @loadeddata="isVideoLoading = false" @canplay="isVideoLoading = false" :loop="false"></video>
+
+              <img v-else-if="videoMap[currentMediaUrl] === false" :key="currentMediaUrl + 'img'" :src="currentMediaUrl" class="w-full h-full object-cover select-none" loading="eager" @load="isVideoLoading = false" draggable="false" />
 
               <div v-else class="w-full h-full bg-gray-200 animate-pulse"></div>
             </div>
-            <button @click="prevSlide" class="absolute left-3 top-1/2 -translate-y-1/2 size-11 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-lg text-white border border-white/20 opacity-0 group-hover:opacity-100 transition-all z-10 hover:bg-primary hover:border-primary">
+            <button @click="prevSlide" class="absolute left-3 top-1/2 -translate-y-1/2 size-11 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-lg text-white border border-white/20 opacity-0 group-hover:opacity-100 transition-all z-10 hover:bg-bejo-600 hover:border-bejo-600">
               <Icon icon="lucide:chevron-left" class="size-6"></Icon>
             </button>
-            <button @click="nextSlide(false)" class="absolute right-3 top-1/2 -translate-y-1/2 size-11 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-lg text-white border border-white/20 opacity-0 group-hover:opacity-100 transition-all z-10 hover:bg-primary hover:border-primary">
+            <button @click="nextSlide(false)" class="absolute right-3 top-1/2 -translate-y-1/2 size-11 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-lg text-white border border-white/20 opacity-0 group-hover:opacity-100 transition-all z-10 hover:bg-bejo-600 hover:border-bejo-600">
               <Icon icon="lucide:chevron-right" class="size-6"></Icon>
             </button>
 
             <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10 bg-black/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
-              <button v-for="(_, index) in product?.MediaUrls?.length" :key="index" @click="goToSlide(index)" class="size-1.5 rounded-full transition-all duration-300" :class="currentIndex === index ? 'bg-primary w-5' : 'bg-white/50'"></button>
+              <button v-for="(_, index) in product?.MediaUrls?.length" :key="index" @click="goToSlide(index)" class="size-1.5 rounded-full transition-all duration-300" :class="currentIndex === index ? 'bg-bejo-500 w-5' : 'bg-white/50'"></button>
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-3 relative">
-            <a href="https://wa.me/62895353837000" class="flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-bold text-sm tracking-wide transition-all shadow-sm bg-primary text-white hover:bg-primary-600 hover:shadow-primary/20">
-              <Icon icon="lucide:headset" class="size-4"></Icon>
-              Hubungi Kami
-            </a>
-            <button type="button" @click.prevent="shareProduct" class="flex w-full items-center justify-center gap-2 py-3 px-4 rounded-lg font-bold text-sm tracking-wide transition-all shadow-sm border border-default-200 text-default-700 hover:bg-default-50 hover:border-default-300">
-              <Icon icon="lucide:share-2" class="size-4"></Icon>
+            <button @click="handleWaContact" class="flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm tracking-wide transition-all shadow-md bg-bejo-600 text-white hover:bg-bejo-700 hover:shadow-bejo-600/30">
+              <Icon icon="lucide:headset" class="size-4" />
+              Preview WA
+            </button>
+            <button type="button" @click.prevent="shareProduct" class="flex w-full items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm tracking-wide transition-all shadow-sm border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300">
+              <Icon icon="lucide:share-2" class="size-4" />
               Bagikan
             </button>
           </div>
@@ -186,23 +212,33 @@ onUnmounted(() => clearInterval(timer))
 
       <div class="card border-none shadow-sm bg-white rounded-xl overflow-hidden transition-all duration-500 mb-3">
         <div class="p-4 flex justify-between items-center">
-          <div class="flex items-center gap-2 text-default-600">
-            <div class="bg-primary/10 p-1.5 rounded-md">
-              <Icon icon="lucide:map-pin" class="size-4 text-primary"></Icon>
+          <div class="flex items-center gap-2 text-slate-600">
+            <div class="bg-bejo-50 p-1.5 rounded-lg border border-bejo-100" :class="!product ? 'bg-slate-200 border-none animate-pulse *:opacity-0' : ''">
+              <Icon icon="lucide:map-pin" class="size-4 text-bejo-600" />
             </div>
             <div class="flex flex-col">
-              <span class="text-sm font-bold tracking-tighter">
-                {{ product?.Area[0] }}
+              <span class="text-sm font-bold tracking-tight" :class="!product ? 'text-transparent bg-slate-200 animate-pulse select-none rounded w-fit' : ''">
+                {{ !product ? 'Memuat area...' : product?.Area?.[0] }}
               </span>
-              <!-- <span v-if="product?.Area && product.Area[1]" class="text-xs font-medium"> ({{ product.Area[1] }}) </span> -->
             </div>
           </div>
-          <button class="text-[12px] font-black text-primary hover:text-primary-700 tracking-widest border-b border-primary/20">Lihat Area</button>
+          <button class="text-[11px] font-black uppercase tracking-widest border-b px-1 pb-0.5" :class="!product ? 'text-transparent bg-slate-200 border-none animate-pulse select-none rounded' : 'text-bejo-600 hover:text-bejo-800 border-bejo-600/30'">Lihat Area</button>
         </div>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+video, img {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.animate-pulse {
+  animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+</style>
 
 <style scoped>
 video, img {

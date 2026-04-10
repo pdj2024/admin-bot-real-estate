@@ -6,45 +6,18 @@ import listPlugin from '@fullcalendar/list'
 import interactionPlugin from '@fullcalendar/interaction'
 import idLocale from '@fullcalendar/core/locales/id'
 import type { CalendarOptions, EventClickArg } from '@fullcalendar/core'
-import type { DateClickArg } from '@fullcalendar/interaction'
 import { ref, onMounted, computed } from 'vue'
-import { success } from '@/utils/sweet-alert'
 import { calendarEvents } from './data'
 
 const isMobile = ref(false)
 
-const emit = defineEmits<{
-  (
-    e: 'openAppointment',
-    data: {
-      title: string
-      start: Date
-      end: Date
-      location: string
-      customerName: string
-      customerPhone: string
-      salesName: string
-      salesPhone: string
-      image: string
-      propertyName: string
-      type: number
-      buildingSize: number
-      landSize: number
-      carport: number
-      floors: number
-      bedrooms: number
-      bathrooms: number
-    }
-  ): void
-}>()
+const emit = defineEmits(['openAppointment'])
 
-// props untuk dynamic col-span
 const props = defineProps<{
   appointmentOpen?: boolean
 }>()
 
 const calendarColClass = computed(() => (props.appointmentOpen ? 'lg:col-span-3' : 'lg:col-span-4'))
-
 const fullCalendarRef = ref<InstanceType<typeof FullCalendar> | null>(null)
 
 const calendarOptions = computed<CalendarOptions>(() => ({
@@ -54,25 +27,11 @@ const calendarOptions = computed<CalendarOptions>(() => ({
   height: 'auto',
   contentHeight: 650,
   aspectRatio: 1.8,
-
-  headerToolbar: isMobile.value
-    ? {
-        left: 'prev,next',
-        center: 'title',
-        right: ''
-      }
-    : {
-        left: 'prev,next,today',
-        center: 'title',
-        right: 'dayGridMonth,timeGridWeek,dayGridDay,listWeek'
-      },
-
-  footerToolbar: isMobile.value
-    ? {
-        center: 'dayGridMonth,timeGridWeek,listWeek'
-      }
-    : (false as false),
-
+  headerToolbar: {
+    left: isMobile.value ? 'prev,next' : 'prev,next,today',
+    center: 'title',
+    right: isMobile.value ? '' : 'dayGridMonth,timeGridWeek,listWeek'
+  },
   editable: true,
   selectable: true,
   events: calendarEvents,
@@ -80,39 +39,11 @@ const calendarOptions = computed<CalendarOptions>(() => ({
     refreshCalendar()
     const event = info.event
     const data = event.extendedProps
-
-    emit('openAppointment', {
-      title: event.title,
-      start: event.start!,
-      end: event.end!,
-      location: data.location,
-      customerName: data.customerName,
-      customerPhone: data.customerPhone,
-      salesName: data.salesName,
-      salesPhone: data.salesPhone,
-      image: data.image,
-      propertyName: data.propertyName,
-      type: data.type,
-      buildingSize: data.buildingSize,
-      landSize: data.landSize,
-      carport: data.carport,
-      floors: data.floors,
-      bedrooms: data.bedrooms,
-      bathrooms: data.bathrooms
-    })
-  },
-  eventDidMount: (info) => {
-    const event = info.event
-    const data = event.extendedProps
-    console.log(info.event)
-    info.el.setAttribute('title', info.event.title)
+    emit('openAppointment', { title: event.title, start: event.start!, end: event.end!, ...data })
   }
 }))
 
-// gunakan defineExpose untuk parent bisa memanggil fungsi refresh
-const refreshCalendar = () => {
-  fullCalendarRef.value?.getApi().updateSize()
-}
+const refreshCalendar = () => fullCalendarRef.value?.getApi().updateSize()
 defineExpose({ refreshCalendar })
 
 onMounted(() => {
@@ -122,52 +53,96 @@ onMounted(() => {
 </script>
 
 <template>
-  <div :class="calendarColClass">
-    <div class="card">
-      <div class="card-body">
-        <FullCalendar ref="fullCalendarRef" :options="calendarOptions" />
-      </div>
+  <div :class="calendarColClass" class="transition-all duration-500">
+    <div class="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/50">
+      <FullCalendar ref="fullCalendarRef" :options="calendarOptions" />
     </div>
   </div>
 </template>
 
 <style scoped>
-/* CSS bawaan Anda */
-.fc {
-  max-width: 100%;
+/* FullCalendar Custom Premium Styling */
+:deep(.fc) {
+  --fc-button-bg-color: #f8fafc;
+  --fc-button-border-color: #e2e8f0;
+  --fc-button-hover-bg-color: #f1f5f9;
+  --fc-button-hover-border-color: #cbd5e1;
+  --fc-button-text-color: #475569;
+  --fc-button-active-bg-color: #f75211;
+  --fc-button-active-border-color: #f75211;
+  --fc-border-color: #f1f5f9;
+  --fc-today-bg-color: #f7521108;
+  --fc-page-bg-color: transparent;
+  
+  font-family: inherit;
 }
 
-.fc-toolbar-title {
-  font-size: 16px;
+:deep(.fc .fc-toolbar-title) {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #0f172a;
+  text-transform: capitalize;
 }
 
-.fc-daygrid-day-frame {
-  min-height: 90px;
+:deep(.fc .fc-button) {
+  border-radius: 0.85rem;
+  padding: 0.6rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.2s;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  border-width: 1px;
 }
 
-@media (max-width: 640px) {
-  .fc-toolbar {
-    flex-wrap: wrap;
-    gap: 6px;
-  }
+:deep(.fc .fc-button-primary:not(:disabled).fc-button-active) {
+  color: white;
+  box-shadow: 0 10px 15px -3px rgba(247, 82, 17, 0.3);
 }
 
-/* Targetkan tombol FullCalendar dari dalam file kalender ini */
-:deep(.fc-button-primary) {
-  background-color: var(--color-bejo-500) !important;
-  border-color: var(--color-bejo-500) !important;
-  color: var(--text-bejo-50, #ffffff) !important;
-  text-transform: capitalize; /* Opsional: agar teks tombol lebih rapi */
+:deep(.fc .fc-button:focus) {
+  box-shadow: 0 0 0 3px rgba(247, 82, 17, 0.1) !important;
 }
 
-:deep(.fc-button-primary:hover) {
-  background-color: var(--color-bejo-600, #0369a1) !important;
-  border-color: var(--color-bejo-600, #0369a1) !important;
+:deep(.fc .fc-col-header-cell) {
+  padding: 1rem 0;
+  background: #f8fafc50;
 }
 
-:deep(.fc-button-primary:not(:disabled).fc-button-active),
-:deep(.fc-button-primary:not(:disabled):active) {
-  background-color: var(--color-bejo-700, #075985) !important;
-  border-color: var(--color-bejo-700, #075985) !important;
+:deep(.fc .fc-col-header-cell-cushion) {
+  font-size: 0.7rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #94a3b8;
+}
+
+:deep(.fc-daygrid-day-number) {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #64748b;
+  padding: 8px 12px !important;
+}
+
+:deep(.fc-daygrid-event) {
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border: none;
+  background-color: #f7521115;
+  color: #f75211;
+}
+
+:deep(.fc-v-event) {
+  background-color: #f75211;
+  border-color: #f75211;
+}
+
+:deep(.fc-scrollgrid) {
+  border-radius: 1.5rem;
+  overflow: hidden;
+  border: 1px solid #f1f5f9;
 }
 </style>

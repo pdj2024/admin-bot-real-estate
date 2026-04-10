@@ -1,416 +1,122 @@
 import type { ApexOptions } from 'apexcharts'
-import img2 from '@/assets/images/product/img-02.png'
-import img3 from '@/assets/images/product/img-03.png'
-import img4 from '@/assets/images/product/img-04.png'
-import img5 from '@/assets/images/product/img-05.png'
-import img6 from '@/assets/images/product/img-06.png'
 
-export type OrderType = {
-  id: number
-  orderId: string
-  customerName: string
-  location: string
-  orderDate: string
-  paymentMethod: string
-  quantity: number
-  price: number
-  totalAmount: number
-  status: string
-  statusClass: string
-}
-
-export type Product = {
-  image: string
-  name: string
-  rating: number
-  sales: number
-}
-export const products: Product[] = [
-  { image: img2, name: 'Mesh Ergonomic Black Chair', rating: 5, sales: 798 },
-  { image: img3, name: 'Fastcolors Typography Men', rating: 5, sales: 695 },
-  { image: img4, name: 'Mesh Ergonomic Green Chair', rating: 5, sales: 985 },
-  { image: img5, name: 'Techel Black Bluetooth Soundbar', rating: 5, sales: 813 },
-  { image: img6, name: 'Bovet Fleurier AIFSQ029', rating: 5, sales: 915 },
-  { image: img3, name: 'Fastcolors Typography Men', rating: 5, sales: 785 }
-]
-
-export const orders: OrderType[] = [
+// Chart: Tren Leads vs Kunjungan (LeadAnalytics.vue)
+export const leadSeries = [
   {
-    id: 1,
-    orderId: '#TWT5015100365',
-    customerName: 'Marie Prohaska',
-    location: 'Germany',
-    orderDate: '08 Jun, 2026',
-    paymentMethod: 'Credit Card',
-    quantity: 5,
-    price: 146.99,
-    totalAmount: 749.95,
-    status: 'Delivered',
-    statusClass: 'bg-success/10 text-success border border-success/30'
+    name: 'Leads Baru',
+    data: [45, 52, 38, 65, 48, 72, 55, 61, 49, 70, 85, 92]
   },
   {
-    id: 2,
-    orderId: '#TWT5015100366',
-    customerName: 'Jaqueline Hammes',
-    location: 'France',
-    orderDate: '11 July, 2026',
-    paymentMethod: 'Paypal',
-    quantity: 2,
-    price: 450.0,
-    totalAmount: 900.0,
-    status: 'Shipping',
-    statusClass: 'bg-info/10 text-info border border-info/30'
-  },
-  {
-    id: 3,
-    orderId: '#TWT5015100367',
-    customerName: 'Marlene Hirthe',
-    location: 'Argentina',
-    orderDate: '21 Aug, 2026',
-    paymentMethod: 'Visa Card',
-    quantity: 3,
-    price: 147.23,
-    totalAmount: 294.46,
-    status: 'New',
-    statusClass: 'bg-secondary/10 text-secondary border border-secondary/30'
-  },
-  {
-    id: 4,
-    orderId: '#TWT5015100368',
-    customerName: 'Reagan Larson',
-    location: 'Belgium',
-    orderDate: '28 Nov, 2026',
-    paymentMethod: 'American Express',
-    quantity: 1,
-    price: 579.12,
-    totalAmount: 579.12,
-    status: 'Delivered',
-    statusClass: 'bg-success/10 text-success border border-success/30'
-  },
-  {
-    id: 5,
-    orderId: '#TWT5015100369',
-    customerName: 'Glennie Langosh',
-    location: 'Australia',
-    orderDate: '11 Oct, 2026',
-    paymentMethod: 'American Express',
-    quantity: 1,
-    price: 349.0,
-    totalAmount: 349.0,
-    status: 'Proses Pesanan',
-    statusClass: 'bg-warning/10 text-warning border border-warning/30'
-  },
-  {
-    id: 6,
-    orderId: '#TWT5015100370',
-    customerName: 'Rickie Cremin',
-    location: 'United States',
-    orderDate: '16 Feb, 2026',
-    paymentMethod: 'COD',
-    quantity: 3,
-    price: 89.49,
-    totalAmount: 268.47,
-    status: 'Delivered',
-    statusClass: 'bg-success/10 text-success border border-success/30'
-  },
-  {
-    id: 7,
-    orderId: '#TWT5015100371',
-    customerName: 'Domenic Tromp',
-    location: 'Afghanistan',
-    orderDate: '21 Jan, 2026',
-    paymentMethod: 'PayPal',
-    quantity: 2,
-    price: 739.79,
-    totalAmount: 1479.58,
-    status: 'New',
-    statusClass: 'bg-secondary/10 text-secondary border border-secondary/30'
+    name: 'Kunjungan Lokasi',
+    data: [12, 18, 15, 25, 20, 32, 28, 30, 22, 35, 42, 48]
   }
 ]
 
-export const series = [
-  {
-    name: 'Proses Pesanan',
-    data: [17, 16, 19, 22, 24, 29, 25, 20, 25, 31, 28, 35]
-  },
-  {
-    name: 'Pesanan Baru',
-    data: [30, 24, 32, 27, 16, 22, 32, 21, 24, 20, 38, 28]
-  }
-]
-
-export const chartOptions: ApexOptions = {
+export const leadOptions: ApexOptions = {
   chart: {
-    type: 'line',
-    height: 275,
-    toolbar: {
-      show: false
+    type: 'area',
+    height: 300,
+    toolbar: { show: false },
+    fontFamily: 'inherit'
+  },
+  stroke: { curve: 'smooth', width: 3 },
+  fill: {
+    type: 'gradient',
+    gradient: {
+      shadeIntensity: 1,
+      opacityFrom: 0.45,
+      opacityTo: 0.05,
+      stops: [20, 100]
     }
   },
-  stroke: {
-    curve: 'smooth',
-    width: 2
-  },
-  colors: ['#14df0d', '#2b7fff'],
-  dataLabels: {
-    enabled: false
-  },
+  colors: ['#f75211', '#0ea5e9'], // bejo-500, sky-500
+  dataLabels: { enabled: false },
   grid: {
-    show: true,
-    padding: {
-      top: -20,
-      right: 0
-    }
-  },
-  markers: {
-    hover: {
-      sizeOffset: 4
-    }
-  }
-}
-
-export const salesseries = [
-  {
-    name: 'Total Penjualan',
-    data: [44.000, 55.000, 41.000, 67.000, 22.000, 43.000, 21.000, 49.000, 20.000, 41.000, 67.000, 22]
-  },
-  {
-    name: 'Total Pendapatan',
-    data: [11.000, 17.000, 15.000, 15.000, 21.000, 14.000, 15.000, 13.000, 5.000, 15.000, 15.000, 21]
-  }
-]
-
-export const salesOptions: ApexOptions = {
-  chart: {
-    type: 'bar',
-    height: 310,
-    stacked: true,
-    stackType: '100%',
-    parentHeightOffset: 0,
-    toolbar: {
-      show: false
-    }
+    borderColor: '#f1f5f9',
+    strokeDashArray: 4,
+    padding: { left: 0, right: 0, bottom: 0 }
   },
   xaxis: {
-    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'agt', 'Sep', 'Okt', 'Nov', 'Des']
-  },
-  tooltip: {
-    y: {
-      formatter: function (val) {
-        return 'Rp ' + val + 'k'
-      }
-    }
-  },
-  grid: {
-    show: true,
-    padding: {
-      top: -20,
-      right: -10,
-      bottom: -10
-    }
-  },
-  plotOptions: {
-    bar: {
-      horizontal: false,
-      columnWidth: '50%'
-    }
-  },
-  colors: ['#13d40c', '#2b7fff', 'var(--color-teal-500)'],
-  fill: {
-    opacity: 1
-  },
-  legend: {
-    position: 'bottom'
-  }
-}
-
-export const initTrafficResourceseries = [44, 34, 22]
-
-export const initTrafficResources: ApexOptions = {
-  chart: {
-    height: 222,
-    type: 'radialBar'
-  },
-  plotOptions: {
-    radialBar: {
-      dataLabels: {
-        total: {
-          show: true,
-          label: 'Total',
-          formatter: function () {
-            return '875'
-          }
-        }
-      }
-    }
-  },
-  grid: {
-    show: true,
-    padding: {
-      top: -8,
-      bottom: -15,
-      left: 0,
-      right: 0
-    }
-  },
-  colors: ['#2b7fff', '#facc15', '#4ade80', '#f87171'],
-  labels: ['Direct', 'Referrals', 'Search Engine']
-}
-
-export const salesThisMonthChartseries = [
-  {
-    type: 'rangeArea',
-    name: 'Rentang Laba',
-
-    data: [
-      { x: 'Mar', y: [900, 2900] },
-      { x: 'Apr', y: [1400, 2700] },
-      { x: 'Mei', y: [2600, 3900] },
-      { x: 'Jun', y: [500, 1700] },
-      { x: 'Jul', y: [1900, 2300] },
-      { x: 'agt', y: [1000, 1500] }
-    ]
-  },
-  {
-    type: 'rangeArea',
-    name: 'Rentang Pengeluaran',
-    data: [
-      { x: 'Mar', y: [3900, 4900] },
-      { x: 'Apr', y: [3400, 3900] },
-      { x: 'Mei', y: [5100, 5900] },
-      { x: 'Jun', y: [5400, 6700] },
-      { x: 'Jul', y: [4300, 4600] },
-      { x: 'Agt', y: [2100, 2900] }
-    ]
-  },
-  {
-    type: 'line',
-    name: 'Median Laba',
-    data: [
-      { x: 'Mar', y: 1900 },
-      { x: 'Apr', y: 2200 },
-      { x: 'Mei', y: 3000 },
-      { x: 'Jun', y: 1000 },
-      { x: 'Jul', y: 2100 },
-      { x: 'Agt', y: 1200 },
-      { x: 'Sep', y: 2250 },
-      { x: 'Okt', y: 2900 }
-    ]
-  },
-  {
-    type: 'line',
-    name: 'Median Pengeluaran',
-    data: [
-      { x: 'Mar', y: 4300 },
-      { x: 'Apr', y: 3700 },
-      { x: 'Mei', y: 5500 },
-      { x: 'Jun', y: 5900 },
-      { x: 'Jul', y: 4500 },
-      { x: 'Ags', y: 3500 },
-      { x: 'Sep', y: 2000 },
-      { x: 'Okt', y: 1800 }
-    ]
-  }
-]
-
-export const salesThisMonthChart: ApexOptions = {
-  chart: {
-    height: 280,
-    type: 'rangeArea',
-    animations: {
-      speed: 500
-    },
-    toolbar: {
-      show: false
-    }
-  },
-  colors: ['#2b7fff', '#facc15', '#4ade80', '#f87171'],
-  dataLabels: {
-    enabled: false
-  },
-  fill: {
-    opacity: [0.24, 0.24, 1, 1]
-  },
-  forecastDataPoints: {
-    count: 2
+    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'],
+    axisBorder: { show: false },
+    axisTicks: { show: false },
+    labels: { style: { colors: '#64748b', fontWeight: 600 } }
   },
   yaxis: {
-    show: false
-  },
-  stroke: {
-    curve: 'straight',
-    width: [0, 0, 2, 2]
-  },
-  grid: {
-    show: true,
-    padding: {
-      top: -8,
-      left: 10,
-      right: 0
-    }
+    labels: { style: { colors: '#64748b', fontWeight: 600 } }
   },
   legend: {
-    show: true,
-    customLegendItems: ['Team B', 'Team A'],
-    inverseOrder: true
-  },
-  markers: {
-    hover: {
-      sizeOffset: 5
-    }
+    position: 'top',
+    horizontalAlign: 'right',
+    fontWeight: 700,
+    markers: { radius: 12 }
   }
 }
 
-export const audienceChartseries = [
-  {
-    name: 'Laki-Laki',
-    data: [44, 55, 41, 67, 22, 43, 26]
-  },
-  {
-    name: 'Perempuan',
-    data: [13, 23, 20, 8, 13, 27, 41]
-  }
-]
+// Chart: Sebaran Properti (PropertyDistribution.vue)
+export const distributionSeries = [44, 32, 24]
 
-export const audienceChartOptions: ApexOptions = {
+export const distributionOptions: ApexOptions = {
   chart: {
-    type: 'bar',
-    height: 340,
-    stacked: true,
-    toolbar: {
-      show: false
-    },
-    zoom: {
-      enabled: true
-    }
+    type: 'donut',
+    height: 300,
+  },
+  labels: ['Rumah', 'Apartemen', 'Ruko/Komersial'],
+  colors: ['#f75211', '#0ea5e9', '#6366f1'], // bejo-500, sky-500, indigo-500
+  legend: {
+    position: 'bottom',
+    fontWeight: 700,
   },
   plotOptions: {
-    bar: {
-      horizontal: false,
-      borderRadius: 6,
-      columnWidth: '44%',
-      dataLabels: {
-        total: {
-          enabled: true,
-          style: {
-            fontSize: '13px',
-            fontWeight: 600
+    pie: {
+      donut: {
+        size: '75%',
+        labels: {
+          show: true,
+          total: {
+            show: true,
+            label: 'Total Unit',
+            fontSize: '14px',
+            fontWeight: 800,
+            color: '#64748b',
+            formatter: (w) => '263'
           }
         }
       }
     }
   },
-  xaxis: {
-    type: 'datetime',
-    categories: ['01/01/2026 GMT', '01/02/2026 GMT', '01/03/2026 GMT', '01/04/2026 GMT', '01/05/2026 GMT', '01/06/2026 GMT', '01/07/2026 GMT']
-  },
-  colors: ['#f75211ff', '#2b7fff'],
-
-  legend: {
-    position: 'top',
-    horizontalAlign: 'right'
-  },
-  fill: {
-    opacity: 1
-  }
+  dataLabels: { enabled: false }
 }
+
+// Data: Operasional (OperationalSummary.vue)
+export const operationalStats = [
+  { 
+    label: 'Chat Aktif Hari Ini', 
+    value: '18', 
+    icon: 'lucide:message-square-more', 
+    color: 'bejo',
+    trend: '+12% vs kemarin'
+  },
+  { 
+    label: 'Janji Temu Hari Ini', 
+    value: '06', 
+    icon: 'lucide:calendar-clock', 
+    color: 'sky',
+    trend: '3 dikonfirmasi'
+  },
+  { 
+    label: 'Total Leads (Bulan Ini)', 
+    value: '142', 
+    icon: 'lucide:user-plus', 
+    color: 'emerald',
+    trend: '+24 leads baru'
+  }
+]
+
+// Data: Inventory (InventoryStatus.vue)
+export const inventoryStats = [
+  { label: 'Tersedia', value: '24', icon: 'lucide:home', color: 'emerald' },
+  { label: 'Terjual', value: '150', icon: 'lucide:award', color: 'bejo' },
+  { label: 'Tersewa', value: '89', icon: 'lucide:key', color: 'amber' },
+  { label: 'Total Unit', value: '263', icon: 'lucide:layers', color: 'slate' },
+]

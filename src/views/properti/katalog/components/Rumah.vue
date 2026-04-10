@@ -1,23 +1,43 @@
 <script setup lang="ts">
-import { onMounted, ref, nextTick } from 'vue'
+import { onMounted, ref, nextTick, computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import api from '@/services/axios'
-import Modal from './Modal.vue' // Impor modal baru kamu
+import Modal from './Modal.vue'
 import { useVueTable, getCoreRowModel, getPaginationRowModel, getSortedRowModel, getFilteredRowModel, type SortingState } from '@tanstack/vue-table'
 import { confirm, success, fail } from '@/utils/sweet-alert'
 
+// Helper Functions (Top to ensure availability)
+const formatCurrency = (value: number) => {
+  if (value === undefined || value === null) return 'Rp 0'
+  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
+}
+
+const formatShortCurrency = (value: number) => {
+  if (value === undefined || value === null || value === 0) return 'Rp 0'
+  if (value >= 1000000000) {
+    return (value / 1000000000).toFixed(1).replace(/\.0$/, '') + ' M'
+  }
+  if (value >= 1000000) {
+    return (value / 1000000).toFixed(0) + ' Jt'
+  }
+  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
+}
+
+const calculateDiscount = (original: number, current: number) => {
+  if (!original || !current || current >= original) return 0
+  return Math.round(((original - current) / original) * 100)
+}
+
 const isModalOpen = ref(false)
 const isSortOpen = ref(false)
+const isTransactionOpen = ref(false)
 const activeDropdownId = ref<string | null>(null)
 const filter = ref('')
 const products = ref<Product[]>([])
+const transactionFilter = ref('Semua')
 const selectedItem = ref<Product | null>(null)
 const sorting = ref<SortingState>([])
 const selectedSort = ref('Terbaru')
-
-const props = defineProps<{
-  isAdmin: boolean
-}>()
 
 interface MediaUrl {
   Url: string | null
@@ -59,35 +79,30 @@ export interface Product {
   Flag_Sewa: string
   Minimal_Sewa: number | null
   Satuan_Minimal_Sewa: string
-  Area: string
+  Area: string[]
   Hide_alamat: boolean
   Akses_Jalan: string[]
   File_Image: string[]
   MediaUrls: MediaUrl[]
 }
 
-const setSort = (type: string) => {
-  selectedSort.value = type
-
-  if (type === 'Harga Termurah') {
-    sorting.value = [{ id: 'Harga_Jual1', desc: false }]
-  } else if (type === 'Harga Termahal') {
-    sorting.value = [{ id: 'Harga_Jual1', desc: true }]
-  } else if (type === 'Luas Terbesar') {
-    sorting.value = [{ id: 'Luas_Tanah', desc: true }]
-  } else {
-    sorting.value = []
-  }
+const toggleDropdown = (id: string) => {
+  activeDropdownId.value = activeDropdownId.value === id ? null : id
 }
 
-const handleSort = (type: string) => {
-  setSort(type)
-  isSortOpen.value = false
+const handleTransactionFilter = (type: string) => {
+  transactionFilter.value = type
+  isTransactionOpen.value = false
 }
+
+const filteredProducts = computed(() => {
+  if (transactionFilter.value === 'Semua') return products.value
+  return products.value.filter(p => p.Status_Transaksi.includes(transactionFilter.value))
+})
 
 const table = useVueTable({
   get data() {
-    return products.value
+    return filteredProducts.value
   },
   columns: [
     { accessorKey: 'Nama_Produk', header: 'Properti' },
@@ -119,22 +134,13 @@ const table = useVueTable({
 const fetchData = async () => {
   try {
     const { data } = await api.get('/api/realEstate/getAll', {
-      headers: { 'X-Jenis-User': 'Admin' }
+      headers: { 'X-Jenis-User': 'admin' }
     })
-    products.value = data.Data
+    products.value = data.Data || []
   } catch (err: any) {
-    console.error('DATA:', err.response?.data)
-    console.error('STATUS:', err.response?.status)
-    console.error('MESSAGE:', err.message)
+    console.error('FETCH_ERROR:', err.message)
+    products.value = []
   }
-}
-
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
-}
-
-const toggleDropdown = (id: string) => {
-  activeDropdownId.value = activeDropdownId.value === id ? null : id
 }
 
 const updateStatusTransaksi = async (product: any, newStatus: string) => {
@@ -152,6 +158,19 @@ const updateStatusTransaksi = async (product: any, newStatus: string) => {
   })
 }
 
+const setSort = (type: string) => {
+  selectedSort.value = type
+  if (type === 'Harga Termurah') sorting.value = [{ id: 'Harga_Jual1', desc: false }]
+  else if (type === 'Harga Termahal') sorting.value = [{ id: 'Harga_Jual1', desc: true }]
+  else if (type === 'Luas Terbesar') sorting.value = [{ id: 'Luas_Tanah', desc: true }]
+  else sorting.value = []
+}
+
+const handleSort = (type: string) => {
+  setSort(type)
+  isSortOpen.value = false
+}
+
 const openAddModal = () => {
   selectedItem.value = null
   isModalOpen.value = true
@@ -165,92 +184,103 @@ const openEditModal = (data: Product) => {
 const deleteProduct = async (data: Product) => {
   confirm('Apakah Anda ingin menghapus data ini?', async () => {
     try {
-      // hapus media dulu
       const res = await api.delete('/api/mediacloud/delete-batch', {
-        data: {
-          ids: [...data.File_Image]
-        },
-        headers: {
-          'X-Jenis-User': 'admin'
-        }
+        data: { ids: [...data.File_Image] },
+        headers: { 'X-Jenis-User': 'admin' }
       })
-
       const successMedia: string[] = res.data?.Success || []
-
-      // cek apakah semua File_Image berhasil dihapus
-      const semuaTerhapus = data.File_Image.every((id: string) => successMedia.includes(id))
-
-      if (!semuaTerhapus) {
+      if (!data.File_Image.every((id: string) => successMedia.includes(id))) {
         fail('Beberapa gambar gagal dihapus')
         return
       }
-
-      // lanjut hapus produk
       await api.delete(`/api/realEstate/delete?no_id=${data.No_Id}`, {
-        headers: {
-          'X-Jenis-User': 'admin'
-        }
+        headers: { 'X-Jenis-User': 'admin' }
       })
-
-      fetchData
+      fetchData()
       success('Berhasil hapus produk')
     } catch (err: any) {
-      console.log(err.message)
       fail('Gagal menghapus data')
     }
   })
 }
 
 window.addEventListener('click', (e) => {
-  if (!(e.target as Element).closest('.relative')) activeDropdownId.value = null
   const target = e.target as HTMLElement
-  if (!target.closest('#sorting-container')) {
+  if (!target.closest('.relative')) {
+    activeDropdownId.value = null
     isSortOpen.value = false
+    isTransactionOpen.value = false
   }
 })
 
 onMounted(async () => {
   await fetchData()
-  nextTick(() => {
-    window.HSStaticMethods?.autoInit()
-  })
+  nextTick(() => { window.HSStaticMethods?.autoInit() })
 })
+
+const emit = defineEmits<{
+  (e: 'openFilter'): void
+}>()
+
+defineExpose({ openAddModal })
 </script>
 
 <template>
   <div class="lg:col-span-3 col-span-1">
-    <div class="flex items-center md:justify-between flex-wrap gap-4 mb-6 print:hidden">
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8 print:hidden border-b border-slate-50 pb-6">
       <div>
-        <p class="text-default-500 text-sm">
-          Menampilkan <span class="font-bold text-default-900">{{ table.getFilteredRowModel().rows.length }}</span> Properti
+        <!-- <h4 class="text-xl font-black text-slate-900 tracking-tight">Katalog Properti</h4> -->
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
+          Ditemukan <span class="text-bejo-600">{{ table.getFilteredRowModel().rows.length }}</span> Properti Tersedia
         </p>
       </div>
 
-      <div class="flex items-center gap-3">
-        <div id="sorting-container" class="relative inline-flex">
-          <button type="button" @click="isSortOpen = !isSortOpen" class="btn btn-sm bg-card border border-default-200 text-default-700 hover:bg-default-50 transition-all">
-            <Icon icon="lucide:arrow-up-down" class="size-3.5 me-2" />
-            Urutkan: <span class="text-primary ms-1 font-bold">{{ selectedSort }}</span>
+      <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+        <!-- Sidebar Filter Trigger (Mobile/Tablet Only) -->
+        <button type="button" @click="emit('openFilter')" class="lg:hidden px-4 py-2.5 bg-bejo-500 text-white rounded-xl text-[11px] font-black uppercase tracking-wider hover:bg-bejo-600 transition-all shadow-md shadow-bejo-500/20 flex items-center gap-2 btn-trigger-filter">
+          <Icon icon="lucide:settings-2" class="size-3.5" />
+          Filter
+        </button>
+
+        <!-- Filter Transaksi -->
+        <div class="relative inline-flex">
+          <button type="button" @click="isTransactionOpen = !isTransactionOpen" class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[11px] font-black text-slate-700 hover:bg-slate-50 transition-all shadow-sm uppercase tracking-wider">
+            <Icon icon="lucide:filter" class="size-3.5 me-2 inline text-bejo-500" />
+            {{ transactionFilter }}
           </button>
           <Transition enter-active-class="transition duration-100 ease-out" enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100" leave-active-class="transition duration-75 ease-in" leave-from-class="transform scale-100 opacity-100" leave-to-class="transform scale-95 opacity-0">
-            <div v-show="isSortOpen" class="absolute right-0 top-full mt-2 z-50 min-w-40 bg-card border border-default-100 rounded-xl shadow-xl p-2 animate-in fade-in zoom-in duration-200">
-              <button @click="handleSort('Terbaru')" class="dropdown-item w-full text-left rounded-lg p-2 hover:bg-default-100 text-sm text-default-700">Terbaru</button>
-              <button @click="handleSort('Harga Termurah')" class="dropdown-item w-full text-left rounded-lg p-2 hover:bg-default-100 text-sm text-default-700">Harga Termurah</button>
-              <button @click="handleSort('Harga Termahal')" class="dropdown-item w-full text-left rounded-lg p-2 hover:bg-default-100 text-sm text-default-700">Harga Termahal</button>
-              <hr class="my-2 border-default-100" />
-              <button @click="handleSort('Luas Terbesar')" class="dropdown-item w-full text-left rounded-lg p-2 hover:bg-default-100 text-sm text-default-700">Luas Terbesar</button>
+            <div v-show="isTransactionOpen" class="absolute right-0 top-full mt-2 z-50 min-w-40 bg-white border border-slate-100 rounded-2xl shadow-2xl p-2">
+              <button @click="handleTransactionFilter('Semua')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Semua <Icon v-if="transactionFilter === 'Semua'" icon="lucide:check" class="size-3 text-bejo-500" /></button>
+              <button @click="handleTransactionFilter('Jual')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Jual Saja <Icon v-if="transactionFilter === 'Jual'" icon="lucide:check" class="size-3 text-bejo-500" /></button>
+              <button @click="handleTransactionFilter('Sewa')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Sewa Saja <Icon v-if="transactionFilter === 'Sewa'" icon="lucide:check" class="size-3 text-bejo-500" /></button>
             </div>
           </Transition>
         </div>
 
-        <button v-if="isAdmin" @click="openAddModal" class="btn btn-sm bg-primary-gradient text-white hover:bg-primary-800 shadow-md shadow-primary/20">
-          <Icon icon="lucide:plus" class="size-4 me-1" />
-          Tambah Properti
+        <!-- Sorting -->
+        <div class="relative inline-flex">
+          <button type="button" @click="isSortOpen = !isSortOpen" class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[11px] font-black text-slate-700 hover:bg-slate-50 transition-all shadow-sm uppercase tracking-wider">
+            <Icon icon="lucide:arrow-up-down" class="size-3.5 me-2 inline text-bejo-500" />
+            Urutkan
+          </button>
+          <Transition enter-active-class="transition duration-100 ease-out" enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100" leave-active-class="transition duration-75 ease-in" leave-from-class="transform scale-100 opacity-100" leave-to-class="transform scale-95 opacity-0">
+            <div v-show="isSortOpen" class="absolute right-0 top-full mt-2 z-50 min-w-48 bg-white border border-slate-100 rounded-2xl shadow-2xl p-2">
+              <button @click="handleSort('Terbaru')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Terbaru <Icon v-if="selectedSort === 'Terbaru'" icon="lucide:check" class="size-3 text-bejo-500" /></button>
+              <button @click="handleSort('Harga Termurah')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Harga Termurah <Icon v-if="selectedSort === 'Harga Termurah'" icon="lucide:check" class="size-3 text-bejo-500" /></button>
+              <button @click="handleSort('Harga Termahal')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Harga Termahal <Icon v-if="selectedSort === 'Harga Termahal'" icon="lucide:check" class="size-3 text-bejo-500" /></button>
+            </div>
+          </Transition>
+        </div>
+
+        <!-- Tambah Properti Button -->
+        <button @click="openAddModal" class="px-5 py-2.5 bg-slate-900 text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-bejo-600 hover:shadow-lg hover:shadow-bejo-600/20 transition-all flex items-center gap-2">
+          <Icon icon="lucide:plus" class="size-3.5" />
+          Tambah Unit
         </button>
       </div>
     </div>
 
-    <div class="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
+    <div class="grid xl:grid-cols-3 lg:grid-cols-2 md:grid-cols-2 grid-cols-1 gap-6">
       <div v-for="row in table.getRowModel().rows" :key="row.id" class="card group flex flex-col h-full rounded-2xl overflow-hidden border transition-all duration-500 hover:-translate-y-1 relative bg-card border-default-150 hover:border-primary/30 hover:shadow-lg">
         <div class="relative h-60 overflow-hidden">
           <div v-if="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia'" class="absolute inset-0 bg-black/40 backdrop-grayscale-[60%] z-[5] pointer-events-none transition-all duration-500"></div>
@@ -316,7 +346,7 @@ onMounted(async () => {
           </div>
 
           <h6 class="text-lg text-default-900 font-black transition-colors line-clamp-1 mb-1 leading-tight group-hover:text-primary">
-            <RouterLink :to="isAdmin ? `/properti/detail/${row.original.Slug}` : `/detail/${row.original.Slug}`">{{ row.original.Nama_Produk }}</RouterLink>
+            <RouterLink :to="`/properti/detail/${row.original.Slug}`">{{ row.original.Nama_Produk }}</RouterLink>
           </h6>
 
           <p class="text-[12px] font-medium text-default-400 mb-4">
@@ -356,27 +386,41 @@ onMounted(async () => {
                 Harga Sewa
                 <span v-if="row.original.Minimal_Sewa && row.original.Minimal_Sewa > 0">(min. {{ row.original.Minimal_Sewa + ' ' + row.original.Satuan_Minimal_Sewa }})</span>
               </span>
-              <div class="flex items-baseline gap-1.5">
-                <span class="text-base font-black text-default-900">
-                  {{ formatCurrency(row.original.Harga_Sewa2 > 0 ? row.original.Harga_Sewa2 : row.original.Harga_Sewa1) }}
+              <div class="flex items-center flex-wrap gap-1.5 min-h-[24px]">
+                <span class="text-lg font-black text-default-900 leading-none">
+                  {{ formatShortCurrency(row.original.Harga_Sewa2 > 0 ? row.original.Harga_Sewa2 : row.original.Harga_Sewa1) }}
                 </span>
-                <span v-if="row.original.Harga_Sewa2 > 0" class="text-[10px] text-red-500 line-through">
-                  {{ formatCurrency(row.original.Harga_Sewa1) }}
-                </span>
-                <span class="text-[10px] text-default-400 italic">/{{ row.original.Satuan_Minimal_Sewa || 'thn' }}</span>
+                <div v-if="row.original.Harga_Sewa2 > 0" class="flex items-center gap-1 opacity-60">
+                  <span class="text-[11px] text-red-500 line-through decoration-red-500/50">
+                    {{ formatShortCurrency(row.original.Harga_Sewa1) }}
+                  </span>
+                  <span class="text-[10px] font-black bg-red-50 text-red-500 px-1 rounded uppercase tracking-tighter">
+                    -{{ calculateDiscount(row.original.Harga_Sewa1, row.original.Harga_Sewa2) }}%
+                  </span>
+                </div>
+                <span class="text-[11px] text-default-400 italic">/{{ row.original.Satuan_Minimal_Sewa || 'thn' }}</span>
               </div>
             </div>
 
             <div v-if="row.original.Harga_Jual1 > 0" class="flex flex-col">
               <span class="text-[9px] font-black text-default-400 uppercase tracking-widest mb-0.5">Harga Jual</span>
-              <div class="flex items-baseline gap-1.5">
-                <span class="text-lg font-black text-default-900">{{ formatCurrency(row.original.Harga_Jual2 > 0 ? row.original.Harga_Jual2 : row.original.Harga_Jual1) }}</span>
-                <span v-if="row.original.Harga_Jual2 > 0" class="text-[10px] text-red-500 line-through">{{ formatCurrency(row.original.Harga_Jual1) }}</span>
+              <div class="flex items-center flex-wrap gap-1.5 min-h-[24px]">
+                <span class="text-lg font-black text-default-900 leading-none">
+                  {{ formatShortCurrency(row.original.Harga_Jual2 > 0 ? row.original.Harga_Jual2 : row.original.Harga_Jual1) }}
+                </span>
+                <div v-if="row.original.Harga_Jual2 > 0" class="flex items-center gap-1 opacity-60">
+                  <span class="text-[11px] text-red-500 line-through decoration-red-500/50">
+                    {{ formatShortCurrency(row.original.Harga_Jual1) }}
+                  </span>
+                  <span class="text-[10px] font-black bg-red-50 text-red-500 px-1 rounded uppercase tracking-tighter">
+                    -{{ calculateDiscount(row.original.Harga_Jual1, row.original.Harga_Jual2) }}%
+                  </span>
+                </div>
               </div>
             </div>
           </div>
 
-          <div v-if="isAdmin" class="absolute bottom-5 right-5 z-20">
+          <div class="absolute bottom-5 right-5 z-20">
             <button type="button" @click.stop="toggleDropdown(row.id)" class="size-9 flex items-center justify-center rounded-xl bg-default-100 text-default-600 hover:bg-primary hover:text-white transition-all">
               <Icon icon="lucide:more-vertical" class="size-5" />
             </button>
@@ -407,7 +451,7 @@ onMounted(async () => {
       </nav>
     </div>
 
-    <Modal v-if="isAdmin" v-model:showModal="isModalOpen" :itemData="selectedItem" @success="fetchData" />
+    <Modal v-model:showModal="isModalOpen" :itemData="selectedItem" @success="fetchData" />
   </div>
 </template>
 

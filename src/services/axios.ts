@@ -1,6 +1,6 @@
 import axios from 'axios'
 import router from '@/router'
-import { logout } from './auth';
+import { isTokenExpired } from '@/utils/token'
 
 const baseURL = 'https://wabotapi.padajaya.biz.id'
 
@@ -12,6 +12,9 @@ const api = axios.create({
 let isRefreshing = false
 let failedQueue: any[] = []
 
+/**
+ * Process the queue of requests waiting for a new token.
+ */
 const processQueue = (error: any, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) prom.reject(error)
@@ -20,12 +23,80 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = []
 }
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token')
-  if (token) config.headers.Authorization = `Bearer ${token}`
+/**
+ * Perform the actual token refresh call.
+ */
+const performRefresh = async () => {
+  const refreshToken = localStorage.getItem('refreshToken')
+  const roleUser = localStorage.getItem('role_user') || 'admin'
+  
+  if (!refreshToken) throw new Error('Refresh token missing')
+
+  try {
+    const { data } = await axios.post(`${baseURL}/api/auth/refresh`, 
+      { refreshToken, Jenis_User: roleUser }, // Kirim di body juga agar aman
+      { headers: { 'X-Jenis-User': roleUser } }
+    )
+
+    const resData = data.Data || data
+    const newToken = resData.token || resData.Token
+    const newRefresh = resData.refreshToken || resData.RefreshToken
+
+    if (!newToken) throw new Error('Invalid Token Response')
+
+    localStorage.setItem('token', newToken)
+    if (newRefresh) localStorage.setItem('refreshToken', newRefresh)
+
+    return newToken
+  } catch (err: any) {
+    // Hanya hapus session jika server merespon dengan kegagalan autentikasi
+    if (err.response?.status === 401 || err.response?.status === 403) {
+      console.error('Refresh token expired or invalid')
+      localStorage.clear()
+      router.push({ path: '/login', query: { expired: '1' } })
+    }
+    throw err
+  }
+}
+
+// Request Interceptor: Proactive Refresh
+api.interceptors.request.use(async (config) => {
+  let token = localStorage.getItem('token')
+
+  // Cek secara proaktif jika token akan habis
+  if (token && isTokenExpired(token)) {
+    const refreshToken = localStorage.getItem('refreshToken')
+    
+    if (refreshToken && !isRefreshing) {
+      isRefreshing = true
+      try {
+        const newToken = await performRefresh()
+        processQueue(null, newToken)
+        token = newToken
+      } catch (err) {
+        processQueue(err, null)
+      } finally {
+        isRefreshing = false
+      }
+    } else if (isRefreshing) {
+      // Jika sedang me-refresh, tunggu sampai selesai
+      try {
+        token = await new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject })
+        })
+      } catch (err) {
+        // Biarkan request berlanjut (akan tertangkap 401 di response)
+      }
+    }
+  }
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
   return config
 }, (error) => Promise.reject(error))
 
+// Response Interceptor: Reactive Refresh (Safety Net)
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -46,49 +117,17 @@ api.interceptors.response.use(
       originalRequest._retry = true
       isRefreshing = true
 
-      const refreshToken = localStorage.getItem('refreshToken')
-      const jenisUser = localStorage.getItem('role_user') || 'admin'
-
-      return new Promise((resolve, reject) => {
-        console.log('refreshtoken')
-        axios.post(`${baseURL}/api/auth/refresh`,
-          { refreshToken },
-          { headers: { 'X-Jenis-User': jenisUser } }
-        )
-          .then(({ data }) => {
-            const resData = data.Data || data
-            const newToken = resData.token || resData.Token
-            const newRefresh = resData.refreshToken || resData.RefreshToken
-
-            if (!newToken) throw new Error("Invalid Token Response")
-
-            localStorage.setItem('token', newToken)
-            if (newRefresh) localStorage.setItem('refreshToken', newRefresh)
-
-            api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`
-            originalRequest.headers.Authorization = `Bearer ${newToken}`
-
-            processQueue(null, newToken)
-            resolve(api(originalRequest))
-          })
-          .catch((err) => {
-            const errorStatus = err.response?.status; // Contoh: 400, 401, 500
-            const errorMessage = err.response?.data?.Message || err.response?.data?.error || err.message;
-            const errorDetail = err.response?.data || 'No extra details';
-            console.error('--- REFRESH TOKEN FAILED ---');
-            console.error(`Status: ${errorStatus}`);
-            console.error(`Message: ${errorMessage}`);
-            console.error('Full Detail:', errorDetail);
-            processQueue(err, null);
-            localStorage.clear();
-            logout(false)
-
-            reject(err);
-          })
-          .finally(() => {
-            isRefreshing = false
-          })
-      })
+      try {
+        const newToken = await performRefresh()
+        processQueue(null, newToken)
+        originalRequest.headers.Authorization = `Bearer ${newToken}`
+        return api(originalRequest)
+      } catch (err) {
+        processQueue(err, null)
+        return Promise.reject(err)
+      } finally {
+        isRefreshing = false
+      }
     }
     return Promise.reject(error)
   }

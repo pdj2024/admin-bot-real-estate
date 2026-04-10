@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { Icon } from '@iconify/vue'
-import { RouterLink } from 'vue-router'
 import api from '@/services/axios'
 import { useVueTable, FlexRender, getCoreRowModel, getPaginationRowModel, getSortedRowModel, getFilteredRowModel } from '@tanstack/vue-table'
 import { confirm, success, fail } from '@/utils/sweet-alert'
@@ -113,89 +112,127 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="flex flex-col rounded-xl border border-default-200 bg-card shadow-sm">
+  <div class="flex flex-col">
     <div class="overflow-x-auto lg:overflow-visible">
-      <table class="min-w-full divide-y divide-default-200">
-        <thead class="bg-default-50">
+      <table class="min-w-full divide-y divide-slate-100">
+        <thead>
           <tr v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
-            <th v-for="header in headerGroup.headers" :key="header.id" class="px-5 py-4 text-start text-xs font-bold text-default-600 uppercase tracking-wider">
+            <th v-for="header in headerGroup.headers" :key="header.id" class="px-6 py-5 text-start text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
               <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
             </th>
           </tr>
         </thead>
 
-        <tbody class="divide-y divide-default-200">
+        <tbody class="divide-y divide-slate-50">
           <tr v-if="isLoading">
-            <td colspan="4" class="py-20 text-center text-default-500">
-              <div class="flex justify-center items-center gap-2">
-                <Icon icon="lucide:loader-2" class="animate-spin size-5" />
-                <span>Memuat data...</span>
+            <td colspan="4" class="py-24 text-center">
+              <div class="flex flex-col items-center gap-3">
+                <div class="size-12 rounded-2xl bg-bejo-50 flex items-center justify-center">
+                  <Icon icon="lucide:loader-2" class="animate-spin size-6 text-bejo-500" />
+                </div>
+                <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Memuat Data Admin...</span>
               </div>
             </td>
           </tr>
 
           <tr v-else-if="table.getRowModel().rows.length === 0">
-            <td colspan="4" class="py-16 text-center text-default-400 text-sm italic">Tidak ada data admin ditemukan.</td>
+            <td colspan="4" class="py-20 text-center">
+              <div class="flex flex-col items-center gap-3 opacity-40">
+                <Icon icon="lucide:database-zap" class="size-12 text-slate-300" />
+                <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Tidak ada data ditemukan</span>
+              </div>
+            </td>
           </tr>
 
-          <tr v-for="row in table.getRowModel().rows" :key="row.id" class="hover:bg-default-50/50 transition-colors group">
-            <td class="px-5 py-4 flex items-center gap-3">
-              <div class="size-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm border border-primary/20">
-                {{ getInitial(row.original.Nama_User) }}
-              </div>
-              <div class="flex flex-col">
-                <span class="font-bold text-default-900 leading-tight">{{ row.original.Nama_User }}</span>
-                <span class="text-xs text-default-500 font-medium">ID: {{ row.original.No_Id }}</span>
+          <tr v-for="row in table.getRowModel().rows" :key="row.id" class="hover:bg-slate-50/50 transition-all duration-300 group">
+            <td class="px-6 py-5">
+              <div class="flex items-center gap-4">
+                <div class="size-12 rounded-2xl bg-gradient-to-br from-bejo-500 to-bejo-600 text-white flex items-center justify-center font-black text-lg shadow-lg shadow-bejo-500/20 group-hover:scale-110 transition-transform duration-500">
+                  {{ getInitial(row.original.Nama_User) }}
+                </div>
+                <div class="flex flex-col gap-0.5">
+                  <span class="font-black text-slate-900 tracking-tight group-hover:text-bejo-600 transition-colors">{{ row.original.Nama_User }}</span>
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-black uppercase tracking-wider">ID: {{ row.original.No_Id }}</span>
+                  </div>
+                </div>
               </div>
             </td>
 
-            <td class="px-5 py-4 text-sm text-default-600 font-medium">
-              {{ row.original.Email }}
+            <td class="px-6 py-5">
+              <div class="flex items-center gap-2 text-slate-600 font-bold text-sm">
+                <Icon icon="lucide:mail" class="size-4 text-slate-400" />
+                {{ row.original.Email }}
+              </div>
             </td>
 
-            <td class="px-5 py-4">
-              <div class="flex flex-col items-center gap-2">
-                <span class="text-[10px] uppercase font-black tracking-widest transition-colors" :class="row.original.Status === 'aktif' ? 'text-primary' : 'text-default-400'">
-                  {{ row.original.Status }}
+            <td class="px-6 py-5">
+              <div class="flex items-center gap-4">
+                <span class="text-[10px] uppercase font-black tracking-[0.1em] transition-all min-w-[60px]" :class="row.original.Status === 'aktif' ? 'text-bejo-500' : 'text-slate-300'">
+                  {{ row.original.Status === 'aktif' ? 'Aktif' : 'Non-Aktif' }}
                 </span>
-                <button class="toggle" :class="{ 'toggle-active': row.original.Status === 'aktif' }" @click="toggleStatus(row.original)">
-                  <span class="toggle-circle" :class="{ 'translate-x-6': row.original.Status === 'aktif' }"></span>
+                <button 
+                  @click="toggleStatus(row.original)"
+                  class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-bejo-500/20"
+                  :class="row.original.Status === 'aktif' ? 'bg-bejo-500' : 'bg-slate-200'"
+                >
+                  <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out" :class="row.original.Status === 'aktif' ? 'translate-x-5' : 'translate-x-0'"></span>
                 </button>
               </div>
             </td>
 
-            <td class="px-5 py-4 relative action-menu">
-              <button class="size-9 rounded-lg flex items-center justify-center hover:bg-default-100 transition-all text-default-500 hover:text-default-900 border border-transparent hover:border-default-200" @click.stop="toggleDropdown(row.original.No_Id)">
-                <Icon icon="lucide:more-horizontal" class="size-5" />
+            <td class="px-6 py-5 relative action-menu">
+              <button @click.stop="toggleDropdown(row.original.No_Id)" class="size-10 rounded-xl flex items-center justify-center hover:bg-slate-100 transition-all text-slate-400 hover:text-slate-900 border border-transparent hover:border-slate-200">
+                <Icon icon="lucide:more-vertical" class="size-5" />
               </button>
 
-              <div v-if="openDropdownId === row.original.No_Id" class="absolute right-5 mt-2 w-44 bg-card shadow-xl border border-default-200 rounded-xl p-1.5 z-[100] animate-in fade-in zoom-in duration-150">
-                <!-- <RouterLink :to="" class="dropdown-item"> <Icon icon="lucide:eye" class="size-4" /> Detail Admin </RouterLink> -->
-                <button @click="emit('edit', row.original)" class="dropdown-item w-full"><Icon icon="lucide:edit-3" class="size-4" /> Edit Data</button>
-                <div class="my-1.5 border-t border-default-100"></div>
-                <button @click="handleDelete(row.original)" class="dropdown-item w-full text-red-500 hover:bg-red-500/10 hover:text-red-600"><Icon icon="lucide:trash-2" class="size-4" /> Hapus Admin</button>
-              </div>
+              <Transition enter-active-class="transition duration-100 ease-out" enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100" leave-active-class="transition duration-75 ease-in" leave-from-class="transform scale-100 opacity-100" leave-to-class="transform scale-95 opacity-0">
+                <div v-if="openDropdownId === row.original.No_Id" class="absolute right-6 mt-2 w-48 bg-white shadow-2xl border border-slate-100 rounded-2xl p-2 z-[100]">
+                  <button @click="emit('edit', row.original)" class="dropdown-item w-full">
+                    <Icon icon="lucide:pencil" class="size-4" /> 
+                    Edit Data
+                  </button>
+                  <div class="my-1.5 border-t border-slate-50"></div>
+                  <button @click="handleDelete(row.original)" class="dropdown-item w-full text-red-500 hover:bg-red-50 hover:text-red-600">
+                    <Icon icon="lucide:trash-2" class="size-4" /> 
+                    Hapus Admin
+                  </button>
+                </div>
+              </Transition>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
 
-    <div class="px-5 py-4 bg-default-50/50 border-t border-default-200 flex items-center justify-between">
-      <p class="text-xs text-default-500 font-medium">
-        Menampilkan <span class="text-default-900 font-bold">{{ table.getRowModel().rows.length }}</span> dari <span class="text-default-900 font-bold">{{ admins.length }}</span> Admin
-      </p>
+    <!-- Pagination -->
+    <div class="px-6 py-5 border-t border-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+        Menampilkan 
+        <span class="text-slate-900 font-black">{{ table.getRowModel().rows.length }}</span> 
+        dari 
+        <span class="text-slate-900 font-black">{{ admins.length }}</span> 
+        Data Admin
+      </div>
 
       <div class="flex items-center gap-2">
-        <button @click="table.previousPage()" :disabled="!table.getCanPreviousPage()" class="btn-nav">
+        <button @click="table.previousPage()" :disabled="!table.getCanPreviousPage()" class="btn-pagination">
           <Icon icon="lucide:chevron-left" class="size-4" />
         </button>
 
-        <div class="px-3 py-1 bg-default-100 rounded-md">
-          <span class="text-xs font-bold text-default-700"> {{ table.getState().pagination.pageIndex + 1 }} / {{ table.getPageCount() }} </span>
+        <div class="flex items-center gap-1">
+          <button 
+            v-for="n in table.getPageCount()" 
+            :key="n" 
+            @click="table.setPageIndex(n - 1)" 
+            class="btn-pagination-num"
+            :class="table.getState().pagination.pageIndex === n - 1 ? 'active' : ''"
+          >
+            {{ n }}
+          </button>
         </div>
 
-        <button @click="table.nextPage()" :disabled="!table.getCanNextPage()" class="btn-nav">
+        <button @click="table.nextPage()" :disabled="!table.getCanNextPage()" class="btn-pagination">
           <Icon icon="lucide:chevron-right" class="size-4" />
         </button>
       </div>
@@ -206,26 +243,20 @@ onBeforeUnmount(() => {
 <style scoped>
 @reference "@/assets/css/style.css";
 
-.toggle {
-  @apply w-[54px] h-7 bg-default-200 rounded-full relative transition-all duration-300 cursor-pointer border-none shadow-inner;
-}
-.toggle-active {
-  @apply bg-primary;
-}
-.toggle-circle {
-  @apply size-5.5 bg-white rounded-full absolute top-0.5 left-0.5 transition-transform duration-300 shadow-md;
+.btn-pagination {
+  @apply size-9 flex items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-400
+         transition-all hover:bg-slate-50 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed;
 }
 
-.btn-nav {
-  @apply size-8 flex items-center justify-center rounded-lg border border-default-300 bg-card text-default-600
-         transition-all hover:bg-default-100 hover:text-default-900 disabled:opacity-30 disabled:cursor-not-allowed;
+.btn-pagination-num {
+  @apply size-9 flex items-center justify-center rounded-xl text-xs font-black text-slate-400 hover:bg-slate-50 transition-all;
+}
+
+.btn-pagination-num.active {
+  @apply bg-bejo-500 text-white shadow-lg shadow-bejo-500/20;
 }
 
 .dropdown-item {
-  @apply flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-default-700 rounded-lg transition-colors hover:bg-default-100;
-}
-
-.action-menu {
-  @apply relative;
+  @apply flex items-center gap-3 px-3 py-2.5 text-[11px] font-black uppercase tracking-widest text-slate-600 rounded-xl transition-all hover:bg-slate-50;
 }
 </style>

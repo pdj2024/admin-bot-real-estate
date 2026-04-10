@@ -19,7 +19,8 @@
             <Icon icon="lucide:message-square-more" class="size-4" /> Bantuan & Kemitraan
           </span>
           <h1 class="text-4xl sm:text-5xl lg:text-7xl font-black text-white tracking-tight drop-shadow-2xl mb-4">
-            Mari <span class="bg-gradient-to-r from-bejo-400 to-bejo-600 bg-clip-text text-transparent">Terkoneksi</span>
+            Temukan Kami
+            <br> <span class="bg-gradient-to-r from-bejo-400 to-bejo-600 bg-clip-text text-transparent">Di Sini</span>
           </h1>
           <p class="text-slate-300 text-sm sm:text-base lg:text-lg font-medium max-w-2xl mx-auto drop-shadow leading-relaxed">
             Tim Rumah Bejo selalu bersiaga membantu Anda mencari properti, menawarkan hunian, atau perihal kerja sama kemitraan.
@@ -28,7 +29,7 @@
       </div>
 
       <!-- Info Kontak Grid -->
-      <div class="grid lg:grid-cols-3 gap-8 relative z-10 -mt-6">
+      <div class="grid lg:grid-cols-3 gap-8 relative z-10 mt-8">
         
         <!-- Alamat -->
         <div class="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/50 hover:-translate-y-2 transition-transform duration-300">
@@ -63,7 +64,7 @@
           <div class="bg-bejo-50 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 border border-bejo-100">
             <Icon icon="lucide:mail" class="size-8 text-bejo-600" />
           </div>
-          <h3 class="text-xl font-black text-slate-900 mb-3">Surat Elektronik</h3>
+          <h3 class="text-xl font-black text-slate-900 mb-3">Email</h3>
           <p class="text-sm font-medium text-slate-500 leading-relaxed mb-6">
             Kirimkan pertanyaan resmi, dokumen legalitas, atau penawaran kerja sama investasi ke kotak masuk kami.
           </p>

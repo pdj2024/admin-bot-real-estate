@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <div class="flex flex-col sm:flex-row justify-between items-center bg-white p-4 mb-5 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 gap-4 mb-2">
       <div class="text-sm text-slate-800 font-medium px-2">
-        Tampil <span class="text-bejo-600 font-black text-base">{{ table.getFilteredRowModel().rows.length }}</span> Properti Ditemukan
+        Menampilkan Daftar <span class="text-bejo-600 font-black text-base">{{ table.getFilteredRowModel().rows.length }}</span> Properti
       </div>
 
       <div class="flex items-center gap-3 w-full sm:w-auto relative">

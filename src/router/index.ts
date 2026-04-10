@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { isTokenExpired } from '@/services/auth';
+import { isTokenExpired } from '@/utils/token';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -161,16 +161,20 @@ router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token');
   const refreshToken = localStorage.getItem('refreshToken');
 
+  // Cek keberadaan sesi
   const hasTokens = !!token && token !== 'undefined' && !!refreshToken && refreshToken !== 'undefined';
 
-  if (to.path === '/login' && hasTokens && !isTokenExpired(token)) {
+  // Jika mencoba ke halaman login tapi sudah punya sesi
+  if (to.path === '/login' && hasTokens) {
     return next({ name: 'Dashboard' });
   }
 
+  // Jika rute butuh autentikasi
   if (to.meta.requiresAuth) {
     if (!hasTokens) {
       return next({ name: 'Login', query: { redirect: to.fullPath } });
     }
+    // Lanjutkan, biarkan Axios menangani refresh jika token utama expired
     next();
   } else {
     next();
