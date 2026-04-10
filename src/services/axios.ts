@@ -72,23 +72,15 @@ api.interceptors.response.use(
             resolve(api(originalRequest))
           })
           .catch((err) => {
-            // 1. Ekstrak pesan error yang paling detail
             const errorStatus = err.response?.status; // Contoh: 400, 401, 500
             const errorMessage = err.response?.data?.Message || err.response?.data?.error || err.message;
             const errorDetail = err.response?.data || 'No extra details';
-
-            // 2. Log ke konsol dengan format yang mudah dibaca
             console.error('--- REFRESH TOKEN FAILED ---');
             console.error(`Status: ${errorStatus}`);
             console.error(`Message: ${errorMessage}`);
             console.error('Full Detail:', errorDetail);
-
-            // 3. Jalankan pembersihan
             processQueue(err, null);
             localStorage.clear();
-
-            // 4. Arahkan ke login dengan menyertakan alasan error di URL (opsional)
-            // Ini berguna agar di halaman login Anda bisa menampilkan pesan "Sesi Anda habis: [pesan]"
             logout(false)
 
             reject(err);

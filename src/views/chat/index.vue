@@ -7,14 +7,21 @@ import Vertical from '@/layouts/vertical.vue'
 import PageTitle from '@/components/PageTitle.vue'
 import ChatContent from './components/ChatContent.vue'
 import SideBar from './components/SideBar.vue'
+import { type TakeOverPayload } from './components/SideBar.vue'
 
 const selectedRoomId = ref<string | null>(null)
+const roomIdsBot = ref<string[]>([])
+const roomIdsAktif = ref<string[]>([])
+const roomIdsAssign = ref<string[]>([])
 const selectedUsername = ref<string>('')
 const selectedUsernameChange = ref<string>('')
 const selectedPhone = ref<string>('')
 const selectedIdLawan = ref<string>('')
+const lastMessageId = ref<string>('')
+const takeOverBatch = ref<TakeOverPayload[]>([])
+const takeOverSuccess = ref<string[]>([])
 
-const currentActiveTab = ref<string>('untuk_saya')
+const currentActiveTab = ref<string>('chat_saya')
 
 const sidebarRef = ref<any>(null)
 const chatContentRef = ref<any>(null)
@@ -24,13 +31,13 @@ const signalRConnection = ref<signalR.HubConnection | null>(null)
 const audio = new Audio('/sounds/Ding.mp3')
 
 const handleSelectChat = async (id: string) => {
-  if (selectedRoomId.value && signalRConnection.value?.state === signalR.HubConnectionState.Connected) {
-    try {
-      await signalRConnection.value.invoke('LeaveRoom', selectedRoomId.value)
-    } catch (err) {
-      console.warn(`[SignalR] Gagal keluar dari room lama ${selectedRoomId.value}:`, err)
-    }
-  }
+  // if (selectedRoomId.value && signalRConnection.value?.state === signalR.HubConnectionState.Connected) {
+  //   try {
+  //     await signalRConnection.value.invoke('LeaveRoom', selectedRoomId.value)
+  //   } catch (err) {
+  //     console.warn(`[SignalR] Gagal keluar dari room lama ${selectedRoomId.value}:`, err)
+  //   }
+  // }
 
   selectedRoomId.value = id
 
@@ -64,7 +71,6 @@ const handleUsernameChange = (username: string) => {
 
 const handleTabChange = (tab: string) => {
   currentActiveTab.value = tab
-  console.log(tab)
 }
 
 const handleClearRoom = () => {
@@ -74,22 +80,84 @@ const handleClearRoom = () => {
 }
 
 const handleTakeOver = () => {
-  currentActiveTab.value = 'untuk_saya'
+  currentActiveTab.value = 'chat_saya'
   if (sidebarRef.value) sidebarRef.value.forceRefreshToUntukSaya()
+}
+
+const handleLastMessage = (id: string) => {
+  lastMessageId.value = id
+}
+
+const handleChatTakeOverBatch = async (payload: TakeOverPayload[]) => {
+  takeOverBatch.value = payload
+}
+
+const handleTakeOverStatus = (room: string[]) => {
+  takeOverSuccess.value = room
+  takeOverBatch.value = []
+}
+
+const joinUserChannel = async () => {
+  if (signalRConnection.value?.state === signalR.HubConnectionState.Connected) {
+    const userId = localStorage.getItem('no_id')
+    if (!userId) return
+
+    try {
+      await signalRConnection.value.invoke('JoinUserChannel', userId)
+      console.log(`[SignalR] Berhasil Join ke User Channel: ${userId}`)
+    } catch (err) {
+      console.error(`[SignalR] Gagal Join ke User Channel ${userId}:`, err)
+    }
+  }
+}
+
+const joinRoom = async (bot: any, aktif: any, assign: any) => {
+  if (signalRConnection.value?.state !== signalR.HubConnectionState.Connected) {
+    console.warn('[SignalR] Koneksi belum siap, gagal join ke daftar room.')
+    return
+  }
+
+  const idsBot = Array.isArray(bot) ? bot : bot?._value || []
+  const idsAktif = Array.isArray(aktif) ? aktif : aktif?._value || []
+  const idsAssign = Array.isArray(assign) ? assign : assign?._value || []
+
+  const joinMultipleRooms = async (roomIds: string[], name: string) => {
+    if (!roomIds || roomIds.length === 0) return
+
+    const promises = roomIds.map(
+      (id) => signalRConnection.value!.invoke('JoinRoom', id)
+      // .then(() => console.log(`[SignalR ${name}] Berhasil Join ke Room: ${id}`))
+      // .catch((err) => console.error(`[SignalR ${name}] Gagal Join ke Room ${id}:`, err))
+    )
+    await Promise.allSettled(promises)
+  }
+
+  if (currentActiveTab.value === 'bot') {
+    await joinMultipleRooms(idsBot, 'bot')
+  } else if (currentActiveTab.value === 'chat_saya') {
+    await joinMultipleRooms([...idsAktif, ...idsAssign], 'chat saya')
+  }
+}
+
+const handleAllRoomIds = async (bot: any, aktif: any, assign: any) => {
+  roomIdsBot.value = Array.isArray(bot) ? bot : bot?._value || []
+  roomIdsAktif.value = Array.isArray(aktif) ? aktif : aktif?._value || []
+  roomIdsAssign.value = Array.isArray(assign) ? assign : assign?._value || []
+
+  if (signalRConnection.value?.state === signalR.HubConnectionState.Connected) {
+    await joinRoom(roomIdsBot.value, roomIdsAktif.value, roomIdsAssign.value)
+  }
 }
 
 const startSignalR = async () => {
   const token = localStorage.getItem('token') || ''
   const role = localStorage.getItem('role_user') || 'admin'
-
   const hubUrl = 'https://wabotapi.padajaya.biz.id/api/chathub'
 
   signalRConnection.value = new signalR.HubConnectionBuilder()
     .withUrl(hubUrl, {
       accessTokenFactory: () => token,
-      headers: {
-        'X-Jenis-User': role
-      },
+      headers: { 'X-Jenis-User': role },
       transport: signalR.HttpTransportType.LongPolling
     })
     .withAutomaticReconnect()
@@ -103,7 +171,7 @@ const startSignalR = async () => {
   signalRConnection.value.on('ReceiveMessage', (data: any) => {
     console.log('[SignalR] Data Diterima:', data)
 
-    if (sidebarRef.value) sidebarRef.value.refreshChatList()
+    if (sidebarRef.value) sidebarRef.value.refreshChatList(data)
 
     if (String(data.roomId) === String(selectedRoomId.value)) {
       const myId = localStorage.getItem('no_id') || ''
@@ -132,13 +200,7 @@ const startSignalR = async () => {
         Send_Status: data.sendStatus || 'send'
       })
 
-      audio.play().catch((error) => {
-        console.error('Gagal memutar audio:', error)
-      })
-
-      console.log('[SignalR] Berhasil push ke UI. Total chats:', chats.value.length)
-    } else {
-      console.warn(`[SignalR] Pesan diabaikan. Room: ${data.roomId} != Aktif: ${selectedRoomId.value}`)
+      audio.play().catch((error) => console.error('Gagal memutar audio:', error))
     }
   })
 
@@ -150,9 +212,25 @@ const startSignalR = async () => {
     }
   })
 
+  signalRConnection.value.onreconnected(async (connectionId) => {
+    console.log(`[SignalR] Reconnected otomatis. Connection ID: ${connectionId}`)
+    await joinUserChannel()
+    await joinRoom(roomIdsBot.value, roomIdsAktif.value, roomIdsAssign.value)
+    if (selectedRoomId.value) {
+      try {
+        await signalRConnection.value!.invoke('JoinRoom', selectedRoomId.value)
+        console.log(`[SignalR] Berhasil Re-Join ke Room: ${selectedRoomId.value}`)
+      } catch (err) {
+        console.error(`[SignalR] Gagal Re-Join ke Room ${selectedRoomId.value}:`, err)
+      }
+    }
+  })
+
   try {
     await signalRConnection.value.start()
     console.log('[SignalR] Connected via Index')
+    await joinUserChannel()
+    await joinRoom(roomIdsBot.value, roomIdsAktif.value, roomIdsAssign.value)
   } catch (err) {
     console.error('[SignalR] Connection Error:', err)
   }
@@ -194,13 +272,13 @@ onBeforeUnmount(() => {
 
 <template>
   <Vertical>
-    <PageTitle subtitle="Utama" title="Chat" />
+    <!-- <PageTitle subtitle="Utama" title="Chat" /> -->
 
     <div class="card overflow-hidden">
       <div class="flex h-[calc(100vh-180px)] min-h-[500px]">
-        <SideBar ref="sidebarRef" :activeRoomId="selectedRoomId || ''" :usernameChange="selectedUsernameChange" @selectChat="handleSelectChat" @username="handleUsername" @phoneNumber="handlePhone" @idLawan="handleIdLawan" @changeTab="handleTabChange" />
+        <SideBar ref="sidebarRef" :activeRoomId="selectedRoomId || ''" :usernameChange="selectedUsernameChange" @selectChat="handleSelectChat" @username="handleUsername" @phoneNumber="handlePhone" @idLawan="handleIdLawan" @changeTab="handleTabChange" @allRoomIds="handleAllRoomIds" @lastMessageId="handleLastMessage" @chatTakeOverBatch="handleChatTakeOverBatch" />
 
-        <ChatContent ref="chatContentRef" :roomId="selectedRoomId" :idLawan="selectedIdLawan" :username="selectedUsername" :phoneNumber="selectedPhone" :activeTab="currentActiveTab" :chats="chats" @chatTakeOver="handleTakeOver" @clearRoom="handleClearRoom" @usernameChange="handleUsernameChange" />
+        <ChatContent ref="chatContentRef" :roomId="selectedRoomId" :idLawan="selectedIdLawan" :username="selectedUsername" :phoneNumber="selectedPhone" :activeTab="currentActiveTab" :chats="chats" :lastMessageId="lastMessageId" :takeOverBatch="takeOverBatch" :takeOverStatus="takeOverSuccess" @chatTakeOver="handleTakeOver" @clearRoom="handleClearRoom" @usernameChange="handleUsernameChange" @takeOverStatus="handleTakeOverStatus"/>
       </div>
     </div>
   </Vertical>

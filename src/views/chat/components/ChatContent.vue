@@ -19,6 +19,7 @@ import bgChatDark from '@/assets/images/background-chat-dark.png'
 import simplebar from 'simplebar-vue'
 import Filter from './Filter.vue'
 import { type Catalogue, type CalendarEvent, type Appointment, type Chat, type PreviewImage, calendarEvents } from './data'
+import { type TakeOverPayload } from './SideBar.vue'
 
 const menuRef = ref<HTMLElement | null>(null)
 const etalaseRef = ref<HTMLElement | null>(null)
@@ -60,12 +61,15 @@ const props = defineProps<{
   phoneNumber: string
   activeTab: string
   chats: Chat[]
+  lastMessageId: string
+  takeOverBatch: TakeOverPayload[]
 }>()
 
 const emit = defineEmits<{
   (e: 'chatTakeOver'): void
   (e: 'clearRoom'): void
   (e: 'usernameChange', value: string): void
+  (e: 'takeOverStatus', value: string[]): void
 }>()
 
 const handleClickOutside = (event: MouseEvent) => {
@@ -123,7 +127,7 @@ const calendarOptions = computed<CalendarOptions>(() => ({
   eventClick(info: EventClickArg) {
     const event = info.event
     const data = event.extendedProps
-    console.log(data.customer)
+    // console.log(data.customer)
     openSchedule.value = false
   }
 }))
@@ -193,16 +197,21 @@ const scrollToBottom = async () => {
 
       if (scrollElement) {
         scrollElement.scrollTo({
-          top: scrollElement.scrollHeight,
-          behavior: 'smooth'
+          top: scrollElement.scrollHeight + 2000,
+          behavior: 'auto'
         })
       }
     }
   }, 100)
 }
 
-const sendChat = async (type: string, url?: string) => {
+const sendChat = async (type: string, url?: string, targetRoomId?: string, targetPhone?: string) => {
   if (!type.includes('system') && !sendChatContent.value.trim()) return
+
+  const activeRoomId = targetRoomId || props.roomId
+  const activePhone = targetPhone || props.phoneNumber
+
+  if (!activeRoomId) return
 
   const myId = localStorage.getItem('no_id') || ''
   const role = localStorage.getItem('role_user') || ''
@@ -211,51 +220,46 @@ const sendChat = async (type: string, url?: string) => {
   const now = new Date()
   const sentAt = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 19)
 
-  let currentUserIds: string[] = []
+  let currentUserIds: string[] = [myId]
 
-  if (props.chats && props.chats.length > 0) {
+  const isCurrentActiveRoom = activeRoomId === props.roomId
+
+  if (isCurrentActiveRoom && props.chats && props.chats.length > 0) {
     const lastChat = props.chats[props.chats.length - 1]
     if (lastChat.User_Ids && Array.isArray(lastChat.User_Ids)) {
       currentUserIds = [...lastChat.User_Ids]
-    } else {
-      currentUserIds = [myId]
     }
-  } else {
-    currentUserIds = [myId]
   }
 
   if (myId && !currentUserIds.includes(myId)) {
     currentUserIds.push(myId)
   }
 
-  let formattedPhone = props.phoneNumber.replace(/\D/g, '')
+  let formattedPhone = activePhone.replace(/\D/g, '')
   if (formattedPhone.startsWith('0')) {
     formattedPhone = '62' + formattedPhone.substring(1)
   }
 
-  console.log(props)
-  if (props.roomId) {
-    var messageText
-    if (type === 'system_masuk') {
-      messageText = username + '_X7#mQ9!vW2_Bergabung'
-    } else if (type === 'system_keluar') {
-      messageText = username + '_X7#mQ9!vW2_Keluar'
-    } else {
-      messageText = sendChatContent.value
-    }
+  let messageText = ''
+  if (type === 'system_masuk') {
+    messageText = username + '_X7#mQ9!vW2_Bergabung'
+  } else if (type === 'system_keluar') {
+    messageText = username + '_X7#mQ9!vW2_Keluar'
+  } else {
+    messageText = sendChatContent.value
+  }
 
-    console.log(type, type === 'system_keluar', messageText)
+  const tempIndex = props.chats.length
 
-    const tempIndex = props.chats.length
-
+  if (isCurrentActiveRoom) {
     props.chats.push({
-      Message: type == "system_image" ? url : messageText,
+      Message: type == 'system_image' ? url : messageText,
       Sent_At: sentAt,
       Sender_Id: myId,
       Tipe_User: role,
       Jenis_Pesan: type.includes('system') ? type : 'text',
       Send_Status: 'pending',
-      Room_Id: props.roomId,
+      Room_Id: activeRoomId,
       User_Ids: currentUserIds,
       Username_User: username,
       Telepon_User: myId
@@ -263,91 +267,93 @@ const sendChat = async (type: string, url?: string) => {
 
     sendChatContent.value = ''
     scrollToBottom()
+  }
 
-    try {
-      if (!type.includes('system')) {
-        await api.post(
-          '/api/waha/send-text',
-          {
-            ChatId: formattedPhone + '@s.whatsapp.net',
-            ReplyTo: null,
-            Text: messageText,
-            LinkPreview: true,
-            LinkPreviewHighQuality: false,
-            Session: 'session_OtpWaha'
-          },
-          { headers: { 'X-Jenis-User': 'admin' } }
-        )
-      }
-
+  try {
+    if (!type.includes('system')) {
       await api.post(
-        '/api/chat/create',
+        '/api/waha/send-text',
         {
-          Chat: {
-            Jenis_Pesan: type.includes('system') ? type : 'text',
-            Sent_At: sentAt,
-            Sender_Id: myId,
-            Tipe_User: role,
-            Message: type == "system_image" ? url : messageText,
-            Id_Paket: null,
-            No_Pesanan: null,
-            No_Penawaran: null,
-            Send_Status: 'send'
-          },
-          Room_Id: props.roomId,
-          User_Ids: currentUserIds
+          ChatId: formattedPhone + '@s.whatsapp.net',
+          ReplyTo: null,
+          Text: messageText,
+          LinkPreview: true,
+          LinkPreviewHighQuality: false,
+          Session: 'session_OtpWaha'
         },
         { headers: { 'X-Jenis-User': 'admin' } }
       )
+    }
 
-      if (props.chats[tempIndex]) {
-        props.chats[tempIndex].Send_Status = 'send'
-      }
+    await api.post(
+      '/api/chat/create',
+      {
+        Chat: {
+          Jenis_Pesan: type.includes('system') ? type : 'text',
+          Sent_At: sentAt,
+          Sender_Id: myId,
+          Tipe_User: role,
+          Message: type == 'system_image' ? url : messageText,
+          Id_Paket: null,
+          No_Pesanan: null,
+          No_Penawaran: null,
+          Send_Status: 'send'
+        },
+        Room_Id: activeRoomId,
+        User_Ids: currentUserIds
+      },
+      { headers: { 'X-Jenis-User': 'admin' } }
+    )
 
-      type === 'system_keluar' ? emit('clearRoom') : ''
-    } catch (err: any) {
-      console.error('Gagal mengirim chat:', err.response?.data || err.message)
+    if (isCurrentActiveRoom && props.chats[tempIndex]) {
+      props.chats[tempIndex].Send_Status = 'send'
+    }
 
-      if (props.chats[tempIndex]) {
-        props.chats[tempIndex].Send_Status = 'failed'
-      }
+    if (type === 'system_keluar' && isCurrentActiveRoom) {
+      emit('clearRoom')
+    }
+
+  } catch (err: any) {
+    console.error('Gagal mengirim chat:', err.response?.data || err.message)
+
+    if (isCurrentActiveRoom && props.chats[tempIndex]) {
+      props.chats[tempIndex].Send_Status = 'failed'
     }
   }
 }
 
-const takeOverChat = async (status: boolean) => {
-  confirm(status == false ? 'Apakah Anda yakin ingin mengambil alih percakapan ini?' : 'Apakah Anda ingin mengakhiri percakapan ini?', async () => {
-    try {
-      await api.post(
-        '/api/chat/toggle-bot',
-        {
-          customer_phone: props.phoneNumber,
-          admin_id: localStorage.getItem('no_id'),
-          status_bot: status
-        },
-        {
-          headers: { 'X-Jenis-User': 'admin' }
-        }
-      )
-      if (status == false) {
-        sendChat('system_masuk')
-        success('Percakapan berhasil diambil alih')
-      } else {
-        sendChat('system_keluar')
-        success('Percakapan telah diakhiri')
-      }
-      emit('chatTakeOver')
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.Message || ''
-      if (errorMessage.includes('Percakapan ini sudah diambil alih')) {
-        fail('Percakapan ini sudah diambil alih Admin lain')
-        emit('chatTakeOver')
-      } else {
-        fail('Ambil alih percakapan gagal')
-        console.error('Error take over:', err.response?.data || err.message)
-      }
+const takeOverChat = async (status: boolean, phoneNumber?: string, roomId?: string) => {
+  const targetPhone = phoneNumber || props.phoneNumber
+  const targetRoom = roomId || props.roomId || undefined
+
+  try {
+    await api.post(
+      '/api/chat/toggle-bot',
+      {
+        customer_phone: targetPhone,
+        admin_id: localStorage.getItem('no_id'),
+        status_bot: status
+      },
+      { headers: { 'X-Jenis-User': 'admin' } }
+    )
+    
+    if (status == false) {
+      await sendChat('system_masuk', undefined, targetRoom, targetPhone)
+    } else {
+      await sendChat('system_keluar', undefined, targetRoom, targetPhone)
     }
-  })
+    
+    emit('chatTakeOver')
+  } catch (err: any) {
+    const errorMessage = err.response?.data?.Message || ''
+    if (errorMessage.includes('Percakapan ini sudah diambil alih')) {
+      fail('Percakapan ini sudah diambil alih Admin lain')
+      emit('chatTakeOver')
+    } else {
+      fail('Ambil alih percakapan gagal')
+      console.error('Error take over:', err.response?.data || err.message)
+    }
+  }
 }
 
 const saveUsername = async () => {
@@ -438,7 +444,7 @@ const fileToBase64 = (file: File): Promise<string> => {
 
 const sendImages = async () => {
   const config = { headers: { 'X-Jenis-User': 'admin' } }
-  console.log('Mengirim data gambar beserta caption:')
+  // console.log('Mengirim data gambar beserta caption:')
 
   try {
     const payloads = await Promise.all(
@@ -457,7 +463,7 @@ const sendImages = async () => {
 
     for (const item of payloads) {
       await api.post('/api/waha/send-image', item, config)
-      sendChat('system_image', item.Caption+"_"+item.FileUrl)
+      sendChat('system_image', item.Caption + '_' + item.FileUrl)
     }
 
     closePreview()
@@ -500,6 +506,27 @@ watch(
     scrollToBottom()
   },
   { deep: true, immediate: true }
+)
+
+watch(
+  () => props.takeOverBatch,
+  async (newVal) => {
+    if (newVal && newVal.length > 0) {
+      const takeOverSuccess: string[] = []
+
+      for (const [idx, item] of newVal.entries()) {
+        try {
+          await takeOverChat(item.status, item.phoneNumber, item.room) 
+          takeOverSuccess.push(item.room)
+        } catch (err: any) {
+          console.error(`Gagal batch untuk room ${item.room}:`, err)
+        }
+      }
+      
+      emit('takeOverStatus', takeOverSuccess)
+    }
+  },
+  { deep: true }
 )
 
 onMounted(() => {
@@ -617,14 +644,14 @@ onUpdated(() => {
       <input type="file" ref="addMoreInput" multiple hidden accept="image/*" @change="handleAddMore" />
     </div>
 
-    <simplebar ref="chatContainer" class="flex-grow bg-repeat bg-center h-0 bg-chat" :class="{ hidden: isPreviewMode }">
+    <simplebar ref="chatContainer" class="flex-grow bg-repeat bg-center h-0 container bg-chat" :class="{ hidden: isPreviewMode }">
       <div class="flex flex-col gap-4 px-5 py-6">
-        <ChatBubble v-for="(chat, i) in chats" :key="i" :idx="i" :chat="chat" :chats="chats" />
+        <ChatBubble v-for="(chat, i) in chats" :key="i" :idx="i" :chat="chat" :chats="chats" :lastMessageId="props.lastMessageId" />
       </div>
     </simplebar>
 
     <div class="p-3 bg-white border-t border-default-200" :class="{ hidden: isPreviewMode }">
-      <div v-if="activeTab != 'semua'" class="flex gap-2 items-center bg-default-50 border border-default-200 p-2 rounded-2xl focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
+      <div v-if="activeTab != 'bot'" class="flex gap-2 items-center bg-default-50 border border-default-200 p-2 rounded-2xl focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
         <div class="relative" ref="dropdownRef">
           <button @click.stop="openMenu = !openMenu" class="btn rounded-xl size-10 bg-transparent text-default-500 hover:bg-default-200 hover:text-default-800 transition-colors">
             <Icon icon="lucide:plus" class="size-5"></Icon>
@@ -835,18 +862,26 @@ onUpdated(() => {
     </div>
   </div>
 
-  <div v-else class="relative w-full h-full min-h-[500px] flex flex-col items-center justify-center bg-default-50/50">
-    <button @click="openSidebar" class="absolute top-4 left-4 lg:hidden h-9 px-4 gap-2 rounded-lg flex justify-center items-center bg-white border border-default-200 shadow-sm hover:bg-default-50 font-medium transition-colors">
-      <Icon icon="lucide:menu" class="size-4 text-default-600"></Icon>
+  <div v-else class="relative w-full h-full min-h-[500px] flex flex-col items-center justify-center bg-slate-50/50 overflow-hidden">
+    
+    <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 24px 24px;"></div>
+
+    <button @click="openSidebar" class="absolute top-5 left-5 lg:hidden h-10 px-5 gap-2 rounded-xl flex justify-center items-center bg-white border border-slate-200 shadow-sm hover:shadow-md hover:bg-slate-50 font-semibold text-slate-700 transition-all z-10 active:scale-95">
+      <Icon icon="lucide:menu" class="size-4"></Icon>
       <span class="text-sm">Buka Daftar Pesan</span>
     </button>
 
-    <div class="flex flex-col items-center justify-center text-center p-8 bg-white rounded-3xl border border-default-100 shadow-sm max-w-sm">
-      <div class="size-20 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-5">
-        <Icon icon="lucide:message-square-dashed" class="size-10"></Icon>
+    <div class="flex flex-col items-center justify-center text-center p-10 bg-white/80 backdrop-blur-sm rounded-[2rem] border border-white shadow-xl shadow-slate-200/50 max-w-sm z-10 transform transition-all hover:scale-[1.02]">
+      
+      <div class="relative mb-6">
+        <div class="absolute inset-0 bg-bejo-400 rounded-full blur-xl opacity-20 animate-pulse"></div>
+        <div class="size-24 bg-gradient-to-br from-bejo-50 to-bejo-100 border-4 border-white text-bejo-600 rounded-full flex items-center justify-center shadow-lg relative">
+          <Icon icon="lucide:message-square-dashed" class="size-10 stroke-[1.5]"></Icon>
+        </div>
       </div>
-      <h4 class="text-xl font-bold text-default-900">Mulai Percakapan</h4>
-      <p class="text-sm text-default-500 mt-2">Pilih pelanggan dari daftar di samping untuk mulai melihat dan membalas pesan.</p>
+      
+      <h4 class="text-xl font-extrabold text-slate-800 tracking-tight">Mulai Percakapan</h4>
+      <p class="text-sm text-slate-500 mt-2.5 leading-relaxed font-medium">Pilih pelanggan dari daftar di samping untuk mulai melihat dan membalas pesan.</p>
     </div>
   </div>
 </template>
@@ -862,6 +897,12 @@ onUpdated(() => {
 :where([data-theme='dark']) .bg-chat {
   background-image: v-bind(bgDarkUrl);
   background-size: 400px;
+}
+
+.container {
+  background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), v-bind(bgLightUrl);
+  background-size: cover;
+  background-position: center;
 }
 
 .minimal-scrollbar {

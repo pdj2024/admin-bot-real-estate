@@ -5,20 +5,9 @@
         <button id="button-toggle-menu" class="hs-overlay btn btn-icon size-8 hover:bg-default-150 rounded" @click="toggleSideNav">
           <Icon icon="lucide:align-left" class="iconify text-xl" />
         </button>
-        <div class="lg:flex hidden items-center relative">
-          <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-            <Icon icon="tabler:search" class="iconify text-base" />
-          </div>
-          <input type="search" id="topbar-search" class="form-input px-12 text-sm rounded border-transparent focus:border-transparent w-60" placeholder="Search something..." />
-          <button type="button" class="absolute inset-y-0 end-0 flex items-center pe-4">
-            <span class="ms-auto font-medium">⌘ K</span>
-          </button>
-        </div>
       </div>
       <div class="flex items-center gap-3">
         <ThemeToggler />
-
-        <!-- <NotificationDropdown /> -->
 
         <UserProfile />
       </div>

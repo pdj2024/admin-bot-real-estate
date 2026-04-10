@@ -73,7 +73,7 @@ interface RealEstateForm {
   Harga_Sewa2: number
   Keterangan: string
   Slug: string
-  Area: string
+  Area: string[]
   Akses_Jalan: string[]
   File_Image: string[]
   MediaUrls: MediaUrl[]
@@ -142,7 +142,7 @@ const defaultForm = (): RealEstateForm => ({
   Harga_Sewa2: 0,
   Keterangan: '',
   Slug: '',
-  Area: '',
+  Area: ['', ''],
   Akses_Jalan: [],
   File_Image: [],
   MediaUrls: []
@@ -206,7 +206,7 @@ const filteredCities = computed(() => {
 
 // Reset search saat pilih provinsi
 const selectProvince = async (p: Province) => {
-  form.value.Area = `, ${p.name}`
+  form.value.Area[0] = `, ${p.name}`
   searchProvince.value = '' // Reset search
   cities.value = []
   await getCity(p.id)
@@ -215,9 +215,9 @@ const selectProvince = async (p: Province) => {
 }
 
 const selectCity = (c: City) => {
-  const parts = form.value.Area.split(',')
+  const parts = form.value.Area[0].split(',')
   const provinceName = parts.length > 1 ? parts[1].trim() : parts[0].trim()
-  form.value.Area = `${c.name}, ${provinceName}`
+  form.value.Area[0] = `${c.name}, ${provinceName}`
   searchCity.value = '' // Reset search
   openCity.value = false
 }
@@ -379,7 +379,7 @@ const sendMedia = async (uploadUrl: string, media: File) => {
   try {
     const response = await axios.put(uploadUrl, media, {
       headers: {
-        'Content-Type': media.type // Aman sekarang
+        'Content-Type': media.type
       }
     })
     return response.data
@@ -502,269 +502,267 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 </script>
 
 <template>
-  <Transition
-    enter-active-class="transition duration-300 ease-out"
-    enter-from-class="opacity-0"
-    enter-to-class="opacity-100"
-    leave-active-class="transition duration-200 ease-in"
-    leave-from-class="opacity-100"
-    leave-to-class="opacity-0"
-  >
-  <div v-if="showModal" class="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-    <div class="bg-card w-full max-w-5xl rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
-      <div class="flex justify-between items-center p-5 border-b">
-        <h2 class="text-xl font-extrabold text-default-900">{{ form.No_Id ? 'Edit' : 'Tambah' }} Properti</h2>
-        <button @click="$emit('update:showModal', false)" class="p-2 hover:bg-red-50 rounded-full text-slate-400 hover:text-red-500">
-          <Icon icon="lucide:x" class="size-6" />
-        </button>
-      </div>
+  <Transition enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0" enter-to-class="opacity-100" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0">
+    <div v-if="showModal" class="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div class="bg-card w-full max-w-5xl rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
+        <div class="flex justify-between items-center p-5 border-b">
+          <h2 class="text-xl font-extrabold text-default-900">{{ form.No_Id ? 'Edit' : 'Tambah' }} Properti</h2>
+          <button @click="$emit('update:showModal', false)" class="p-2 hover:bg-red-50 rounded-full text-slate-400 hover:text-red-500">
+            <Icon icon="lucide:x" class="size-6" />
+          </button>
+        </div>
 
-      <div class="px-6 py-3 overflow-y-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div class="space-y-5">
-          <div class="field" v-if="form.No_Id">
-            <div class="toggle-box mt-2">
-              <span class="flex items-center gap-2 text-xs font-bold text-slate-600 uppercase"> <Icon icon="lucide:power" /> {{ form.Status_Display }} </span>
-              <button @click="form.Status_Display = form.Status_Display === 'Aktif' ? 'Nonaktif' : 'Aktif'" class="toggle" :class="form.Status_Display === 'Aktif' ? 'toggle-active' : ''">
-                <span class="toggle-circle" :class="form.Status_Display === 'Aktif' ? 'translate-x-6' : ''"></span>
-              </button>
-            </div>
-          </div>
-          <div class="col-span-2 space-y-2 !mb-3" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
-            <label class="label block" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">Gambar Produk</label>
-            <div ref="scrollContainer" class="preview-container flex flex-nowrap gap-3 overflow-x-auto pb-2 custom-scroll">
-              <div v-if="previewPhotos.length >= 1" v-for="(img, i) in previewPhotos" :key="i" class="preview-box relative size-24 flex-shrink-0">
-                <img :src="img.Id_Media" class="size-full object-cover rounded-xl border border-slate-200" />
-                <button @click="removePhoto(i)" class="preview-delete">✕</button>
-              </div>
-
-              <label class="size-24 border-2 border-dashed border-slate-200 rounded-xl flex flex-shrink-0 flex-col items-center justify-center cursor-pointer hover:bg-slate-50 hover:border-primary/50 transition-all text-slate-400 group">
-                <Icon icon="lucide:plus" class="size-6 group-hover:text-primary transition-colors" />
-                <span class="text-[10px] font-bold mt-1 group-hover:text-primary">TAMBAH</span>
-                <input type="file" multiple hidden @change="handlePhoto" accept="image/*" />
-              </label>
-
-              <div v-if="!previewPhotos.length" class="flex-shrink-0 text-slate-500 text-[10px] italic flex items-center px-2">Belum ada foto terpilih</div>
-            </div>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div class="field" :class="{ inactive: form.Status_Display !== 'Aktif' }">
-              <label class="label">Tipe Properti</label>
-              <div class="relative">
-                <select v-model="form.Tipe" class="field-input !pl-4 w-full appearance-none">
-                  <option value="Rumah">Rumah</option>
-                  <option value="Apartemen">Apartemen</option>
-                  <option value="Villa">Villa</option>
-                  <option value="Mansion">Mansion</option>
-                </select>
-                <Icon icon="lucide:chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 size-4 pointer-events-none text-slate-400" />
+        <div class="px-6 py-3 overflow-y-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div class="space-y-5">
+            <div class="field" v-if="form.No_Id">
+              <div class="toggle-box mt-2">
+                <span class="flex items-center gap-2 text-xs font-bold text-slate-600 uppercase"> <Icon icon="lucide:power" /> {{ form.Status_Display }} </span>
+                <button @click="form.Status_Display = form.Status_Display === 'Aktif' ? 'Nonaktif' : 'Aktif'" class="toggle" :class="form.Status_Display === 'Aktif' ? 'toggle-active' : ''">
+                  <span class="toggle-circle" :class="form.Status_Display === 'Aktif' ? 'translate-x-6' : ''"></span>
+                </button>
               </div>
             </div>
+            <div class="col-span-2 space-y-2 !mb-3">
+              <label class="label block">Gambar Produk</label>
+              <div ref="scrollContainer" class="preview-container flex flex-nowrap gap-3 overflow-x-auto pb-2 custom-scroll">
+                <div v-if="previewPhotos.length >= 1" v-for="(img, i) in previewPhotos" :key="i" class="preview-box relative size-24 flex-shrink-0">
+                  <img :src="img.Id_Media" class="size-full object-cover rounded-xl border border-slate-200" />
+                  <button @click="removePhoto(i)" class="preview-delete">✕</button>
+                </div>
 
-            <div class="md:col-span-2 field" :class="{ inactive: form.Status_Display !== 'Aktif' }">
-              <label class="label">Nama Properti</label>
-              <div class="relative">
-                <Icon icon="lucide:house" class="field-icon" />
-                <input v-model="form.Nama_Produk" placeholder="Contoh: The Sapphire Sky Mansion" class="field-input w-full" />
+                <label class="size-24 border-2 border-dashed border-slate-200 rounded-xl flex flex-shrink-0 flex-col items-center justify-center cursor-pointer hover:bg-slate-50 hover:border-primary/50 transition-all text-slate-400 group">
+                  <Icon icon="lucide:plus" class="size-6 group-hover:text-primary transition-colors" />
+                  <span class="text-[10px] font-bold mt-1 group-hover:text-primary">TAMBAH</span>
+                  <input type="file" multiple hidden @change="handlePhoto" accept="image/*,video/*" />
+                </label>
+
+                <div v-if="!previewPhotos.length" class="flex-shrink-0 text-slate-500 text-[10px] italic flex items-center px-2">Belum ada foto terpilih</div>
               </div>
             </div>
-          </div>
-
-          <div class="field" ref="dropdownRef" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
-            <label class="label flex justify-between">
-              Area & Alamat
-              <label class="flex items-center gap-1 cursor-pointer text-[10px] text-slate-500">
-                <input type="checkbox" v-model="form.Hide_alamat" class="size-3 rounded form-checkbox" />
-                Sembunyikan Alamat?
-              </label>
-            </label>
-            <div class="space-y-2">
-              <div class="grid grid-cols-2 gap-2">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div class="field">
+                <label class="label">Tipe Properti</label>
                 <div class="relative">
-                  <div @click.stop="openProvince = !openProvince" class="field-input cursor-pointer truncate flex justify-between items-center">
-                    <span>{{ form.Area.split(',').pop()?.trim() || 'Pilih Provinsi' }}</span>
-                    <Icon icon="lucide:chevron-down" class="size-4 text-slate-400" />
-                  </div>
+                  <select v-model="form.Tipe" class="field-input !pl-4 w-full appearance-none">
+                    <option value="Rumah">Rumah</option>
+                    <option value="Apartemen">Apartemen</option>
+                    <option value="Villa">Villa</option>
+                    <option value="Mansion">Mansion</option>
+                  </select>
+                  <Icon icon="lucide:chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 size-4 pointer-events-none text-slate-400" />
+                </div>
+              </div>
 
-                  <div v-if="openProvince" class="absolute bottom-full left-0 mb-1 w-full max-w-[420px] max-h-62 z-[9999] bg-card rounded-2xl shadow-2xl border border-slate-200 flex flex-col">
-                    <div class="px-4 py-2 border-b bg-slate-50">
-                      <div class="relative">
-                        <Icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
-                        <input v-model="searchProvince" type="text" placeholder="Cari Provinsi..." class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" @click.stop />
+              <div class="md:col-span-2 field">
+                <label class="label">Nama Properti</label>
+                <div class="relative">
+                  <Icon icon="lucide:house" class="field-icon" />
+                  <input v-model="form.Nama_Produk" placeholder="Contoh: The Sapphire Sky Mansion" class="field-input w-full" />
+                </div>
+              </div>
+            </div>
+
+            <div class="field" ref="dropdownRef">
+              <label class="label flex justify-between">
+                Area & Alamat
+                <label class="flex items-center gap-1 cursor-pointer text-[10px] text-slate-500">
+                  <input type="checkbox" v-model="form.Hide_alamat" class="size-3 rounded form-checkbox" />
+                  Sembunyikan Alamat?
+                </label>
+              </label>
+              <div class="space-y-2">
+                <div class="grid grid-cols-2 gap-2">
+                  <div class="relative">
+                    <div @click.stop="openProvince = !openProvince" class="field-input cursor-pointer truncate flex justify-between items-center">
+                      <span>{{ form.Area[0].split(',').pop()?.trim() || 'Pilih Provinsi' }}</span>
+                      <Icon icon="lucide:chevron-down" class="size-4 text-slate-400" />
+                    </div>
+
+                    <div v-if="openProvince" class="absolute bottom-full left-0 mb-1 w-full max-w-[420px] max-h-62 z-[9999] bg-card rounded-2xl shadow-2xl border border-slate-200 flex flex-col">
+                      <div class="px-4 py-2 border-b bg-slate-50">
+                        <div class="relative">
+                          <Icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
+                          <input v-model="searchProvince" type="text" placeholder="Cari Provinsi..." class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" @click.stop />
+                        </div>
+                      </div>
+                      <div class="max-h-60 overflow-y-auto p-2 custom-scroll flex flex-col">
+                        <button v-for="p in filteredProvinces" :key="p.id" @click="selectProvince(p)" type="button" class="dropdown-item text-left w-full">
+                          {{ p.name }}
+                        </button>
                       </div>
                     </div>
-                    <div class="max-h-60 overflow-y-auto p-2 custom-scroll flex flex-col">
-                      <button v-for="p in filteredProvinces" :key="p.id" @click="selectProvince(p)" type="button" class="dropdown-item text-left w-full">
-                        {{ p.name }}
-                      </button>
+                  </div>
+
+                  <div class="relative">
+                    <div @click.stop="cities.length && (openCity = !openCity)" class="field-input cursor-pointer truncate flex justify-between items-center" :class="!cities.length && 'bg-slate-50 opacity-50 cursor-not-allowed'">
+                      <span>{{ form.Area[0].split(',')[0]?.trim() || 'Pilih Kota' }}</span>
+                      <Icon icon="lucide:chevron-down" class="size-4 text-slate-400" />
+                    </div>
+
+                    <div v-if="openCity" class="absolute bottom-full left-0 mb-1 w-full max-w-[420px] max-h-62 z-[9999] bg-card rounded-2xl shadow-2xl border border-slate-200 flex flex-col">
+                      <div class="px-4 py-2 border-b bg-slate-50">
+                        <div class="relative">
+                          <Icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
+                          <input v-model="searchCity" type="text" placeholder="Cari Kota/Kabupaten..." class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" @click.stop />
+                        </div>
+                      </div>
+                      <div class="max-h-60 overflow-y-auto p-2 custom-scroll flex flex-col">
+                        <button v-for="c in filteredCities" :key="c.id" @click="selectCity(c)" type="button" class="dropdown-item text-left w-full">
+                          {{ c.name }}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 <div class="relative">
-                  <div @click.stop="cities.length && (openCity = !openCity)" class="field-input cursor-pointer truncate flex justify-between items-center" :class="!cities.length && 'bg-slate-50 opacity-50 cursor-not-allowed'">
-                    <span>{{ form.Area.split(',')[0]?.trim() || 'Pilih Kota' }}</span>
-                    <Icon icon="lucide:chevron-down" class="size-4 text-slate-400" />
-                  </div>
+                  <Icon icon="lucide:map" class="field-icon" />
+                  <input v-model="form.Area[1]" placeholder="Kawasan (misal: Surabaya Barat, Surabaya Timur...)" class="field-input" />
+                </div>
 
-                  <div v-if="openCity" class="absolute bottom-full left-0 mb-1 w-full max-w-[420px] max-h-62 z-[9999] bg-card rounded-2xl shadow-2xl border border-slate-200 flex flex-col">
-                    <div class="px-4 py-2 border-b bg-slate-50">
-                      <div class="relative">
-                        <Icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
-                        <input v-model="searchCity" type="text" placeholder="Cari Kota/Kabupaten..." class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" @click.stop />
-                      </div>
-                    </div>
-                    <div class="max-h-60 overflow-y-auto p-2 custom-scroll flex flex-col">
-                      <button v-for="c in filteredCities" :key="c.id" @click="selectCity(c)" type="button" class="dropdown-item text-left w-full">
-                        {{ c.name }}
-                      </button>
-                    </div>
-                  </div>
+                <div class="relative">
+                  <Icon icon="lucide:map-pin" class="field-icon" />
+                  <input v-model="form.Alamat" placeholder="Detail jalan, no rumah..." class="field-input" />
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-default-50 p-4 rounded-2xl space-y-4 border border-slate-100">
+              <div class="flex items-center gap-4 border-b border-slate-200 pb-2">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Opsi Transaksi</span>
+                <div class="flex gap-4">
+                  <label class="flex items-center gap-2 text-xs font-bold cursor-pointer">
+                    <input type="checkbox" value="Jual" v-model="form.Status_Transaksi" class="form-checkbox" />
+                    JUAL
+                  </label>
+
+                  <label class="flex items-center gap-2 text-xs font-bold cursor-pointer">
+                    <input type="checkbox" value="Sewa" v-model="form.Status_Transaksi" class="form-checkbox" />
+                    SEWA
+                  </label>
+
+                  <label v-if="form.Status_Transaksi.includes('Sewa')" class="flex items-center gap-2 text-xs font-bold cursor-pointer">
+                    <input type="checkbox" v-model="form.Ada_Minimal_Sewa" class="form-checkbox" />
+                    MIN SEWA
+                  </label>
                 </div>
               </div>
 
-              <div class="relative">
-                <Icon icon="lucide:map-pin" class="field-icon" />
-                <input v-model="form.Alamat" placeholder="Detail jalan, no rumah..." class="field-input" />
+              <div v-if="form.Status_Transaksi.includes('Jual')" class="grid grid-cols-2 gap-3">
+                <div class="field">
+                  <label class="label !text-slate-500">Harga Jual Normal (Rp)</label>
+                  <input type="text" :value="form.Harga_Jual1 ? formatCurrency(form.Harga_Jual1) : ''" @input="handleInputCurrency($event, 'Harga_Jual1')" class="field-input !pl-4" placeholder="Harga awal" />
+                </div>
+
+                <div class="field">
+                  <label class="label !text-bejo-600">Harga Jual Diskon (Rp)</label>
+                  <input type="text" :value="form.Harga_Jual2 ? formatCurrency(form.Harga_Jual2) : ''" @input="handleInputCurrency($event, 'Harga_Jual2')" class="field-input !pl-4 focus:border-emerald-500" :class="form.Harga_Jual2 > 0 && form.Harga_Jual2 >= form.Harga_Jual1 ? '!border-red-500 focus:!border-red-500' : 'border-emerald-200'" placeholder="Setelah diskon" />
+                  <span v-if="form.Harga_Jual2 > 0 && form.Harga_Jual2 >= form.Harga_Jual1" class="text-xs text-red-500 mt-1 inline-block font-medium"> ⚠️ Harga diskon harus lebih kecil dari harga normal. </span>
+                </div>
+              </div>
+
+              <div v-if="form.Status_Transaksi.includes('Sewa')" class="grid grid-cols-2 gap-3 mt-3">
+                <div class="field">
+                  <label class="label !text-slate-500">Harga Sewa Normal (Rp)</label>
+
+                  <div class="flex items-center gap-2">
+                    <input type="text" :value="form.Harga_Sewa1 ? formatCurrency(form.Harga_Sewa1) : ''" @input="handleInputCurrency($event, 'Harga_Sewa1')" class="field-input !pl-4 w-full" placeholder="Harga awal" />
+                    <span class="text-slate-500 font-medium whitespace-nowrap">/{{ form.Satuan_Minimal_Sewa || 'Tahun' }}</span>
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label class="label !text-bejo-600">Harga Sewa Diskon (Rp)</label>
+                  <div class="flex items-center gap-2">
+                    <input type="text" :value="form.Harga_Sewa2 ? formatCurrency(form.Harga_Sewa2) : ''" @input="handleInputCurrency($event, 'Harga_Sewa2')" class="field-input !pl-4 focus:border-blue-500" :class="form.Harga_Sewa2 > 0 && form.Harga_Sewa2 >= form.Harga_Sewa1 ? '!border-red-500 focus:!border-red-500' : 'border-blue-200'" placeholder="Setelah diskon" />
+                    <span class="text-slate-500 font-medium whitespace-nowrap">/{{ form.Satuan_Minimal_Sewa || 'Tahun' }}</span>
+                  </div>
+                  <span v-if="form.Harga_Sewa2 > 0 && form.Harga_Sewa2 >= form.Harga_Sewa1" class="text-xs text-red-500 mt-1 inline-block font-medium"> ⚠️ Harga diskon sewa harus lebih kecil dari harga sewa normal. </span>
+                </div>
+              </div>
+
+              <div v-if="form.Ada_Minimal_Sewa" class="grid grid-cols-2 gap-3">
+                <div class="field">
+                  <label class="label !text-slate-500">Minimal Sewa</label>
+                  <input v-model="form.Minimal_Sewa" type="number" class="field-input !pl-4" min="0" placeholder="Minimal sewa" />
+                </div>
+                <div class="field">
+                  <label class="label !text-slate-600">Satuan</label>
+                  <select v-model="form.Satuan_Minimal_Sewa" class="field-input !pl-4">
+                    <option value="Bulan">Bulan</option>
+                    <option value="Tahun" selected>Tahun</option>
+                  </select>
+                </div>
               </div>
             </div>
           </div>
 
-          <div class="bg-default-50 p-4 rounded-2xl space-y-4 border border-slate-100" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
-            <div class="flex items-center gap-4 border-b border-slate-200 pb-2">
-              <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Opsi Transaksi</span>
-              <div class="flex gap-4">
-                <label class="flex items-center gap-2 text-xs font-bold cursor-pointer">
-                  <input type="checkbox" value="Jual" v-model="form.Status_Transaksi" class="form-checkbox" />
-                  JUAL
-                </label>
-
-                <label class="flex items-center gap-2 text-xs font-bold cursor-pointer">
-                  <input type="checkbox" value="Sewa" v-model="form.Status_Transaksi" class="form-checkbox" />
-                  SEWA
-                </label>
-
-                <label v-if="form.Status_Transaksi.includes('Sewa')" class="flex items-center gap-2 text-xs font-bold cursor-pointer">
-                  <input type="checkbox" v-model="form.Ada_Minimal_Sewa" class="form-checkbox" />
-                  MIN SEWA
-                </label>
+          <div class="flex flex-col gap-4 h-full">
+            <div class="field">
+              <label class="label"> Url Slug </label>
+              <div class="relative">
+                <Icon icon="lucide:link-2" class="field-icon" />
+                <input v-model="form.Slug" class="field-input" readonly />
               </div>
             </div>
 
-            <div v-if="form.Status_Transaksi.includes('Jual')" class="grid grid-cols-2 gap-3">
-              <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
-                <label class="label !text-slate-500">Harga Jual Normal (Rp)</label>
-                <input type="text" :value="form.Harga_Jual1 ? formatCurrency(form.Harga_Jual1) : ''" @input="handleInputCurrency($event, 'Harga_Jual1')" class="field-input !pl-4" placeholder="Harga awal" />
-              </div>
-
-              <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
-                <label class="label !text-bejo-600">Harga Jual Diskon (Rp)</label>
-                <input type="text" :value="form.Harga_Jual2 ? formatCurrency(form.Harga_Jual2) : ''" @input="handleInputCurrency($event, 'Harga_Jual2')" class="field-input !pl-4 focus:border-emerald-500" :class="form.Harga_Jual2 > 0 && form.Harga_Jual2 >= form.Harga_Jual1 ? '!border-red-500 focus:!border-red-500' : 'border-emerald-200'" placeholder="Setelah diskon" />
-                <span v-if="form.Harga_Jual2 > 0 && form.Harga_Jual2 >= form.Harga_Jual1" class="text-xs text-red-500 mt-1 inline-block font-medium"> ⚠️ Harga diskon harus lebih kecil dari harga normal. </span>
-              </div>
-            </div>
-
-            <div v-if="form.Status_Transaksi.includes('Sewa')" class="grid grid-cols-2 gap-3 mt-3">
-              <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
-                <label class="label !text-slate-500">Harga Sewa Normal (Rp)</label>
-
-                <div class="flex items-center gap-2">
-                  <input type="text" :value="form.Harga_Sewa1 ? formatCurrency(form.Harga_Sewa1) : ''" @input="handleInputCurrency($event, 'Harga_Sewa1')" class="field-input !pl-4 w-full" placeholder="Harga awal" />
-                  <span class="text-slate-500 font-medium whitespace-nowrap">/{{ form.Satuan_Minimal_Sewa || 'Tahun' }}</span>
-                </div>
-              </div>
-
-              <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
-                <label class="label !text-bejo-600">Harga Sewa Diskon (Rp)</label>
-                <div class="flex items-center gap-2">
-                  <input type="text" :value="form.Harga_Sewa2 ? formatCurrency(form.Harga_Sewa2) : ''" @input="handleInputCurrency($event, 'Harga_Sewa2')" class="field-input !pl-4 focus:border-blue-500" :class="form.Harga_Sewa2 > 0 && form.Harga_Sewa2 >= form.Harga_Sewa1 ? '!border-red-500 focus:!border-red-500' : 'border-blue-200'" placeholder="Setelah diskon" />
-                  <span class="text-slate-500 font-medium whitespace-nowrap">/{{ form.Satuan_Minimal_Sewa || 'Tahun' }}</span>
-                </div>
-                <span v-if="form.Harga_Sewa2 > 0 && form.Harga_Sewa2 >= form.Harga_Sewa1" class="text-xs text-red-500 mt-1 inline-block font-medium"> ⚠️ Harga diskon sewa harus lebih kecil dari harga sewa normal. </span>
-              </div>
-            </div>
-
-            <div v-if="form.Ada_Minimal_Sewa" class="grid grid-cols-2 gap-3">
-              <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
-                <label class="label !text-slate-500">Minimal Sewa</label>
-                <input v-model="form.Minimal_Sewa" type="number" class="field-input !pl-4" min="0" placeholder="Minimal sewa" />
-              </div>
-              <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
-                <label class="label !text-slate-600">Satuan</label>
-                <select v-model="form.Satuan_Minimal_Sewa" class="field-input !pl-4">
-                  <option value="Bulan">Bulan</option>
-                  <option value="Tahun" selected>Tahun</option>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="field">
+                <label class="label">Sertifikat</label>
+                <select v-model="form.Jenis_Sertifikat" class="field-input !pl-4">
+                  <option value="SHM">SHM</option>
+                  <option value="SHGB">SHGB</option>
+                  <option value="Lainnya">Lainnya</option>
                 </select>
               </div>
+              <div class="field">
+                <label class="label">Dimensi (P x L)</label>
+                <div class="flex gap-2 items-center">
+                  <input v-model="panjang" placeholder="P" type="number" class="field-input !pl-2 text-center" />
+                  <span class="text-slate-300">x</span>
+                  <input v-model="lebar" placeholder="L" type="number" class="field-input !pl-2 text-center" />
+                </div>
+              </div>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <div class="field"><label class="label">Luas Tanah (m²)</label><input v-model="form.Luas_Tanah" type="number" class="field-input !pl-4" /></div>
+              <div class="field"><label class="label">Luas Bangunan (m²)</label><input v-model="form.Luas_Bangunan" type="number" class="field-input !pl-4" /></div>
+              <div class="field"><label class="label">Jumlah Lantai</label><input v-model="form.Jumlah_Lantai" type="number" class="field-input !pl-4" /></div>
+            </div>
+            <div class="grid grid-cols-4 gap-2">
+              <div v-for="s in specs" :key="s.key" class="field">
+                <label class="label">{{ s.label }}</label>
+                <input v-model="form[s.key as keyof RealEstateForm]" type="number" class="field-input !pl-4" />
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="label">Aksesibilitas (Contoh: 5 min ke Tol)</label>
+              <div class="flex gap-2">
+                <input v-model="newAkses" @keyup.enter="addAkses" placeholder="Ketik akses..." class="field-input !pl-4" />
+                <button @click="addAkses" class="bg-slate-800 text-white px-3 rounded-xl"><Icon icon="lucide:plus" /></button>
+              </div>
+              <div class="flex flex-wrap gap-2 mt-2">
+                <span v-for="(a, i) in form.Akses_Jalan" :key="i" class="bg-card border text-[10px] font-bold px-2 py-1 rounded-lg flex items-center gap-1"> {{ a }} <Icon @click="form.Akses_Jalan.splice(i, 1)" icon="lucide:x" class="text-red-500 cursor-pointer" /> </span>
+              </div>
+            </div>
+
+            <div class="field flex flex-col flex-1">
+              <label class="label">Keterangan</label>
+              <textarea v-model="form.Keterangan" class="field-input !pl-4 pt-2 resize-none flex-1 w-full" placeholder="Ceritakan keunggulan properti..."></textarea>
             </div>
           </div>
         </div>
 
-        <div class="flex flex-col gap-4 h-full" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
-          <div class="field">
-            <label class="label"> Url Slug </label>
-            <div class="relative">
-              <Icon icon="lucide:link-2" class="field-icon" />
-              <input v-model="form.Slug" class="field-input" readonly />
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
-              <label class="label">Sertifikat</label>
-              <select v-model="form.Jenis_Sertifikat" class="field-input !pl-4">
-                <option value="SHM">SHM</option>
-                <option value="SHGB">SHGB</option>
-                <option value="Lainnya">Lainnya</option>
-              </select>
-            </div>
-            <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
-              <label class="label">Dimensi (P x L)</label>
-              <div class="flex gap-2 items-center">
-                <input v-model="panjang" placeholder="P" type="number" class="field-input !pl-2 text-center" />
-                <span class="text-slate-300">x</span>
-                <input v-model="lebar" placeholder="L" type="number" class="field-input !pl-2 text-center" />
-              </div>
-            </div>
-          </div>
-          <div class="grid grid-cols-3 gap-2">
-            <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'"><label class="label">Luas Tanah (m²)</label><input v-model="form.Luas_Tanah" type="number" class="field-input !pl-4" /></div>
-            <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'"><label class="label">Luas Bangunan (m²)</label><input v-model="form.Luas_Bangunan" type="number" class="field-input !pl-4" /></div>
-            <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'"><label class="label">Jumlah Lantai</label><input v-model="form.Jumlah_Lantai" type="number" class="field-input !pl-4" /></div>
-          </div>
-          <div class="grid grid-cols-4 gap-2">
-            <div v-for="s in specs" :key="s.key" class="field">
-              <label class="label">{{ s.label }}</label>
-              <input v-model="form[s.key as keyof RealEstateForm]" type="number" class="field-input !pl-4" />
-            </div>
-          </div>
-
-          <div class="field" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
-            <label class="label">Aksesibilitas (Contoh: 5 min ke Tol)</label>
-            <div class="flex gap-2">
-              <input v-model="newAkses" @keyup.enter="addAkses" placeholder="Ketik akses..." class="field-input !pl-4" />
-              <button @click="addAkses" class="bg-slate-800 text-white px-3 rounded-xl"><Icon icon="lucide:plus" /></button>
-            </div>
-            <div class="flex flex-wrap gap-2 mt-2">
-              <span v-for="(a, i) in form.Akses_Jalan" :key="i" class="bg-card border text-[10px] font-bold px-2 py-1 rounded-lg flex items-center gap-1"> {{ a }} <Icon @click="form.Akses_Jalan.splice(i, 1)" icon="lucide:x" class="text-red-500 cursor-pointer" /> </span>
-            </div>
-          </div>
-
-          <div class="field flex flex-col flex-1" :class="form.Status_Display === 'Aktif' ? '' : 'inactive'">
-            <label class="label">Keterangan</label>
-            <textarea v-model="form.Keterangan" class="field-input !pl-4 pt-2 resize-none flex-1 w-full" placeholder="Ceritakan keunggulan properti..."></textarea>
-          </div>
+        <div class="p-5 border-t flex justify-end gap-3 bg-default-50/50">
+          <button @click="$emit('update:showModal', false)" class="px-6 py-2.5 text-sm font-bold text-slate-500 hover:bg-card rounded-xl transition-all">Batal</button>
+          <button :disabled="isLoading" @click="submitForm" class="px-8 py-2.5 bg-primary text-white text-sm font-black rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]">
+            <span v-if="isLoading">Sedang Mengunggah...</span>
+            <span v-else>Simpan Data</span>
+          </button>
         </div>
-      </div>
-
-      <div class="p-5 border-t flex justify-end gap-3 bg-default-50/50">
-        <button @click="$emit('update:showModal', false)" class="px-6 py-2.5 text-sm font-bold text-slate-500 hover:bg-card rounded-xl transition-all">Batal</button>
-        <button :disabled="isLoading" @click="submitForm" class="px-8 py-2.5 bg-primary text-white text-sm font-black rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]">
-          <span v-if="isLoading">Sedang Mengunggah...</span>
-          <span v-else>Simpan Data</span>
-        </button>
       </div>
     </div>
-  </div>
   </Transition>
 </template>
 

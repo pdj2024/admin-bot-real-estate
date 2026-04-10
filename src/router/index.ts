@@ -30,7 +30,7 @@ const router = createRouter({
         title: 'Katalog Properti',
         requiresAuth: false
       },
-      component: () => import('@/views/properti/katalog/index.vue')
+      component: () => import('@/views/guest/properti/katalog/index.vue')
     },
     {
       path: '/detail/:slug',
@@ -39,7 +39,16 @@ const router = createRouter({
         title: 'Detail properti',
         requiresAuth: false
       },
-      component: () => import('@/views/properti/detail/index.vue')
+      component: () => import('@/views/guest/properti/detail/index.vue')
+    },
+    {
+      path: '/simulasi-kpr',
+      name: 'Simulasi KPR',
+      meta: {
+        title: 'Simulasi KPR',
+        requiresAuth: false
+      },
+      component: () => import('@/views/guest/simulasi-kpr/index.vue')
     },
 
 

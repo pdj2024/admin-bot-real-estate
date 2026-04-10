@@ -19,6 +19,7 @@ import bgChatDark from '@/assets/images/background-chat-dark.png'
 import simplebar from 'simplebar-vue'
 import Filter from './Filter.vue'
 import { type Catalogue, type CalendarEvent, type Appointment, type Chat, type PreviewImage, calendarEvents } from './data'
+import { type TakeOverPayload } from './SideBar.vue'
 
 const menuRef = ref<HTMLElement | null>(null)
 const etalaseRef = ref<HTMLElement | null>(null)
@@ -45,10 +46,13 @@ const username = defineModel<string>('username')
 const events = ref<CalendarEvent[]>(calendarEvents)
 const bgLightUrl = `url(${bgChat})`
 const bgDarkUrl = `url(${bgChatDark})`
+
+const isPreviewMode = computed(() => previewImages.value.length > 0)
+const isPreviewOpen = ref(false)
 const previewImages = ref<PreviewImage[]>([])
 const activeIndex = ref(0)
-const activeImage = computed(() => previewImages.value[activeIndex.value] || null)
-const addMoreInput = ref<HTMLInputElement | null>(null);
+const activeImage = computed(() => previewImages.value[activeIndex.value])
+const addMoreInput = ref<HTMLInputElement | null>(null)
 
 const props = defineProps<{
   roomId: string | null
@@ -57,12 +61,15 @@ const props = defineProps<{
   phoneNumber: string
   activeTab: string
   chats: Chat[]
+  lastMessageId: string
+  takeOverBatch: TakeOverPayload[]
 }>()
 
 const emit = defineEmits<{
   (e: 'chatTakeOver'): void
   (e: 'clearRoom'): void
   (e: 'usernameChange', value: string): void
+  (e: 'takeOverStatus', value: string[]): void
 }>()
 
 const handleClickOutside = (event: MouseEvent) => {
@@ -120,7 +127,7 @@ const calendarOptions = computed<CalendarOptions>(() => ({
   eventClick(info: EventClickArg) {
     const event = info.event
     const data = event.extendedProps
-    console.log(data.customer)
+    // console.log(data.customer)
     openSchedule.value = false
   }
 }))
@@ -190,16 +197,21 @@ const scrollToBottom = async () => {
 
       if (scrollElement) {
         scrollElement.scrollTo({
-          top: scrollElement.scrollHeight,
-          behavior: 'smooth'
+          top: scrollElement.scrollHeight + 2000,
+          behavior: 'auto'
         })
       }
     }
   }, 100)
 }
 
-const sendChat = async (type: string) => {
+const sendChat = async (type: string, url?: string, targetRoomId?: string, targetPhone?: string) => {
   if (!type.includes('system') && !sendChatContent.value.trim()) return
+
+  const activeRoomId = targetRoomId || props.roomId
+  const activePhone = targetPhone || props.phoneNumber
+
+  if (!activeRoomId) return
 
   const myId = localStorage.getItem('no_id') || ''
   const role = localStorage.getItem('role_user') || ''
@@ -208,51 +220,46 @@ const sendChat = async (type: string) => {
   const now = new Date()
   const sentAt = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 19)
 
-  let currentUserIds: string[] = []
+  let currentUserIds: string[] = [myId]
 
-  if (props.chats && props.chats.length > 0) {
+  const isCurrentActiveRoom = activeRoomId === props.roomId
+
+  if (isCurrentActiveRoom && props.chats && props.chats.length > 0) {
     const lastChat = props.chats[props.chats.length - 1]
     if (lastChat.User_Ids && Array.isArray(lastChat.User_Ids)) {
       currentUserIds = [...lastChat.User_Ids]
-    } else {
-      currentUserIds = [myId]
     }
-  } else {
-    currentUserIds = [myId]
   }
 
   if (myId && !currentUserIds.includes(myId)) {
     currentUserIds.push(myId)
   }
 
-  let formattedPhone = props.phoneNumber.replace(/\D/g, '')
+  let formattedPhone = activePhone.replace(/\D/g, '')
   if (formattedPhone.startsWith('0')) {
     formattedPhone = '62' + formattedPhone.substring(1)
   }
 
-  console.log(props)
-  if (props.roomId) {
-    var messageText
-    if (type === 'system_masuk') {
-      messageText = username + '_X7#mQ9!vW2_Bergabung'
-    } else if (type === 'system_keluar') {
-      messageText = username + '_X7#mQ9!vW2_Keluar'
-    } else {
-      messageText = sendChatContent.value
-    }
+  let messageText = ''
+  if (type === 'system_masuk') {
+    messageText = username + '_X7#mQ9!vW2_Bergabung'
+  } else if (type === 'system_keluar') {
+    messageText = username + '_X7#mQ9!vW2_Keluar'
+  } else {
+    messageText = sendChatContent.value
+  }
 
-    console.log(type, type === 'system_keluar', messageText)
+  const tempIndex = props.chats.length
 
-    const tempIndex = props.chats.length
-
+  if (isCurrentActiveRoom) {
     props.chats.push({
-      Message: messageText,
+      Message: type == 'system_image' ? url : messageText,
       Sent_At: sentAt,
       Sender_Id: myId,
       Tipe_User: role,
-      Jenis_Pesan: type.includes('system') ? 'system' : 'text',
+      Jenis_Pesan: type.includes('system') ? type : 'text',
       Send_Status: 'pending',
-      Room_Id: props.roomId,
+      Room_Id: activeRoomId,
       User_Ids: currentUserIds,
       Username_User: username,
       Telepon_User: myId
@@ -260,91 +267,93 @@ const sendChat = async (type: string) => {
 
     sendChatContent.value = ''
     scrollToBottom()
+  }
 
-    try {
-      if (!type.includes('system')) {
-        await api.post(
-          '/api/waha/send-text',
-          {
-            ChatId: formattedPhone + '@s.whatsapp.net',
-            ReplyTo: null,
-            Text: messageText,
-            LinkPreview: true,
-            LinkPreviewHighQuality: false,
-            Session: 'session_OtpWaha'
-          },
-          { headers: { 'X-Jenis-User': 'admin' } }
-        )
-      }
-
+  try {
+    if (!type.includes('system')) {
       await api.post(
-        '/api/chat/create',
+        '/api/waha/send-text',
         {
-          Chat: {
-            Jenis_Pesan: type.includes('system') ? 'system' : 'text',
-            Sent_At: sentAt,
-            Sender_Id: myId,
-            Tipe_User: role,
-            Message: messageText,
-            Id_Paket: null,
-            No_Pesanan: null,
-            No_Penawaran: null,
-            Send_Status: 'send'
-          },
-          Room_Id: props.roomId,
-          User_Ids: currentUserIds
+          ChatId: formattedPhone + '@s.whatsapp.net',
+          ReplyTo: null,
+          Text: messageText,
+          LinkPreview: true,
+          LinkPreviewHighQuality: false,
+          Session: 'session_OtpWaha'
         },
         { headers: { 'X-Jenis-User': 'admin' } }
       )
+    }
 
-      if (props.chats[tempIndex]) {
-        props.chats[tempIndex].Send_Status = 'send'
-      }
+    await api.post(
+      '/api/chat/create',
+      {
+        Chat: {
+          Jenis_Pesan: type.includes('system') ? type : 'text',
+          Sent_At: sentAt,
+          Sender_Id: myId,
+          Tipe_User: role,
+          Message: type == 'system_image' ? url : messageText,
+          Id_Paket: null,
+          No_Pesanan: null,
+          No_Penawaran: null,
+          Send_Status: 'send'
+        },
+        Room_Id: activeRoomId,
+        User_Ids: currentUserIds
+      },
+      { headers: { 'X-Jenis-User': 'admin' } }
+    )
 
-      type === 'system_keluar' ? emit('clearRoom') : ''
-    } catch (err: any) {
-      console.error('Gagal mengirim chat:', err.response?.data || err.message)
+    if (isCurrentActiveRoom && props.chats[tempIndex]) {
+      props.chats[tempIndex].Send_Status = 'send'
+    }
 
-      if (props.chats[tempIndex]) {
-        props.chats[tempIndex].Send_Status = 'failed'
-      }
+    if (type === 'system_keluar' && isCurrentActiveRoom) {
+      emit('clearRoom')
+    }
+
+  } catch (err: any) {
+    console.error('Gagal mengirim chat:', err.response?.data || err.message)
+
+    if (isCurrentActiveRoom && props.chats[tempIndex]) {
+      props.chats[tempIndex].Send_Status = 'failed'
     }
   }
 }
 
-const takeOverChat = async (status: boolean) => {
-  confirm(status == false ? 'Apakah Anda yakin ingin mengambil alih percakapan ini?' : 'Apakah Anda ingin mengakhiri percakapan ini?', async () => {
-    try {
-      await api.post(
-        '/api/chat/toggle-bot',
-        {
-          customer_phone: props.phoneNumber,
-          admin_id: localStorage.getItem('no_id'),
-          status_bot: status
-        },
-        {
-          headers: { 'X-Jenis-User': 'admin' }
-        }
-      )
-      if (status == false) {
-        sendChat('system_masuk')
-        success('Percakapan berhasil diambil alih')
-      } else {
-        sendChat('system_keluar')
-        success('Percakapan telah diakhiri')
-      }
-      emit('chatTakeOver')
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.Message || ''
-      if (errorMessage.includes('Percakapan ini sudah diambil alih')) {
-        fail('Percakapan ini sudah diambil alih Admin lain')
-        emit('chatTakeOver')
-      } else {
-        fail('Ambil alih percakapan gagal')
-        console.error('Error take over:', err.response?.data || err.message)
-      }
+const takeOverChat = async (status: boolean, phoneNumber?: string, roomId?: string) => {
+  const targetPhone = phoneNumber || props.phoneNumber
+  const targetRoom = roomId || props.roomId || undefined
+
+  try {
+    await api.post(
+      '/api/chat/toggle-bot',
+      {
+        customer_phone: targetPhone,
+        admin_id: localStorage.getItem('no_id'),
+        status_bot: status
+      },
+      { headers: { 'X-Jenis-User': 'admin' } }
+    )
+    
+    if (status == false) {
+      await sendChat('system_masuk', undefined, targetRoom, targetPhone)
+    } else {
+      await sendChat('system_keluar', undefined, targetRoom, targetPhone)
     }
-  })
+    
+    emit('chatTakeOver')
+  } catch (err: any) {
+    const errorMessage = err.response?.data?.Message || ''
+    if (errorMessage.includes('Percakapan ini sudah diambil alih')) {
+      fail('Percakapan ini sudah diambil alih Admin lain')
+      emit('chatTakeOver')
+    } else {
+      fail('Ambil alih percakapan gagal')
+      console.error('Error take over:', err.response?.data || err.message)
+    }
+  }
 }
 
 const saveUsername = async () => {
@@ -373,86 +382,120 @@ const saveUsername = async () => {
   }
 }
 
-const sendPhoto = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  if (!target.files || target.files.length === 0) return;
+const chooseImages = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (!target.files || target.files.length === 0) return
 
-  // Konversi FileList menjadi array objek PreviewFile
-  const newImages = Array.from(target.files).map(file => ({
-    id: crypto.randomUUID(),
-    file: file,
-    url: URL.createObjectURL(file), // Membuat link preview
-    caption: ''
-  }));
-
-  // Masukkan ke state preview
-  previewImages.value = newImages;
-  activeIndex.value = 0; // Fokus ke gambar pertama
-
-  // Reset input agar bisa pilih file yang sama lagi nantinya
-  target.value = '';
-};
-
-
-const triggerAddMore = () => {
-  addMoreInput.value?.click();
-};
-
-const createPreviewItems = (fileList: FileList | null): PreviewImage[] => {
-  if (!fileList) return [];
-
-  return Array.from(fileList).map(file => ({
+  const newFiles = Array.from(target.files).map((file) => ({
     id: crypto.randomUUID(),
     file: file,
     url: URL.createObjectURL(file),
     caption: ''
-  }));
-};
+  }))
 
-const handleAddMore = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  const newImages = createPreviewItems(target.files);
+  previewImages.value = newFiles
+  activeIndex.value = 0
 
-  previewImages.value = [...previewImages.value, ...newImages];
-  target.value = '';
-  if (newImages.length > 0) {
-    activeIndex.value = previewImages.value.length - newImages.length;
-  }
-};
+  isPreviewOpen.value = true
 
-const closePreview = () => {
-  previewImages.value.forEach(item => URL.revokeObjectURL(item.url));
-  previewImages.value = [];
-  activeIndex.value = 0;
-  console.log("Preview ditutup");
-};
-
-const sendImages = () => {
-  console.log("Mengirim data gambar beserta caption:");
-  const payload = previewImages.value.map(item => ({
-    fileName: item.file.name,
-    caption: item.caption
-  }));
-  console.table(payload);
-
-  // Panggil API pengiriman di sini...
-
-  // Setelah sukses, tutup preview
-  // closePreview();
-};
-
-const setInitialFiles = (fileList: FileList) => {
-    previewImages.value.forEach(item => URL.revokeObjectURL(item.url));
-    previewImages.value = createPreviewItems(fileList);
+  target.value = ''
 }
 
-defineExpose({ setInitialFiles });
+const triggerAddMore = () => {
+  addMoreInput.value?.click()
+}
+
+const createPreviewItems = (fileList: FileList | null): PreviewImage[] => {
+  if (!fileList) return []
+
+  return Array.from(fileList).map((file) => ({
+    id: crypto.randomUUID(),
+    file: file,
+    url: URL.createObjectURL(file),
+    caption: ''
+  }))
+}
+
+const handleAddMore = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const newImages = createPreviewItems(target.files)
+
+  previewImages.value = [...previewImages.value, ...newImages]
+  target.value = ''
+  if (newImages.length > 0) {
+    activeIndex.value = previewImages.value.length - newImages.length
+  }
+}
+
+const closePreview = () => {
+  previewImages.value.forEach((img) => URL.revokeObjectURL(img.url))
+  previewImages.value = []
+  activeIndex.value = 0
+}
+
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = reject
+  })
+}
+
+const sendImages = async () => {
+  const config = { headers: { 'X-Jenis-User': 'admin' } }
+  // console.log('Mengirim data gambar beserta caption:')
+
+  try {
+    const payloads = await Promise.all(
+      previewImages.value.map(async (item) => {
+        const base64String = await fileToBase64(item.file)
+
+        return {
+          PhoneNumber: props.phoneNumber + '@s.whatsapp.net',
+          FileUrl: base64String,
+          FileName: item.file.name,
+          MimeType: item.file.type,
+          Caption: item.caption
+        }
+      })
+    )
+
+    for (const item of payloads) {
+      await api.post('/api/waha/send-image', item, config)
+      sendChat('system_image', item.Caption + '_' + item.FileUrl)
+    }
+
+    closePreview()
+  } catch (error) {
+    console.error('Terjadi kesalahan saat mengirim gambar:', error)
+  }
+}
+
+const setInitialFiles = (fileList: FileList) => {
+  previewImages.value.forEach((item) => URL.revokeObjectURL(item.url))
+  previewImages.value = createPreviewItems(fileList)
+}
+
+const removeImage = (index: number) => {
+  URL.revokeObjectURL(previewImages.value[index].url)
+  previewImages.value.splice(index, 1)
+  if (previewImages.value.length === 0) {
+    closePreview()
+  } else if (activeIndex.value >= index) {
+    activeIndex.value = Math.max(0, activeIndex.value - 1)
+  }
+}
+
+defineExpose({ setInitialFiles })
 
 watch(
   () => props.roomId,
   (newRoomId, oldRoomId) => {
     if (newRoomId !== oldRoomId) {
       changeUsername.value = false
+      previewImages.value = []
+      closePreview()
     }
   }
 )
@@ -463,6 +506,27 @@ watch(
     scrollToBottom()
   },
   { deep: true, immediate: true }
+)
+
+watch(
+  () => props.takeOverBatch,
+  async (newVal) => {
+    if (newVal && newVal.length > 0) {
+      const takeOverSuccess: string[] = []
+
+      for (const [idx, item] of newVal.entries()) {
+        try {
+          await takeOverChat(item.status, item.phoneNumber, item.room) 
+          takeOverSuccess.push(item.room)
+        } catch (err: any) {
+          console.error(`Gagal batch untuk room ${item.room}:`, err)
+        }
+      }
+      
+      emit('takeOverStatus', takeOverSuccess)
+    }
+  },
+  { deep: true }
 )
 
 onMounted(() => {
@@ -523,70 +587,71 @@ onUpdated(() => {
       </div>
     </div>
 
-    <simplebar class="flex-grow bg-[#1a1a1a] h-0 relative flex flex-col overflow-hidden group">
-      <div class="absolute top-0 start-0 end-0 h-16 flex items-center px-4 z-50 bg-gradient-to-b from-black/50 to-transparent">
-        <button @click="closePreview" class="size-10 flex items-center justify-center rounded-full text-white hover:bg-white/10 transition-colors">
+    <div v-if="isPreviewMode" class="flex-grow bg-bejo-50 min-h-0 relative flex flex-col overflow-hidden group">
+      <div class="shrink-0 h-14 flex items-center px-4 z-5">
+        <button @click="closePreview" class="size-9 flex items-center justify-center rounded-full text-bejo-600 hover:bg-bejo-300 transition-colors bg-white/50 backdrop-blur-sm">
           <Icon icon="lucide:x" class="size-6"></Icon>
         </button>
       </div>
 
-      <div v-if="activeImage" class="flex-grow flex flex-col items-center justify-center relative p-4 pb-32 pt-16 mt-6">
-        <img :src="activeImage.url" :alt="'Preview ' + activeIndex" class="max-w-full max-h-[60vh] object-contain rounded-lg shadow-xl" />
+      <div v-if="activeImage" class="flex-grow flex flex-col min-h-0 h-full mb-2">
+        <div class="flex-grow w-full flex items-center justify-center min-h-0 overflow-hidden px-0 sm:px-2">
+          <img :src="activeImage.url" :alt="'Preview ' + activeIndex" class="w-full h-full max-h-[75vh] object-contain rounded-xl transition-all duration-300" />
+        </div>
 
-        <div class="absolute bottom-28 start-1/2 -translate-x-1/2 w-full max-w-xl px-4 z-40">
-          <div class="relative">
-            <input v-model="activeImage.caption" type="text" placeholder="Tambahkan keterangan..." class="w-full bg-[#2a2a2a] text-white text-sm rounded-full px-12 py-3.5 border border-transparent focus:border-cyan-500 focus:ring-0 placeholder:text-slate-500 shadow-lg" />
-            <div class="absolute inset-y-0 start-0 flex items-center ps-4 text-slate-400">
-              <Icon icon="lucide:file-text" class="size-5"></Icon>
+        <div class="shrink-0 w-full px-4 mt-3 mb-1">
+          <div class="max-w-2xl mx-auto relative">
+            <input v-model="activeImage.caption" type="text" placeholder="Tambahkan keterangan..." class="w-full bg-white/80 backdrop-blur text-bejo-900 text-sm rounded-2xl px-10 py-2.5 border border-bejo-100 focus:ring-0 placeholder:text-bejo-400 shadow-md" />
+            <div class="absolute inset-y-0 start-0 flex items-center ps-4 text-bejo-500">
+              <Icon icon="lucide:text-initial" class="size-5"></Icon>
             </div>
-            <div class="absolute inset-y-0 end-0 flex items-center pe-3">
-              <button class="size-8 flex items-center justify-center rounded-full text-cyan-500 hover:bg-cyan-500/10">
-                <Icon icon="lucide:smile" class="size-5"></Icon>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="previewImages.length > 0" class="shrink-0 w-full bg-bejo-100 grid grid-cols-[1fr_auto] items-center border-t border-bejo-200">
+        <div class="overflow-x-auto minimal-scrollbar w-full">
+          <div class="flex items-center gap-4 w-max px-4 py-6">
+            <div v-for="(item, index) in previewImages" :key="item.id" @click="activeIndex = index" class="relative size-16 shrink-0 rounded-xl cursor-pointer transition-all duration-300" :class="activeIndex === index ? 'scale-110 ring-4 ring-bejo-500 z-10' : 'ring-2 ring-transparent opacity-80 hover:opacity-100'">
+              <img :src="item.url" class="w-full h-full object-cover rounded-lg" />
+
+              <button @click.stop="removeImage(index)" class="absolute -top-2 -right-2 size-5 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md z-20 hover:bg-red-600">
+                <Icon icon="lucide:x" class="size-3.5 stroke-[3]"></Icon>
               </button>
             </div>
+
+            <button @click="triggerAddMore" class="size-16 shrink-0 border-2 border-dashed border-bejo-400 rounded-xl flex flex-col items-center justify-center text-bejo-500 bg-white hover:bg-bejo-50 transition-colors">
+              <Icon icon="lucide:plus" class="size-6" />
+              <span class="text-[9px] font-bold mt-1 uppercase">Tambah</span>
+            </button>
           </div>
+        </div>
+
+        <div class="px-4 border-l border-bejo-200 h-full flex items-center justify-center">
+          <button @click="sendImages" class="bg-green-500 hover:bg-green-600 text-white rounded-xl px-5 py-3 font-bold flex items-center gap-2 transition-all active:scale-95 shadow-md">
+            <span class="hidden sm:inline text-sm">Kirim</span>
+            <Icon icon="lucide:send" class="size-4"></Icon>
+          </button>
         </div>
       </div>
 
-      <div v-if="previewImages.length > 0" class="absolute bottom-0 start-0 end-0 h-28 bg-[#222222] border-t border-slate-700/50 flex items-center px-6 z-30 shadow-[0_-4px_12px_rgba(0,0,0,0.3)]">
-        <div class="flex-grow flex items-center gap-2.5 overflow-x-auto py-2 pe-4 no-scrollbar">
-          <div v-for="(item, index) in previewImages" :key="item.id" @click="activeIndex = index" class="relative size-16 shrink-0 rounded-xl cursor-pointer transition-all duration-200" :class="activeIndex === index ? 'ring-4 ring-cyan-500 scale-105' : 'ring-2 ring-transparent hover:ring-slate-500'">
-            <img :src="item.url" class="w-full h-full object-cover rounded-lg" />
-            <div v-if="activeIndex !== index" class="absolute inset-0 bg-black/30 rounded-lg"></div>
-          </div>
-
-          <button @click="triggerAddMore" class="size-16 shrink-0 border-2 border-dashed border-slate-600 rounded-xl flex flex-col items-center justify-center text-slate-500 hover:border-cyan-500 hover:text-cyan-500 transition-colors group">
-            <Icon icon="lucide:plus" class="size-6 transition-colors" />
-            <span class="text-[9px] font-bold mt-1 uppercase tracking-wider">Tambah</span>
-          </button>
-        </div>
-
-        <div class="relative shrink-0 ms-4">
-          <button @click="sendImages" class="size-14 rounded-full bg-cyan-600 text-white flex items-center justify-center shadow-lg hover:bg-cyan-500 active:scale-95 transition-all">
-            <Icon icon="lucide:send-horizontal" class="size-6 rotate-[-15deg]"></Icon>
-          </button>
-          <div class="absolute -top-1.5 -right-1.5 size-6 rounded-full bg-cyan-100 text-cyan-800 text-xs font-bold flex items-center justify-center border-2 border-[#222222]">
-            {{ previewImages.length }}
-          </div>
-        </div>
-      </div>
-
-      <div v-else class="flex flex-col items-center justify-center h-full text-slate-500 p-10 text-center">
-        <Icon icon="lucide:image" class="size-16 mb-4 text-slate-700"></Icon>
-        <h4 class="font-bold text-slate-400">Preview Gambar</h4>
-        <p class="text-sm max-w-xs mt-1">Pilih gambar menggunakan tombol input file di komponen lain untuk melihat preview di sini.</p>
+      <div v-else class="flex-grow flex flex-col items-center justify-center text-bejo-500">
+        <Icon icon="lucide:image" class="size-16 mb-4 opacity-30"></Icon>
+        <h4 class="font-bold text-bejo-700">Tidak ada gambar</h4>
+        <p class="text-xs mt-1">Silahkan pilih gambar kembali</p>
       </div>
 
       <input type="file" ref="addMoreInput" multiple hidden accept="image/*" @change="handleAddMore" />
-    </simplebar>
-    <simplebar ref="chatContainer" class="flex-grow bg-repeat bg-center h-0 bg-chat hidden">
+    </div>
+
+    <simplebar ref="chatContainer" class="flex-grow bg-repeat bg-center h-0 container bg-chat" :class="{ hidden: isPreviewMode }">
       <div class="flex flex-col gap-4 px-5 py-6">
-        <ChatBubble v-for="(chat, i) in chats" :key="i" :idx="i" :chat="chat" :chats="chats" />
+        <ChatBubble v-for="(chat, i) in chats" :key="i" :idx="i" :chat="chat" :chats="chats" :lastMessageId="props.lastMessageId" />
       </div>
     </simplebar>
 
-    <div class="p-3 bg-white border-t border-default-200">
-      <div v-if="activeTab !== 'semua'" class="flex gap-2 items-center bg-default-50 border border-default-200 p-2 rounded-2xl focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
+    <div class="p-3 bg-white border-t border-default-200" :class="{ hidden: isPreviewMode }">
+      <div v-if="activeTab != 'bot'" class="flex gap-2 items-center bg-default-50 border border-default-200 p-2 rounded-2xl focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
         <div class="relative" ref="dropdownRef">
           <button @click.stop="openMenu = !openMenu" class="btn rounded-xl size-10 bg-transparent text-default-500 hover:bg-default-200 hover:text-default-800 transition-colors">
             <Icon icon="lucide:plus" class="size-5"></Icon>
@@ -618,7 +683,7 @@ onUpdated(() => {
         <div ref="containerRef" class="flex items-center gap-2 relative">
           <label class="btn size-9 rounded-xl bg-transparent text-default-500 hover:bg-default-200 hover:text-default-800">
             <Icon icon="lucide:image" class="size-4"></Icon>
-            <input type="file" multiple hidden @change="sendPhoto" accept="image/*,video/*" />
+            <input type="file" multiple hidden @change="chooseImages" accept="image/*" />
           </label>
           <button @click="sendChat('text')" class="btn rounded-xl px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-medium flex items-center gap-2 transition-colors">
             <span class="hidden sm:inline text-sm">Kirim</span>
@@ -797,23 +862,33 @@ onUpdated(() => {
     </div>
   </div>
 
-  <div v-else class="relative w-full h-full min-h-[500px] flex flex-col items-center justify-center bg-default-50/50">
-    <button @click="openSidebar" class="absolute top-4 left-4 lg:hidden h-9 px-4 gap-2 rounded-lg flex justify-center items-center bg-white border border-default-200 shadow-sm hover:bg-default-50 font-medium transition-colors">
-      <Icon icon="lucide:menu" class="size-4 text-default-600"></Icon>
+  <div v-else class="relative w-full h-full min-h-[500px] flex flex-col items-center justify-center bg-slate-50/50 overflow-hidden">
+    
+    <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 24px 24px;"></div>
+
+    <button @click="openSidebar" class="absolute top-5 left-5 lg:hidden h-10 px-5 gap-2 rounded-xl flex justify-center items-center bg-white border border-slate-200 shadow-sm hover:shadow-md hover:bg-slate-50 font-semibold text-slate-700 transition-all z-10 active:scale-95">
+      <Icon icon="lucide:menu" class="size-4"></Icon>
       <span class="text-sm">Buka Daftar Pesan</span>
     </button>
 
-    <div class="flex flex-col items-center justify-center text-center p-8 bg-white rounded-3xl border border-default-100 shadow-sm max-w-sm">
-      <div class="size-20 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-5">
-        <Icon icon="lucide:message-square-dashed" class="size-10"></Icon>
+    <div class="flex flex-col items-center justify-center text-center p-10 bg-white/80 backdrop-blur-sm rounded-[2rem] border border-white shadow-xl shadow-slate-200/50 max-w-sm z-10 transform transition-all hover:scale-[1.02]">
+      
+      <div class="relative mb-6">
+        <div class="absolute inset-0 bg-bejo-400 rounded-full blur-xl opacity-20 animate-pulse"></div>
+        <div class="size-24 bg-gradient-to-br from-bejo-50 to-bejo-100 border-4 border-white text-bejo-600 rounded-full flex items-center justify-center shadow-lg relative">
+          <Icon icon="lucide:message-square-dashed" class="size-10 stroke-[1.5]"></Icon>
+        </div>
       </div>
-      <h4 class="text-xl font-bold text-default-900">Mulai Percakapan</h4>
-      <p class="text-sm text-default-500 mt-2">Pilih pelanggan dari daftar di samping untuk mulai melihat dan membalas pesan.</p>
+      
+      <h4 class="text-xl font-extrabold text-slate-800 tracking-tight">Mulai Percakapan</h4>
+      <p class="text-sm text-slate-500 mt-2.5 leading-relaxed font-medium">Pilih pelanggan dari daftar di samping untuk mulai melihat dan membalas pesan.</p>
     </div>
   </div>
 </template>
 
 <style scoped>
+@reference "@/assets/css/style.css";
+
 .bg-chat {
   background-image: v-bind(bgLightUrl);
   background-size: 400px;
@@ -824,12 +899,38 @@ onUpdated(() => {
   background-size: 400px;
 }
 
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
+.container {
+  background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), v-bind(bgLightUrl);
+  background-size: cover;
+  background-position: center;
 }
 
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+.minimal-scrollbar {
+  -webkit-overflow-scrolling: touch; /* Optimasi swipe iOS */
+  scrollbar-width: thin; /* Untuk Firefox */
+  scrollbar-color: var(--color-bejo-300, #d1d5db) transparent;
+}
+
+.minimal-scrollbar::-webkit-scrollbar {
+  height: 5px;
+}
+
+.minimal-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  margin-inline: 20px;
+}
+
+.minimal-scrollbar::-webkit-scrollbar-thumb {
+  border-radius: 20px;
+  @apply bg-bejo-400;
+}
+
+.minimal-scrollbar:active::-webkit-scrollbar-thumb,
+.minimal-scrollbar:hover::-webkit-scrollbar-thumb {
+  @apply bg-bejo-500;
+}
+
+.snap-start {
+  scroll-snap-align: start;
 }
 </style>

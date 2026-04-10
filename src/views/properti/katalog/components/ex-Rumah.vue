@@ -15,6 +15,10 @@ const selectedItem = ref<Product | null>(null)
 const sorting = ref<SortingState>([])
 const selectedSort = ref('Terbaru')
 
+const props = defineProps<{
+  isAdmin: boolean
+}>()
+
 interface MediaUrl {
   Url: string | null
   Expired_At: Date
@@ -125,34 +129,6 @@ const fetchData = async () => {
   }
 }
 
-// const columns = [
-//   { accessorKey: 'Nama_Produk', header: 'Properti' },
-//   { accessorKey: 'Tipe', header: 'Tipe' },
-//   { accessorKey: 'Luas_Tanah', header: 'Luas (LT/LB)' },
-//   { accessorKey: 'Harga_Jual1', header: 'Harga_Jual1' },
-//   { accessorKey: 'Status_Properti', header: 'Status' },
-//   { id: 'aksi', header: 'Aksi', enableSorting: false }
-// ]
-
-// const table = useVueTable({
-//   get data() {
-//     return products.value
-//   },
-//   columns,
-//   state: {
-//     get globalFilter() {
-//       return filter.value
-//     }
-//   },
-//   getCoreRowModel: getCoreRowModel(),
-//   getPaginationRowModel: getPaginationRowModel(),
-//   getSortedRowModel: getSortedRowModel(),
-//   getFilteredRowModel: getFilteredRowModel(),
-//   initialState: {
-//     pagination: { pageSize: 6 }
-//   }
-// })
-
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
 }
@@ -164,11 +140,6 @@ const toggleDropdown = (id: string) => {
 const updateStatusTransaksi = async (product: any, newStatus: string) => {
   confirm(`Apakah Anda yakin ingin mengubah status menjadi ${newStatus}?`, async () => {
     try {
-      if (newStatus === 'Tersedia') {
-        product.Status_Display = 'Aktif'
-      } else {
-        product.Status_Display = 'Nonaktif'
-      }
       product.Status_Properti = newStatus
       await api.put('/api/realEstate/update?no_id=' + product.No_Id, product, {
         headers: { 'X-Jenis-User': 'admin' }
@@ -225,7 +196,6 @@ const deleteProduct = async (data: Product) => {
       success('Berhasil hapus produk')
     } catch (err: any) {
       console.log(err.message)
-      // console.error('Error:', err.response?.data || err.Message)
       fail('Gagal menghapus data')
     }
   })
@@ -273,7 +243,7 @@ onMounted(async () => {
           </Transition>
         </div>
 
-        <button @click="openAddModal" class="btn btn-sm bg-primary text-white hover:bg-primary-600 shadow-md shadow-primary/20">
+        <button v-if="isAdmin" @click="openAddModal" class="btn btn-sm bg-primary-gradient text-white hover:bg-primary-800 shadow-md shadow-primary/20">
           <Icon icon="lucide:plus" class="size-4 me-1" />
           Tambah Properti
         </button>
@@ -281,8 +251,18 @@ onMounted(async () => {
     </div>
 
     <div class="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
-      <div v-for="row in table.getRowModel().rows" :key="row.id" class="card group flex flex-col h-full rounded-2xl overflow-hidden border transition-all duration-500 hover:-translate-y-1 relative" :class="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia' ? 'bg-default-100 border-default-200 opacity-75 grayscale-[30%]' : 'bg-card border-default-150 hover:border-primary/30 hover:shadow-lg'">
+      <div v-for="row in table.getRowModel().rows" :key="row.id" class="card group flex flex-col h-full rounded-2xl overflow-hidden border transition-all duration-500 hover:-translate-y-1 relative bg-card border-default-150 hover:border-primary/30 hover:shadow-lg">
         <div class="relative h-60 overflow-hidden">
+          <div v-if="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia'" class="absolute inset-0 bg-black/40 backdrop-grayscale-[60%] z-[5] pointer-events-none transition-all duration-500"></div>
+
+          <div v-if="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia'" class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+            <div class="px-2 py-1 bg-black/20 backdrop-blur-md rounded-xl border border-white/10 shadow-2xl transform transition-transform duration-500 group-hover:scale-110">
+              <span class="text-md font-black uppercase tracking-widest text-white/90">
+                {{ row.original.Status_Display != 'Aktif' ? 'Nonaktif' : row.original.Status_Properti }}
+              </span>
+            </div>
+          </div>
+
           <img v-if="row.original.MediaUrls.length >= 1" :src="row.original.MediaUrls[0].Id_Media" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
           <div v-else class="w-full h-full bg-default-100 flex flex-col items-center justify-center">
             <Icon icon="lucide:image" class="size-16 text-default-300" />
@@ -291,11 +271,12 @@ onMounted(async () => {
           <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
 
           <div class="absolute top-4 left-4 flex flex-col gap-2 z-10">
-            <span class="backdrop-blur-md text-white text-[10px] uppercase tracking-widest font-bold px-2.5 py-1 rounded-md shadow-sm" :class="row.original.Status_Properti != 'Tersedia' ? 'bg-red-500/80' : 'bg-emerald-500/80'">
-              {{ row.original.Status_Properti }}
+            <span class="w-fit bg-bejo-600/70 backdrop-blur-md text-white text-[10px] uppercase tracking-widest font-bold px-2.5 py-1 rounded-md shadow-md border border-bejo-300/40">
+              {{ row.original.Status_Display != 'Aktif' ? 'Nonaktif' : row.original.Status_Properti }}
             </span>
+
             <div class="flex flex-wrap gap-1.5">
-              <span v-for="(trans, i) in row.original.Status_Transaksi" :key="i" class="backdrop-blur-md bg-indigo-600/80 text-white text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-md">
+              <span v-for="(trans, i) in row.original.Status_Transaksi" :key="i" class="bg-black/50 backdrop-blur-md text-bejo-100 text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-md border border-bejo-700/60 shadow-sm">
                 {{ trans }}
               </span>
             </div>
@@ -313,13 +294,29 @@ onMounted(async () => {
           <div class="flex items-start gap-1.5 text-primary mb-2">
             <Icon icon="lucide:map-pin" class="size-3.5 mt-0.5" />
             <div class="flex flex-col">
-              <span class="text-[11px] font-bold uppercase tracking-wider text-primary">{{ row.original.Area }}</span>
-              <p v-if="!row.original.Hide_alamat" class="text-[10px] font-medium text-default-500 line-clamp-1">{{ row.original.Alamat }}</p>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-primary">{{ row.original.Area[0] }}</span>
+              <p class="text-[10px] font-medium text-default-500 line-clamp-1">
+                <span v-if="!row.original.Hide_alamat">{{
+                  (row.original.Alamat || '')
+                    .split(' ')
+                    .filter(
+                      (kata) =>
+                        !(row.original.Area[0] || '')
+                          .toLowerCase()
+                          .replace(/[^a-z0-9\s]/g, '')
+                          .split(/\s+/)
+                          .includes(kata.toLowerCase().replace(/[^a-z0-9]/g, ''))
+                    )
+                    .join(' ')
+                    .replace(/[,.\s]+$/, '')
+                }}</span>
+                <span v-if="row.original.Area[1]"> ({{ row.original.Area[1] }})</span>
+              </p>
             </div>
           </div>
 
           <h6 class="text-lg text-default-900 font-black transition-colors line-clamp-1 mb-1 leading-tight group-hover:text-primary">
-            <RouterLink :to="`/properti/detail/${row.original.Slug}`">{{ row.original.Nama_Produk }}</RouterLink>
+            <RouterLink :to="isAdmin ? `/properti/detail/${row.original.Slug}` : `/detail/${row.original.Slug}`">{{ row.original.Nama_Produk }}</RouterLink>
           </h6>
 
           <p class="text-[12px] font-medium text-default-400 mb-4">
@@ -328,26 +325,37 @@ onMounted(async () => {
 
           <div class="grid grid-cols-2 gap-3 rounded-xl p-3 mb-5 border border-default-100 bg-default-50/50">
             <div class="flex items-center gap-2">
-              <Icon icon="lucide:home" class="size-3.5 text-default-400" />
-              <span class="text-xs font-bold text-default-600">LB {{ row.original.Luas_Bangunan }}m²</span>
+              <Icon icon="lucide:land-plot" class="size-3.5 text-default-400" />
+              <span class="text-xs font-bold text-default-600">LT {{ row.original.Luas_Tanah }} m²</span>
             </div>
             <div class="flex items-center gap-2">
-              <Icon icon="lucide:land-plot" class="size-3.5 text-default-400" />
-              <span class="text-xs font-bold text-default-600">LT {{ row.original.Luas_Tanah }}m²</span>
+              <Icon icon="lucide:home" class="size-3.5 text-default-400" />
+              <span class="text-xs font-bold text-default-600">LB {{ row.original.Luas_Bangunan }} m²</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <Icon icon="lucide:layers" class="size-3.5 text-default-400" />
+              <span class="text-xs font-bold text-default-600">{{ row.original.Jumlah_Lantai }} Lantai</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <Icon icon="lucide:car" class="size-3.5 text-default-400" />
+              <span class="text-xs font-bold text-default-600">{{ row.original.Jumlah_Carpot }} Mobil</span>
             </div>
             <div class="flex items-center gap-2">
               <Icon icon="lucide:bed" class="size-3.5 text-default-400" />
               <span class="text-xs font-bold text-default-600">{{ row.original.Jumlah_Kamar_Tidur }} Kamar</span>
             </div>
             <div class="flex items-center gap-2">
-              <Icon icon="lucide:car" class="size-3.5 text-default-400" />
-              <span class="text-xs font-bold text-default-600">{{ row.original.Jumlah_Carpot }} Mobil</span>
+              <Icon icon="lucide:bath" class="size-3.5 text-default-400" />
+              <span class="text-xs font-bold text-default-600">{{ row.original.Jumlah_Kamar_Mandi }} Kamar</span>
             </div>
           </div>
 
           <div class="mt-auto pt-4 border-t border-default-100 flex flex-col gap-2">
             <div v-if="row.original.Harga_Sewa1 > 0" class="flex flex-col">
-              <span class="text-[9px] font-black text-default-400 uppercase tracking-widest mb-0.5">Harga Sewa</span>
+              <span class="text-[9px] font-black text-default-400 uppercase tracking-widest mb-0.5">
+                Harga Sewa
+                <span v-if="row.original.Minimal_Sewa && row.original.Minimal_Sewa > 0">(min. {{ row.original.Minimal_Sewa + ' ' + row.original.Satuan_Minimal_Sewa }})</span>
+              </span>
               <div class="flex items-baseline gap-1.5">
                 <span class="text-base font-black text-default-900">
                   {{ formatCurrency(row.original.Harga_Sewa2 > 0 ? row.original.Harga_Sewa2 : row.original.Harga_Sewa1) }}
@@ -368,12 +376,15 @@ onMounted(async () => {
             </div>
           </div>
 
-          <div class="absolute bottom-5 right-5 z-20">
+          <div v-if="isAdmin" class="absolute bottom-5 right-5 z-20">
             <button type="button" @click.stop="toggleDropdown(row.id)" class="size-9 flex items-center justify-center rounded-xl bg-default-100 text-default-600 hover:bg-primary hover:text-white transition-all">
               <Icon icon="lucide:more-vertical" class="size-5" />
             </button>
             <div v-show="activeDropdownId === row.id" class="absolute right-0 bottom-11 z-[100] min-w-[180px] bg-card p-1.5 shadow-2xl border border-default-100 rounded-xl animate-in slide-in-from-bottom-2 duration-200">
               <button @click="updateStatusTransaksi(row.original, 'Terjual')" v-if="row.original.Status_Transaksi.includes('Jual') && row.original.Status_Properti != 'Terjual'" class="dropdown-item-custom hover:bg-emerald-500/10 hover:text-emerald-500"><Icon icon="lucide:badge-check" class="size-4" /> Sudah Terjual</button>
+              <button @click="updateStatusTransaksi(row.original, 'Tersewa')" v-if="row.original.Status_Transaksi.includes('Sewa') && row.original.Status_Properti != 'Tersewa'" class="dropdown-item-custom hover:bg-emerald-500/10 hover:text-emerald-500"><Icon icon="lucide:key" class="size-4" /> Sudah Tersewa</button>
+              <button @click="updateStatusTransaksi(row.original, 'Tersedia')" v-if="row.original.Status_Transaksi.includes('Jual') && row.original.Status_Properti == 'Terjual'" class="dropdown-item-custom hover:bg-emerald-500/10 hover:text-emerald-500"><Icon icon="lucide:badge-check" class="size-4" /> Batal Terjual</button>
+              <button @click="updateStatusTransaksi(row.original, 'Tersedia')" v-if="row.original.Status_Transaksi.includes('Sewa') && row.original.Status_Properti == 'Tersewa'" class="dropdown-item-custom hover:bg-emerald-500/10 hover:text-emerald-500"><Icon icon="lucide:key" class="size-4" /> Batal Tersewa</button>
               <button @click="openEditModal(row.original)" class="dropdown-item-custom hover:bg-primary/10 hover:text-primary"><Icon icon="lucide:pencil" class="size-4" /> Edit</button>
               <button @click="deleteProduct(row.original)" class="dropdown-item-custom text-red-500 hover:bg-red-500/10"><Icon icon="lucide:trash-2" class="size-4" /> Hapus</button>
             </div>
@@ -395,5 +406,35 @@ onMounted(async () => {
         <button @click="table.nextPage()" :disabled="!table.getCanNextPage()" class="btn-pagination">Next</button>
       </nav>
     </div>
+
+    <Modal v-if="isAdmin" v-model:showModal="isModalOpen" :itemData="selectedItem" @success="fetchData" />
   </div>
 </template>
+
+<style scoped>
+@reference "@/assets/css/style.css";
+
+.dropdown-item-custom {
+  @apply w-full flex items-center gap-2.5 px-3 py-2 text-sm font-bold text-default-600 rounded-lg transition-colors text-left;
+}
+
+.btn-pagination {
+  @apply px-3 py-1.5 text-xs font-bold bg-card border border-default-200 text-default-600 rounded-lg disabled:opacity-30 hover:bg-default-50 transition-all;
+}
+
+.btn-pagination-num {
+  @apply size-8 flex items-center justify-center text-xs font-bold rounded-lg border border-default-200 bg-card text-default-600 hover:border-primary hover:text-primary transition-all;
+}
+
+.btn-pagination-num.active {
+  @apply bg-primary text-white border-primary shadow-md shadow-primary/20;
+}
+
+:where([data-theme='dark']) .card {
+  @apply bg-zinc-900 border-zinc-800 shadow-none;
+}
+
+:where([data-theme='dark']) .card:hover {
+  @apply border-primary/50 bg-zinc-800/50;
+}
+</style>

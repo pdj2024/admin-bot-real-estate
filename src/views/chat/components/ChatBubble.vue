@@ -28,6 +28,7 @@ const props = defineProps<{
   chat: Chat
   chats: Chat[]
   idx: number
+  lastMessageId: string
 }>()
 
 const isCustomer = computed(() => props.chat.Tipe_User === 'customer')
@@ -38,7 +39,7 @@ const bubbleStyle = computed(() => {
       return 'bubble-customer bg-bejo-100 border border-default-200 text-default-900 shadow-sm rounded-bl-none'
     case 'admin':
     case 'cs':
-      return 'bubble-admin bg-emerald-50 text-default-900 shadow-sm rounded-br-none'
+      return 'bubble-admin bg-amber-100 text-default-900 shadow-sm rounded-br-none'
     case 'ai':
       return 'bubble-ai bg-white border border-amber-200 text-amber-900 shadow-sm rounded-br-none'
     default:
@@ -82,7 +83,7 @@ const formatMessage = (msg: string) => {
 
   return (
     msg
-      // escape HTML dulu (biar aman)
+      // escape HTML
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
 
@@ -103,7 +104,8 @@ const getImageUrl = async (paket?: string) => {
   if (!id) return
 
   try {
-    const { data } = await api.post('/api/mediacloud/read-url-batch',
+    const { data } = await api.post(
+      '/api/mediacloud/read-url-batch',
       {
         ids: [id]
       },
@@ -128,29 +130,37 @@ watch(
 </script>
 
 <template>
-  <div class="flex flex-col w-full">
-    <div v-if="isNewDate" class="w-full my-5 flex items-center justify-center">
-      <span class="divider-tanggal px-4 py-1.5 bg-white border border-default-200 rounded-full text-default-500 text-[11px] font-bold shadow-sm uppercase tracking-wide transition-colors">
+  <div class="flex flex-col w-full animate-fade-in-up">
+    <div v-if="isNewDate" class="w-full my-5 flex items-center justify-center sticky top-2 z-10">
+      <span class="divider-tanggal px-4 py-1.5 bg-white/70 backdrop-blur-md border border-white/50 rounded-full text-slate-500 text-[10px] font-extrabold shadow-sm uppercase tracking-widest transition-colors">
         {{ getDateChat(chat.Sent_At) }}
       </span>
     </div>
-    <div v-if="chat.Message.includes('_X7#mQ9!vW2_')" class="w-full my-5 flex items-center justify-center">
-      <span class="divider-tanggal px-4 py-1.5 bg-white border border-default-200 rounded-full text-default-500 text-[11px] font-bold shadow-sm capitalize tracking-wide transition-colors">
-        {{ (chat.Message || '').replace('_X7#mQ9!vW2_', ' ') }}
-      </span>
+
+    <div v-if="chat.Message.includes('_X7#mQ9!vW2_')" class="w-full my-4 flex justify-center px-4">
+      <div class="flex flex-col items-center justify-center text-center px-5 py-2 bg-slate-100/80 backdrop-blur-sm border border-slate-200/50 rounded-full shadow-sm max-w-[85%] sm:max-w-md transition-all hover:bg-white/90">
+        <span class="text-[9px] font-bold text-slate-400 tracking-wider mb-0.5">
+          {{ new Date(chat.Sent_At).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }}
+        </span>
+        <span class="text-[11px] font-bold text-slate-600 capitalize leading-snug">
+          {{ (chat.Message || '').replace('_X7#mQ9!vW2_', ' ') }}
+        </span>
+      </div>
     </div>
 
-    <div class="flex gap-3 w-full mt-1" :class="isCustomer ? 'justify-start' : 'justify-end'">
-      <div v-if="isCustomer" class="flex items-end flex-shrink-0 mb-1">
-        <div class="avatar-customer relative flex items-center justify-center rounded-full size-7 bg-default-200 text-default-500 border border-white shadow-sm transition-colors">
+    <div class="flex gap-3 w-full mt-1.5 group" :class="isCustomer ? 'justify-start' : 'justify-end'">
+      <div v-if="isCustomer" class="flex items-end flex-shrink-0 mb-1 opacity-80 group-hover:opacity-100 transition-opacity">
+        <div class="avatar-customer relative flex items-center justify-center rounded-full size-7 bg-gradient-to-br from-slate-100 to-slate-200 text-slate-500 border border-white shadow-sm">
           <Icon icon="lucide:user" class="size-4" />
         </div>
       </div>
+
       <div class="flex flex-col max-w-[85%] lg:max-w-[70%]" :class="isCustomer ? 'items-start' : 'items-end'">
-        <div v-if="!chat.Message.includes('_X7#mQ9!vW2_')" class="px-3 py-2.5 rounded-2xl text-sm relative transition-colors max-w-xs" :class="bubbleStyle">
-          <div v-if="chat.Id_Paket != null || chat.Message.includes('_data:image/')" class="mb-2 overflow-hidden rounded-xl">
-            <img v-if="imageUrl || chat.Message.includes('_data:image/')" :src="chat.Message.includes('_data:image/') ? 'data:image/'+chat.Message.split('_data:image/')[1] : imageUrl" class="w-full h-auto object-cover max-h-64" />
+        <div v-if="!chat.Message.includes('_X7#mQ9!vW2_')" class="px-3.5 py-2.5 rounded-2xl text-sm relative transition-all hover:shadow-md max-w-xs" :class="bubbleStyle">
+          <div v-if="chat.Id_Paket != null || chat.Message.includes('_data:image/')" class="mb-2 overflow-hidden rounded-xl border border-black/5">
+            <img v-if="imageUrl || chat.Message.includes('_data:image/')" :src="chat.Message.includes('_data:image/') ? 'data:image/' + chat.Message.split('_data:image/')[1] : imageUrl" class="w-full h-auto object-cover max-h-64 hover:scale-105 transition-transform duration-300 cursor-pointer" />
           </div>
+
           <span v-if="chat.Message" class="block break-words leading-relaxed" v-html="formatMessage(chat.Message.includes('_data:image/') ? chat.Message.split('_data:image/')[0] : chat.Message)"></span>
 
           <div v-if="chat.Tipe_User === 'admin' && chat.Sender_Id === 'adm_bot'" class="ai-indicator mt-2 pt-1.5 border-t border-amber-200/60 flex items-center gap-1.5 text-[10px] font-semibold text-amber-700">
@@ -158,7 +168,7 @@ watch(
             Asisten AI
           </div>
 
-          <div class="flex justify-end items-center mt-1 gap-1 text-[10px] font-medium" :class="timeColor">
+          <div class="flex justify-end items-center mt-1.5 gap-1 text-[9px] font-bold tracking-wide" :class="timeColor">
             {{ new Date(chat.Sent_At).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }}
 
             <template v-if="!isCustomer">
@@ -170,22 +180,42 @@ watch(
         </div>
       </div>
 
-      <div v-if="!isCustomer && !chat.Message.includes('_X7#mQ9!vW2_')" class="flex items-end flex-shrink-0 mb-1">
-        <div v-if="chat.Tipe_User === 'admin' && chat.Sender_Id != 'adm_bot'" class="avatar-admin relative flex items-center justify-center rounded-full size-7 bg-primary/20 text-primary border border-white shadow-sm transition-colors">
+      <div v-if="!isCustomer && !chat.Message.includes('_X7#mQ9!vW2_')" class="flex items-end flex-shrink-0 mb-1 opacity-80 group-hover:opacity-100 transition-opacity">
+        <div v-if="chat.Tipe_User === 'admin' && chat.Sender_Id != 'adm_bot'" class="avatar-admin relative flex items-center justify-center rounded-full size-7 bg-gradient-to-br from-cyan-50 to-cyan-100 text-cyan-600 border border-white shadow-sm">
           <Icon icon="lucide:headset" class="size-3.5" />
         </div>
-        <div v-else-if="chat.Tipe_User === 'admin' && chat.Sender_Id === 'adm_bot'" class="avatar-ai relative flex items-center justify-center rounded-full size-7 bg-amber-100 text-amber-600 border border-white shadow-sm font-bold text-[9px] transition-colors">AI</div>
+        <div v-else-if="chat.Tipe_User === 'admin' && chat.Sender_Id === 'adm_bot'" class="avatar-ai relative flex items-center justify-center rounded-full size-7 bg-gradient-to-br from-amber-100 to-amber-200 text-amber-700 border border-white shadow-sm font-bold text-[9px]">AI</div>
       </div>
+    </div>
+
+    <div v-if="chat.Message_Id == props.lastMessageId" class="w-full my-6 flex items-center justify-center relative">
+      <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-red-200/50 border-dashed"></div></div>
+      <span class="relative px-4 py-1 bg-red-50 text-red-500 border border-red-100 rounded-full text-[10px] font-bold shadow-sm uppercase tracking-wider"> Pesan Belum Terbaca </span>
     </div>
   </div>
 </template>
 
 <style scoped>
 @reference "tailwindcss";
-:where([data-theme='dark']) .divider-tanggal {
-  @apply bg-zinc-900 border-zinc-700 text-zinc-400;
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(15px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+:where([data-theme='dark']) .divider-tanggal {
+  @apply bg-zinc-900/80 border-zinc-700 text-zinc-400;
+}
 :where([data-theme='dark']) .avatar-customer {
   @apply bg-zinc-800 text-zinc-400 border-zinc-900;
 }
@@ -195,18 +225,17 @@ watch(
 :where([data-theme='dark']) .avatar-ai {
   @apply bg-amber-900/40 text-amber-400 border-zinc-900;
 }
-
 :where([data-theme='dark']) .bubble-customer {
-  @apply bg-zinc-800 border-zinc-700 text-zinc-200;
+  @apply bg-zinc-800 border-zinc-700 text-zinc-200 shadow-none;
 }
 :where([data-theme='dark']) .bubble-admin {
-  @apply bg-emerald-900 text-emerald-50 border border-emerald-800/50;
+  @apply bg-emerald-900 text-emerald-50 border border-emerald-800/50 shadow-none;
 }
 :where([data-theme='dark']) .bubble-ai {
-  @apply bg-zinc-900 border-amber-700/50 text-amber-100;
+  @apply bg-zinc-900 border-amber-700/50 text-amber-100 shadow-none;
 }
 :where([data-theme='dark']) .bubble-default {
-  @apply bg-zinc-800 text-zinc-300;
+  @apply bg-zinc-800 text-zinc-300 shadow-none;
 }
 :where([data-theme='dark']) .ai-indicator {
   @apply border-amber-700/50 text-amber-400;
