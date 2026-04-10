@@ -272,13 +272,41 @@ onBeforeUnmount(() => {
 
 <template>
   <Vertical>
-    <!-- <PageTitle subtitle="Utama" title="Chat" /> -->
+    <div class="p-0 sm:p-4 md:p-6 md:pt-4 h-full">
+      <!-- Premium Main Container -->
+      <div class="bg-white sm:rounded-[2.5rem] border border-slate-100 shadow-2xl shadow-slate-200/40 overflow-hidden">
+        <div class="flex h-[calc(100vh-120px)] sm:h-[calc(100vh-180px)] min-h-[500px]">
+          <SideBar 
+            ref="sidebarRef" 
+            :activeRoomId="selectedRoomId || ''" 
+            :usernameChange="selectedUsernameChange" 
+            @selectChat="handleSelectChat" 
+            @username="handleUsername" 
+            @phoneNumber="handlePhone" 
+            @idLawan="handleIdLawan" 
+            @changeTab="handleTabChange" 
+            @allRoomIds="handleAllRoomIds" 
+            @lastMessageId="handleLastMessage" 
+            @chatTakeOverBatch="handleChatTakeOverBatch" 
+          />
 
-    <div class="card overflow-hidden">
-      <div class="flex h-[calc(100vh-180px)] min-h-[500px]">
-        <SideBar ref="sidebarRef" :activeRoomId="selectedRoomId || ''" :usernameChange="selectedUsernameChange" @selectChat="handleSelectChat" @username="handleUsername" @phoneNumber="handlePhone" @idLawan="handleIdLawan" @changeTab="handleTabChange" @allRoomIds="handleAllRoomIds" @lastMessageId="handleLastMessage" @chatTakeOverBatch="handleChatTakeOverBatch" />
-
-        <ChatContent ref="chatContentRef" :roomId="selectedRoomId" :idLawan="selectedIdLawan" :username="selectedUsername" :phoneNumber="selectedPhone" :activeTab="currentActiveTab" :chats="chats" :lastMessageId="lastMessageId" :takeOverBatch="takeOverBatch" :takeOverStatus="takeOverSuccess" @chatTakeOver="handleTakeOver" @clearRoom="handleClearRoom" @usernameChange="handleUsernameChange" @takeOverStatus="handleTakeOverStatus"/>
+          <ChatContent 
+            ref="chatContentRef" 
+            :roomId="selectedRoomId" 
+            :idLawan="selectedIdLawan" 
+            :username="selectedUsername" 
+            :phoneNumber="selectedPhone" 
+            :activeTab="currentActiveTab" 
+            :chats="chats" 
+            :lastMessageId="lastMessageId" 
+            :takeOverBatch="takeOverBatch" 
+            :takeOverStatus="takeOverSuccess" 
+            @chatTakeOver="handleTakeOver" 
+            @clearRoom="handleClearRoom" 
+            @usernameChange="handleUsernameChange" 
+            @takeOverStatus="handleTakeOverStatus"
+          />
+        </div>
       </div>
     </div>
   </Vertical>

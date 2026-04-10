@@ -547,43 +547,61 @@ onUpdated(() => {
 
 <template>
   <div v-if="roomId" class="w-full h-full flex flex-col bg-white">
-    <div class="flex justify-between items-center px-5 py-3 border-b border-default-200 bg-white z-10">
-      <div class="flex gap-3.5 items-center">
-        <button @click="openSidebar" class="lg:hidden size-8 rounded-md flex justify-center items-center bg-default-100 hover:bg-default-200 transition-colors">
-          <Icon icon="lucide:between-horizontal-end" class="size-4 text-default-600"></Icon>
-        </button>
+    <!-- Header: Premium Profile Section -->
+    <div class="relative overflow-hidden px-8 py-5 border-b border-slate-50 bg-white group">
+      <!-- Ambient Background Decoration -->
+      <div class="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-bejo-50/50 to-transparent pointer-events-none"></div>
+      <div class="absolute -right-20 -top-20 size-64 bg-bejo-100/30 rounded-full blur-3xl pointer-events-none transition-all duration-500 group-hover:scale-125"></div>
 
-        <div class="relative flex items-center justify-center font-bold rounded-full size-10 bg-primary/10 text-primary">
-          <span v-if="username" class="text-sm">
-            {{ username.substring(0, 2).toUpperCase() }}
-          </span>
-          <Icon v-else icon="lucide:user" class="size-5" />
+      <div class="relative z-10 flex justify-between items-center">
+        <div class="flex gap-5 items-center">
+          <button @click="openSidebar" class="lg:hidden size-10 rounded-xl flex justify-center items-center bg-slate-50 hover:bg-bejo-50 text-slate-500 hover:text-bejo-600 transition-all duration-300 shadow-sm">
+            <Icon icon="lucide:menu" class="size-5"></Icon>
+          </button>
+
+          <div class="relative flex items-center justify-center font-black rounded-2xl size-14 bg-gradient-to-br from-bejo-50 to-bejo-100/50 text-bejo-600 border border-white shadow-xl shadow-bejo-500/10">
+            <span v-if="username" class="text-lg tracking-tighter">
+              {{ username.substring(0, 2).toUpperCase() }}
+            </span>
+            <Icon v-else icon="lucide:user" class="size-7 text-bejo-300" />
+            <span class="absolute -bottom-1 -right-1 size-5 border-2 border-white rounded-full bg-green-500 shadow-lg shadow-green-500/20 ring-1 ring-green-500/20"></span>
+          </div>
+
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <h6 class="text-slate-900 font-black text-xl tracking-tight capitalize leading-none">
+                <template v-if="changeUsername">
+                  <div class="flex items-center gap-2">
+                    <input 
+                      v-model="username" 
+                      placeholder="Ubah nama..." 
+                      class="bg-slate-50 border-transparent rounded-xl py-1.5 px-3 text-sm font-bold focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500 focus:bg-white transition-all outline-none border border-slate-100 shadow-inner" 
+                    />
+                    <button @click="saveUsername" class="text-[10px] font-black uppercase tracking-widest bg-bejo-500 text-white px-4 py-2 mt-0.5 rounded-lg shadow-lg shadow-bejo-500/20 hover:scale-105 active:scale-95 transition-all">
+                      Simpan
+                    </button>
+                  </div>
+                </template>
+                <template v-else>
+                  <span class="flex items-center gap-2 group/name cursor-pointer" @click="changeUsername = true">
+                    {{ username || phoneNumber }}
+                    <Icon icon="lucide:pencil" class="size-4 text-slate-300 group-hover/name:text-bejo-500 transition-colors" />
+                  </span>
+                </template>
+              </h6>
+            </div>
+            <p v-if="username" class="text-xs font-black text-slate-400 uppercase tracking-widest">{{ phoneNumber }}</p>
+          </div>
         </div>
 
-        <div>
-          <h6 class="text-default-900 mb-0.5 font-bold text-base capitalize flex items-center gap-2">
-            <span v-if="changeUsername" class="flex items-center gap-2">
-              <!-- <input v-model="username" type="text" class="border rounded px-1 text-sm font-normal normal-case" placeholder="Username..." /> -->
-              <input v-model="username" placeholder="Username..." class="w-full border border-slate-200 rounded-xl py-2 pl-3 pr-3 text-sm bg-card focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none" />
-              <button @click="saveUsername" class="text-xs bg-primary text-white px-3 py-2 rounded">simpan</button>
-            </span>
-
-            <span v-else class="flex items-center gap-1 cursor-pointer" @click="changeUsername = true">
-              {{ username || phoneNumber }}
-              <div class="group relative inline-block">
-                <Icon icon="lucide:pencil" class="size-4 text-default-600 inline cursor-pointer"></Icon>
-                <span class="invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity absolute top-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 text-xs text-white bg-gray-800 rounded whitespace-nowrap"> Ubah nama kontak </span>
-              </div>
-            </span>
-          </h6>
-          <p v-if="username" class="text-xs font-medium text-default-500">{{ phoneNumber }}</p>
+        <div class="flex items-center gap-3">
+          <button class="size-10 rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-bejo-600 hover:border-bejo-100 hover:bg-bejo-50 hover:shadow-lg hover:shadow-bejo-500/10 transition-all duration-300 flex items-center justify-center">
+            <Icon icon="lucide:search" class="size-5"></Icon>
+          </button>
+          <button class="size-10 rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-slate-900 hover:border-slate-200 hover:shadow-sm transition-all duration-300 flex items-center justify-center">
+            <Icon icon="lucide:more-vertical" class="size-5"></Icon>
+          </button>
         </div>
-      </div>
-
-      <div class="flex gap-2">
-        <button class="btn rounded-full size-9 bg-default-100 text-default-600 hover:bg-primary/10 hover:text-primary transition-all">
-          <Icon icon="lucide:search" class="size-4"></Icon>
-        </button>
       </div>
     </div>
 
@@ -644,80 +662,97 @@ onUpdated(() => {
       <input type="file" ref="addMoreInput" multiple hidden accept="image/*" @change="handleAddMore" />
     </div>
 
-    <simplebar ref="chatContainer" class="flex-grow bg-repeat bg-center h-0 container bg-chat" :class="{ hidden: isPreviewMode }">
-      <div class="flex flex-col gap-4 px-5 py-6">
+    <simplebar ref="chatContainer" class="flex-grow bg-slate-50 relative h-0 container bg-chat/5" :class="{ hidden: isPreviewMode }">
+      <!-- Ambient Overlay for Chat Board -->
+      <div class="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent pointer-events-none"></div>
+      
+      <div class="relative z-10 flex flex-col gap-6 px-8 py-10">
         <ChatBubble v-for="(chat, i) in chats" :key="i" :idx="i" :chat="chat" :chats="chats" :lastMessageId="props.lastMessageId" />
       </div>
     </simplebar>
 
     <div class="p-3 bg-white border-t border-default-200" :class="{ hidden: isPreviewMode }">
-      <div v-if="activeTab != 'bot'" class="flex gap-2 items-center bg-default-50 border border-default-200 p-2 rounded-2xl focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
+      <div v-if="activeTab != 'bot'" class="flex gap-4 items-center bg-slate-50 p-2.5 pl-4 rounded-[1.5rem] border border-transparent focus-within:border-bejo-500/20 focus-within:bg-white focus-within:ring-8 focus-within:ring-bejo-500/5 focus-within:shadow-xl focus-within:shadow-bejo-500/5 transition-all duration-300">
         <div class="relative" ref="dropdownRef">
-          <button @click.stop="openMenu = !openMenu" class="btn rounded-xl size-10 bg-transparent text-default-500 hover:bg-default-200 hover:text-default-800 transition-colors">
-            <Icon icon="lucide:plus" class="size-5"></Icon>
+          <button @click.stop="openMenu = !openMenu" class="size-11 rounded-2xl bg-white border border-slate-100 text-slate-400 hover:text-bejo-600 hover:border-bejo-100 hover:shadow-lg hover:shadow-bejo-500/10 transition-all duration-300 flex items-center justify-center">
+            <Icon icon="lucide:plus" class="size-6 transition-transform duration-300" :class="{'rotate-45': openMenu}"></Icon>
           </button>
 
-          <div v-if="openMenu" class="absolute bottom-[calc(100%+12px)] left-0 min-w-48 bg-white shadow-xl border border-default-100 rounded-xl p-2 z-50 transform origin-bottom-left transition-all">
-            <button @click.stop="openEtalase = !openEtalase" class="flex items-center gap-3 w-full text-left px-3 py-2.5 hover:bg-default-50 rounded-lg text-sm text-default-700 transition-colors">
-              <Icon icon="lucide:blocks" class="size-4 text-primary" />
+          <div v-if="openMenu" class="absolute bottom-[calc(100%+16px)] left-0 min-w-[220px] bg-white shadow-2xl shadow-slate-900/10 border border-slate-50 rounded-[1.5rem] p-2 z-50 transform origin-bottom-left transition-all animate-fade-in-up">
+            <button @click.stop="openEtalase = !openEtalase" class="flex items-center gap-3.5 w-full text-left px-4 py-3 hover:bg-bejo-50 text-slate-600 hover:text-bejo-600 rounded-xl text-[13px] font-bold transition-all">
+              <div class="size-8 rounded-lg bg-bejo-100 flex items-center justify-center text-bejo-600">
+                <Icon icon="lucide:blocks" class="size-4" />
+              </div>
               <span>Pilih Etalase</span>
             </button>
-            <button @click.stop="openAppointment = !openAppointment" class="flex items-center gap-3 w-full text-left px-3 py-2.5 hover:bg-default-50 rounded-lg text-sm text-default-700 transition-colors">
-              <Icon icon="lucide:clipboard-clock" class="size-4 text-primary" />
-              <span>Buat Janji</span>
+            <button @click.stop="openAppointment = !openAppointment" class="flex items-center gap-3.5 w-full text-left px-4 py-3 hover:bg-bejo-50 text-slate-600 hover:text-bejo-600 rounded-xl text-[13px] font-bold transition-all">
+              <div class="size-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
+                <Icon icon="lucide:calendar-plus" class="size-4" />
+              </div>
+              <span>Buat Janji Temu</span>
             </button>
-            <button @click.stop="openTukarCS = !openTukarCS" class="flex items-center gap-3 w-full text-left px-3 py-2.5 hover:bg-default-50 rounded-lg text-sm text-default-700 transition-colors">
-              <Icon icon="lucide:arrow-right-left" class="size-4 text-primary" />
-              <span>Tukar CS</span>
+            <button @click.stop="openTukarCS = !openTukarCS" class="flex items-center gap-3.5 w-full text-left px-4 py-3 hover:bg-bejo-50 text-slate-600 hover:text-bejo-600 rounded-xl text-[13px] font-bold transition-all">
+              <div class="size-8 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600">
+                <Icon icon="lucide:repeat" class="size-4" />
+              </div>
+              <span>Alihkan ke CS Lain</span>
             </button>
-            <div class="h-px bg-default-100 my-1"></div>
-            <button @click="endChat" class="flex items-center gap-3 w-full text-left px-3 py-2.5 hover:bg-danger/10 text-danger rounded-lg text-sm transition-colors">
-              <Icon icon="lucide:message-circle-x" class="size-4" />
+            <div class="h-px bg-slate-50 my-2"></div>
+            <button @click="endChat" class="flex items-center gap-3.5 w-full text-left px-4 py-3 hover:bg-red-50 text-red-500 rounded-xl text-[13px] font-bold transition-all">
+              <div class="size-8 rounded-lg bg-red-100 flex items-center justify-center text-red-600">
+                <Icon icon="lucide:log-out" class="size-4" />
+              </div>
               <span>Akhiri Percakapan</span>
             </button>
           </div>
         </div>
 
-        <input type="text" v-model="sendChatContent" @keyup.enter="sendChat('text')" class="flex-grow bg-transparent border-none focus:ring-0 text-sm px-2 w-full" placeholder="Ketik pesan di sini..." />
+        <input 
+          type="text" 
+          v-model="sendChatContent" 
+          @keyup.enter="sendChat('text')" 
+          class="flex-grow bg-transparent border-none focus:ring-0 text-sm font-bold text-slate-700 placeholder:text-slate-400 placeholder:font-bold px-2" 
+          placeholder="Tulis pesan Anda di sini..." 
+        />
 
-        <div ref="containerRef" class="flex items-center gap-2 relative">
-          <label class="btn size-9 rounded-xl bg-transparent text-default-500 hover:bg-default-200 hover:text-default-800">
-            <Icon icon="lucide:image" class="size-4"></Icon>
+        <div ref="containerRef" class="flex items-center gap-3 relative mr-1">
+          <label class="size-11 rounded-2xl bg-white border border-slate-100 text-slate-400 hover:text-blue-600 hover:border-blue-100 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300 flex items-center justify-center cursor-pointer">
+            <Icon icon="lucide:image" class="size-6"></Icon>
             <input type="file" multiple hidden @change="chooseImages" accept="image/*" />
           </label>
-          <button @click="sendChat('text')" class="btn rounded-xl px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-medium flex items-center gap-2 transition-colors">
-            <span class="hidden sm:inline text-sm">Kirim</span>
+          <button @click="sendChat('text')" class="h-11 px-6 rounded-2xl bg-bejo-500 hover:bg-bejo-600 text-white font-black text-xs uppercase tracking-widest flex items-center gap-3 shadow-xl shadow-bejo-500/20 active:scale-95 transition-all">
+            <span>Kirim</span>
             <Icon icon="lucide:send" class="size-4"></Icon>
           </button>
         </div>
       </div>
 
       <div v-else class="w-full">
-        <button @click="takeOverChat(false)" class="w-full py-3.5 bg-bejo-500 hover:bg-bejo-600 text-white font-semibold rounded-xl flex justify-center items-center gap-2 shadow-sm transition-colors">
-          <Icon icon="lucide:message-circle-plus" class="size-5" />
-          <span>Ambil Alih Percakapan</span>
+        <button @click="takeOverChat(false)" class="w-full py-4.5 bg-gradient-to-r from-bejo-500 to-bejo-600 hover:from-bejo-600 hover:to-bejo-700 text-white font-black text-xs uppercase tracking-widest rounded-[1.5rem] flex justify-center items-center gap-3 shadow-xl shadow-bejo-500/20 active:scale-[0.98] transition-all">
+          <Icon icon="lucide:message-square-plus" class="size-5" />
+          <span>Ambil Alih Percakapan Sekarang</span>
         </button>
       </div>
 
-      <div v-if="openEtalase || openAppointment" ref="etalaseRef" class="z-[60] fixed bottom-20 left-1/2 -translate-x-1/2 w-[95vw] sm:w-[850px] sm:bottom-24 sm:right-5 sm:left-auto sm:translate-x-0 bg-white rounded-2xl shadow-2xl p-4 border border-default-100">
-        <div class="flex items-center justify-between mb-4 px-2">
-          <h4 v-if="openEtalase" class="text-default-900 font-bold text-base">Pilih Etalase</h4>
-          <h4 v-if="openAppointment" class="text-default-900 font-bold text-base">Pilih Unit</h4>
-          <button v-if="openEtalase" @click.stop="closeEtalase" class="text-default-400 hover:text-default-900 transition-all">
+      <div v-if="openEtalase || openAppointment" ref="etalaseRef" class="z-[60] fixed bottom-20 left-1/2 -translate-x-1/2 w-[95vw] sm:w-[850px] sm:bottom-24 sm:right-5 sm:left-auto sm:translate-x-0 bg-white/95 backdrop-blur-md rounded-[2rem] shadow-2xl p-6 border border-slate-50">
+        <div class="flex items-center justify-between mb-6 px-2">
+          <h4 v-if="openEtalase" class="text-slate-900 font-extrabold text-lg tracking-tight">Pilih Etalase Premium</h4>
+          <h4 v-if="openAppointment" class="text-slate-900 font-extrabold text-lg tracking-tight">Pilih Unit Properti</h4>
+          <button v-if="openEtalase" @click.stop="closeEtalase" class="size-9 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all">
             <Icon icon="lucide:x" class="size-5" />
           </button>
-          <button v-if="openAppointment" @click.stop="closeAppointment" class="text-default-400 hover:text-default-900 transition-all">
+          <button v-if="openAppointment" @click.stop="closeAppointment" class="size-9 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all">
             <Icon icon="lucide:x" class="size-5" />
           </button>
         </div>
 
         <div class="px-2">
-          <div class="relative mb-3">
-            <Icon icon="lucide:search" class="size-4 absolute left-3 top-3 text-default-400" />
-            <input type="text" placeholder="Cari produk..." class="w-full bg-default-100 rounded-xl py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
+          <div class="relative mb-4 group">
+            <Icon icon="lucide:search" class="size-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-bejo-500 transition-colors" />
+            <input type="text" placeholder="Cari unit atau katalog..." class="w-full bg-slate-50 border-transparent rounded-2xl py-3 pl-11 pr-4 text-sm font-bold focus:bg-white focus:ring-8 focus:ring-bejo-500/5 focus:border-bejo-500 transition-all duration-300 shadow-inner" />
           </div>
-          <div class="flex flex-wrap items-center gap-2 mb-4">
-            <button type="button" @click.stop="openFilter = !openFilter" class="btn-trigger-filter w-full flex justify-center items-center btn btn-sm bg-primary/10 hover:bg-primary/30 text-primary py-2 rounded-xl"><Icon icon="lucide:sliders-horizontal" class="size-4 mr-2" /> Filter</button>
+          <div class="flex flex-wrap items-center gap-3 mb-6">
+            <button type="button" @click.stop="openFilter = !openFilter" class="btn-trigger-filter w-full flex justify-center items-center py-3 bg-bejo-50 hover:bg-bejo-100 text-bejo-600 rounded-2xl text-[13px] font-black uppercase tracking-widest transition-all shadow-sm"><Icon icon="lucide:sliders-horizontal" class="size-4 mr-2" /> Filter Pencarian</button>
           </div>
         </div>
 
@@ -781,31 +816,33 @@ onUpdated(() => {
         </div>
       </div>
 
-      <div v-if="openAppointmentForm" ref="appointmentFormRef" class="z-[65] fixed bottom-55 left-1/2 -translate-x-1/2 w-[95vw] sm:w-[350px] sm:bottom-45 sm:right-30 sm:left-auto sm:translate-x-0 bg-white rounded-2xl shadow-2xl p-4 border border-default-100">
-        <div class="flex items-center justify-between mb-4 px-2">
-          <h4 class="text-default-900 font-bold text-base">Form Janji Temu</h4>
-          <button @click.stop="openAppointmentForm = false" class="text-default-400 hover:text-default-900 transition-all">
+      <div v-if="openAppointmentForm" ref="appointmentFormRef" class="z-[65] fixed bottom-55 left-1/2 -translate-x-1/2 w-[95vw] sm:w-[380px] sm:bottom-45 sm:right-30 sm:left-auto sm:translate-x-0 bg-white rounded-[2rem] shadow-2xl p-6 border border-slate-50 animate-fade-in-up">
+        <div class="flex items-center justify-between mb-6 px-2">
+          <h4 class="text-slate-900 font-extrabold text-lg tracking-tight">Form Janji Temu</h4>
+          <button @click.stop="openAppointmentForm = false" class="size-8 flex items-center justify-center rounded-lg bg-slate-50 text-slate-400 hover:text-red-500 transition-all">
             <Icon icon="lucide:x" class="size-5" />
           </button>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 px-2">
+        <div class="space-y-4 px-2">
           <div>
-            <label class="text-xs text-default-500 mb-1 block"> Nama Customer </label>
-            <input type="text" placeholder="Masukkan nama customer" class="form-input w-full" />
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block"> Nama Customer </label>
+            <input type="text" placeholder="Nama customer..." class="w-full bg-slate-50 border-slate-100 rounded-xl py-2.5 px-4 text-sm font-bold focus:bg-white focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500 transition-all shadow-inner" />
           </div>
           <div>
-            <label class="text-xs text-default-500 mb-1 block"> Nama Sales </label>
-            <input type="text" placeholder="Masukkan nama sales" class="form-input w-full" />
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block"> Nama Sales </label>
+            <input type="text" placeholder="Nama sales..." class="w-full bg-slate-50 border-slate-100 rounded-xl py-2.5 px-4 text-sm font-bold focus:bg-white focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500 transition-all shadow-inner" />
           </div>
-          <button @click.stop="openSchedule = !openSchedule" class="btn bg-primary hover:bg-primary-dark text-white rounded-lg"><Icon icon="lucide:calendar-search" class="size-4"></Icon> Pilih Jadwal</button>
+          <button @click.stop="openSchedule = !openSchedule" class="w-full py-3 bg-bejo-50 hover:bg-bejo-100 text-bejo-600 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 border border-bejo-200">
+            <Icon icon="lucide:calendar" class="size-4" /> Pilih Jadwal
+          </button>
           <div>
-            <label class="text-xs text-default-500 mb-1 block"> Waktu </label>
-            <input type="time" class="form-input w-full" />
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block"> Waktu </label>
+            <input type="time" class="w-full bg-slate-50 border-slate-100 rounded-xl py-2.5 px-4 text-sm font-bold focus:bg-white focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500 transition-all shadow-inner" />
           </div>
         </div>
-        <div class="flex justify-end gap-2 mt-6 px-2">
-          <button @click.stop="openAppointmentForm = false" class="btn bg-default-100 hover:bg-default-200 text-default-700 rounded-lg">Batal</button>
-          <button @click="saveAppointment" class="btn bg-green-500 hover:bg-green-600 text-white rounded-lg">Simpan</button>
+        <div class="flex justify-end gap-3 mt-8 px-2">
+          <button @click.stop="openAppointmentForm = false" class="px-5 py-2.5 bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-xl text-xs font-black uppercase tracking-widest transition-all">Batal</button>
+          <button @click="saveAppointment" class="px-6 py-2.5 bg-bejo-500 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-bejo-500/20 hover:bg-bejo-600 transition-all">Simpan</button>
         </div>
       </div>
 
@@ -825,34 +862,43 @@ onUpdated(() => {
         </div>
       </div>
 
-      <div v-if="openTukarCS" ref="tukarCSRef" class="z-[60] fixed bottom-20 left-1/2 -translate-x-1/2 w-[92vw] max-w-[390px] sm:bottom-24 sm:right-5 sm:left-auto sm:translate-x-0 bg-white rounded-2xl shadow-xl p-4 border border-default-100">
-        <div class="flex items-center justify-between mb-4 px-2">
-          <h4 class="text-default-900 font-bold text-base">Pilih CS</h4>
-          <button @click.stop="openTukarCS = false" class="text-default-400 hover:text-default-900 transition-all">
+      <div v-if="openTukarCS" ref="tukarCSRef" class="z-[60] fixed bottom-20 left-1/2 -translate-x-1/2 w-[92vw] max-w-[390px] sm:bottom-24 sm:right-5 sm:left-auto sm:translate-x-0 bg-white/95 backdrop-blur-md rounded-[2rem] shadow-2xl p-6 border border-slate-50 animate-fade-in-up">
+        <div class="flex items-center justify-between mb-6 px-2">
+          <h4 class="text-slate-900 font-extrabold text-lg tracking-tight">Alihkan ke CS Lain</h4>
+          <button @click.stop="openTukarCS = false" class="size-9 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:text-red-500 transition-all">
             <Icon icon="lucide:x" class="size-5" />
           </button>
         </div>
-        <div class="relative mb-3">
-          <Icon icon="lucide:search" class="size-4 absolute left-3 top-3 text-default-400" />
-          <input type="text" placeholder="Cari CS..." class="w-full bg-default-100 rounded-xl py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
+        <div class="relative mb-5 group">
+          <Icon icon="lucide:search" class="size-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-bejo-500 transition-colors" />
+          <input type="text" placeholder="Cari nama CS..." class="w-full bg-slate-50 border-transparent rounded-2xl py-3 pl-11 pr-4 text-sm font-bold focus:bg-white focus:ring-8 focus:ring-bejo-500/5 focus:border-bejo-500 transition-all shadow-inner" />
         </div>
-        <div class="max-h-72 overflow-y-auto custom-scrollbar">
-          <div class="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-default-50 cursor-pointer transition-colors">
-            <span class="text-sm font-medium text-default-700">Yeni Anggraeni</span>
-            <button @click="tukarCS('Yeni Anggraeni')" class="flex items-center justify-center bg-white border border-default-200 hover:border-green-500 hover:bg-green-500 hover:text-white text-default-400 size-7 rounded-lg shadow-sm transition-all">
-              <Icon icon="lucide:check" class="size-3.5" />
+        <div class="max-h-72 overflow-y-auto custom-scrollbar space-y-2 pr-1">
+          <div class="flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-slate-50 cursor-pointer transition-all border border-transparent hover:border-slate-100 group">
+            <div class="flex items-center gap-3">
+              <div class="size-9 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-500 font-black text-xs">YA</div>
+              <span class="text-sm font-bold text-slate-700">Yeni Anggraeni</span>
+            </div>
+            <button @click="tukarCS('Yeni Anggraeni')" class="flex items-center justify-center bg-white border border-slate-200 text-slate-400 size-9 rounded-xl shadow-sm hover:bg-bejo-500 hover:text-white hover:border-bejo-500 transition-all active:scale-90">
+              <Icon icon="lucide:check" class="size-4" />
             </button>
           </div>
-          <div class="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-default-50 cursor-pointer transition-colors">
-            <span class="text-sm font-medium text-default-700">Bima Kurniawan</span>
-            <button @click="tukarCS('Bima Kurniawan')" class="flex items-center justify-center bg-white border border-default-200 hover:border-green-500 hover:bg-green-500 hover:text-white text-default-400 size-7 rounded-lg shadow-sm transition-all">
-              <Icon icon="lucide:check" class="size-3.5" />
+          <div class="flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-slate-50 cursor-pointer transition-all border border-transparent hover:border-slate-100 group">
+            <div class="flex items-center gap-3">
+              <div class="size-9 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-500 font-black text-xs">BK</div>
+              <span class="text-sm font-bold text-slate-700">Bima Kurniawan</span>
+            </div>
+            <button @click="tukarCS('Bima Kurniawan')" class="flex items-center justify-center bg-white border border-slate-200 text-slate-400 size-9 rounded-xl shadow-sm hover:bg-bejo-500 hover:text-white hover:border-bejo-500 transition-all active:scale-90">
+              <Icon icon="lucide:check" class="size-4" />
             </button>
           </div>
-          <div class="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-default-50 cursor-pointer transition-colors">
-            <span class="text-sm font-medium text-default-700">Bobi Sanjaya</span>
-            <button @click="tukarCS('Bobi Sanjaya')" class="flex items-center justify-center bg-white border border-default-200 hover:border-green-500 hover:bg-green-500 hover:text-white text-default-400 size-7 rounded-lg shadow-sm transition-all">
-              <Icon icon="lucide:check" class="size-3.5" />
+          <div class="flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-slate-50 cursor-pointer transition-all border border-transparent hover:border-slate-100 group">
+            <div class="flex items-center gap-3">
+              <div class="size-9 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-500 font-black text-xs">BS</div>
+              <span class="text-sm font-bold text-slate-700">Bobi Sanjaya</span>
+            </div>
+            <button @click="tukarCS('Bobi Sanjaya')" class="flex items-center justify-center bg-white border border-slate-200 text-slate-400 size-9 rounded-xl shadow-sm hover:bg-bejo-500 hover:text-white hover:border-bejo-500 transition-all active:scale-90">
+              <Icon icon="lucide:check" class="size-4" />
             </button>
           </div>
         </div>

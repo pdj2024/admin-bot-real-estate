@@ -54,14 +54,6 @@ onMounted(() => {
         <div class="relative">
           <div class="absolute inset-0 bg-bejo-500 blur-3xl opacity-20 scale-125"></div>
           <Icon icon="lucide:home" class="size-48 text-white/10 transition-transform duration-700 group-hover:scale-110 group-hover:rotate-6" />
-          <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
-            <div class="size-16 rounded-2xl bg-white shadow-2xl flex items-center justify-center mb-2">
-               <Icon icon="lucide:building-2" class="size-8 text-bejo-500" />
-            </div>
-            <div class="px-3 py-1 bg-white/10 backdrop-blur-md rounded-lg border border-white/20">
-               <span class="text-[10px] font-black text-white uppercase tracking-tighter">Premium System</span>
-            </div>
-          </div>
         </div>
       </div>
     </div>

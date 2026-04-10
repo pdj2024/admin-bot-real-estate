@@ -36,14 +36,14 @@ const isCustomer = computed(() => props.chat.Tipe_User === 'customer')
 const bubbleStyle = computed(() => {
   switch (props.chat.Tipe_User) {
     case 'customer':
-      return 'bubble-customer bg-bejo-100 border border-default-200 text-default-900 shadow-sm rounded-bl-none'
+      return 'bubble-customer bg-amber-50 border border-slate-100 text-slate-800 shadow-sm rounded-2xl rounded-bl-none'
     case 'admin':
     case 'cs':
-      return 'bubble-admin bg-amber-100 text-default-900 shadow-sm rounded-br-none'
+      return 'bubble-admin bg-gradient-to-br from-bejo-50 to-bejo-100 text-slate-800 shadow-lg shadow-bejo-500/20 rounded-2xl rounded-br-none'
     case 'ai':
-      return 'bubble-ai bg-white border border-amber-200 text-amber-900 shadow-sm rounded-br-none'
+      return 'bubble-ai bg-white border border-amber-200 text-amber-900 shadow-xl shadow-amber-500/10 rounded-2xl rounded-br-none ring-1 ring-amber-100'
     default:
-      return 'bubble-default bg-default-100 text-default-700 rounded-br-none'
+      return 'bubble-default bg-slate-100 text-slate-600 rounded-2xl rounded-br-none'
   }
 })
 
@@ -137,54 +137,56 @@ watch(
       </span>
     </div>
 
-    <div v-if="chat.Message.includes('_X7#mQ9!vW2_')" class="w-full my-4 flex justify-center px-4">
-      <div class="flex flex-col items-center justify-center text-center px-5 py-2 bg-slate-100/80 backdrop-blur-sm border border-slate-200/50 rounded-full shadow-sm max-w-[85%] sm:max-w-md transition-all hover:bg-white/90">
-        <span class="text-[9px] font-bold text-slate-400 tracking-wider mb-0.5">
+    <div v-if="chat.Message.includes('_X7#mQ9!vW2_')" class="w-full my-6 flex justify-center px-4">
+      <div class="flex flex-col items-center justify-center text-center px-6 py-2.5 bg-slate-50/80 backdrop-blur-md border border-slate-100 rounded-2xl shadow-sm max-w-[85%] transition-all hover:bg-white hover:shadow-md group">
+        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 opacity-70 group-hover:opacity-100 transition-opacity">
           {{ new Date(chat.Sent_At).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }}
         </span>
-        <span class="text-[11px] font-bold text-slate-600 capitalize leading-snug">
+        <span class="text-[11px] font-black text-slate-600 leading-snug tracking-tight">
           {{ (chat.Message || '').replace('_X7#mQ9!vW2_', ' ') }}
         </span>
       </div>
     </div>
 
-    <div class="flex gap-3 w-full mt-1.5 group" :class="isCustomer ? 'justify-start' : 'justify-end'">
-      <div v-if="isCustomer" class="flex items-end flex-shrink-0 mb-1 opacity-80 group-hover:opacity-100 transition-opacity">
-        <div class="avatar-customer relative flex items-center justify-center rounded-full size-7 bg-gradient-to-br from-slate-100 to-slate-200 text-slate-500 border border-white shadow-sm">
-          <Icon icon="lucide:user" class="size-4" />
+    <div class="flex gap-4 w-full mt-2 group" :class="isCustomer ? 'justify-start pl-4' : 'justify-end pr-4'">
+      <div v-if="isCustomer" class="flex items-end flex-shrink-0 mb-1 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+        <div class="avatar-customer relative flex items-center justify-center rounded-xl size-8 bg-gradient-to-br from-slate-100 to-slate-200 text-slate-500 border-2 border-white shadow-sm">
+          <Icon icon="lucide:user" class="size-4.5" />
         </div>
       </div>
 
-      <div class="flex flex-col max-w-[85%] lg:max-w-[70%]" :class="isCustomer ? 'items-start' : 'items-end'">
-        <div v-if="!chat.Message.includes('_X7#mQ9!vW2_')" class="px-3.5 py-2.5 rounded-2xl text-sm relative transition-all hover:shadow-md max-w-xs" :class="bubbleStyle">
-          <div v-if="chat.Id_Paket != null || chat.Message.includes('_data:image/')" class="mb-2 overflow-hidden rounded-xl border border-black/5">
-            <img v-if="imageUrl || chat.Message.includes('_data:image/')" :src="chat.Message.includes('_data:image/') ? 'data:image/' + chat.Message.split('_data:image/')[1] : imageUrl" class="w-full h-auto object-cover max-h-64 hover:scale-105 transition-transform duration-300 cursor-pointer" />
+      <div class="flex flex-col max-w-[80%] lg:max-w-[65%]" :class="isCustomer ? 'items-start' : 'items-end'">
+        <div v-if="!chat.Message.includes('_X7#mQ9!vW2_')" class="px-5 py-3.5 rounded-2xl text-sm relative transition-all duration-300 hover:shadow-xl" :class="[bubbleStyle, isCustomer ? 'hover:-translate-x-1' : 'hover:translate-x-1']">
+          <div v-if="chat.Id_Paket != null || chat.Message.includes('_data:image/')" class="mb-3 overflow-hidden rounded-xl border border-black/5 shadow-inner bg-slate-50/50">
+            <img v-if="imageUrl || chat.Message.includes('_data:image/')" :src="chat.Message.includes('_data:image/') ? 'data:image/' + chat.Message.split('_data:image/')[1] : imageUrl" class="w-full h-auto object-cover max-h-72 hover:scale-105 transition-transform duration-500 cursor-pointer" />
           </div>
 
-          <span v-if="chat.Message" class="block break-words leading-relaxed" v-html="formatMessage(chat.Message.includes('_data:image/') ? chat.Message.split('_data:image/')[0] : chat.Message)"></span>
+          <span v-if="chat.Message" class="block break-words leading-relaxed tracking-tight" v-html="formatMessage(chat.Message.includes('_data:image/') ? chat.Message.split('_data:image/')[0] : chat.Message)"></span>
 
-          <div v-if="chat.Tipe_User === 'admin' && chat.Sender_Id === 'adm_bot'" class="ai-indicator mt-2 pt-1.5 border-t border-amber-200/60 flex items-center gap-1.5 text-[10px] font-semibold text-amber-700">
-            <Icon icon="lucide:bot" class="size-3.5" />
+          <div v-if="chat.Tipe_User === 'admin' && chat.Sender_Id === 'adm_bot'" class="ai-indicator mt-3 pt-2 border-t border-amber-200/40 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-amber-700">
+            <div class="size-4 bg-amber-500 rounded-md flex items-center justify-center text-white">
+              <Icon icon="lucide:bot" class="size-3" />
+            </div>
             Asisten AI
           </div>
 
-          <div class="flex justify-end items-center mt-1.5 gap-1 text-[9px] font-bold tracking-wide" :class="timeColor">
+          <div class="flex justify-end items-center mt-2.5 gap-1.5 text-[9px] font-black uppercase tracking-widest opacity-70" :class="timeColor">
             {{ new Date(chat.Sent_At).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }}
 
             <template v-if="!isCustomer">
-              <Icon v-if="chat.Send_Status === 'pending'" icon="lucide:clock" class="size-3 opacity-70" />
+              <Icon v-if="chat.Send_Status === 'pending'" icon="lucide:clock" class="size-3" />
               <Icon v-else-if="chat.Send_Status === 'failed'" icon="lucide:circle-alert" class="size-3 text-red-500" />
-              <Icon v-else icon="lucide:check-check" class="size-3" />
+              <Icon v-else icon="lucide:check-check" class="size-3 text-white/90" />
             </template>
           </div>
         </div>
       </div>
 
-      <div v-if="!isCustomer && !chat.Message.includes('_X7#mQ9!vW2_')" class="flex items-end flex-shrink-0 mb-1 opacity-80 group-hover:opacity-100 transition-opacity">
-        <div v-if="chat.Tipe_User === 'admin' && chat.Sender_Id != 'adm_bot'" class="avatar-admin relative flex items-center justify-center rounded-full size-7 bg-gradient-to-br from-cyan-50 to-cyan-100 text-cyan-600 border border-white shadow-sm">
-          <Icon icon="lucide:headset" class="size-3.5" />
+      <div v-if="!isCustomer && !chat.Message.includes('_X7#mQ9!vW2_')" class="flex items-end flex-shrink-0 mb-1 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+        <div v-if="chat.Tipe_User === 'admin' && chat.Sender_Id != 'adm_bot'" class="avatar-admin relative flex items-center justify-center rounded-xl size-8 bg-gradient-to-br from-cyan-400 to-cyan-500 text-white border-2 border-white shadow-lg shadow-cyan-500/20">
+          <Icon icon="lucide:headset" class="size-4" />
         </div>
-        <div v-else-if="chat.Tipe_User === 'admin' && chat.Sender_Id === 'adm_bot'" class="avatar-ai relative flex items-center justify-center rounded-full size-7 bg-gradient-to-br from-amber-100 to-amber-200 text-amber-700 border border-white shadow-sm font-bold text-[9px]">AI</div>
+        <div v-else-if="chat.Tipe_User === 'admin' && chat.Sender_Id === 'adm_bot'" class="avatar-ai relative flex items-center justify-center rounded-xl size-8 bg-gradient-to-br from-amber-400 to-amber-500 text-white border-2 border-white shadow-lg shadow-amber-500/20 font-black text-[10px] tracking-tighter">AI</div>
       </div>
     </div>
 

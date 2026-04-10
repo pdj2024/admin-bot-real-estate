@@ -40,39 +40,6 @@ const openEditModal = (customer: any) => {
 <template>
   <Vertical>
     <div class="p-4 md:p-6 md:pt-4 pb-32 space-y-6 md:space-y-8">
-      <!-- Premium Header Section -->
-      <div class="relative overflow-hidden rounded-[2.5rem] bg-white border border-slate-100 p-6 md:p-8 shadow-xl shadow-slate-200/40">
-        <!-- Ambient Background -->
-        <div class="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-bejo-50 via-bejo-50/30 to-transparent"></div>
-        <div class="absolute -right-20 -top-20 size-96 bg-gradient-to-br from-bejo-100/40 to-bejo-400/20 rounded-full blur-3xl"></div>
-
-        <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
-          <div class="max-w-xl">
-            <nav class="flex items-center gap-2 text-[10px] text-slate-400 mb-4 uppercase tracking-widest font-black">
-              <span>Rumah Bejo</span>
-              <Icon icon="lucide:chevron-right" class="size-3" />
-              <span>Kelola</span>
-              <Icon icon="lucide:chevron-right" class="size-3" />
-              <span class="text-bejo-600">Data Customer</span>
-            </nav>
-            <h1 class="text-3xl md:text-5xl font-black text-slate-900 tracking-tighter leading-tight mb-4">
-              Database <span class="text-bejo-500">Customer</span>
-            </h1>
-            <p class="text-sm font-bold text-slate-500 leading-relaxed">
-              Pantau dan kelola data pelanggan yang terdaftar di sistem. Gunakan informasi ini untuk memberikan layanan terbaik dan analisis pasar.
-            </p>
-          </div>
-
-          <!-- Opsional: Jika customer tidak bisa ditambah manual, hapus bagian ini. Namun saya biarkan konsisten dengan admin jika butuh fitur tambah admin-side. -->
-          <!-- <div class="flex items-center gap-4 shrink-0">
-            <button @click="openAddModal" class="px-6 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-900/20 hover:bg-bejo-600 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2">
-              <Icon icon="lucide:user-plus" class="size-4" />
-              Tambah Customer
-            </button>
-          </div> -->
-        </div>
-      </div>
-
       <!-- Main Content Card -->
       <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/30 overflow-hidden">
         <div class="p-6 md:p-8 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-6">
