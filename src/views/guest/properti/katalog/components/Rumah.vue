@@ -53,176 +53,22 @@
     </div>
 
     <div class="grid xl:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
-      <div v-for="(row, idx) in (isLoading ? Array.from({length: 6}).map(() => ({ original: {} })) as any : table.getRowModel().rows)" :key="row.id || idx" class="group flex flex-col h-full rounded-[2rem] overflow-hidden border transition-all duration-500 relative bg-white border-slate-100 shadow-xl shadow-slate-200/30" :class="!isLoading ? 'hover:-translate-y-2 hover:shadow-2xl hover:border-bejo-200 hover:shadow-bejo-600/10 cursor-pointer' : ''">
-        <div class="relative h-60 overflow-hidden" :class="isLoading ? 'bg-slate-200 animate-pulse' : 'bg-slate-100'">
-          <div v-if="row.original?.Status_Display && row.original.Status_Display != 'Aktif' && row.original.Status_Properti != 'Tersedia'" class="absolute inset-0 bg-black/40 backdrop-grayscale-[60%] z-[5] pointer-events-none transition-all duration-500"></div>
-
-          <div v-if="row.original?.Status_Display && row.original.Status_Display != 'Aktif' && row.original.Status_Properti != 'Tersedia'" class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-            <div class="px-3 py-1.5 bg-black/40 backdrop-blur-md rounded-2xl border border-white/20 shadow-2xl transform transition-transform duration-500 group-hover:scale-110">
-              <span class="text-sm font-black uppercase tracking-[0.2em] text-white">
-                {{ row.original.Status_Display != 'Aktif' ? 'Nonaktif' : row.original.Status_Properti }}
-              </span>
-            </div>
-          </div>
-
-          <img v-if="row.original?.MediaUrls && row.original.MediaUrls.length >= 1" :src="row.original.MediaUrls[0].Id_Media" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-          <div v-else-if="!isLoading" class="w-full h-full bg-slate-100 flex flex-col items-center justify-center">
-            <Icon icon="lucide:image" class="size-16 text-slate-300" />
-          </div>
-
-          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" v-if="!isLoading"></div>
-
-          <div class="absolute top-4 left-4 flex flex-col gap-2 z-10" v-if="!isLoading && row.original?.Status_Properti">
-            <span class="w-fit bg-bejo-600/70 backdrop-blur-md text-white text-[10px] uppercase tracking-widest font-bold px-2.5 py-1 rounded-md shadow-md border border-bejo-300/40">
-              {{ row.original.Status_Display != 'Aktif' ? 'Nonaktif' : row.original.Status_Properti }}
-            </span>
-
-            <div class="flex flex-wrap gap-1.5" v-if="row.original?.Status_Transaksi">
-              <span v-for="(trans, i) in row.original.Status_Transaksi" :key="i" class="bg-black/50 backdrop-blur-md text-bejo-100 text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-md border border-bejo-700/60 shadow-sm">
-                {{ trans }}
-              </span>
-            </div>
-          </div>
-
-          <div class="absolute bottom-4 right-4 flex flex-col gap-1.5 items-end z-10" v-if="!isLoading && row.original?.Akses_Jalan">
-            <span v-for="(akses, idx) in row.original.Akses_Jalan.slice(0, 2)" :key="idx" class="bg-white/90 backdrop-blur-md text-slate-700 text-[10px] font-bold px-2.5 py-1 rounded-md border-l-4 border-bejo-600 shadow-sm flex items-center gap-1.5">
-              <Icon icon="lucide:map-pin" class="size-2.5 text-bejo-600" />
-              {{ akses }}
-            </span>
-          </div>
-        </div>
-        <div class="p-5 flex flex-col flex-1">
-          <div class="flex items-start gap-1.5 text-bejo-600 mb-2" :class="isLoading ? 'opacity-50 grayscale' : ''">
-            <Icon icon="lucide:map-pin" class="size-3.5 mt-0.5" />
-            <div class="flex flex-col">
-              <span class="text-[11px] font-bold uppercase tracking-wider" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded select-none w-1/3 mb-1' : 'text-bejo-600'">{{ !isLoading ? (row.original.Area ? row.original.Area[0] : '') : 'Area' }}</span>
-              <p class="text-[10px] font-medium line-clamp-1" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded select-none w-[80%]' : 'text-slate-500'">
-                <span v-if="!row.original.Hide_alamat">{{
-                  (row.original.Alamat || '')
-                    .split(' ')
-                    .filter(
-                      (kata) =>
-                        !(row.original.Area && row.original.Area[0] ? row.original.Area[0] : '')
-                          .toLowerCase()
-                          .replace(/[^a-z0-9\s]/g, '')
-                          .split(/\s+/)
-                          .includes(kata.toLowerCase().replace(/[^a-z0-9]/g, ''))
-                    )
-                    .join(' ')
-                    .replace(/[,.\s]+$/, '')
-                }}</span>
-                <span v-if="!isLoading && row.original?.Area && row.original.Area[1]"> ({{ row.original.Area[1] }})</span>
-                <span v-if="isLoading">Memuat Detail Alamat Lanjutan..</span>
-              </p>
-            </div>
-          </div>
-
-          <h6 class="text-lg font-black transition-colors line-clamp-1 mb-1 leading-tight" :class="isLoading ? 'text-transparent bg-slate-200 animate-pulse rounded select-none w-full' : 'group-hover:text-bejo-600 text-slate-900'">
-            <RouterLink v-if="!isLoading" :to="isAdmin ? `/properti/detail/${row.original.Slug}` : `/detail/${row.original.Slug}`">{{ row.original.Nama_Produk }}</RouterLink>
-            <span v-else>Memuat Nama Katalog Properti Terbaru</span>
-          </h6>
-
-          <p class="text-[12px] font-medium mb-4" :class="isLoading ? 'text-transparent bg-slate-200 animate-pulse rounded select-none w-2/3' : 'text-slate-400'">
-            {{ !isLoading ? row.original.Tipe : 'Tipe' }} &bull; Tipe {{ !isLoading ? row.original.Luas_Bangunan : 0 }} <span class="opacity-70" v-if="!isLoading && row.original.Tipe_Ukuran">[{{ row.original.Tipe_Ukuran }}]</span>
-          </p>
-
-          <div class="grid grid-cols-2 gap-3 rounded-2xl p-4 mb-5 border border-slate-100 bg-gradient-to-br from-slate-50 to-slate-100/50 shadow-inner">
-            <div class="flex items-center gap-2">
-              <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0" :class="isLoading ? 'opacity-50 grayscale' : ''">
-                <Icon icon="lucide:land-plot" class="size-3.5 text-bejo-600" />
-              </div>
-              <span class="text-xs font-bold" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded select-none w-1/2' : 'text-slate-700'">LT {{ row.original.Luas_Tanah || 0 }} m²</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0" :class="isLoading ? 'opacity-50 grayscale' : ''">
-                <Icon icon="lucide:home" class="size-3.5 text-bejo-600" />
-              </div>
-              <span class="text-xs font-bold" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded select-none w-1/2' : 'text-slate-700'">LB {{ row.original.Luas_Bangunan || 0 }} m²</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0" :class="isLoading ? 'opacity-50 grayscale' : ''">
-                <Icon icon="lucide:layers" class="size-3.5 text-bejo-600" />
-              </div>
-              <span class="text-xs font-bold" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded select-none w-1/2' : 'text-slate-700'">{{ row.original.Jumlah_Lantai || 0 }} Lt</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0" :class="isLoading ? 'opacity-50 grayscale' : ''">
-                <Icon icon="lucide:car" class="size-3.5 text-bejo-600" />
-              </div>
-              <span class="text-xs font-bold" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded select-none w-1/2' : 'text-slate-700'">{{ row.original.Jumlah_Carpot || 0 }} Mob</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0" :class="isLoading ? 'opacity-50 grayscale' : ''">
-                <Icon icon="lucide:bed" class="size-3.5 text-bejo-600" />
-              </div>
-              <span class="text-xs font-bold" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded select-none w-1/2' : 'text-slate-700'">{{ row.original.Jumlah_Kamar_Tidur || 0 }} Kmr</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0" :class="isLoading ? 'opacity-50 grayscale' : ''">
-                <Icon icon="lucide:bath" class="size-3.5 text-bejo-600" />
-              </div>
-              <span class="text-xs font-bold" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded select-none w-1/2' : 'text-slate-700'">{{ row.original.Jumlah_Kamar_Mandi || 0 }} Kmr</span>
-            </div>
-          </div>
-
-          <div class="mt-auto pt-4 border-t border-slate-100 flex flex-col gap-2 relative">
-            <div v-show="isLoading || row.original?.Harga_Sewa1 > 0" class="flex flex-col flex-wrap">
-              <span class="text-[9px] font-black uppercase tracking-widest mb-0.5" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded select-none w-1/4' : 'text-slate-400'">
-                Harga Sewa
-                <span v-if="!isLoading && row.original.Minimal_Sewa && row.original.Minimal_Sewa > 0">(min. {{ row.original.Minimal_Sewa + ' ' + row.original.Satuan_Minimal_Sewa }})</span>
-              </span>
-              <div class="flex flex-wrap items-baseline gap-1.5">
-                <span class="text-base font-black" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded select-none w-[60%] inline-block mt-0.5' : 'text-slate-900'">
-                  {{ formatCurrency(row.original?.Harga_Sewa2 > 0 ? row.original.Harga_Sewa2 : (row.original?.Harga_Sewa1 || 240000000)) }}
-                </span>
-                <div v-if="!isLoading && row.original.Harga_Sewa2 > 0" class="flex items-center gap-1.5">
-                  <span class="relative text-[10px] text-slate-400 font-bold px-1 shrink-0 break-all leading-tight mt-0.5">
-                    {{ formatCurrency(row.original.Harga_Sewa1) }}
-                    <span class="absolute inset-x-0 top-1/2 h-[1.5px] bg-red-500 transform -rotate-[10deg] opacity-80 rounded-full"></span>
-                  </span>
-                  <span class="bg-red-50 text-red-600 text-[8px] font-black px-1.5 py-0.5 rounded-md leading-none border border-red-100/50 mt-0.5">
-                    -{{ Math.round(((row.original.Harga_Sewa1 - row.original.Harga_Sewa2) / row.original.Harga_Sewa1) * 100) }}%
-                  </span>
-                </div>
-                <span class="text-[10px] text-slate-400 italic" v-if="!isLoading">/{{ row.original.Satuan_Minimal_Sewa || 'thn' }}</span>
-              </div>
-            </div>
-
-            <div v-show="!isLoading && row.original?.Harga_Jual1 > 0" class="flex flex-col flex-wrap">
-              <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Harga Jual</span>
-              <div class="flex flex-wrap items-baseline gap-1.5">
-                <span class="text-lg font-black text-slate-900">
-                  {{ formatCurrency(row.original.Harga_Jual2 > 0 ? row.original.Harga_Jual2 : row.original.Harga_Jual1) }}
-                </span>
-                <div v-if="!isLoading && row.original.Harga_Jual2 > 0" class="flex items-center gap-1.5">
-                  <span class="relative text-[10px] text-slate-400 font-bold px-1 shrink-0 break-all leading-tight mt-0.5">
-                    {{ formatCurrency(row.original.Harga_Jual1) }}
-                    <span class="absolute inset-x-0 top-1/2 h-[1.5px] bg-red-500 transform -rotate-[10deg] opacity-80 rounded-full"></span>
-                  </span>
-                  <span class="bg-red-50 text-red-600 text-[8px] font-black px-1.5 py-0.5 rounded-md leading-none border border-red-100/50 mt-0.5">
-                    -{{ Math.round(((row.original.Harga_Jual1 - row.original.Harga_Jual2) / row.original.Harga_Jual1) * 100) }}%
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div v-if="isAdmin && !isLoading" class="absolute bottom-5 right-5 z-20">
-            <button type="button" @click.stop="toggleDropdown(row.id)" class="size-9 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:bg-bejo-600 hover:text-white transition-all">
-              <Icon icon="lucide:more-vertical" class="size-5" />
-            </button>
-            <div v-show="activeDropdownId === row.id" class="absolute right-0 bottom-11 z-[100] min-w-[180px] bg-white p-1.5 shadow-2xl border border-slate-200 rounded-xl animate-in slide-in-from-bottom-2 duration-200">
-              <button @click="updateStatusTransaksi(row.original, 'Terjual')" v-if="row.original.Status_Transaksi.includes('Jual') && row.original.Status_Properti != 'Terjual'" class="admin-dropdown-item hover:bg-emerald-50 hover:text-emerald-600"><Icon icon="lucide:badge-check" class="size-4" /> Sudah Terjual</button>
-              <button @click="updateStatusTransaksi(row.original, 'Tersewa')" v-if="row.original.Status_Transaksi.includes('Sewa') && row.original.Status_Properti != 'Tersewa'" class="admin-dropdown-item hover:bg-emerald-50 hover:text-emerald-600"><Icon icon="lucide:key" class="size-4" /> Sudah Tersewa</button>
-              <button @click="updateStatusTransaksi(row.original, 'Tersedia')" v-if="row.original.Status_Transaksi.includes('Jual') && row.original.Status_Properti == 'Terjual'" class="admin-dropdown-item hover:bg-emerald-50 hover:text-emerald-600"><Icon icon="lucide:badge-check" class="size-4" /> Batal Terjual</button>
-              <button @click="updateStatusTransaksi(row.original, 'Tersedia')" v-if="row.original.Status_Transaksi.includes('Sewa') && row.original.Status_Properti == 'Tersewa'" class="admin-dropdown-item hover:bg-emerald-50 hover:text-emerald-600"><Icon icon="lucide:key" class="size-4" /> Batal Tersewa</button>
-              <hr class="my-1 border-slate-100" />
-              <button @click="$router.push('/admin/properti/edit/'+row.original.Slug)" class="admin-dropdown-item hover:bg-bejo-50 hover:text-bejo-600"><Icon icon="lucide:pencil" class="size-4" /> Edit</button>
-              <button @click="deleteProduct(row.original)" class="admin-dropdown-item text-red-500 hover:bg-red-50"><Icon icon="lucide:trash-2" class="size-4" /> Hapus</button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <template v-if="isLoading">
+        <ProductCard v-for="i in 6" :key="i" :product="{}" is-loading />
+      </template>
+      <template v-else>
+        <ProductCard 
+          v-for="row in table.getRowModel().rows" 
+          :key="row.id" 
+          :product="row.original" 
+          :is-admin="isAdmin"
+          :active-dropdown-id="activeDropdownId"
+          @toggle-dropdown="toggleDropdown"
+          @update-status="updateStatusTransaksi"
+          @delete="deleteProduct"
+          @edit="(slug) => $router.push(isAdmin ? `/admin/properti/edit/${slug}` : `/detail/${slug}`)"
+        />
+      </template>
     </div>
 
     <div class="flex flex-col sm:flex-row justify-between items-center mt-10 gap-4 pt-6">
@@ -243,6 +89,7 @@ import { onMounted, ref, nextTick, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import api from '@/services/axios'
+import ProductCard from '@/components/ProductCard.vue'
 import { useVueTable, getCoreRowModel, getPaginationRowModel, getSortedRowModel, getFilteredRowModel, type SortingState } from '@tanstack/vue-table'
 import { confirm, success, fail } from '@/utils/sweet-alert'
 

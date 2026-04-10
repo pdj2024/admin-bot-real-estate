@@ -18,10 +18,12 @@ const router = createRouter({
     // Guest
     {
       path: '/',
-      redirect: '/katalog',
+      name: 'Beranda',
       meta: {
+        title: 'Beranda',
         requiresAuth: false
-      }
+      },
+      component: () => import('@/views/guest/beranda/index.vue')
     },
     {
       path: '/katalog',
@@ -49,6 +51,24 @@ const router = createRouter({
         requiresAuth: false
       },
       component: () => import('@/views/guest/simulasi-kpr/index.vue')
+    },
+    {
+      path: '/tentang-kami',
+      name: 'Tentang Kami',
+      meta: {
+        title: 'Tentang Kami',
+        requiresAuth: false
+      },
+      component: () => import('@/views/guest/tentang-kami/index.vue')
+    },
+    {
+      path: '/kontak',
+      name: 'Kontak',
+      meta: {
+        title: 'Kontak',
+        requiresAuth: false
+      },
+      component: () => import('@/views/guest/kontak/index.vue')
     },
 
 

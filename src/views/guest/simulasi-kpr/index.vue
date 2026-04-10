@@ -2,6 +2,12 @@
   <GuestLayout>
     <div class="mb-10 print:hidden space-y-8">
       
+      <nav class="flex items-center gap-2 text-[10px] sm:text-xs text-slate-500 mb-4 uppercase tracking-widest font-semibold">
+        <RouterLink to="/" class="hover:text-bejo-600 transition-colors">Beranda</RouterLink>
+        <Icon icon="lucide:chevron-right" class="size-3" />
+        <span class="text-slate-800">Simulasi KPR</span>
+      </nav>
+
       <!-- Hero Section -->
       <div class="relative overflow-hidden rounded-[2.5rem] bg-slate-900 mt-4 h-72 sm:h-80 lg:h-96 shadow-2xl flex items-center justify-center border border-slate-800">
         <!-- Dekorasi Background -->
