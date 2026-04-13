@@ -22,6 +22,7 @@ interface Chat {
   Send_Status: string
   No_Penawaran: string
   Receiver_Ids: string[]
+  Media_Url?: string
 }
 
 const props = defineProps<{
@@ -30,6 +31,8 @@ const props = defineProps<{
   idx: number
   lastMessageId: string
 }>()
+
+const emit = defineEmits(['imageLoaded'])
 
 const isMe = computed(() => {
   const role = (props.chat.Tipe_User || '').toLowerCase()
@@ -142,7 +145,7 @@ watch(
       </span>
     </div>
 
-    <div v-if="chat.Message.includes('_X7#mQ9!vW2_')" class="w-full my-6 flex justify-center px-4">
+    <div v-if="(chat.Message || '').includes('_X7#mQ9!vW2_')" class="w-full my-6 flex justify-center px-4">
       <div class="flex flex-col items-center justify-center text-center px-6 py-2.5 bg-slate-50/80 backdrop-blur-md border border-slate-100 rounded-2xl shadow-sm max-w-[85%] transition-all hover:bg-white hover:shadow-md group">
         <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 opacity-70 group-hover:opacity-100 transition-opacity">
           {{ new Date(chat.Sent_At).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }}
@@ -161,13 +164,12 @@ watch(
       </div>
 
       <div class="flex flex-col max-w-[85%] md:max-w-[70%]" :class="isMe ? 'items-end' : 'items-start'">
-        <div v-if="!chat.Message.includes('_X7#mQ9!vW2_')" class="px-3 py-2 md:px-5 md:py-3.5 rounded-2xl text-[13px] md:text-sm relative transition-all duration-300 hover:shadow-xl" :class="[bubbleStyle, isMe ? 'hover:translate-x-1' : 'hover:-translate-x-1']">
-          <div v-if="chat.Id_Paket != null || chat.Message.includes('_data:image/')" class="mb-3 overflow-hidden rounded-xl border border-black/5 shadow-inner bg-slate-50/50">
-            <img v-if="imageUrl || chat.Message.includes('_data:image/')" :src="chat.Message.includes('_data:image/') ? 'data:image/' + chat.Message.split('_data:image/')[1] : imageUrl" class="w-full h-auto object-cover max-h-72 hover:scale-105 transition-transform duration-500 cursor-pointer" />
+        <div v-if="!(chat.Message || '').includes('_X7#mQ9!vW2_')" class="px-3 py-2 md:px-5 md:py-3.5 rounded-2xl text-[13px] md:text-sm relative transition-all duration-300 hover:shadow-xl" :class="[bubbleStyle, isMe ? 'hover:translate-x-1' : 'hover:-translate-x-1']">
+          <div v-if="chat.Id_Paket != null || chat.Media_Url || (chat.Message || '').includes('_data:image')" class="mb-3 overflow-hidden rounded-xl border border-black/5 shadow-inner bg-slate-50/50">
+            <img v-if="imageUrl || chat.Media_Url" :src="imageUrl || chat.Media_Url" @load="$emit('imageLoaded')" class="w-full h-auto object-cover max-h-72 hover:scale-105 transition-transform duration-500 cursor-pointer" />
+            <img v-else-if="(chat.Message || '').includes('_data:image/')" :src="(chat.Message || '').includes('_data:image/') ? 'data:image/' + (chat.Message || '').split('_data:image/')[1] : imageUrl" @load="$emit('imageLoaded')" class="w-full h-auto object-cover max-h-72 hover:scale-105 transition-transform duration-500 cursor-pointer" />
           </div>
-
-          <span v-if="chat.Message" class="block break-words leading-relaxed tracking-tight" v-html="formatMessage(chat.Message.includes('_data:image/') ? chat.Message.split('_data:image/')[0] : chat.Message)"></span>
-
+          <span v-if="chat.Message" class="block break-words leading-relaxed tracking-tight" v-html="formatMessage((chat.Message || '').includes('_data:image/') ? (chat.Message || '').split('_data:image/')[0] : chat.Message || '')"></span>
           <div v-if="chat.Tipe_User === 'admin' && chat.Sender_Id === 'adm_bot'" class="ai-indicator mt-3 pt-2 border-t border-amber-200/40 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-amber-700">
             <div class="size-4 bg-amber-500 rounded-md flex items-center justify-center text-white">
               <Icon icon="lucide:bot" class="size-3" />
@@ -187,7 +189,7 @@ watch(
         </div>
       </div>
 
-      <div v-if="!isCustomer && !chat.Message.includes('_X7#mQ9!vW2_')" class="hidden md:flex items-end flex-shrink-0 mb-1 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+      <div v-if="!isCustomer && !(chat.Message || '').includes('_X7#mQ9!vW2_')" class="hidden md:flex items-end flex-shrink-0 mb-1 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
         <div v-if="chat.Tipe_User === 'admin' && chat.Sender_Id != 'adm_bot'" class="avatar-admin relative flex items-center justify-center rounded-xl size-8 bg-gradient-to-br from-cyan-400 to-cyan-500 text-white border-2 border-white shadow-lg shadow-cyan-500/20">
           <Icon icon="lucide:headset" class="size-4" />
         </div>
@@ -195,7 +197,7 @@ watch(
       </div>
     </div>
 
-    <div v-if="chat.Message_Id == props.lastMessageId" class="w-full my-6 flex items-center justify-center relative">
+    <div v-if="chat.Message_Id == props.lastMessageId && idx < chats.length - 1" class="w-full my-6 flex items-center justify-center relative">
       <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-red-200/50 border-dashed"></div></div>
       <span class="relative px-4 py-1 bg-red-50 text-red-500 border border-red-100 rounded-full text-[10px] font-bold shadow-sm uppercase tracking-wider"> Pesan Belum Terbaca </span>
     </div>

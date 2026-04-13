@@ -66,7 +66,8 @@
 
       <!-- Title -->
       <h6 class="text-xl text-slate-900 font-black transition-colors line-clamp-2 mb-2 leading-tight" :class="isLoading ? 'text-transparent bg-slate-200 animate-pulse rounded w-full' : 'group-hover:text-bejo-600'">
-        <RouterLink v-if="!isLoading" :to="targetUrl" class="before:absolute before:inset-0">{{ product.Nama_Produk }}</RouterLink>
+        <RouterLink v-if="!isLoading && !disableRouting" :to="targetUrl" class="before:absolute before:inset-0">{{ product.Nama_Produk }}</RouterLink>
+        <div v-else-if="!isLoading && disableRouting" class="before:absolute before:inset-0">{{ product.Nama_Produk }}</div>
         <span v-else>Memuat Nama Katalog Properti Terbaru</span>
       </h6>
 
@@ -198,10 +199,12 @@ const props = withDefaults(defineProps<{
   isLoading?: boolean
   isAdmin?: boolean
   activeDropdownId?: string | null
+  disableRouting?: boolean
 }>(), {
   isLoading: false,
   isAdmin: false,
-  activeDropdownId: null
+  activeDropdownId: null,
+  disableRouting: false
 })
 
 const emit = defineEmits(['toggleDropdown', 'updateStatus', 'delete', 'edit', 'click'])

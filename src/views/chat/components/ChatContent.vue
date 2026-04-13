@@ -18,6 +18,7 @@ import bgChatDark from '@/assets/images/background-chat-dark.png'
 
 import simplebar from 'simplebar-vue'
 import Filter from './Filter.vue'
+import ProductCard from '@/components/ProductCard.vue'
 import { type Catalogue, type CalendarEvent, type Appointment, type Chat, type PreviewImage, calendarEvents } from './data'
 import { type TakeOverPayload } from './SideBar.vue'
 
@@ -41,6 +42,7 @@ const isMobile = ref(false)
 const changeUsername = ref(false)
 const sendChatContent = ref('')
 const isSendingImage = ref(false)
+const searchKatalog = ref('')
 
 const username = defineModel<string>('username')
 // const catalogues = ref<Catalogue[]>(catalogueData)
@@ -134,9 +136,165 @@ const calendarOptions = computed<CalendarOptions>(() => ({
 }))
 
 const closeEtalase = () => {
-  openEtalase.value = !openEtalase
+  openEtalase.value = !openEtalase.value
   if (openFilter.value == true) {
-    openFilter.value = !openFilter
+    openFilter.value = !openFilter.value
+  }
+}
+
+const handleOpenEtalase = () => {
+  openEtalase.value = !openEtalase.value
+  if (openEtalase.value) {
+    openAppointment.value = false
+    openTukarCS.value = false
+    openMenu.value = false
+  }
+}
+
+const handleOpenAppointment = () => {
+  openAppointment.value = !openAppointment.value
+  if (openAppointment.value) {
+    openEtalase.value = false
+    openTukarCS.value = false
+    openMenu.value = false
+  }
+}
+
+const handleOpenTukarCS = () => {
+  openTukarCS.value = !openTukarCS.value
+  if (openTukarCS.value) {
+    openEtalase.value = false
+    openAppointment.value = false
+    openMenu.value = false
+  }
+}
+
+const products = ref<any[]>([])
+const isLoadingProducts = ref(false)
+const filteredProducts = computed(() => {
+  if (!searchKatalog.value) return products.value
+  const query = searchKatalog.value.toLowerCase()
+  return products.value.filter((p) => p.Nama_Produk?.toLowerCase().includes(query) || p.Slug?.toLowerCase().includes(query))
+})
+
+const fetchProducts = async () => {
+  if (products.value.length > 0) return
+  isLoadingProducts.value = true
+  try {
+    const { data } = await api.get('/api/realEstate/getAll', {
+      headers: { 'X-Jenis-User': 'Admin' }
+    })
+    products.value = data.Data
+  } catch (err) {
+    console.error('Fetch products error:', err)
+  } finally {
+    isLoadingProducts.value = false
+  }
+}
+
+watch(openEtalase, (newVal) => {
+  if (newVal) fetchProducts()
+})
+
+const sendProduct = async (product: any) => {
+  if (isSendingImage.value) return
+  isSendingImage.value = true
+
+  const config = { headers: { 'X-Jenis-User': 'admin' } }
+
+  try {
+    const formatCurrency = (val: number) => {
+      if (!val) return 'Rp 0'
+      return 'Rp ' + val.toLocaleString('id-ID')
+    }
+
+    let template = `🏡 *${product.Nama_Produk}*\n`
+
+    const category = product.Tipe
+    const location = product.Area && product.Area.length ? product.Area.join(', ') : ''
+    template += `🏷️ ${category} | ${location}\n`
+
+    const isSewa = product.Status_Transaksi && product.Status_Transaksi.includes('Sewa')
+    const hargaType = isSewa ? 'Sewa' : 'Jual'
+    let hargaValue = 0
+
+    if(hargaType == "Sewa"){
+      hargaValue = product.Harga_Sewa2 == 0 ? product.Harga_Sewa1 : product.Harga_Sewa1
+    }else{
+      hargaValue = product.Harga_Jual2 == 0 ? product.Harga_Jual1 : product.Harga_Jual1
+    }
+
+    template += `💰 *Harga ${hargaType}: ${formatCurrency(hargaValue)}*\n\n`
+
+    template += `📐 LT: ${product.Luas_Tanah || 0} m² | LB: ${product.Luas_Bangunan || 0} m²\n`
+    template += `🛌 KT: ${product.Kamar_Tidur || 0} | 🚿 KM: ${product.Kamar_Mandi || 0}\n`
+
+    if (product.Akses_Jalan && product.Akses_Jalan.length) {
+      template += `🛣️ Akses: ${product.Akses_Jalan.join(' | ')}\n`
+    }
+
+    template += `📄 Legalitas: ${product.Jenis_Sertifikat || 'SHM'}\n`
+
+    template += `\n📝 *Deskripsi:*\n${product.Keterangan || ''}`
+
+    let urlMedia = ''
+
+    if (product.MediaUrls && product.MediaUrls.length > 0) {
+      const idMedia = product.MediaUrls[0].Id_Media || ''
+
+      if (idMedia.includes('base64,')) {
+        urlMedia = idMedia
+      } else if (idMedia.startsWith('http')) {
+        try {
+          const response = await fetch(idMedia)
+          const blob = await response.blob()
+
+          urlMedia = await new Promise((resolve) => {
+            const reader = new FileReader()
+            reader.onloadend = () => resolve(reader.result)
+            reader.readAsDataURL(blob)
+          })
+        } catch (error) {
+          console.error('Gagal mengambil gambar dari URL:', error)
+          urlMedia = idMedia
+        }
+      } else {
+        urlMedia = idMedia
+      }
+    }
+
+    if (!urlMedia) {
+      fail('Properti tidak memiliki gambar base64 valid')
+      return
+    }
+
+    let formattedPhone = props.phoneNumber.replace(/\D/g, '')
+    if (formattedPhone.startsWith('0')) {
+      formattedPhone = '62' + formattedPhone.substring(1)
+    }
+
+    const payload = {
+      PhoneNumber: formattedPhone + '@s.whatsapp.net',
+      FileUrl: urlMedia,
+      FileName: `product_${product.No_Id || 'image'}.jpg`,
+      MimeType: 'image/jpeg',
+      Caption: template
+    }
+
+    await api.post('/api/waha/send-image', payload, config)
+
+    // Create the ID for media cloud fetching (ex: prd_2_media_130)
+    const mediaName = product.File_Image?.[0] || 'img'
+    const idPaket = `${product.No_Id}_${mediaName}`
+
+    // Now just send the template text with idPaket handling the image fetching
+    await sendChat('system_image', template, undefined, undefined, idPaket, urlMedia)
+    openEtalase.value = false
+  } catch (err) {
+    console.error('Terjadi kesalahan saat mengirim gambar properti:', err)
+    fail('Gagal mengirim properti ke WhatsApp')
+  } finally {
+    isSendingImage.value = false
   }
 }
 
@@ -193,20 +351,24 @@ const scrollToBottom = async () => {
   await nextTick()
 
   setTimeout(() => {
-    if (chatContainer.value) {
-      const scrollElement = chatContainer.value.getScrollElement?.() || chatContainer.value.$el?.querySelector('.simplebar-content-wrapper')
+    // Gunakan ID spesifik agar tidak terbentur dengan simplebar di komponen lain (misal sidebar)
+    const scrollElement = document.querySelector('#chat-scroll-container .simplebar-content-wrapper')
 
-      if (scrollElement) {
-        scrollElement.scrollTo({
-          top: scrollElement.scrollHeight + 2000,
-          behavior: 'auto'
-        })
-      }
+    if (scrollElement) {
+      requestAnimationFrame(() => {
+        if (typeof scrollElement.scrollTo === 'function') {
+          scrollElement.scrollTo({
+            top: scrollElement.scrollHeight + 5000,
+            behavior: 'auto'
+          })
+        }
+        scrollElement.scrollTop = scrollElement.scrollHeight + 5000
+      })
     }
   }, 100)
 }
 
-const sendChat = async (type: string, url?: string, targetRoomId?: string, targetPhone?: string) => {
+const sendChat = async (type: string, url?: string, targetRoomId?: string, targetPhone?: string, idPaket?: string, mediaUrl?: string) => {
   if (!type.includes('system') && !sendChatContent.value.trim()) return
 
   const activeRoomId = targetRoomId || props.roomId
@@ -263,7 +425,8 @@ const sendChat = async (type: string, url?: string, targetRoomId?: string, targe
       Room_Id: activeRoomId,
       User_Ids: currentUserIds,
       Username_User: username,
-      Telepon_User: myId
+      Telepon_User: myId,
+      Media_Url: mediaUrl || ''
     } as unknown as Chat)
 
     sendChatContent.value = ''
@@ -295,7 +458,7 @@ const sendChat = async (type: string, url?: string, targetRoomId?: string, targe
           Sender_Id: myId,
           Tipe_User: role,
           Message: type == 'system_image' ? url : messageText,
-          Id_Paket: null,
+          Id_Paket: idPaket || null,
           No_Pesanan: null,
           No_Penawaran: null,
           Send_Status: 'send'
@@ -313,7 +476,6 @@ const sendChat = async (type: string, url?: string, targetRoomId?: string, targe
     if (type === 'system_keluar' && isCurrentActiveRoom) {
       emit('clearRoom')
     }
-
   } catch (err: any) {
     console.error('Gagal mengirim chat:', err.response?.data || err.message)
 
@@ -337,13 +499,13 @@ const takeOverChat = async (status: boolean, phoneNumber?: string, roomId?: stri
       },
       { headers: { 'X-Jenis-User': 'admin' } }
     )
-    
+
     if (status == false) {
       await sendChat('system_masuk', undefined, targetRoom, targetPhone)
     } else {
       await sendChat('system_keluar', undefined, targetRoom, targetPhone)
     }
-    
+
     emit('chatTakeOver')
   } catch (err: any) {
     const errorMessage = err.response?.data?.Message || ''
@@ -522,13 +684,13 @@ watch(
 
       for (const [idx, item] of newVal.entries()) {
         try {
-          await takeOverChat(item.status, item.phoneNumber, item.room) 
+          await takeOverChat(item.status, item.phoneNumber, item.room)
           takeOverSuccess.push(item.room)
         } catch (err: any) {
           console.error(`Gagal batch untuk room ${item.room}:`, err)
         }
       }
-      
+
       emit('takeOverStatus', takeOverSuccess)
     }
   },
@@ -578,14 +740,8 @@ onUpdated(() => {
               <h6 class="text-slate-900 font-black text-xs md:text-xl tracking-tight capitalize leading-tight truncate max-w-[120px] md:max-w-none flex-1 min-w-0">
                 <template v-if="changeUsername">
                   <div class="flex items-center gap-2">
-                    <input 
-                      v-model="username" 
-                      placeholder="Ubah nama..." 
-                      class="bg-slate-50 border-transparent rounded-xl py-1.5 px-3 text-sm font-bold focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500 focus:bg-white transition-all outline-none border border-slate-100 shadow-inner" 
-                    />
-                    <button @click="saveUsername" class="text-[10px] font-black uppercase tracking-widest bg-bejo-500 text-white px-4 py-2 mt-0.5 rounded-lg shadow-lg shadow-bejo-500/20 hover:scale-105 active:scale-95 transition-all">
-                      Simpan
-                    </button>
+                    <input v-model="username" placeholder="Ubah nama..." class="bg-slate-50 border-transparent rounded-xl py-1.5 px-3 text-sm font-bold focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500 focus:bg-white transition-all outline-none border border-slate-100 shadow-inner" />
+                    <button @click="saveUsername" class="text-[10px] font-black uppercase tracking-widest bg-bejo-500 text-white px-4 py-2 mt-0.5 rounded-lg shadow-lg shadow-bejo-500/20 hover:scale-105 active:scale-95 transition-all">Simpan</button>
                   </div>
                 </template>
                 <template v-else>
@@ -669,12 +825,12 @@ onUpdated(() => {
       <input type="file" ref="addMoreInput" multiple hidden accept="image/*" @change="handleAddMore" />
     </div>
 
-    <simplebar ref="chatContainer" class="flex-grow bg-slate-50 relative h-0 container bg-chat/5" :class="{ hidden: isPreviewMode }">
+    <simplebar id="chat-scroll-container" ref="chatContainer" class="flex-grow bg-slate-50 relative h-0 container bg-chat/5" :class="{ hidden: isPreviewMode }">
       <!-- Ambient Overlay for Chat Board -->
       <div class="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent pointer-events-none"></div>
-      
+
       <div class="relative z-10 flex flex-col gap-6 px-4 py-6 sm:px-8 sm:py-10">
-        <ChatBubble v-for="(chat, i) in chats" :key="i" :idx="i" :chat="chat" :chats="chats" :lastMessageId="props.lastMessageId" />
+        <ChatBubble v-for="(chat, i) in chats" :key="i" :idx="i" :chat="chat" :chats="chats" :lastMessageId="props.lastMessageId" @imageLoaded="scrollToBottom" />
       </div>
     </simplebar>
 
@@ -682,23 +838,32 @@ onUpdated(() => {
       <div v-if="activeTab != 'bot'" class="flex gap-1 md:gap-4 items-center bg-slate-50 p-1.5 md:p-2.5 pl-2 md:pl-4 rounded-xl md:rounded-[1.5rem] border border-transparent focus-within:border-bejo-500/20 focus-within:bg-white focus-within:ring-8 focus-within:ring-bejo-500/5 focus-within:shadow-xl focus-within:shadow-bejo-500/5 transition-all duration-300">
         <div class="relative" ref="dropdownRef">
           <button @click.stop="openMenu = !openMenu" class="size-9 md:size-11 rounded-xl md:rounded-2xl bg-white border border-slate-100 text-slate-400 hover:text-bejo-600 hover:border-bejo-100 hover:shadow-lg hover:shadow-bejo-500/10 transition-all duration-300 flex items-center justify-center">
-            <Icon icon="lucide:plus" class="size-5 md:size-6 transition-transform duration-300" :class="{'rotate-45': openMenu}"></Icon>
+            <Icon icon="lucide:plus" class="size-5 md:size-6 transition-transform duration-300" :class="{ 'rotate-45': openMenu }"></Icon>
           </button>
 
           <div v-if="openMenu" class="absolute bottom-[calc(100%+16px)] left-0 min-w-[220px] bg-white shadow-2xl shadow-slate-900/10 border border-slate-50 rounded-[1.5rem] p-2 z-50 transform origin-bottom-left transition-all animate-fade-in-up">
-            <button @click.stop="openEtalase = !openEtalase" class="flex items-center gap-3.5 w-full text-left px-4 py-3 hover:bg-bejo-50 text-slate-600 hover:text-bejo-600 rounded-xl text-[13px] font-bold transition-all">
+            <button
+              @click.stop="handleOpenEtalase"
+              class="flex items-center gap-3.5 w-full text-left px-4 py-3 hover:bg-bejo-50 text-slate-600 hover:text-bejo-600 rounded-xl text-[13px] font-bold transition-all"
+            >
               <div class="size-8 rounded-lg bg-bejo-100 flex items-center justify-center text-bejo-600">
                 <Icon icon="lucide:blocks" class="size-4" />
               </div>
               <span>Pilih Etalase</span>
             </button>
-            <button @click.stop="openAppointment = !openAppointment" class="flex items-center gap-3.5 w-full text-left px-4 py-3 hover:bg-bejo-50 text-slate-600 hover:text-bejo-600 rounded-xl text-[13px] font-bold transition-all">
+            <button
+              @click.stop="handleOpenAppointment"
+              class="flex items-center gap-3.5 w-full text-left px-4 py-3 hover:bg-bejo-50 text-slate-600 hover:text-bejo-600 rounded-xl text-[13px] font-bold transition-all"
+            >
               <div class="size-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
                 <Icon icon="lucide:calendar-plus" class="size-4" />
               </div>
               <span>Buat Janji Temu</span>
             </button>
-            <button @click.stop="openTukarCS = !openTukarCS" class="flex items-center gap-3.5 w-full text-left px-4 py-3 hover:bg-bejo-50 text-slate-600 hover:text-bejo-600 rounded-xl text-[13px] font-bold transition-all">
+            <button
+              @click.stop="handleOpenTukarCS"
+              class="flex items-center gap-3.5 w-full text-left px-4 py-3 hover:bg-bejo-50 text-slate-600 hover:text-bejo-600 rounded-xl text-[13px] font-bold transition-all"
+            >
               <div class="size-8 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600">
                 <Icon icon="lucide:repeat" class="size-4" />
               </div>
@@ -714,13 +879,7 @@ onUpdated(() => {
           </div>
         </div>
 
-        <input 
-          type="text" 
-          v-model="sendChatContent" 
-          @keyup.enter="sendChat('text')" 
-          class="flex-1 min-w-0 bg-transparent border-none focus:ring-0 text-sm font-bold text-slate-700 placeholder:text-slate-400 placeholder:font-bold px-1 md:px-2" 
-          placeholder="Tulis pesan..." 
-        />
+        <input type="text" v-model="sendChatContent" @keyup.enter="sendChat('text')" class="flex-1 min-w-0 bg-transparent border-none focus:ring-0 text-sm font-bold text-slate-700 placeholder:text-slate-400 placeholder:font-bold px-1 md:px-2" placeholder="Tulis pesan..." />
 
         <div ref="containerRef" class="flex-shrink-0 flex items-center gap-1 md:gap-3 relative">
           <label class="size-8 md:size-11 rounded-xl md:rounded-2xl bg-white border border-slate-100 text-slate-400 flex-shrink-0 flex items-center justify-center cursor-pointer hover:bg-slate-50 transition-all">
@@ -742,9 +901,21 @@ onUpdated(() => {
         </button>
       </div>
 
-      <div v-if="openEtalase || openAppointment" ref="etalaseRef" class="z-[60] fixed bottom-20 left-1/2 -translate-x-1/2 w-[95vw] sm:w-[850px] sm:bottom-24 sm:right-5 sm:left-auto sm:translate-x-0 bg-white/95 backdrop-blur-md rounded-[2rem] shadow-2xl p-6 border border-slate-50">
+      <div v-if="openEtalase || openAppointment" ref="etalaseRef" class="z-[60] fixed bottom-20 left-1/2 -translate-x-1/2 w-[95vw] sm:w-[1000px] xl:w-[1100px] sm:bottom-24 sm:right-5 sm:left-auto sm:translate-x-0 bg-white/95 backdrop-blur-md rounded-[2rem] shadow-2xl p-6 border border-slate-50 overflow-hidden">
+        
+        <!-- Loading Overlay Send Product -->
+        <div v-if="isSendingImage && openEtalase" class="absolute inset-0 z-[100] bg-white/70 backdrop-blur-sm flex flex-col items-center justify-center animate-fade-in-up">
+          <div class="size-16 relative mb-4">
+            <div class="absolute inset-0 border-4 border-slate-100 rounded-full"></div>
+            <div class="absolute inset-0 border-4 border-bejo-500 rounded-full border-t-transparent animate-spin"></div>
+            <Icon icon="lucide:send" class="size-6 text-bejo-500 absolute top-1/2 left-1/2 -translate-x-[40%] -translate-y-[40%]" />
+          </div>
+          <h4 class="text-lg font-black text-slate-800 tracking-tight">Harap Tunggu...</h4>
+          <p class="text-xs font-bold text-slate-500 text-center max-w-[250px] mt-1.5 leading-relaxed">Sistem sedang merangkai dan mengirim detail properti ke pelanggan Anda.</p>
+        </div>
+
         <div class="flex items-center justify-between mb-6 px-2">
-          <h4 v-if="openEtalase" class="text-slate-900 font-extrabold text-lg tracking-tight">Pilih Etalase Premium</h4>
+          <h4 v-if="openEtalase" class="text-slate-900 font-extrabold text-lg tracking-tight">Pilih Etalase</h4>
           <h4 v-if="openAppointment" class="text-slate-900 font-extrabold text-lg tracking-tight">Pilih Unit Properti</h4>
           <button v-if="openEtalase" @click.stop="closeEtalase" class="size-9 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all">
             <Icon icon="lucide:x" class="size-5" />
@@ -757,7 +928,7 @@ onUpdated(() => {
         <div class="px-2">
           <div class="relative mb-4 group">
             <Icon icon="lucide:search" class="size-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-bejo-500 transition-colors" />
-            <input type="text" placeholder="Cari unit atau katalog..." class="w-full bg-slate-50 border-transparent rounded-2xl py-3 pl-11 pr-4 text-sm font-bold focus:bg-white focus:ring-8 focus:ring-bejo-500/5 focus:border-bejo-500 transition-all duration-300 shadow-inner" />
+            <input type="text" v-model="searchKatalog" placeholder="Cari unit atau katalog..." class="w-full bg-slate-50 border-transparent rounded-2xl py-3 pl-11 pr-4 text-sm font-bold focus:bg-white focus:ring-8 focus:ring-bejo-500/5 focus:border-bejo-500 transition-all duration-300 shadow-inner" />
           </div>
           <div class="flex flex-wrap items-center gap-3 mb-6">
             <button type="button" @click.stop="openFilter = !openFilter" class="btn-trigger-filter w-full flex justify-center items-center py-3 bg-bejo-50 hover:bg-bejo-100 text-bejo-600 rounded-2xl text-[13px] font-black uppercase tracking-widest transition-all shadow-sm"><Icon icon="lucide:sliders-horizontal" class="size-4 mr-2" /> Filter Pencarian</button>
@@ -765,61 +936,11 @@ onUpdated(() => {
         </div>
 
         <div class="overflow-y-auto max-h-[55vh] px-2 custom-scrollbar">
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
-            <!-- <div class="card overflow-hidden group border border-default-100 shadow-sm hover:shadow-md transition-all duration-300" v-for="(item, idx) in catalogues" :key="idx">
-              <div class="card-body p-0 relative overflow-hidden h-36">
-                <img :src="item.image" alt="rumah" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                <span class="absolute top-2 start-2 bg-primary text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase"> TERSEDIA </span>
-              </div>
-              <div class="p-3">
-                <div class="flex items-center gap-1 text-primary mb-1">
-                  <Icon icon="lucide:map-pin" class="size-3"></Icon>
-                  <span class="text-[10px] font-medium uppercase tracking-wider">{{ item.location || 'Surabaya' }}</span>
-                </div>
-                <div>
-                  <p class="text-xs font-semibold text-default-400 leading-none mb-1">Tipe {{ item.type || '45' }}</p>
-                </div>
-                <h6 class="text-base text-default-800 font-bold hover:text-primary transition-all mb-3 line-clamp-1">
-                  <RouterLink to="">{{ item.name }}</RouterLink>
-                </h6>
-                <div class="grid grid-cols-3 gap-y-2 gap-x-1 border-y border-default-100 py-2 mb-3">
-                  <div class="flex items-center gap-1">
-                    <Icon icon="lucide:maximize" class="size-3 text-default-400"></Icon><span class="text-[9px] text-default-600">LB {{ item.buildingSize }}m²</span>
-                  </div>
-                  <div class="flex items-center gap-1">
-                    <Icon icon="lucide:layers" class="size-3 text-default-400"></Icon><span class="text-[9px] text-default-600">LT {{ item.landSize }}m²</span>
-                  </div>
-                  <div class="flex items-center gap-1">
-                    <Icon icon="lucide:layers" class="size-3 text-default-400"></Icon><span class="text-[9px] text-default-600">Uk {{ item.floors }} Lt</span>
-                  </div>
-                  <div class="flex items-center gap-1">
-                    <Icon icon="lucide:bed" class="size-3 text-default-400"></Icon><span class="text-[9px] text-default-600">{{ item.bedrooms }} KT</span>
-                  </div>
-                  <div class="flex items-center gap-1">
-                    <Icon icon="lucide:bath" class="size-3 text-default-400"></Icon><span class="text-[9px] text-default-600">{{ item.bathrooms }} WC</span>
-                  </div>
-                  <div class="flex items-center gap-1">
-                    <Icon icon="lucide:car" class="size-3 text-default-400"></Icon><span class="text-[9px] text-default-600">{{ item.car }} CP</span>
-                  </div>
-                </div>
-                <div class="flex items-end justify-between gap-2">
-                  <div>
-                    <p class="text-[9px] text-default-400 leading-none mb-1">Mulai Dari</p>
-                    <h5 class="text-sm font-bold text-primary">{{ item.price }}</h5>
-                  </div>
-                  <div class="hs-dropdown relative inline-flex">
-                    <button v-if="openEtalase" type="button" @click="openEtalase = false" class="btn bg-green-500 text-white h-7 inline-flex items-center gap-2 hover:bg-green-600 px-3 rounded-lg">
-                      <Icon icon="lucide:send" class="size-3.5" />
-                      <span class="text-xs">Kirim</span>
-                    </button>
-                    <button v-if="openAppointment" type="button" @click.stop="openAppointmentForm = !openAppointmentForm" class="btn bg-green-500 text-white h-7 inline-flex items-center gap-2 hover:bg-green-600 px-3 rounded-lg">
-                      <Icon icon="lucide:clipboard-clock" class="size-3.5" />
-                      <span class="text-xs">Pilih</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div> -->
+          <div v-if="isLoadingProducts" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
+            <ProductCard v-for="i in 3" :key="'loading-' + i" :product="{}" is-loading />
+          </div>
+          <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
+            <ProductCard v-for="product in filteredProducts" :key="product.No_Id" :product="product" :disable-routing="true" @click="sendProduct(product)" />
           </div>
         </div>
       </div>
@@ -840,9 +961,7 @@ onUpdated(() => {
             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block"> Nama Sales </label>
             <input type="text" placeholder="Nama sales..." class="w-full bg-slate-50 border-slate-100 rounded-xl py-2.5 px-4 text-sm font-bold focus:bg-white focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500 transition-all shadow-inner" />
           </div>
-          <button @click.stop="openSchedule = !openSchedule" class="w-full py-3 bg-bejo-50 hover:bg-bejo-100 text-bejo-600 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 border border-bejo-200">
-            <Icon icon="lucide:calendar" class="size-4" /> Pilih Jadwal
-          </button>
+          <button @click.stop="openSchedule = !openSchedule" class="w-full py-3 bg-bejo-50 hover:bg-bejo-100 text-bejo-600 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 border border-bejo-200"><Icon icon="lucide:calendar" class="size-4" /> Pilih Jadwal</button>
           <div>
             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block"> Waktu </label>
             <input type="time" class="w-full bg-slate-50 border-slate-100 rounded-xl py-2.5 px-4 text-sm font-bold focus:bg-white focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500 transition-all shadow-inner" />
@@ -912,13 +1031,12 @@ onUpdated(() => {
         </div>
       </div>
 
-      <Filter v-if="openFilter" @close="openFilter = false" ref="filterRef" class="z-[75] bg-white sm:shadow-none fixed left-1/2 bottom-12 -translate-x-1/2 w-[92vw] max-w-[390px] sm:fixed sm:right-20 sm:bottom-10 sm:left-auto sm:translate-x-0 sm:max-w-[700px] rounded-2xl shadow-xl p-4 max-h-[80vh] overflow-y-auto custom-scrollbar" />
+      <Filter v-if="openFilter" @close="openFilter = false" ref="filterRef" class="z-[75] bg-white sm:shadow-none fixed left-1/2 bottom-20 -translate-x-1/2 w-[95vw] sm:w-[850px] sm:fixed sm:right-5 sm:bottom-24 sm:left-auto sm:translate-x-0 rounded-[2rem] shadow-2xl p-6 border border-slate-50 max-h-[85vh] overflow-y-auto custom-scrollbar" />
     </div>
   </div>
 
   <div v-else class="relative w-full h-full min-h-[500px] flex flex-col items-center justify-center bg-slate-50/50 overflow-hidden">
-    
-    <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 24px 24px;"></div>
+    <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 24px 24px"></div>
 
     <button @click="openSidebar" class="absolute top-5 left-5 lg:hidden h-10 px-5 gap-2 rounded-xl flex justify-center items-center bg-white border border-slate-200 shadow-sm hover:shadow-md hover:bg-slate-50 font-semibold text-slate-700 transition-all z-10 active:scale-95">
       <Icon icon="lucide:menu" class="size-4"></Icon>
@@ -926,14 +1044,13 @@ onUpdated(() => {
     </button>
 
     <div class="flex flex-col items-center justify-center text-center p-10 bg-white/80 backdrop-blur-sm rounded-[2rem] border border-white shadow-xl shadow-slate-200/50 max-w-sm z-10 transform transition-all hover:scale-[1.02]">
-      
       <div class="relative mb-6">
         <div class="absolute inset-0 bg-bejo-400 rounded-full blur-xl opacity-20 animate-pulse"></div>
         <div class="size-24 bg-gradient-to-br from-bejo-50 to-bejo-100 border-4 border-white text-bejo-600 rounded-full flex items-center justify-center shadow-lg relative">
           <Icon icon="lucide:message-square-dashed" class="size-10 stroke-[1.5]"></Icon>
         </div>
       </div>
-      
+
       <h4 class="text-xl font-extrabold text-slate-800 tracking-tight">Mulai Percakapan</h4>
       <p class="text-sm text-slate-500 mt-2.5 leading-relaxed font-medium">Pilih pelanggan dari daftar di samping untuk mulai melihat dan membalas pesan.</p>
     </div>
@@ -957,6 +1074,19 @@ onUpdated(() => {
   background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), v-bind(bgLightUrl);
   background-size: cover;
   background-position: center;
+}
+
+:deep(.simplebar-scrollbar::before) {
+  background-color: var(--color-slate-400, #94a3b8) !important;
+  opacity: 0.8 !important;
+  border-radius: 10px !important;
+  width: 6px !important;
+  right: 2px !important;
+}
+
+:deep(.simplebar-track.simplebar-vertical) {
+  width: 10px !important;
+  background-color: transparent !important;
 }
 
 .minimal-scrollbar {

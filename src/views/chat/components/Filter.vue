@@ -1,93 +1,114 @@
 <template>
-  <div class="card sm:border-none max-h-[85vh] sm:max-h-none">
-    <div class="card-body p-4 sm:p-5">
-      <div class="flex items-center justify-between mb-4 px-2">
-        <h4 class="text-default-900 font-bold text-base">Filter</h4>
+  <div ref="filterRef">
+    <div class="flex items-center justify-between mb-6">
+      <h6 class="text-lg font-bold text-slate-800 tracking-tight uppercase">Filter</h6>
+      <button class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest hover:text-red-500 transition-colors underline underline-offset-4 decoration-transparent hover:decoration-red-500">Hapus Semua</button>
+    </div>
 
-        <button @click.stop="emit('close')" class="text-default-400 hover:text-default-900 transition-all">
-          <Icon icon="lucide:x" class="size-5" />
-        </button>
-      </div>
+    <div class="space-y-5">
+      <div class="hs-accordion-group space-y-4">
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 items-start">
-        <div class="space-y-3 sm:space-y-6">
-          <div>
-            <label class="block text-xs font-semibold text-default-600 mb-1.5 sm:mb-2">Kata Kunci</label>
-            <div class="relative">
-              <span class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-                <Icon icon="lucide:search" class="size-4 text-default-400" />
-              </span>
-              <input type="text" class="py-2 sm:py-2.5 ps-10 pe-4 block w-full bg-default-50 border-default-200 rounded-xl text-sm focus:border-primary focus:ring-primary outline-none" placeholder="Cari properti..." />
+        <div class="hs-accordion active" id="chat-filter-lokasi">
+          <button class="hs-accordion-toggle flex items-center justify-between w-full font-semibold text-xs uppercase tracking-widest text-slate-500 pb-2 border-b border-slate-200" aria-expanded="true" aria-controls="chat-content-lokasi">
+            Lokasi
+            <Icon icon="lucide:chevron-down" class="size-4 hs-accordion-active:rotate-180 transition-transform" />
+          </button>
+          <div id="chat-content-lokasi" class="hs-accordion-content w-full overflow-hidden transition-[height] duration-300">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4">
+              <label v-for="loc in ['DKI Jakarta', 'Jawa Barat', 'Jawa Tengah', 'Jawa Timur', 'Bali']" :key="loc" class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" class="size-4 rounded border-slate-300 text-bejo-600 focus:ring-bejo-500/20 transition-all cursor-pointer" />
+                <span class="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors">{{ loc }}</span>
+              </label>
             </div>
           </div>
+        </div>
 
-          <div class="hs-accordion active" id="filter-lokasi">
-            <button class="hs-accordion-toggle py-2 sm:py-3 inline-flex items-center justify-between gap-x-3 w-full font-bold text-start text-default-800 text-sm" aria-expanded="true">Lokasi</button>
-            <div class="hs-accordion-content w-full overflow-hidden transition-[height] duration-300" role="region">
-              <div class="py-2 grid grid-cols-2 sm:flex sm:flex-col gap-2 sm:gap-3">
-                <label v-for="loc in ['Semua', 'DKI Jakarta', 'Jawa Barat', 'Jawa Tengah', 'Jawa Timur', 'Bali']" :key="loc" class="flex gap-2 sm:gap-3 items-center cursor-pointer">
-                  <input type="checkbox" class="rounded bg-white border-blue-500 text-bejo-500 focus:ring-blue-200 form-checkbox transition-all size-4" />
-                  <span class="text-xs sm:text-sm text-default-700 whitespace-nowrap">
-                    {{ loc }}
-                  </span>
-                </label>
+        <div class="hs-accordion active" id="chat-filter-harga">
+          <button class="hs-accordion-toggle flex items-center justify-between w-full font-semibold text-xs uppercase tracking-widest text-slate-500 pb-2 border-b border-slate-200 mt-2" aria-expanded="true" aria-controls="chat-content-harga">
+            Rentang Harga
+            <Icon icon="lucide:chevron-down" class="size-4 hs-accordion-active:rotate-180 transition-transform" />
+          </button>
+          <div id="chat-content-harga" class="hs-accordion-content w-full overflow-hidden transition-[height] duration-300">
+            <div class="flex items-center gap-2 pt-4">
+              <div class="relative flex-1">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-400">Rp</span>
+                <input type="number" class="w-full pl-8 pr-2 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-bejo-500 focus:bg-white transition-all focus:ring-4 focus:ring-bejo-500/10" placeholder="Min" />
+              </div>
+              <span class="text-slate-300 font-bold">-</span>
+              <div class="relative flex-1">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-400">Rp</span>
+                <input type="number" class="w-full pl-8 pr-2 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-bejo-500 focus:bg-white transition-all focus:ring-4 focus:ring-bejo-500/10" placeholder="Max" />
               </div>
             </div>
           </div>
         </div>
 
-        <div class="space-y-3 sm:space-y-6 sm:border-s sm:ps-6 border-default-100">
-          <div class="hs-accordion active" id="filter-fasilitas">
-            <button class="hs-accordion-toggle py-2 sm:py-3 inline-flex items-center justify-between gap-x-3 w-full font-bold text-start text-default-800 text-sm" aria-expanded="true">Fasilitas Minimal</button>
-            <div class="hs-accordion-content w-full overflow-hidden transition-[height] duration-300" role="region">
-              <div class="py-2 sm:py-4 grid grid-cols-2 gap-2 sm:gap-3">
-                <div
-                  v-for="fasil in [
-                    { i: 'bed', p: 'Kamar' },
-                    { i: 'bath', p: 'Toilet' },
-                    { i: 'car', p: 'Parkir' },
-                    { i: 'layers', p: 'Lantai' }
-                  ]"
-                  :key="fasil.p"
-                  class="relative"
-                >
-                  <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-                    <Icon :icon="'lucide:' + fasil.i" class="text-default-400 text-sm sm:text-base" />
-                  </div>
-                  <input type="number" class="py-1.5 sm:py-2 ps-9 sm:ps-10 pe-3 block w-full bg-default-50 border-default-200 rounded-lg text-xs sm:text-sm focus:border-primary focus:ring-primary" :placeholder="fasil.p" />
-                </div>
+        <div class="hs-accordion active" id="chat-filter-spek">
+          <button class="hs-accordion-toggle flex items-center justify-between w-full font-semibold text-xs uppercase tracking-widest text-slate-500 pb-2 border-b border-slate-200 mt-2" aria-expanded="true" aria-controls="chat-content-spek">
+            Kebutuhan Ruang
+            <Icon icon="lucide:chevron-down" class="size-4 hs-accordion-active:rotate-180 transition-transform" />
+          </button>
+          <div id="chat-content-spek" class="hs-accordion-content w-full overflow-hidden transition-[height] duration-300">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4">
+              <div class="relative">
+                <Icon icon="lucide:bed" class="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
+                <input type="text" class="w-full pl-9 pr-2 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:border-bejo-500 focus:bg-white transition-all outline-none focus:ring-4 focus:ring-bejo-500/10" placeholder="Kamar" />
               </div>
-            </div>
-          </div>
-
-          <div class="hs-accordion active" id="filter-harga">
-            <button class="hs-accordion-toggle py-2 sm:py-3 inline-flex items-center justify-between gap-x-3 w-full font-bold text-start text-default-800 text-sm" aria-expanded="true">Rentang Harga</button>
-            <div class="hs-accordion-content w-full overflow-hidden transition-[height] duration-300" role="region">
-              <div class="py-2 sm:py-4 flex items-center gap-2">
-                <div class="relative flex-1">
-                  <span class="absolute inset-y-0 start-0 flex items-center ps-2 sm:ps-3 pointer-events-none text-[10px] sm:text-xs text-default-400">Rp</span>
-                  <input type="number" class="py-1.5 sm:py-2 ps-7 sm:ps-9 pe-2 block w-full bg-default-50 border-default-200 rounded-lg text-xs sm:text-sm focus:border-primary focus:ring-primary" placeholder="Min" />
-                </div>
-                <span class="text-default-400 text-xs">—</span>
-                <div class="relative flex-1">
-                  <span class="absolute inset-y-0 start-0 flex items-center ps-2 sm:ps-3 pointer-events-none text-[10px] sm:text-xs text-default-400">Rp</span>
-                  <input type="number" class="py-1.5 sm:py-2 ps-7 sm:ps-9 pe-2 block w-full bg-default-50 border-default-200 rounded-lg text-xs sm:text-sm focus:border-primary focus:ring-primary" placeholder="Max" />
-                </div>
+              <div class="relative">
+                <Icon icon="lucide:bath" class="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
+                <input type="text" class="w-full pl-9 pr-2 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:border-bejo-500 focus:bg-white transition-all outline-none focus:ring-4 focus:ring-bejo-500/10" placeholder="Toilet" />
+              </div>
+              <div class="relative">
+                <Icon icon="lucide:car" class="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
+                <input type="text" class="w-full pl-9 pr-2 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:border-bejo-500 focus:bg-white transition-all outline-none focus:ring-4 focus:ring-bejo-500/10" placeholder="Parkir" />
+              </div>
+              <div class="relative">
+                <Icon icon="lucide:layers" class="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
+                <input type="text" class="w-full pl-9 pr-2 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:border-bejo-500 focus:bg-white transition-all outline-none focus:ring-4 focus:ring-bejo-500/10" placeholder="Lantai" />
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div class="mt-4 sm:mt-8 border-t border-default-100 pt-4">
-        <button @click.stop="emit('close')" class="w-full py-2.5 sm:py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/30 hover:bg-primary-600 transition-all text-sm sm:text-base">Terapkan Filter</button>
       </div>
+    </div>
+
+    <div class="mt-8 pt-6 border-t border-slate-200">
+      <button class="w-full py-3 bg-bejo-600 text-white rounded-xl font-bold hover:bg-bejo-700 transition-colors uppercase tracking-widest text-xs border border-transparent shadow shadow-bejo-600/20 hover:shadow-lg hover:shadow-bejo-600/40 active:scale-95">
+        Terapkan Filter
+      </button>
+
+      <button @click="$emit('close')" class="sm:hidden w-full mt-3 py-2 text-[10px] font-semibold text-slate-400 uppercase tracking-widest hover:text-slate-700">
+        Tutup Filter
+      </button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 const emit = defineEmits(['close'])
+const filterRef = ref<HTMLElement | null>(null)
+
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as HTMLElement
+  if (filterRef.value) {
+    const isTrigger = target.closest('button') && target.innerText.includes('Filter')
+    if (!filterRef.value.contains(target) && !isTrigger) {
+      emit('close')
+    }
+  }
+}
+
+onMounted(() => {
+  setTimeout(() => {
+    document.addEventListener('click', handleClickOutside)
+  }, 10)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 </script>

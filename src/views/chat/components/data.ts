@@ -97,6 +97,7 @@ export interface Chat {
   List_Id_Message_Sent?: string[]
   Count_Status_Received?: number
   List_Id_Message_Received?: string[]
+  Media_Url?: string
 }
 
 export interface PreviewImage {
