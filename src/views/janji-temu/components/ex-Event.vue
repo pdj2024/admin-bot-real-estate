@@ -173,14 +173,14 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
 import { confirmCancel, confirm, success, fail } from '@/utils/sweet-alert'
-import { onBeforeUnmount, onMounted, ref, computed, nextTick } from 'vue'
+import { onBeforeUnmount, onMounted, ref, computed } from 'vue'
 import FullCalendar from '@fullcalendar/vue3'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import listPlugin from '@fullcalendar/list'
 import interactionPlugin from '@fullcalendar/interaction'
 import idLocale from '@fullcalendar/core/locales/id'
-import type { CalendarOptions, EventClickArg, CalendarApi, EventApi } from '@fullcalendar/core'
+import type { CalendarOptions, EventClickArg } from '@fullcalendar/core'
 import type { DateClickArg } from '@fullcalendar/interaction'
 
 const rescheduleFormRef = ref<HTMLElement | null>(null)

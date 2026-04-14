@@ -4,7 +4,6 @@ import Vertical from '@/layouts/vertical.vue'
 import Filter from './components/Filter.vue'
 import Table from './components/Table.vue'
 import Modal from './components/Modal.vue'
-import { Icon } from '@iconify/vue'
 
 interface Sales {
   No_Id: string
@@ -24,11 +23,6 @@ const refreshTable = () => {
   if (tableRef.value?.fetchData) {
     tableRef.value.fetchData()
   }
-}
-
-const openAddModal = () => {
-  selectedSales.value = null
-  isModalOpen.value = true
 }
 
 const openEditModal = (sales: any) => {

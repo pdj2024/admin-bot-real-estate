@@ -76,6 +76,7 @@ const toggleStatus = async (item: Customer) => {
     emit('success')
   } catch (err) {
     fail(`Gagal mengubah status ${item.Nama_Display}`)
+    console.log(err)
   }
 }
 

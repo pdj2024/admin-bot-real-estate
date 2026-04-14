@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { Icon } from '@iconify/vue'
 import api from '@/services/axios'
 import { useVueTable, FlexRender, getCoreRowModel, getPaginationRowModel, getSortedRowModel, getFilteredRowModel } from '@tanstack/vue-table'
@@ -54,6 +54,7 @@ const toggleStatus = async (item: Admin) => {
     emit('success')
   } catch (err) {
     fail(`Gagal mengubah status ${item.Nama_User}`)
+    console.log(err)
   }
 }
 

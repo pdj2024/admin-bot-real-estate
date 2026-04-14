@@ -12,7 +12,6 @@ const photos = ref<File[]>([])
 const extensionsPhotos = ref<string[]>([])
 const previewPhotos = ref<MediaItem[]>([])
 const selectedFiles = ref<File[]>([])
-const mediaIdsLists = ref<string[]>([])
 const provinces = ref<Province[]>([])
 const cities = ref<City[]>([])
 const dropdownProvinceRef = ref<HTMLElement | null>(null)
@@ -23,9 +22,6 @@ const isLoading = ref(false)
 const openType = ref(false)
 const openProvince = ref(false)
 const openCity = ref(false)
-const selectedProvinceId = ref('')
-const selectedProvinceName = ref('')
-const selectedCityName = ref('')
 const searchProvince = ref('')
 const searchCity = ref('')
 const searchType = ref('')
@@ -94,12 +90,6 @@ interface Province {
 interface City {
   id: string
   name: string
-}
-
-interface UploadTicket {
-  ExpireAt: Date
-  ObjectName: string
-  UploadUrl: string
 }
 
 interface MediaItem {
@@ -270,20 +260,11 @@ const getCity = async (id: string | number) => {
   }
 }
 
-const handleCancel = () => {
-  emit('update:showModal', false)
-  emit('close')
-}
-
 const addAkses = () => {
   if (newAkses.value.trim()) {
     form.value.Akses_Jalan.push(newAkses.value.trim())
     newAkses.value = ''
   }
-}
-
-const removeAkses = (index: number) => {
-  form.value.Akses_Jalan.splice(index, 1)
 }
 
 // --- Logic Foto ---

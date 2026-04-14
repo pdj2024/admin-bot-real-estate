@@ -58,12 +58,4 @@ watchEffect(() => {
     didAutoOpen.value = true
   }
 })
-
-const toggleOpen = () => {
-  if (isTopLevel.value && props.setOpenMenuKey) {
-    props.setOpenMenuKey(isOpen.value ? null : props.item.key)
-  } else {
-    localOpen.value = !localOpen.value
-  }
-}
 </script>

@@ -17,7 +17,7 @@ const props = defineProps<{
   appointmentOpen?: boolean
 }>()
 
-const calendarColClass = computed(() => (props.appointmentOpen ? 'lg:col-span-3' : 'lg:col-span-4'))
+const calendarColClass = computed(() => (props.appointmentOpen ? 'xl:col-span-3' : 'xl:col-span-4'))
 const fullCalendarRef = ref<InstanceType<typeof FullCalendar> | null>(null)
 
 const calendarOptions = computed<CalendarOptions>(() => ({
@@ -53,8 +53,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <div :class="calendarColClass" class="transition-all duration-500">
-    <div class="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/50">
+  <div :class="calendarColClass" class="h-full transition-all duration-500 min-h-0">
+    <div class="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/50 h-full overflow-hidden">
       <FullCalendar ref="fullCalendarRef" :options="calendarOptions" />
     </div>
   </div>

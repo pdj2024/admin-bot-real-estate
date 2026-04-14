@@ -99,7 +99,6 @@
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import { RouterLink } from 'vue-router'
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 interface Props {

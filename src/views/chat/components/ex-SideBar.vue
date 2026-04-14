@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { Icon } from '@iconify/vue'
-import simplebar from 'simplebar-vue'
 import { RouterLink } from 'vue-router'
 import api from '@/services/axios'
 const audio = new Audio('/sounds/Ding.mp3')
-import { fail, success } from '@/utils/sweet-alert'
 
 const chatsBot = ref<Chat[]>([])
 const chatsAktif = ref<Chat[]>([])
@@ -23,6 +21,8 @@ const contextMenuPosition = ref({ x: 0, y: 0 })
 const selectedChatForMenu = ref<Chat | null>(null)
 const selectedChatIdx = ref<number>(-1)
 const selectedChatGroup = ref<string>('')
+const unreadCounts = ref<Record<string, number>>({})
+const firstUnreadIds = ref<Record<string, string>>({})
 
 const selectedBotChats = ref<Chat[]>([])
 const selectedAssignChats = ref<Chat[]>([])
@@ -50,6 +50,22 @@ const selectChat = (idx: number, group: string, id: string, idLawan: string, use
   }
   closeSidebar()
   selectedChatId.value = id
+
+  // Capture first unread message ID for the divider
+  const firstUnreadId = firstUnreadIds.value[id] || ''
+  emit('lastMessageId', firstUnreadId)
+
+  // Reset unread count for the selected chat
+  unreadCounts.value[id] = 0
+  firstUnreadIds.value[id] = ''
+  
+  const updateCountInList = (list: Chat[]) => {
+    const item = list.find(c => c.Room_Id === id)
+    if (item) item.New_Message_Count = 0
+  }
+  updateCountInList(chatsBot.value)
+  updateCountInList(chatsAktif.value)
+  updateCountInList(chatsAssign.value)
 }
 
 const props = withDefaults(
@@ -143,6 +159,12 @@ const fetchData = async (tab: 'bot' | 'chat_saya') => {
 
       data.Data.forEach((item: any) => {
         if (item.Username_Lawan !== '' && item.Telepon_User_Lawan !== '') {
+          // Merge local unread counts
+          if (unreadCounts.value[item.Room_Id] !== undefined) {
+            item.New_Message_Count = unreadCounts.value[item.Room_Id]
+          } else {
+            unreadCounts.value[item.Room_Id] = item.New_Message_Count || 0
+          }
           chatsBot.value.push(item)
           roomIdsBot.value.push(item.Room_Id)
         }
@@ -159,12 +181,24 @@ const fetchData = async (tab: 'bot' | 'chat_saya') => {
 
       resHandle.data.Data.forEach((item: any) => {
         if (item.Username_Lawan !== '' && item.Telepon_User_Lawan !== '') {
+          // Merge local unread counts
+          if (unreadCounts.value[item.Room_Id] !== undefined) {
+            item.New_Message_Count = unreadCounts.value[item.Room_Id]
+          } else {
+            unreadCounts.value[item.Room_Id] = item.New_Message_Count || 0
+          }
           chatsAssign.value.push(item)
           roomIdsAssign.value.push(item.Room_Id)
         }
       })
       resBalasan.data.Data.forEach((item: any, idx: number) => {
         if (item.Username_Lawan !== '' && (item.Telepon_User_Lawan !== '' || idx == 0)) {
+          // Merge local unread counts
+          if (unreadCounts.value[item.Room_Id] !== undefined) {
+            item.New_Message_Count = unreadCounts.value[item.Room_Id]
+          } else {
+            unreadCounts.value[item.Room_Id] = item.New_Message_Count || 0
+          }
           chatsAktif.value.push(item)
           roomIdsAktif.value.push(item.Room_Id)
         }
@@ -197,17 +231,30 @@ const forceRefreshToUntukSaya = () => {
 const refreshChatList = (data?: any) => {
   if (data && data.roomId) {
     const formattedDate = data.sentAt ? data.sentAt.substring(0, 19) : ''
+    const roomIdStr = String(data.roomId)
+
+    // Update unread logic
+    const isRoomOpen = roomIdStr === String(props.activeRoomId)
+    const isSystemReply = data.tipeUser === 'admin' || data.tipeUser === 'ai'
+
+    if (isRoomOpen || isSystemReply) {
+      unreadCounts.value[roomIdStr] = 0
+      firstUnreadIds.value[roomIdStr] = ''
+    } else {
+      // Catch the first unread message ID when the bubble starts appearing
+      if (!unreadCounts.value[roomIdStr] || unreadCounts.value[roomIdStr] === 0) {
+        firstUnreadIds.value[roomIdStr] = data.messageId
+      }
+      unreadCounts.value[roomIdStr] = (unreadCounts.value[roomIdStr] || 0) + 1
+    }
 
     const updateLocalChat = (chatList: any[]) => {
-      const index = chatList.findIndex((c) => c.Room_Id === String(data.roomId))
+      const index = chatList.findIndex((c) => String(c.Room_Id) === roomIdStr)
 
       if (index !== -1) {
-        const currentCount = chatList[index].New_Message_Count || 0
-
         chatList[index].Last_Message = data.message
         chatList[index].Last_Message_At = formattedDate
-        chatList[index].New_Message_Count = currentCount + 1
-        chatList[index].Last_Id_Message_Viewed = data.messageId
+        chatList[index].New_Message_Count = unreadCounts.value[roomIdStr]
 
         const updatedChat = chatList.splice(index, 1)[0]
         chatList.unshift(updatedChat)
@@ -217,14 +264,15 @@ const refreshChatList = (data?: any) => {
     updateLocalChat(chatsBot.value)
     updateLocalChat(chatsAktif.value)
     updateLocalChat(chatsAssign.value)
-    if (data.roomId != selectedChatId) {
+
+    if (roomIdStr !== String(props.activeRoomId) && !isSystemReply) {
       audio.play().catch((error) => {
         console.error('Gagal memutar audio:', error)
       })
     }
 
-    if (!chatsBot.value.some((chat) => chat.Room_Id === data.roomId) && !roomIdsBot.value.includes(data.roomId)) {
-      roomIdsBot.value.push(data.roomId)
+    if (!chatsBot.value.some((chat) => String(chat.Room_Id) === roomIdStr) && !roomIdsBot.value.includes(roomIdStr)) {
+      roomIdsBot.value.push(roomIdStr)
       emit('allRoomIds', roomIdsBot.value, roomIdsAktif.value, roomIdsAssign.value)
     }
   }
@@ -242,7 +290,7 @@ const formatMessage = (msg: string, maxLength: number = 50) => {
     processedMsg = '🖼️ Foto'
   }
 
-  let finalMsg = processedMsg.length > maxLength ? processedMsg.slice(0, maxLength) + '...' : processedMsg
+  const finalMsg = processedMsg.length > maxLength ? processedMsg.slice(0, maxLength) + '...' : processedMsg
 
   return finalMsg
     .replace(/</g, '&lt;')
@@ -461,19 +509,35 @@ defineExpose({
     <div id="hs-offcanvas-left" class="hs-overlay [--auto-close:lg] lg:block lg:translate-x-0 lg:static lg:end-auto lg:bottom-0 w-80 hs-overlay-open:translate-x-0 -translate-x-full transition-all duration-300 transform h-full hidden fixed top-0 start-0 bottom-0 overflow-hidden z-60" role="dialog" tabindex="-1" aria-label="Sidebar">
       <div class="card rounded-none shadow-none relative flex flex-row h-full max-h-full overflow-hidden divide-x divide-slate-200 bg-white">
         <div class="w-80 flex flex-col h-full">
-          <div class="p-4 border-b border-slate-100 shrink-0 bg-white">
-            <div class="relative">
-              <input type="text" class="ps-11 block w-full text-sm border-slate-200 rounded-full focus:border-bejo-500 focus:ring-bejo-500" placeholder="Search for...." />
+          <div class="px-6 py-5 border-b border-slate-50 shrink-0 bg-white">
+            <div class="relative group">
+              <input 
+                type="text" 
+                class="ps-11 block w-full text-sm bg-slate-50 border-transparent rounded-2xl focus:border-bejo-500 focus:ring-4 focus:ring-bejo-500/10 focus:bg-white transition-all duration-300" 
+                placeholder="Cari obrolan..." 
+              />
               <div class="absolute inset-y-0 start-0 flex items-center ps-4">
-                <Icon icon="lucide:search" class="size-4 text-slate-400"></Icon>
+                <Icon icon="lucide:search" class="size-4 text-slate-400 group-focus-within:text-bejo-500 transition-colors"></Icon>
               </div>
             </div>
           </div>
 
           <div class="flex flex-col flex-grow min-h-0 overflow-hidden">
-            <div class="px-4 py-3 flex gap-2 sticky top-0 bg-white/95 backdrop-blur-sm z-20 border-b border-slate-100 shadow-sm shrink-0">
-              <button @click="changeTab('bot')" class="px-5 py-1.5 text-xs font-semibold rounded-full transition-all duration-200 border" :class="activeTab === 'bot' ? 'bg-bejo-100 text-default-800 border-transparent' : 'bg-transparent border-slate-200 text-slate-500 hover:bg-slate-50'">Bot</button>
-              <button @click="changeTab('chat_saya')" class="px-5 py-1.5 text-xs font-semibold rounded-full transition-all duration-200 border" :class="activeTab === 'chat_saya' ? 'bg-bejo-100 text-default-800 border-transparent' : 'bg-transparent border-slate-200 text-slate-500 hover:bg-slate-50'">Chat Saya</button>
+            <div class="px-6 py-4 flex gap-3 sticky top-0 bg-white/95 backdrop-blur-md z-20 border-b border-slate-50 shrink-0">
+              <button 
+                @click="changeTab('bot')" 
+                class="flex-1 px-4 py-2 text-[11px] font-black uppercase tracking-widest rounded-xl transition-all duration-300 border shadow-sm" 
+                :class="activeTab === 'bot' ? 'bg-bejo-500 text-white border-bejo-500 shadow-bejo-500/20' : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50 hover:text-slate-600'"
+              >
+                Bot
+              </button>
+              <button 
+                @click="changeTab('chat_saya')" 
+                class="flex-1 px-4 py-2 text-[11px] font-black uppercase tracking-widest rounded-xl transition-all duration-300 border shadow-sm" 
+                :class="activeTab === 'chat_saya' ? 'bg-bejo-500 text-white border-bejo-500 shadow-bejo-500/20' : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50 hover:text-slate-600'"
+              >
+                Chat Saya
+              </button>
             </div>
 
             <div v-if="isLoading" class="flex flex-col items-center justify-center py-10 text-slate-400">
@@ -498,46 +562,46 @@ defineExpose({
                 </div>
 
                 <div v-if="chatsBot.length > 0" class="flex-1 min-h-0 overflow-y-auto overscroll-contain [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 hover:[&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full">
-                  <RouterLink
-                    to=""
-                    v-for="(chat, idx) in chatsBot"
-                    :key="'bot-' + idx"
-                    @click="selectChat(idx, 'bot', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan || chat.Room_Name, chat.Telepon_User_Lawan)"
-                    @contextmenu.prevent="openContextMenu($event, chat, 'bot', idx)"
-                    class="relative flex items-center gap-3 py-3.5 px-4 bg-white cursor-pointer border-b border-slate-100 hover:bg-slate-50 transition-all duration-200 group"
-                    :class="{
-                      'bg-bejo-50/40 before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-amber-500 before:rounded-r-full': selectedBotChats.includes(chat)
-                    }"
-                  >
-                    <div class="shrink-0 flex items-center pr-1">
-                      <input @click.stop type="checkbox" :value="chat" v-model="selectedBotChats" class="w-4 h-4 rounded border-slate-300 text-bejo-600 focus:ring-bejo-500 cursor-pointer transition-all" />
-                    </div>
-
-                    <div class="relative shrink-0 flex items-center justify-center font-bold rounded-full size-11 bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600 border border-white shadow-sm group-hover:shadow transition-all">
-                      <span v-if="chat.Room_Name" class="text-sm">{{ chat.Username_Lawan?.charAt(0).toUpperCase() || chat.Room_Name?.charAt(0).toUpperCase() }}</span>
-                      <Icon v-else icon="lucide:user" class="size-5 text-slate-400" />
-                      <span class="absolute bottom-0.5 right-0.5 w-3 h-3 border-2 border-white rounded-full bg-green-500"></span>
-                    </div>
-
-                    <div class="flex-grow min-w-0">
-                      <div class="flex items-center justify-between gap-2 mb-1">
-                        <h6 class="text-slate-800 font-bold text-sm truncate capitalize">
-                          {{ chat.Username_Lawan?.toLowerCase() || chat.Room_Name?.toLowerCase() }}
-                        </h6>
-                        <small class="text-[10px] text-slate-400 shrink-0 font-semibold">
-                          {{ getDateChat(chat.Last_Message_At) }}
-                        </small>
+                    <RouterLink
+                      to=""
+                      v-for="(chat, idx) in chatsBot"
+                      :key="'bot-' + idx"
+                      @click="selectChat(idx, 'bot', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan || chat.Room_Name, chat.Telepon_User_Lawan)"
+                      @contextmenu.prevent="openContextMenu($event, chat, 'bot', idx)"
+                      class="relative flex items-center gap-4 py-4.5 px-6 bg-white cursor-pointer border-b border-slate-50 hover:bg-slate-50/80 transition-all duration-300 group"
+                      :class="{
+                        'bg-bejo-50/30 before:absolute before:inset-y-0 before:left-0 before:w-1.5 before:bg-bejo-500 before:rounded-r-full': selectedChatId === chat.Room_Id
+                      }"
+                    >
+                      <div class="shrink-0 flex items-center">
+                        <input @click.stop type="checkbox" :value="chat" v-model="selectedBotChats" class="size-4.5 rounded-lg border-slate-200 text-bejo-500 focus:ring-bejo-500/20 cursor-pointer transition-all" />
                       </div>
 
-                      <div class="flex items-center justify-between gap-2">
-                        <p class="text-xs truncate text-slate-500 leading-relaxed capitalize" v-html="formatMessage(chat.Last_Message.replace('_X7#mQ9!vW2_', ' '))"></p>
+                      <div class="relative shrink-0 flex items-center justify-center font-black rounded-2xl size-12 bg-gradient-to-br from-bejo-50 to-bejo-100/50 text-bejo-600 border border-white shadow-sm group-hover:scale-105 transition-all duration-300">
+                        <span v-if="chat.Username_Lawan || chat.Room_Name" class="text-sm tracking-tighter">{{ chat.Username_Lawan?.charAt(0).toUpperCase() || chat.Room_Name?.charAt(0).toUpperCase() }}</span>
+                        <Icon v-else icon="lucide:user" class="size-6 text-bejo-300" />
+                        <span class="absolute -bottom-1 -right-1 size-4 border-2 border-white rounded-full bg-green-500 shadow-sm shadow-green-500/20"></span>
+                      </div>
 
-                        <div v-if="chat.New_Message_Count! > 0" class="flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[9px] font-black text-white bg-red-500 rounded-full shrink-0 shadow-sm animate-pulse">
-                          {{ chat.New_Message_Count! > 99 ? '99+' : chat.New_Message_Count }}
+                      <div class="flex-grow min-w-0">
+                        <div class="flex items-center justify-between gap-2 mb-1">
+                          <h6 class="text-slate-900 font-black text-sm truncate tracking-tight">
+                            {{ chat.Username_Lawan || chat.Room_Name }}
+                          </h6>
+                          <span class="text-[9px] font-black text-slate-400 shrink-0 uppercase tracking-tighter">
+                            {{ getDateChat(chat.Last_Message_At) }}
+                          </span>
+                        </div>
+
+                        <div class="flex items-center justify-between gap-2">
+                          <p class="text-[11px] font-bold truncate text-slate-500 leading-none" v-html="formatMessage(chat.Last_Message.replace('_X7#mQ9!vW2_', ' '))"></p>
+
+                          <div v-if="chat.New_Message_Count! > 0" class="flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[9px] font-black text-white bg-red-500 rounded-full shrink-0 shadow-lg shadow-red-500/30 ring-2 ring-white animate-bounce-subtle">
+                            {{ chat.New_Message_Count! > 99 ? '99+' : chat.New_Message_Count }}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </RouterLink>
+                    </RouterLink>
                 </div>
               </div>
 
@@ -565,35 +629,35 @@ defineExpose({
                       :key="chat.Room_Id"
                       @click="selectChat(idx, 'chat_saya', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan || chat.Room_Name, chat.Telepon_User_Lawan)"
                       @contextmenu.prevent="openContextMenu($event, chat, 'assign', idx)"
-                      class="relative flex items-center gap-3 py-3.5 px-4 bg-white cursor-pointer border-b border-slate-100 hover:bg-slate-50 transition-all duration-200 group"
+                      class="relative flex items-center gap-4 py-4.5 px-6 bg-white cursor-pointer border-b border-slate-50 hover:bg-slate-50/80 transition-all duration-300 group"
                       :class="{
-                        'bg-bejo-50/40 before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-amber-500 before:rounded-r-full': selectedAssignChats.includes(chat)
+                        'bg-bejo-50/30 before:absolute before:inset-y-0 before:left-0 before:w-1.5 before:bg-bejo-500 before:rounded-r-full': selectedChatId === chat.Room_Id
                       }"
                     >
-                      <div class="shrink-0 flex items-center pr-1">
-                        <input @click.stop type="checkbox" :value="chat" v-model="selectedAssignChats" class="w-4 h-4 rounded border-slate-300 text-bejo-600 focus:ring-bejo-500 cursor-pointer transition-all" />
+                      <div class="shrink-0 flex items-center">
+                        <input @click.stop type="checkbox" :value="chat" v-model="selectedAssignChats" class="size-4.5 rounded-lg border-slate-200 text-bejo-500 focus:ring-bejo-500/20 cursor-pointer transition-all" />
                       </div>
 
-                      <div class="relative shrink-0 flex items-center justify-center font-bold rounded-full size-11 bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600 border border-white shadow-sm group-hover:shadow transition-all">
-                        <span v-if="chat.Username_Lawan" class="text-sm">{{ chat.Username_Lawan.charAt(0).toUpperCase() }}</span>
-                        <Icon v-else icon="lucide:user" class="size-5 text-slate-400" />
-                        <span class="absolute bottom-0.5 right-0.5 w-3 h-3 border-2 border-white rounded-full bg-green-500"></span>
+                      <div class="relative shrink-0 flex items-center justify-center font-black rounded-2xl size-12 bg-gradient-to-br from-slate-100 to-slate-200/50 text-slate-600 border border-white shadow-sm group-hover:scale-105 transition-all duration-300">
+                        <span v-if="chat.Username_Lawan" class="text-sm tracking-tighter">{{ chat.Username_Lawan.charAt(0).toUpperCase() }}</span>
+                        <Icon v-else icon="lucide:user" class="size-6 text-slate-300" />
+                        <span class="absolute -bottom-1 -right-1 size-4 border-2 border-white rounded-full bg-slate-300 shadow-sm"></span>
                       </div>
 
                       <div class="flex-grow min-w-0">
                         <div class="flex items-center justify-between gap-2 mb-1">
-                          <h6 class="text-slate-800 font-bold text-sm truncate capitalize">
-                            {{ chat.Username_Lawan?.toLowerCase() || chat.Room_Name?.toLowerCase() }}
+                          <h6 class="text-slate-900 font-black text-sm truncate tracking-tight">
+                            {{ chat.Username_Lawan || chat.Room_Name }}
                           </h6>
-                          <small class="text-[10px] text-slate-400 shrink-0 font-semibold">
+                          <span class="text-[9px] font-black text-slate-400 shrink-0 uppercase tracking-tighter">
                             {{ getDateChat(chat.Last_Message_At) }}
-                          </small>
+                          </span>
                         </div>
 
                         <div class="flex items-center justify-between gap-2">
-                          <p class="text-xs truncate text-slate-500 leading-relaxed capitalize" v-html="formatMessage(chat.Last_Message.replace('_X7#mQ9!vW2_', ' '))"></p>
+                          <p class="text-[11px] font-bold truncate text-slate-500 leading-none" v-html="formatMessage(chat.Last_Message.replace('_X7#mQ9!vW2_', ' '))"></p>
 
-                          <div v-if="chat.New_Message_Count! > 0" class="flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[9px] font-black text-white bg-red-500 rounded-full shrink-0 shadow-sm animate-pulse">
+                          <div v-if="chat.New_Message_Count! > 0" class="flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[9px] font-black text-white bg-red-500 rounded-full shrink-0 shadow-lg shadow-red-500/30 ring-2 ring-white animate-bounce-subtle">
                             {{ chat.New_Message_Count! > 99 ? '99+' : chat.New_Message_Count }}
                           </div>
                         </div>
@@ -622,35 +686,35 @@ defineExpose({
                       :key="'balasan-' + idx"
                       @click="selectChat(idx, 'chat_saya', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan || chat.Room_Name, chat.Telepon_User_Lawan)"
                       @contextmenu.prevent="openContextMenu($event, chat, 'aktif', idx)"
-                      class="relative flex items-center gap-3 py-3.5 px-4 bg-white cursor-pointer border-b border-slate-100 hover:bg-slate-50 transition-all duration-200 group"
+                      class="relative flex items-center gap-4 py-4.5 px-6 bg-white cursor-pointer border-b border-slate-50 hover:bg-slate-50/80 transition-all duration-300 group"
                       :class="{
-                        'bg-bejo-50/40 before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-amber-500 before:rounded-r-full': selectedActiveChats.includes(chat)
+                        'bg-bejo-50/30 before:absolute before:inset-y-0 before:left-0 before:w-1.5 before:bg-bejo-500 before:rounded-r-full': selectedChatId === chat.Room_Id
                       }"
                     >
-                      <div class="shrink-0 flex items-center pr-1">
-                        <input @click.stop type="checkbox" :value="chat" v-model="selectedActiveChats" class="w-4 h-4 rounded border-slate-300 text-bejo-600 focus:ring-bejo-500 cursor-pointer transition-all" />
+                      <div class="shrink-0 flex items-center">
+                        <input @click.stop type="checkbox" :value="chat" v-model="selectedActiveChats" class="size-4.5 rounded-lg border-slate-200 text-bejo-500 focus:ring-bejo-500/20 cursor-pointer transition-all" />
                       </div>
 
-                      <div class="relative shrink-0 flex items-center justify-center font-bold rounded-full size-11 bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600 border border-white shadow-sm group-hover:shadow transition-all">
-                        <span v-if="chat.Username_Lawan" class="text-sm">{{ chat.Username_Lawan.charAt(0).toUpperCase() }}</span>
-                        <Icon v-else icon="lucide:user" class="size-5 text-slate-400" />
-                        <span class="absolute bottom-0.5 right-0.5 w-3 h-3 border-2 border-white rounded-full bg-green-500"></span>
+                      <div class="relative shrink-0 flex items-center justify-center font-black rounded-2xl size-12 bg-gradient-to-br from-bejo-50 to-bejo-100/50 text-bejo-600 border border-white shadow-sm group-hover:scale-105 transition-all duration-300">
+                        <span v-if="chat.Username_Lawan" class="text-sm tracking-tighter">{{ chat.Username_Lawan.charAt(0).toUpperCase() }}</span>
+                        <Icon v-else icon="lucide:user" class="size-6 text-bejo-300" />
+                        <span class="absolute -bottom-1 -right-1 size-4 border-2 border-white rounded-full bg-green-500 shadow-sm shadow-green-500/20"></span>
                       </div>
 
                       <div class="flex-grow min-w-0">
                         <div class="flex items-center justify-between gap-2 mb-1">
-                          <h6 class="text-slate-800 font-bold text-sm truncate capitalize">
-                            {{ chat.Username_Lawan?.toLowerCase() || chat.Room_Name?.toLowerCase() }}
+                          <h6 class="text-slate-900 font-black text-sm truncate tracking-tight">
+                            {{ chat.Username_Lawan || chat.Room_Name }}
                           </h6>
-                          <small class="text-[10px] text-slate-400 shrink-0 font-semibold">
+                          <span class="text-[9px] font-black text-slate-400 shrink-0 uppercase tracking-tighter">
                             {{ getDateChat(chat.Last_Message_At) }}
-                          </small>
+                          </span>
                         </div>
 
                         <div class="flex items-center justify-between gap-2">
-                          <p class="text-xs truncate text-slate-500 leading-relaxed capitalize" v-html="formatMessage(chat.Last_Message.replace('_X7#mQ9!vW2_', ' '))"></p>
+                          <p class="text-[11px] font-bold truncate text-slate-500 leading-none" v-html="formatMessage(chat.Last_Message.replace('_X7#mQ9!vW2_', ' '))"></p>
 
-                          <div v-if="chat.New_Message_Count! > 0" class="flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[9px] font-black text-white bg-red-500 rounded-full shrink-0 shadow-sm animate-pulse">
+                          <div v-if="chat.New_Message_Count! > 0" class="flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[9px] font-black text-white bg-red-500 rounded-full shrink-0 shadow-lg shadow-red-500/30 ring-2 ring-white animate-bounce-subtle">
                             {{ chat.New_Message_Count! > 99 ? '99+' : chat.New_Message_Count }}
                           </div>
                         </div>

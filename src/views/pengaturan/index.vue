@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, watch, onMounted, computed, defineAsyncComponent } from 'vue'
-import PageTitle from '@/components/PageTitle.vue'
+import { ref, reactive, watch, onMounted, defineAsyncComponent } from 'vue'
 import Vertical from '@/layouts/vertical.vue'
 import { useLayout } from '@/stores/layout'
 import { useSettings } from '@/stores/settings'

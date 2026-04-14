@@ -47,8 +47,7 @@ const loadAppName = () => {
   }
 }
 
-watch(() => layout.sidenav.size, (newSize) => {
-  console.log('Size berubah, menjalankan loadAppName...');
+watch(() => layout.sidenav.size, () => {
   loadAppName();
 });
 

@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { Icon } from '@iconify/vue'
-import simplebar from 'simplebar-vue'
 import { RouterLink } from 'vue-router'
 import api from '@/services/axios'
 const audio = new Audio('/sounds/Ding.mp3')
-import { fail, success } from '@/utils/sweet-alert'
 
 const chatsBot = ref<Chat[]>([])
 const chatsAktif = ref<Chat[]>([])
@@ -292,7 +290,7 @@ const formatMessage = (msg: string, maxLength: number = 50) => {
     processedMsg = '🖼️ Foto'
   }
 
-  let finalMsg = processedMsg.length > maxLength ? processedMsg.slice(0, maxLength) + '...' : processedMsg
+  const finalMsg = processedMsg.length > maxLength ? processedMsg.slice(0, maxLength) + '...' : processedMsg
 
   return finalMsg
     .replace(/</g, '&lt;')

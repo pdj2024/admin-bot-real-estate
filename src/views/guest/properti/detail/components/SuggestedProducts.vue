@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Icon } from '@iconify/vue'
 import { useRouter } from 'vue-router'
 import type { Product } from '../index.vue'
 import ProductCard from '@/components/ProductCard.vue'
@@ -10,14 +9,6 @@ defineProps<{
 }>()
 
 const router = useRouter()
-
-const formatCurrency = (value: number) => {
-  if (value >= 1e12) return 'Rp ' + (value / 1e12).toLocaleString('id-ID', { maximumFractionDigits: 2 }) + ' T'
-  if (value >= 1e9) return 'Rp ' + (value / 1e9).toLocaleString('id-ID', { maximumFractionDigits: 2 }) + ' M'
-  if (value >= 1e6) return 'Rp ' + (value / 1e6).toLocaleString('id-ID', { maximumFractionDigits: 2 }) + ' Jt'
-  if (value >= 1e3) return 'Rp ' + (value / 1e3).toLocaleString('id-ID', { maximumFractionDigits: 2 }) + ' Rb'
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
-}
 
 const goToDetail = (slug: string) => {
   router.push(`/detail/${slug}`).then(() => {

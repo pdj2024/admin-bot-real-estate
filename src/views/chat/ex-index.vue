@@ -4,7 +4,6 @@ import api from '@/services/axios'
 import * as signalR from '@microsoft/signalr'
 
 import Vertical from '@/layouts/vertical.vue'
-import PageTitle from '@/components/PageTitle.vue'
 import ChatContent from './components/ChatContent.vue'
 import SideBar from './components/SideBar.vue'
 import { type TakeOverPayload } from './components/SideBar.vue'

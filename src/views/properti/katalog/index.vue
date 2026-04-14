@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Icon } from '@iconify/vue'
 import Vertical from '@/layouts/vertical.vue'
 import Filter from './components/Filter.vue'
 import Rumah from './components/Rumah.vue'
@@ -11,10 +10,6 @@ const rumahRef = ref<any>(null)
 
 const toggleFilter = () => {
   isFilterOpen.value = !isFilterOpen.value
-}
-
-const openAddModal = () => {
-  rumahRef.value?.openAddModal()
 }
 </script>
 

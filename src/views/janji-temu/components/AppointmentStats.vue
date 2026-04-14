@@ -7,15 +7,6 @@ const stats = [
   { label: 'Total Janji Temu (Bulan Ini)', value: '124', icon: 'lucide:users', color: 'sky' },
 ]
 
-const getColorClass = (color: string) => {
-  const map: Record<string, string> = {
-    bejo: 'bg-bejo-500/10 text-bejo-600',
-    amber: 'bg-amber-500/10 text-amber-600',
-    sky: 'bg-sky-500/10 text-sky-600',
-  }
-  return map[color] || map.bejo
-}
-
 const getIconBg = (color: string) => {
   const map: Record<string, string> = {
     bejo: 'bg-bejo-500',

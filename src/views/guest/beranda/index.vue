@@ -224,14 +224,6 @@ interface ProductPreview {
 const isLoading = ref(true)
 const displayedProducts = ref<ProductPreview[]>([])
 
-const formatCurrency = (value: number) => {
-  if (!value) return '0'
-  if (value >= 1e12) return 'Rp ' + (value / 1e12).toLocaleString('id-ID', { maximumFractionDigits: 1 }) + ' T'
-  if (value >= 1e9) return 'Rp ' + (value / 1e9).toLocaleString('id-ID', { maximumFractionDigits: 1 }) + ' M'
-  if (value >= 1e6) return 'Rp ' + (value / 1e6).toLocaleString('id-ID', { maximumFractionDigits: 1 }) + ' Jt'
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
-}
-
 const fetchData = async () => {
   try {
     const { data } = await api.get('/api/realEstate/getAll', {

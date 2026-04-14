@@ -1,12 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, nextTick } from 'vue'
-import { Icon } from '@iconify/vue'
-import avatar2 from '@/assets/images/user/avatar-2.png'
-import { RouterLink } from 'vue-router'
 import api from '@/services/axios'
 import Vertical from '@/layouts/vertical.vue'
-import SidebarProduct from './components/SidebarProduct.vue'
-import ProductDetails from './components/ProductDetails.vue'
 import PageTitle from '@/components/PageTitle.vue'
 import { useRoute } from 'vue-router'
 

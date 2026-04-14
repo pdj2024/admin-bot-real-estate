@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { Icon } from '@iconify/vue'
-import { RouterLink } from 'vue-router'
 
 interface Sales {
   id: string
@@ -18,9 +17,7 @@ interface Sales {
 
 const emit = defineEmits(['edit', 'success'])
 const openDropdownId = ref<string | null>(null)
-const isLoading = ref(false)
-
-// Mock Data (Sesuai aslinya SalesTable.vue)
+  
 const salesList = ref<Sales[]>([
   { id: '#USR0011', name: 'Agus Saputra', username: 'agussaputra', area: 'Yogyakarta', email: 'agus.saputra@gmail.com', phone: '0813 2345 6789', joined: '05 Jan 2023', status: 'Aktif' },
   { id: '#USR0012', name: 'Maya Sari', username: 'mayasari', area: 'Malang', email: 'maya.sari@gmail.com', phone: '0821 3344 5566', joined: '14 Jan 2023', status: 'Aktif' },

@@ -1,18 +1,16 @@
 <script setup lang="ts">
-import { onMounted, ref, nextTick } from 'vue'
-import { Icon } from '@iconify/vue'
-import avatar2 from '@/assets/images/user/avatar-2.png'
+import { onMounted, ref, nextTick, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { RouterLink } from 'vue-router'
 import api from '@/services/axios'
-import Vertical from '@/layouts/vertical.vue'
+import Guest from '@/layouts/guest.vue'
 import SidebarProduct from './components/SidebarProduct.vue'
 import ProductDetails from './components/ProductDetails.vue'
-import PageTitle from '@/components/PageTitle.vue'
-import { useRoute } from 'vue-router'
+import KprSimulation from './components/KprSimulation.vue'
+import SuggestedProducts from './components/SuggestedProducts.vue'
 
 const route = useRoute()
 const slug = route.params.slug
-console.log(slug)
 
 interface MediaUrl {
   Url: string | null
@@ -61,18 +59,41 @@ export interface Product {
 }
 
 const product = ref<Product | null>(null)
+const suggestions = ref<Product[]>([])
+const isLoading = ref(true)
 
 const fetchData = async () => {
+  isLoading.value = true
   try {
-    const { data } = await api.get('/api/realEstate/getAll?slug='+slug, {
+    const { data } = await api.get('/api/realEstate/getAll?limit=5&sort=desc', {
       headers: { 'X-Jenis-User': 'Admin' }
     })
-    product.value = data.Data[0]
-    console.log(product.value)
+
+    // Find our main product
+    const mainProduct = data.Data.find((p: Product) => p.Slug === slug)
+    // If not found in limit=5, we fetch it directly
+    if (!mainProduct) {
+      const { data: exactData } = await api.get('/api/realEstate/getAll?slug=' + slug, {
+        headers: { 'X-Jenis-User': 'Admin' }
+      })
+      product.value = exactData.Data[0]
+      // Populate suggestions from the first fetch
+      suggestions.value = data.Data.slice(0, 3)
+    } else {
+      product.value = mainProduct
+      // Populate suggestions from remaining
+      suggestions.value = data.Data.filter((p: Product) => p.Slug !== slug).slice(0, 3)
+    }
   } catch (err) {
     console.error(err)
+  } finally {
+    isLoading.value = false
   }
 }
+
+const isAdmin = computed(() => {
+  return localStorage.getItem('role_user') == 'admin' && route.path.startsWith('/properti/detail')
+})
 
 onMounted(async () => {
   await fetchData()
@@ -83,12 +104,23 @@ onMounted(async () => {
 </script>
 
 <template>
-  <Vertical>
-    <PageTitle subtitle="Kelola" title="Detail" />
-    <div class="grid lg:grid-cols-3 grid-cols-1 lg:gap-5">
-      <!-- <SidebarProduct :product="product" />
-      <ProductDetails :product="product" /> -->
-    </div>
-  </Vertical>
-</template>
+  <Guest>
+    <div class="px-4 py-8 md:p-10 max-w-[1440px] mx-auto w-full">
+      <nav class="flex items-center gap-2 text-[10px] sm:text-xs text-slate-500 mb-4 uppercase tracking-widest font-semibold">
+        <RouterLink to="/" class="hover:text-bejo-600 transition-colors">Beranda</RouterLink>
+        <Icon icon="lucide:chevron-right" class="size-3" />
+        <span class="text-slate-800">Detail Properti</span>
+      </nav>
+      <!-- <PageTitle subtitle="Kelola" title="Detail" v-if="isAdmin" /> -->
+      <div class="grid lg:grid-cols-3 grid-cols-1 gap-5">
+        <SidebarProduct :product="product" :isAdmin="isAdmin" />
+        <div class="lg:col-span-2 col-span-1 flex flex-col gap-5">
+          <ProductDetails :product="product" :isAdmin="isAdmin" class="!col-span-1" />
+          <KprSimulation :product="product" />
+        </div>
+      </div>
 
+      <SuggestedProducts :products="suggestions" :is-loading="isLoading" />
+    </div>
+  </Guest>
+</template>

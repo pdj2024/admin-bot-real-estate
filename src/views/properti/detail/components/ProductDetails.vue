@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import { RouterLink, useRouter } from 'vue-router'
 import type { Product } from '../index.vue'
 
 defineProps<{

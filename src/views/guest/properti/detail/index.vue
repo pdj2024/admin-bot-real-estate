@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { onMounted, ref, nextTick, computed } from 'vue'
-import { isTokenExpired } from '@/services/auth'
 import { useRoute } from 'vue-router'
 import { RouterLink } from 'vue-router'
 import api from '@/services/axios'
 import Guest from '@/layouts/guest.vue'
 import SidebarProduct from './components/SidebarProduct.vue'
 import ProductDetails from './components/ProductDetails.vue'
-import PageTitle from '@/components/PageTitle.vue'
 import KprSimulation from './components/KprSimulation.vue'
 import SuggestedProducts from './components/SuggestedProducts.vue'
 
@@ -92,15 +90,6 @@ const fetchData = async () => {
     isLoading.value = false
   }
 }
-
-const isLoggedIn = computed(() => {
-  const token = localStorage.getItem('token')
-  const refreshToken = localStorage.getItem('refreshToken')
-
-  const hasTokens = !!token && token !== 'undefined' && !!refreshToken && refreshToken !== 'undefined'
-
-  return hasTokens && !isTokenExpired(token) && route.path.startsWith('/properti/detail')
-})
 
 const isAdmin = computed(() => {
   return localStorage.getItem('role_user') == 'admin' && route.path.startsWith('/properti/detail')

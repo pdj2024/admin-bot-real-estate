@@ -13,6 +13,5 @@
 </template>
 
 <script setup lang="ts">
-import { appName, author, currentYear } from '@/helpers'
-import { RouterLink } from 'vue-router'
+import { appName, currentYear } from '@/helpers'
 </script>

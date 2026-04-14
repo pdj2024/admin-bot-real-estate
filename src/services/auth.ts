@@ -1,4 +1,3 @@
-import api from './axios'
 import router from '@/router'
 import { fail, success } from '@/utils/sweet-alert'
 import { isTokenExpired as checkExpired } from '@/utils/token'

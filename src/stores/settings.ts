@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, reactive, watch } from 'vue'
+import { reactive } from 'vue'
 
 export interface BusinessSettings {
   description: string

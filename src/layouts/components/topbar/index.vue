@@ -17,7 +17,6 @@
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import NotificationDropdown from './components/NotificationDropdown.vue'
 import ThemeToggler from './components/ThemeToggler.vue'
 import UserProfile from './components/UserProfile.vue'
 import { useLayout } from '@/stores/layout'

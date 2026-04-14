@@ -6,12 +6,6 @@ import Modal from './Modal.vue'
 import { useVueTable, getCoreRowModel, getPaginationRowModel, getSortedRowModel, getFilteredRowModel, type SortingState } from '@tanstack/vue-table'
 import { confirm, success, fail } from '@/utils/sweet-alert'
 
-// Helper Functions (Top to ensure availability)
-const formatCurrency = (value: number) => {
-  if (value === undefined || value === null) return 'Rp 0'
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
-}
-
 const formatShortCurrency = (value: number) => {
   if (value === undefined || value === null || value === 0) return 'Rp 0'
   if (value >= 1000000000) {
@@ -233,6 +227,7 @@ const deleteProduct = async (data: Product) => {
       success('Berhasil hapus produk')
     } catch (err: any) {
       fail('Gagal menghapus data')
+      console.log(err)
     }
   })
 }

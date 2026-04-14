@@ -4,7 +4,6 @@ import api from '@/services/axios'
 import * as signalR from '@microsoft/signalr'
 
 import Vertical from '@/layouts/vertical.vue'
-import PageTitle from '@/components/PageTitle.vue'
 import ChatContent from './components/ChatContent.vue'
 import SideBar from './components/SideBar.vue'
 import { type TakeOverPayload } from './components/SideBar.vue'
@@ -126,8 +125,6 @@ const joinRoom = async (bot: any, aktif: any, assign: any) => {
 
     const promises = roomIds.map(
       (id) => signalRConnection.value!.invoke('JoinRoom', id)
-      // .then(() => console.log(`[SignalR ${name}] Berhasil Join ke Room: ${id}`))
-      // .catch((err) => console.error(`[SignalR ${name}] Gagal Join ke Room ${id}:`, err))
     )
     await Promise.allSettled(promises)
   }

@@ -50,7 +50,16 @@ const openEditModal = (admin: any) => {
             </p>
           </div>
           
-          <Filter />
+          <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <Filter />
+            <button 
+              @click="openAddModal"
+              class="px-6 h-11 bg-bejo-500 hover:bg-bejo-600 text-white rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-bejo-500/20 transition-all flex items-center gap-2 active:scale-95 whitespace-nowrap"
+            >
+              <Icon icon="lucide:user-plus" class="size-4" />
+              Tambah Admin
+            </button>
+          </div>
         </div>
 
         <div class="p-2 md:p-4">

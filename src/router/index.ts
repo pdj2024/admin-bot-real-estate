@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { isTokenExpired } from '@/utils/token';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -144,6 +143,15 @@ const router = createRouter({
         requiresAuth: true
       },
       component: () => import('@/views/data-master/customer/index.vue')
+    },
+    {
+      path: '/data/wilayah',
+      name: 'Data Wilayah',
+      meta: {
+        title: 'Data Wilayah',
+        requiresAuth: true
+      },
+      component: () => import('@/views/data-master/wilayah/index.vue')
     },
     {
       path: '/pengaturan',

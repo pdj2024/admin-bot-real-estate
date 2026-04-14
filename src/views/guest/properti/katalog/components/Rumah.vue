@@ -313,14 +313,6 @@ const fetchData = async () => {
   }
 }
 
-const formatCurrency = (value: number) => {
-  if (value >= 1e12) return 'Rp ' + (value / 1e12).toLocaleString('id-ID', { maximumFractionDigits: 2 }) + ' T'
-  if (value >= 1e9) return 'Rp ' + (value / 1e9).toLocaleString('id-ID', { maximumFractionDigits: 2 }) + ' M'
-  if (value >= 1e6) return 'Rp ' + (value / 1e6).toLocaleString('id-ID', { maximumFractionDigits: 2 }) + ' Jt'
-  if (value >= 1e3) return 'Rp ' + (value / 1e3).toLocaleString('id-ID', { maximumFractionDigits: 2 }) + ' Rb'
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
-}
-
 const toggleDropdown = (id: string) => {
   activeDropdownId.value = activeDropdownId.value === id ? null : id
 }
@@ -363,6 +355,7 @@ const deleteProduct = async (data: Product) => {
       success('Berhasil hapus produk')
     } catch (err: any) {
       fail('Gagal menghapus data')
+      console.log(err)
     }
   })
 }

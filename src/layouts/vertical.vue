@@ -17,10 +17,9 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, onUpdated } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 import { useLayout } from '@/stores/layout'
 import { storeToRefs } from 'pinia'
-import Customizer from '@/layouts/components/customizer/index.vue'
 import Footer from '@/layouts/components/footer/index.vue'
 import MobileMenu from '@/layouts/components/mobile-menu/index.vue'
 import SideNav from '@/layouts/components/sidenav/index.vue'

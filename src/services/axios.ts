@@ -73,8 +73,8 @@ api.interceptors.request.use(async (config) => {
       } else {
          token = await getOrStartRefresh()
       }
-    } catch (err) {
-      // Refresh gagal, biarkan request lanjut (akan tertangkap 401 di response)
+    } catch (err: any) {
+      console.log(err)
     }
   }
 

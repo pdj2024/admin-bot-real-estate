@@ -1,14 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { Icon } from '@iconify/vue'
-import { RouterLink, useRouter } from 'vue-router'
+import { RouterLink } from 'vue-router'
 import { logout } from '@/services/auth'
-import { confirm, success } from '@/utils/sweet-alert'
-
-const router = useRouter()
+import { confirm } from '@/utils/sweet-alert'
 
 const namaDisplay = ref(localStorage.getItem('nama_display') || '');
-const roleUser = ref(localStorage.getItem('role_user') || '');
 const noId = ref(localStorage.getItem('no_id') || '');
 
 const handleLogout = () => {

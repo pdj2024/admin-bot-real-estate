@@ -71,7 +71,6 @@ import { ref } from 'vue'
 import { toLabelCase, toPascalCase } from '@/helpers/casing'
 import { useLayout } from '@/stores/layout'
 import { setPositionOptions, sidenavColorOptions, sidenavSizes, themeOptions } from './data'
-import { RouterLink } from 'vue-router'
 
 const { setTheme, layout, customizer, setSideNavColor, setPosition, setSideNavSize, reset } = useLayout()
 

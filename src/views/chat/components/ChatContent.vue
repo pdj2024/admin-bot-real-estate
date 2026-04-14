@@ -2,7 +2,6 @@
 import { ref, onMounted, onBeforeUnmount, onUpdated, nextTick, computed, watch } from 'vue'
 import { Icon } from '@iconify/vue'
 import { confirm, success, fail } from '@/utils/sweet-alert'
-import { RouterLink } from 'vue-router'
 import type { CalendarOptions, EventClickArg } from '@fullcalendar/core'
 import type { DateClickArg } from '@fullcalendar/interaction'
 import FullCalendar from '@fullcalendar/vue3'
@@ -19,10 +18,9 @@ import bgChatDark from '@/assets/images/background-chat-dark.png'
 import simplebar from 'simplebar-vue'
 import Filter from './Filter.vue'
 import ProductCard from '@/components/ProductCard.vue'
-import { type Catalogue, type CalendarEvent, type Appointment, type Chat, type PreviewImage, calendarEvents } from './data'
+import { type Chat, type PreviewImage, calendarEvents } from './data'
 import { type TakeOverPayload } from './SideBar.vue'
 
-const menuRef = ref<HTMLElement | null>(null)
 const etalaseRef = ref<HTMLElement | null>(null)
 const appointmentFormRef = ref<HTMLElement | null>(null)
 const tukarCSRef = ref<HTMLElement | null>(null)
@@ -43,10 +41,9 @@ const changeUsername = ref(false)
 const sendChatContent = ref('')
 const isSendingImage = ref(false)
 const searchKatalog = ref('')
+const chatInputRef = ref<HTMLTextAreaElement | null>(null)
 
 const username = defineModel<string>('username')
-// const catalogues = ref<Catalogue[]>(catalogueData)
-const events = ref<CalendarEvent[]>(calendarEvents)
 const bgLightUrl = `url(${bgChat})`
 const bgDarkUrl = `url(${bgChatDark})`
 
@@ -116,7 +113,7 @@ const calendarOptions = computed<CalendarOptions>(() => ({
     ? {
         center: 'dayGridMonth,timeGridWeek,listWeek'
       }
-    : (false as false),
+    : (false as const),
   editable: true,
   selectable: true,
   events: calendarEvents,
@@ -299,12 +296,12 @@ const sendProduct = async (product: any) => {
 }
 
 const closeAppointment = () => {
-  openAppointment.value = !openAppointment
+  openAppointment.value = !openAppointment.value
   if (openFilter.value == true) {
-    openFilter.value = !openFilter
+    openFilter.value = !openFilter.value
   }
   if (openAppointmentForm.value == true) {
-    openAppointmentForm.value = !openAppointmentForm
+    openAppointmentForm.value = !openAppointmentForm.value
   }
 }
 
@@ -324,11 +321,6 @@ const tukarCS = (text: string) => {
   confirm('Ingin mengalihkan percakapan kepada CS ' + text + '?', () => {
     success('Berhasil mengalihkan chat ke CS ' + text)
   })
-}
-
-const formatRupiah = (price: string | number): string => {
-  const number = typeof price === 'string' ? parseInt(price) : price
-  return 'Rp ' + number.toLocaleString('id-ID')
 }
 
 const reinitPreline = async () => {
@@ -383,6 +375,12 @@ const sendChat = async (type: string, url?: string, targetRoomId?: string, targe
   const now = new Date()
   const sentAt = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 19)
 
+  const resetInputHeight = () => {
+    if (chatInputRef.value) {
+      chatInputRef.value.style.height = '40px'
+    }
+  }
+
   let currentUserIds: string[] = [myId]
 
   const isCurrentActiveRoom = activeRoomId === props.roomId
@@ -430,6 +428,7 @@ const sendChat = async (type: string, url?: string, targetRoomId?: string, targe
     } as unknown as Chat)
 
     sendChatContent.value = ''
+    resetInputHeight()
     scrollToBottom()
   }
 
@@ -711,6 +710,28 @@ onBeforeUnmount(() => {
 onUpdated(() => {
   reinitPreline()
 })
+
+const adjustInputHeight = () => {
+  const textarea = chatInputRef.value
+  if (!textarea) return
+
+  textarea.style.height = '40px'
+  const newHeight = Math.min(textarea.scrollHeight, 150)
+  textarea.style.height = `${newHeight}px`
+}
+
+const handleKeydown = (e: KeyboardEvent) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault()
+    sendChat('text')
+  }
+}
+
+watch(sendChatContent, () => {
+  nextTick(() => {
+    adjustInputHeight()
+  })
+})
 </script>
 
 <template>
@@ -879,7 +900,15 @@ onUpdated(() => {
           </div>
         </div>
 
-        <input type="text" v-model="sendChatContent" @keyup.enter="sendChat('text')" class="flex-1 min-w-0 bg-transparent border-none focus:ring-0 text-sm font-bold text-slate-700 placeholder:text-slate-400 placeholder:font-bold px-1 md:px-2" placeholder="Tulis pesan..." />
+        <textarea
+          ref="chatInputRef"
+          v-model="sendChatContent"
+          @keydown="handleKeydown"
+          class="flex-1 min-w-0 bg-transparent border-none focus:ring-0 text-sm font-bold text-slate-700 placeholder:text-slate-400 placeholder:font-bold px-1 md:px-2 py-2 resize-none overflow-y-auto custom-scrollbar transition-all duration-200"
+          placeholder="Tulis pesan..."
+          rows="1"
+          style="height: 40px; min-height: 40px;"
+        ></textarea>
 
         <div ref="containerRef" class="flex-shrink-0 flex items-center gap-1 md:gap-3 relative">
           <label class="size-8 md:size-11 rounded-xl md:rounded-2xl bg-white border border-slate-100 text-slate-400 flex-shrink-0 flex items-center justify-center cursor-pointer hover:bg-slate-50 transition-all">
