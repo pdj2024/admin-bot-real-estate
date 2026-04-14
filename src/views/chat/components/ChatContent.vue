@@ -28,6 +28,8 @@ const filterRef = ref<any | null>(null)
 const scheduleRef = ref<HTMLElement | null>(null)
 const containerRef = ref<HTMLElement | null>(null)
 const chatContainer = ref<any>(null)
+const searchHeaderRef = ref<HTMLElement | null>(null)
+const showScrollToBottom = ref(false)
 
 const openMenu = ref(false)
 const openEtalase = ref(false)
@@ -42,6 +44,14 @@ const sendChatContent = ref('')
 const isSendingImage = ref(false)
 const searchKatalog = ref('')
 const chatInputRef = ref<HTMLTextAreaElement | null>(null)
+const adminsList = ref<any[]>([])
+const searchCS = ref('')
+const isFetchingAdmins = ref(false)
+const isSearchingChat = ref(false)
+const searchChatQuery = ref('')
+const searchChatResults = ref<number[]>([])
+const currentSearchMatch = ref(-1)
+const searchChatInputRef = ref<HTMLInputElement | null>(null)
 
 const username = defineModel<string>('username')
 const bgLightUrl = `url(${bgChat})`
@@ -76,7 +86,12 @@ const emit = defineEmits<{
 const handleClickOutside = (event: MouseEvent) => {
   const target = event.target as Node
 
-  const interactiveRefs = [containerRef.value, etalaseRef.value, appointmentFormRef.value, tukarCSRef.value, scheduleRef.value, filterRef.value?.$el]
+  // Auto-close search if clicking outside search header
+  if (isSearchingChat.value && searchHeaderRef.value && !searchHeaderRef.value.contains(target)) {
+    toggleSearchChat()
+  }
+
+  const interactiveRefs = [containerRef.value, etalaseRef.value, appointmentFormRef.value, tukarCSRef.value, scheduleRef.value, filterRef.value?.$el, searchHeaderRef.value]
 
   if (interactiveRefs.some((el) => el && el.contains(target))) {
     return
@@ -148,6 +163,125 @@ const handleOpenEtalase = () => {
   }
 }
 
+const handleOpenTukarCS = () => {
+  openTukarCS.value = !openTukarCS.value
+  if (openTukarCS.value) {
+    openEtalase.value = false
+    openAppointment.value = false
+    openMenu.value = false
+    fetchAdmins()
+  }
+}
+
+const fetchAdmins = async () => {
+  isFetchingAdmins.value = true
+  try {
+    const res = await api.get('/api/admin/getAll?orderby=Tgl_Created&orderdir=desc', {
+      headers: { 'X-Jenis-User': 'admin' }
+    })
+    adminsList.value = res.data.data
+  } catch {
+    fail('Gagal mengambil data admin')
+  } finally {
+    isFetchingAdmins.value = false
+  }
+}
+
+const filteredAdmins = computed(() => {
+  if (!searchCS.value) return adminsList.value
+  return adminsList.value.filter((admin) => admin.Nama_User.toLowerCase().includes(searchCS.value.toLowerCase()))
+})
+
+const handleTransferChat = (targetAdmin: any) => {
+  confirm(`Alihkan percakapan ke ${targetAdmin.Nama_User}?`, async () => {
+    const myId = localStorage.getItem('no_id')
+    const phone = props.phoneNumber.replace(/\D/g, '')
+    const formattedPhone = phone.startsWith('0') ? '62' + phone.substring(1) : phone
+
+    try {
+      // 1. Toggle for current admin (status_bot: true)
+      await api.post(
+        '/api/chat/toggle-bot',
+        {
+          customer_phone: formattedPhone,
+          admin_id: myId,
+          status_bot: true
+        },
+        { headers: { 'X-Jenis-User': 'admin' } }
+      )
+
+      // 2. Toggle for target admin (status_bot: false)
+      await api.post(
+        '/api/chat/toggle-bot',
+        {
+          customer_phone: formattedPhone,
+          admin_id: targetAdmin.No_Id,
+          status_bot: false
+        },
+        { headers: { 'X-Jenis-User': 'admin' } }
+      )
+
+      success(`Berhasil mengalihkan ke ${targetAdmin.Nama_User}`)
+      openTukarCS.value = false
+      emit('clearRoom')
+    } catch (err) {
+      fail('Gagal mengalihkan percakapan')
+      console.error(err)
+    }
+  })
+}
+
+const toggleSearchChat = async () => {
+  isSearchingChat.value = !isSearchingChat.value
+  if (isSearchingChat.value) {
+    await nextTick()
+    searchChatInputRef.value?.focus()
+  } else {
+    searchChatQuery.value = ''
+    searchChatResults.value = []
+    currentSearchMatch.value = -1
+  }
+}
+
+const handleSearchChat = () => {
+  if (!searchChatQuery.value.trim()) {
+    searchChatResults.value = []
+    currentSearchMatch.value = -1
+    return
+  }
+
+  const query = searchChatQuery.value.toLowerCase()
+  searchChatResults.value = props.chats
+    .map((c, i) => ((c.Message as string) || '').toLowerCase().includes(query) ? i : -1)
+    .filter((i) => i !== -1)
+
+  if (searchChatResults.value.length > 0) {
+    currentSearchMatch.value = 0
+    scrollToMatch(searchChatResults.value[0])
+  } else {
+    currentSearchMatch.value = -1
+  }
+}
+
+const nextSearchMatch = () => {
+  if (searchChatResults.value.length === 0) return
+  currentSearchMatch.value = (currentSearchMatch.value + 1) % searchChatResults.value.length
+  scrollToMatch(searchChatResults.value[currentSearchMatch.value])
+}
+
+const prevSearchMatch = () => {
+  if (searchChatResults.value.length === 0) return
+  currentSearchMatch.value = (currentSearchMatch.value - 1 + searchChatResults.value.length) % searchChatResults.value.length
+  scrollToMatch(searchChatResults.value[currentSearchMatch.value])
+}
+
+const scrollToMatch = (idx: number) => {
+  const el = document.getElementById(`chat-message-${idx}`)
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
+}
+
 const handleOpenAppointment = () => {
   openAppointment.value = !openAppointment.value
   if (openAppointment.value) {
@@ -157,14 +291,6 @@ const handleOpenAppointment = () => {
   }
 }
 
-const handleOpenTukarCS = () => {
-  openTukarCS.value = !openTukarCS.value
-  if (openTukarCS.value) {
-    openEtalase.value = false
-    openAppointment.value = false
-    openMenu.value = false
-  }
-}
 
 const products = ref<any[]>([])
 const isLoadingProducts = ref(false)
@@ -315,12 +441,6 @@ const saveAppointment = () => {
 
 const endChat = () => {
   takeOverChat(true)
-}
-
-const tukarCS = (text: string) => {
-  confirm('Ingin mengalihkan percakapan kepada CS ' + text + '?', () => {
-    success('Berhasil mengalihkan chat ke CS ' + text)
-  })
 }
 
 const reinitPreline = async () => {
@@ -701,6 +821,16 @@ onMounted(() => {
   document.addEventListener('click', handleClickOutside)
   reinitPreline()
   scrollToBottom()
+
+  // Scroll indicator logic
+  const scrollElement = chatContainer.value?.getScrollElement()
+  if (scrollElement) {
+    scrollElement.addEventListener('scroll', () => {
+      const { scrollTop, scrollHeight, clientHeight } = scrollElement
+      // Show button if user is more than 300px away from bottom
+      showScrollToBottom.value = scrollHeight - scrollTop - clientHeight > 300
+    })
+  }
 })
 
 onBeforeUnmount(() => {
@@ -742,8 +872,8 @@ watch(sendChatContent, () => {
       <div class="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-bejo-50/50 to-transparent pointer-events-none"></div>
       <div class="absolute -right-20 -top-20 size-64 bg-bejo-100/30 rounded-full blur-3xl pointer-events-none transition-all duration-500 group-hover:scale-125"></div>
 
-      <div class="relative z-10 flex justify-between items-center">
-        <div class="flex gap-2 sm:gap-5 items-center min-w-0">
+      <div ref="searchHeaderRef" class="relative z-10 flex justify-between items-center">
+        <div v-if="!isSearchingChat" class="flex gap-2 sm:gap-5 items-center min-w-0 flex-1">
           <button @click="openSidebar" class="lg:hidden size-9 rounded-xl flex justify-center items-center bg-slate-50 hover:bg-bejo-50 text-slate-500 hover:text-bejo-600 transition-all duration-300 shadow-sm shrink-0">
             <Icon icon="lucide:menu" class="size-4"></Icon>
           </button>
@@ -777,12 +907,48 @@ watch(sendChatContent, () => {
           </div>
         </div>
 
-        <div class="flex items-center gap-2 sm:gap-3">
-          <button class="size-9 sm:size-10 rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-bejo-600 hover:border-bejo-100 hover:bg-bejo-50 hover:shadow-lg hover:shadow-bejo-500/10 transition-all duration-300 flex items-center justify-center">
+        <div v-else class="flex-1 flex items-center gap-2 sm:gap-4 bg-slate-50/50 p-1 md:p-2 rounded-2xl border border-slate-100 animate-fade-in-right">
+          <div class="relative flex-1">
+            <Icon icon="lucide:search" class="size-4 absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input 
+              ref="searchChatInputRef"
+              v-model="searchChatQuery" 
+              type="text" 
+              placeholder="Cari dalam obrolan..." 
+              class="w-full bg-white border border-slate-200 rounded-xl py-2 md:py-2.5 pl-9 md:pl-11 pr-4 text-xs md:text-sm font-bold focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500 transition-all outline-none"
+              @input="handleSearchChat"
+              @keydown.enter="nextSearchMatch"
+              @keydown.esc="toggleSearchChat"
+            />
+          </div>
+          <div v-if="searchChatResults.length > 0" class="flex items-center gap-1 shrink-0">
+            <span class="text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-widest bg-white border border-slate-100 px-2 md:px-3 py-1.5 md:py-2 rounded-lg">
+              {{ currentSearchMatch + 1 }} / {{ searchChatResults.length }}
+            </span>
+            <div class="flex items-center gap-0.5 md:gap-1">
+              <button @click="prevSearchMatch" class="size-8 md:size-10 flex items-center justify-center rounded-lg md:rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-bejo-600 hover:bg-bejo-50 transition-all active:scale-90 shadow-sm">
+                <Icon icon="lucide:chevron-up" class="size-4 md:size-5" />
+              </button>
+              <button @click="nextSearchMatch" class="size-8 md:size-10 flex items-center justify-center rounded-lg md:rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-bejo-600 hover:bg-bejo-50 transition-all active:scale-90 shadow-sm">
+                <Icon icon="lucide:chevron-down" class="size-4 md:size-5" />
+              </button>
+            </div>
+          </div>
+          <button @click="toggleSearchChat" class="size-8 md:size-10 flex items-center justify-center rounded-lg md:rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all active:scale-90 shadow-sm">
+            <Icon icon="lucide:x" class="size-4 md:size-5" />
+          </button>
+        </div>
+
+        <div v-if="!isSearchingChat" class="flex items-center gap-2 sm:gap-3">
+          <button @click="toggleSearchChat" class="size-9 sm:size-10 rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-bejo-600 hover:border-bejo-100 hover:bg-bejo-50 hover:shadow-lg hover:shadow-bejo-500/10 transition-all duration-300 flex items-center justify-center">
             <Icon icon="lucide:search" class="size-4 sm:size-5"></Icon>
           </button>
           <button class="size-10 rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-slate-900 hover:border-slate-200 hover:shadow-sm transition-all duration-300 flex items-center justify-center">
             <Icon icon="lucide:more-vertical" class="size-5"></Icon>
+          </button>
+          <button @click="endChat" title="Akhiri Percakapan" class="h-9 sm:h-10 px-3 sm:px-4 rounded-xl bg-red-500 border border-red-100 text-white hover:bg-red-600 hover:text-white hover:shadow-lg hover:shadow-red-500/20 transition-all duration-300 flex items-center justify-center gap-2 group">
+            <Icon icon="lucide:log-out" class="size-4"></Icon>
+            <span class="hidden sm:inline text-[10px] font-black uppercase tracking-widest">Akhiri</span>
           </button>
         </div>
       </div>
@@ -851,8 +1017,38 @@ watch(sendChatContent, () => {
       <div class="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent pointer-events-none"></div>
 
       <div class="relative z-10 flex flex-col gap-6 px-4 py-6 sm:px-8 sm:py-10">
-        <ChatBubble v-for="(chat, i) in chats" :key="i" :idx="i" :chat="chat" :chats="chats" :lastMessageId="props.lastMessageId" @imageLoaded="scrollToBottom" />
+        <ChatBubble 
+          v-for="(chat, i) in chats" 
+          :id="'chat-message-' + i"
+          :key="i" 
+          :idx="i" 
+          :chat="chat" 
+          :chats="chats" 
+          :lastMessageId="props.lastMessageId" 
+          :highlight="searchChatQuery"
+          :isActiveMatch="i === searchChatResults[currentSearchMatch]"
+          @imageLoaded="scrollToBottom" 
+        />
       </div>
+
+      <!-- Scroll to Bottom Button (WhatsApp Style) -->
+      <Transition
+        enter-active-class="transition duration-300 ease-out"
+        enter-from-class="transform translate-y-4 opacity-0"
+        enter-to-class="transform translate-y-0 opacity-100"
+        leave-active-class="transition duration-200 ease-in"
+        leave-from-class="transform translate-y-0 opacity-100"
+        leave-to-class="transform translate-y-4 opacity-0"
+      >
+        <button 
+          v-if="showScrollToBottom" 
+          @click="scrollToBottom" 
+          class="absolute bottom-6 right-6 size-10 md:size-12 rounded-full bg-white shadow-xl shadow-slate-900/10 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-bejo-600 hover:border-bejo-200 hover:scale-110 active:scale-95 transition-all z-20 group"
+        >
+          <Icon icon="lucide:chevron-down" class="size-5 md:size-6 group-hover:animate-bounce" />
+          <div class="absolute inset-0 rounded-full bg-bejo-500/5 scale-0 group-hover:scale-100 transition-transform duration-500"></div>
+        </button>
+      </Transition>
     </simplebar>
 
     <div class="p-1 md:p-6 bg-white border-t border-slate-50" :class="{ hidden: isPreviewMode }">
@@ -881,21 +1077,12 @@ watch(sendChatContent, () => {
               </div>
               <span>Buat Janji Temu</span>
             </button>
-            <button
-              @click.stop="handleOpenTukarCS"
-              class="flex items-center gap-3.5 w-full text-left px-4 py-3 hover:bg-bejo-50 text-slate-600 hover:text-bejo-600 rounded-xl text-[13px] font-bold transition-all"
-            >
+            <div class="h-px bg-slate-50 my-2"></div>
+            <button @click.stop="handleOpenTukarCS" class="flex items-center gap-3.5 w-full text-left px-4 py-3 hover:bg-bejo-50 text-slate-600 hover:text-bejo-600 rounded-xl text-[13px] font-bold transition-all">
               <div class="size-8 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600">
                 <Icon icon="lucide:repeat" class="size-4" />
               </div>
               <span>Alihkan ke CS Lain</span>
-            </button>
-            <div class="h-px bg-slate-50 my-2"></div>
-            <button @click="endChat" class="flex items-center gap-3.5 w-full text-left px-4 py-3 hover:bg-red-50 text-red-500 rounded-xl text-[13px] font-bold transition-all">
-              <div class="size-8 rounded-lg bg-red-100 flex items-center justify-center text-red-600">
-                <Icon icon="lucide:log-out" class="size-4" />
-              </div>
-              <span>Akhiri Percakapan</span>
             </button>
           </div>
         </div>
@@ -930,7 +1117,7 @@ watch(sendChatContent, () => {
         </button>
       </div>
 
-      <div v-if="openEtalase || openAppointment" ref="etalaseRef" class="z-[60] fixed bottom-20 left-1/2 -translate-x-1/2 w-[95vw] sm:w-[1000px] xl:w-[1100px] sm:bottom-24 sm:right-5 sm:left-auto sm:translate-x-0 bg-white/95 backdrop-blur-md rounded-[2rem] shadow-2xl p-6 border border-slate-50 overflow-hidden">
+      <div v-if="openEtalase || openAppointment" ref="etalaseRef" class="z-[60] fixed bottom-20 left-1/2 -translate-x-1/2 w-[95vw] sm:w-[1000px] xl:w-[1500px] sm:bottom-24 sm:right-5 sm:left-auto sm:translate-x-0 bg-white/95 backdrop-blur-md rounded-[2rem] shadow-2xl p-6 border border-slate-50 overflow-hidden">
         
         <!-- Loading Overlay Send Product -->
         <div v-if="isSendingImage && openEtalase" class="absolute inset-0 z-[100] bg-white/70 backdrop-blur-sm flex flex-col items-center justify-center animate-fade-in-up">
@@ -1027,35 +1214,31 @@ watch(sendChatContent, () => {
         </div>
         <div class="relative mb-5 group">
           <Icon icon="lucide:search" class="size-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-bejo-500 transition-colors" />
-          <input type="text" placeholder="Cari nama CS..." class="w-full bg-slate-50 border-transparent rounded-2xl py-3 pl-11 pr-4 text-sm font-bold focus:bg-white focus:ring-8 focus:ring-bejo-500/5 focus:border-bejo-500 transition-all shadow-inner" />
+          <input v-model="searchCS" type="text" placeholder="Cari nama CS..." class="w-full bg-slate-50 border-transparent rounded-2xl py-3 pl-11 pr-4 text-sm font-bold focus:bg-white focus:ring-8 focus:ring-bejo-500/5 focus:border-bejo-500 transition-all shadow-inner" />
         </div>
-        <div class="max-h-72 overflow-y-auto custom-scrollbar space-y-2 pr-1">
-          <div class="flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-slate-50 cursor-pointer transition-all border border-transparent hover:border-slate-100 group">
+        <div class="max-h-72 overflow-y-auto custom-scrollbar space-y-2 pr-1 min-h-[100px] relative">
+          <div v-if="isFetchingAdmins" class="absolute inset-0 flex items-center justify-center bg-white/50 backdrop-blur-sm z-10">
+            <Icon icon="lucide:loader-2" class="size-8 text-bejo-500 animate-spin" />
+          </div>
+
+          <div v-for="admin in filteredAdmins" :key="admin.No_Id" @click="handleTransferChat(admin)" class="flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-slate-50 cursor-pointer transition-all border border-transparent hover:border-slate-100 group">
             <div class="flex items-center gap-3">
-              <div class="size-9 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-500 font-black text-xs">YA</div>
-              <span class="text-sm font-bold text-slate-700">Yeni Anggraeni</span>
+              <div class="size-9 rounded-xl bg-gradient-to-br from-bejo-50 to-bejo-100 flex items-center justify-center text-bejo-600 font-black text-xs">
+                {{ admin.Nama_User.substring(0, 2).toUpperCase() }}
+              </div>
+              <div class="flex flex-col">
+                <span class="text-sm font-bold text-slate-700">{{ admin.Nama_User }}</span>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ admin.Role }}</span>
+              </div>
             </div>
-            <button @click="tukarCS('Yeni Anggraeni')" class="flex items-center justify-center bg-white border border-slate-200 text-slate-400 size-9 rounded-xl shadow-sm hover:bg-bejo-500 hover:text-white hover:border-bejo-500 transition-all active:scale-90">
+            <button class="flex items-center justify-center bg-white border border-slate-200 text-slate-400 size-9 rounded-xl shadow-sm group-hover:bg-bejo-500 group-hover:text-white group-hover:border-bejo-500 transition-all active:scale-90">
               <Icon icon="lucide:check" class="size-4" />
             </button>
           </div>
-          <div class="flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-slate-50 cursor-pointer transition-all border border-transparent hover:border-slate-100 group">
-            <div class="flex items-center gap-3">
-              <div class="size-9 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-500 font-black text-xs">BK</div>
-              <span class="text-sm font-bold text-slate-700">Bima Kurniawan</span>
-            </div>
-            <button @click="tukarCS('Bima Kurniawan')" class="flex items-center justify-center bg-white border border-slate-200 text-slate-400 size-9 rounded-xl shadow-sm hover:bg-bejo-500 hover:text-white hover:border-bejo-500 transition-all active:scale-90">
-              <Icon icon="lucide:check" class="size-4" />
-            </button>
-          </div>
-          <div class="flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-slate-50 cursor-pointer transition-all border border-transparent hover:border-slate-100 group">
-            <div class="flex items-center gap-3">
-              <div class="size-9 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-500 font-black text-xs">BS</div>
-              <span class="text-sm font-bold text-slate-700">Bobi Sanjaya</span>
-            </div>
-            <button @click="tukarCS('Bobi Sanjaya')" class="flex items-center justify-center bg-white border border-slate-200 text-slate-400 size-9 rounded-xl shadow-sm hover:bg-bejo-500 hover:text-white hover:border-bejo-500 transition-all active:scale-90">
-              <Icon icon="lucide:check" class="size-4" />
-            </button>
+
+          <div v-if="filteredAdmins.length === 0 && !isFetchingAdmins" class="flex flex-col items-center justify-center py-8 text-slate-400">
+            <Icon icon="lucide:users" class="size-8 mb-2 opacity-20" />
+            <p class="text-xs font-bold uppercase tracking-widest">Tidak ada CS</p>
           </div>
         </div>
       </div>

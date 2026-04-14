@@ -30,6 +30,8 @@ const props = defineProps<{
   chats: Chat[]
   idx: number
   lastMessageId: string
+  highlight?: string
+  isActiveMatch?: boolean
 }>()
 
 defineEmits(['imageLoaded'])
@@ -89,18 +91,27 @@ const getDateChat = (date: any): string => {
 const formatMessage = (msg: string) => {
   if (!msg) return ''
 
-  return (
-    msg
-      // escape HTML
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
+  let formatted = msg
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br>')
 
-      // bold: *text*
-      .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+  if (props.highlight && props.highlight.trim()) {
+    try {
+      const query = props.highlight.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
+      const regex = new RegExp(`(${query})`, 'gi')
+      const highlightClass = props.isActiveMatch 
+        ? 'bg-bejo-500 text-white rounded-md px-1 font-bold shadow-sm ring-2 ring-bejo-500/20' 
+        : 'bg-amber-200 text-slate-900 rounded-md px-1'
+      
+      formatted = formatted.replace(regex, `<span class="${highlightClass}">$1</span>`)
+    } catch (e) {
+      console.error('Highlight regex error:', e)
+    }
+  }
 
-      // newline
-      .replace(/\n/g, '<br>')
-  )
+  return formatted
 }
 
 const getMediaId = (paket?: string) => {

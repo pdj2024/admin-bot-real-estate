@@ -126,9 +126,9 @@ const closeModal = () => {
 
       <!-- Actions (Pinned at Bottom) -->
       <div class="p-8 bg-slate-50/50 border-t border-slate-100 space-y-3 shrink-0">
-         <button @click="$emit('openChat', props.appointment.customerId)" class="w-full px-4 py-3 bg-white hover:bg-bejo-50 text-bejo-600 border border-bejo-100 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-sm group">
+         <button @click="$emit('openChat', props.appointment.customerId)" class="w-full px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-sm group">
             <Icon icon="lucide:message-circle" class="size-4 group-hover:scale-110 transition-transform" />
-            Hubungi Customer
+            Hubungi Agen
          </button>
          <div class="grid grid-cols-2 gap-3">
             <button @click="closeModal" class="px-3 py-3 bg-white hover:bg-red-50 text-red-600 border border-slate-200 hover:border-red-200 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">
