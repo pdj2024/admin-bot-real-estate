@@ -146,10 +146,39 @@ watch(currentIndex, (newIndex) => {
   }
 }, { immediate: true })
 
+const isLightboxOpen = ref(false)
+
+const openLightbox = () => {
+  isLightboxOpen.value = true
+  document.body.style.overflow = 'hidden' // Prevent scroll
+  resetTimer() // Stop carousel auto-play
+}
+
+const closeLightbox = () => {
+  isLightboxOpen.value = false
+  document.body.style.overflow = '' // Restore scroll
+  startTimer()
+}
+
+// Global Keyboard Listener for Esc key
+const handleKeyDown = (e: KeyboardEvent) => {
+  if (e.key === 'Escape' && isLightboxOpen.value) {
+    closeLightbox()
+  } else if (isLightboxOpen.value) {
+    if (e.key === 'ArrowRight') nextSlide(false)
+    if (e.key === 'ArrowLeft') prevSlide()
+  }
+}
+
 onMounted(() => {
   startTimer()
+  window.addEventListener('keydown', handleKeyDown)
 })
-onUnmounted(() => clearInterval(timer))
+onUnmounted(() => {
+  clearInterval(timer)
+  window.removeEventListener('keydown', handleKeyDown)
+  document.body.style.overflow = ''
+})
 </script>
 
 <template>
@@ -164,7 +193,16 @@ onUnmounted(() => clearInterval(timer))
 
       <div class="card mb-4 border-none shadow-sm bg-white overflow-hidden rounded-xl">
         <div class="card-body p-4 relative">
-          <div class="relative overflow-hidden mb-4 rounded-lg h-[350px] md:h-[420px] group bg-default-50 shadow-inner cursor-grab active:cursor-grabbing" @mousedown="handleDragStart" @mouseup="handleDragEnd" @mouseleave="handleDragEnd" @touchstart="handleDragStart" @touchend="handleDragEnd">
+          <!-- Main Carousel -->
+          <div 
+            class="relative overflow-hidden mb-4 rounded-lg h-[350px] md:h-[420px] group bg-default-50 shadow-inner cursor-zoom-in active:cursor-grabbing" 
+            @mousedown="handleDragStart" 
+            @mouseup="handleDragEnd" 
+            @mouseleave="handleDragEnd" 
+            @touchstart="handleDragStart" 
+            @touchend="handleDragEnd"
+          >
+            <!-- Label Status -->
             <div v-if="product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia')" class="absolute inset-0 bg-black/40 backdrop-grayscale-[60%] z-[5] pointer-events-none transition-all duration-500"></div>
             <div v-if="product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia')" class="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
               <div class="px-2 py-1 bg-black/30 backdrop-blur-md rounded-xl border border-white/10 shadow-2xl transform transition-transform duration-500 group-hover:scale-110">
@@ -174,7 +212,8 @@ onUnmounted(() => clearInterval(timer))
               </div>
             </div>
 
-            <div class="h-full w-full transition-all duration-700 ease-out group-hover:scale-105 will-change-transform transform-gpu relative">
+            <!-- Media Content -->
+            <div @click="openLightbox" class="h-full w-full transition-all duration-700 ease-out group-hover:scale-105 will-change-transform transform-gpu relative">
               <div v-if="isVideoLoading" class="absolute inset-0 flex items-center justify-center bg-slate-100 z-20">
                 <Icon icon="lucide:loader-2" class="size-8 text-bejo-500 animate-spin" />
               </div>
@@ -185,15 +224,18 @@ onUnmounted(() => clearInterval(timer))
 
               <div v-else class="w-full h-full bg-gray-200 animate-pulse"></div>
             </div>
-            <button @click="prevSlide" class="absolute left-3 top-1/2 -translate-y-1/2 size-11 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-lg text-white border border-white/20 opacity-0 group-hover:opacity-100 transition-all z-10 hover:bg-bejo-600 hover:border-bejo-600">
+
+            <!-- Navigation Buttons -->
+            <button @click.stop="prevSlide" class="absolute left-3 top-1/2 -translate-y-1/2 size-11 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-lg text-white border border-white/20 opacity-0 group-hover:opacity-100 transition-all z-10 hover:bg-bejo-600 hover:border-bejo-600">
               <Icon icon="lucide:chevron-left" class="size-6"></Icon>
             </button>
-            <button @click="nextSlide(false)" class="absolute right-3 top-1/2 -translate-y-1/2 size-11 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-lg text-white border border-white/20 opacity-0 group-hover:opacity-100 transition-all z-10 hover:bg-bejo-600 hover:border-bejo-600">
+            <button @click.stop="nextSlide(false)" class="absolute right-3 top-1/2 -translate-y-1/2 size-11 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-lg text-white border border-white/20 opacity-0 group-hover:opacity-100 transition-all z-10 hover:bg-bejo-600 hover:border-bejo-600">
               <Icon icon="lucide:chevron-right" class="size-6"></Icon>
             </button>
 
+            <!-- Indicators -->
             <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10 bg-black/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
-              <button v-for="(_, index) in product?.MediaUrls?.length" :key="index" @click="goToSlide(index)" class="size-1.5 rounded-full transition-all duration-300" :class="currentIndex === index ? 'bg-bejo-500 w-5' : 'bg-white/50'"></button>
+              <button v-for="(_, index) in product?.MediaUrls?.length" :key="index" @click.stop="goToSlide(index)" class="size-1.5 rounded-full transition-all duration-300" :class="currentIndex === index ? 'bg-bejo-500 w-5' : 'bg-white/50'"></button>
             </div>
           </div>
 
@@ -227,18 +269,74 @@ onUnmounted(() => clearInterval(timer))
       </div>
     </div>
   </div>
+
+  <!-- Media Lightbox (Full Screen) -->
+  <Teleport to="body">
+    <Transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div v-if="isLightboxOpen" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 backdrop-blur-xl">
+        <!-- Close Button -->
+        <button 
+          @click="closeLightbox" 
+          class="absolute top-6 right-6 z-[10000] size-14 flex items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md border border-white/20 hover:bg-bejo-600 transition-all"
+        >
+          <Icon icon="lucide:x" class="size-7" />
+        </button>
+
+        <!-- Navigation -->
+        <button @click="prevSlide" class="absolute left-6 top-1/2 -translate-y-1/2 z-[10000] size-16 flex items-center justify-center rounded-full bg-white/5 text-white backdrop-blur-md border border-white/10 hover:bg-bejo-600 transition-all group">
+          <Icon icon="lucide:chevron-left" class="size-10 group-hover:-translate-x-1 transition-transform" />
+        </button>
+        <button @click="nextSlide(false)" class="absolute right-6 top-1/2 -translate-y-1/2 z-[10000] size-16 flex items-center justify-center rounded-full bg-white/5 text-white backdrop-blur-md border border-white/10 hover:bg-bejo-600 transition-all group">
+          <Icon icon="lucide:chevron-right" class="size-10 group-hover:translate-x-1 transition-transform" />
+        </button>
+
+        <!-- Media Display -->
+        <Transition
+          mode="out-in"
+          enter-active-class="transition duration-300 ease-out"
+          enter-from-class="opacity-0 scale-95"
+          enter-to-class="opacity-100 scale-100"
+          leave-active-class="transition duration-200 ease-in"
+          leave-from-class="opacity-100 scale-100"
+          leave-to-class="opacity-0 scale-95"
+        >
+          <div :key="currentMediaUrl" class="w-full h-full flex items-center justify-center p-12 lg:p-24">
+            <video 
+              v-if="videoMap[currentMediaUrl]" 
+              :src="currentMediaUrl" 
+              class="max-h-full max-w-full rounded-2xl shadow-2xl" 
+              controls 
+              autoplay
+            ></video>
+            <img 
+              v-else 
+              :src="currentMediaUrl" 
+              class="max-h-full max-w-full rounded-2xl shadow-2xl object-contain select-none"
+              content="no-referrer"
+            />
+          </div>
+        </Transition>
+
+        <!-- Status & Indicators -->
+        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 z-[10000]">
+          <div class="px-5 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/10 text-white font-black uppercase tracking-[0.3em] text-[10px]">
+            {{ currentIndex + 1 }} / {{ product?.MediaUrls?.length }}
+          </div>
+          <div class="flex gap-2.5">
+            <button v-for="(_, index) in product?.MediaUrls?.length" :key="index" @click="goToSlide(index)" class="size-2 rounded-full transition-all duration-300 shadow-sm" :class="currentIndex === index ? 'bg-bejo-500 w-8' : 'bg-white/30 hover:bg-white/50'"></button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
 </template>
-
-<style scoped>
-video, img {
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-
-.animate-pulse {
-  animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-</style>
 
 <style scoped>
 video, img {

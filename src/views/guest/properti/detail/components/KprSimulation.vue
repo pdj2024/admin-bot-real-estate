@@ -1,3 +1,4 @@
+<script setup lang="ts">
 import { ref, computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useSettings } from '@/stores/settings'
