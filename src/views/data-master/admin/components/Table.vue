@@ -21,6 +21,17 @@ const filter = ref('')
 const openDropdownId = ref<string | null>(null)
 const emit = defineEmits(['edit', 'success'])
 
+const props = defineProps({
+  searchQuery: {
+    type: String,
+    default: ''
+  },
+  statusFilter: {
+    type: String,
+    default: ''
+  }
+})
+
 const columns = [
   { accessorKey: 'Nama_User', header: 'Nama' },
   { accessorKey: 'Email', header: 'Email' },
@@ -65,13 +76,22 @@ const table = useVueTable({
   columns,
   state: {
     get globalFilter() {
-      return filter.value
+      return props.searchQuery || ''
     }
   },
   getCoreRowModel: getCoreRowModel(),
   getPaginationRowModel: getPaginationRowModel(),
   getSortedRowModel: getSortedRowModel(),
   getFilteredRowModel: getFilteredRowModel(),
+  onGlobalFilterChange: (val) => {
+    filter.value = val
+  },
+  globalFilterFn: (row, columnId, filterValue) => {
+    const value = row.getValue(columnId)
+    const isSearchMatch = !filterValue || String(value).toLowerCase().includes(String(filterValue).toLowerCase())
+    const isStatusMatch = !props.statusFilter || row.original.Status === props.statusFilter
+    return isSearchMatch && isStatusMatch
+  },
   initialState: { pagination: { pageSize: 5 } }
 })
 

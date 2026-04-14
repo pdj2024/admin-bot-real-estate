@@ -79,7 +79,7 @@ export const distributionOptions: ApexOptions = {
             fontSize: '14px',
             fontWeight: 800,
             color: '#64748b',
-            formatter: (w) => '263'
+            formatter: () => '263'
           }
         }
       }

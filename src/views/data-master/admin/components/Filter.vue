@@ -6,6 +6,7 @@
         <Icon icon="lucide:search" class="size-4" />
       </div>
       <input 
+        v-model="searchQuery"
         type="text" 
         class="w-full h-11 ps-11 pe-4 text-xs font-bold text-slate-700 bg-slate-50 border border-slate-100 rounded-xl focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500/50 outline-none transition-all placeholder:text-slate-400 placeholder:font-black placeholder:uppercase placeholder:tracking-widest" 
         placeholder="Cari Nama / Email..." 
@@ -14,10 +15,10 @@
 
     <!-- Status Selector -->
     <div class="relative min-w-[160px]">
-      <select class="w-full h-11 px-4 text-[10px] font-black uppercase tracking-widest text-slate-600 bg-slate-50 border border-slate-100 rounded-xl focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500/50 outline-none appearance-none transition-all cursor-pointer">
-        <option selected disabled>Pilih Status</option>
-        <option>Aktif</option>
-        <option>Non-Aktif</option>
+      <select v-model="status" class="w-full h-11 px-4 text-[10px] font-black uppercase tracking-widest text-slate-600 bg-slate-50 border border-slate-100 rounded-xl focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500/50 outline-none appearance-none transition-all cursor-pointer">
+        <option value="">Semua Status</option>
+        <option value="aktif">Aktif</option>
+        <option value="non aktif">Non-Aktif</option>
       </select>
       <div class="absolute inset-y-0 end-4 flex items-center pointer-events-none text-slate-400">
         <Icon icon="lucide:chevron-down" class="size-3.5" />
@@ -36,7 +37,14 @@
     </div>
   </div>
 </template>
-
 <script setup lang="ts">
+import { ref, watch } from 'vue'
 import { Icon } from '@iconify/vue'
+
+const emit = defineEmits(['search', 'filterStatus'])
+const searchQuery = ref('')
+const status = ref('')
+
+watch(searchQuery, (val) => emit('search', val))
+watch(status, (val) => emit('filterStatus', val))
 </script>

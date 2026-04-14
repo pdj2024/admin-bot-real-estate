@@ -67,7 +67,11 @@ const handleTouchEnd = (e: TouchEvent) => {
   const endX = e.changedTouches[0].clientX
   const diff = startX - endX
   if (Math.abs(diff) > 50) {
-    diff > 0 ? nextSlide(true) : prevSlide()
+    if (diff > 0) {
+      nextSlide(true)
+    } else {
+      prevSlide()
+    }
   }
 }
 

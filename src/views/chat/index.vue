@@ -120,7 +120,7 @@ const joinRoom = async (bot: any, aktif: any, assign: any) => {
   const idsAktif = Array.isArray(aktif) ? aktif : aktif?._value || []
   const idsAssign = Array.isArray(assign) ? assign : assign?._value || []
 
-  const joinMultipleRooms = async (roomIds: string[], name: string) => {
+  const joinMultipleRooms = async (roomIds: string[]) => {
     if (!roomIds || roomIds.length === 0) return
 
     const promises = roomIds.map(
@@ -130,9 +130,9 @@ const joinRoom = async (bot: any, aktif: any, assign: any) => {
   }
 
   if (currentActiveTab.value === 'bot') {
-    await joinMultipleRooms(idsBot, 'bot')
+    await joinMultipleRooms(idsBot)
   } else if (currentActiveTab.value === 'chat_saya') {
-    await joinMultipleRooms([...idsAktif, ...idsAssign], 'chat saya')
+    await joinMultipleRooms([...idsAktif, ...idsAssign])
   }
 }
 
@@ -160,7 +160,7 @@ const startSignalR = async () => {
     .withAutomaticReconnect()
     .build()
 
-  signalRConnection.value.on('RoomCreated', (roomId, createdAt) => {
+  signalRConnection.value.on('RoomCreated', (roomId) => {
     console.log('🟢 [Event: RoomCreated]', roomId)
     if (sidebarRef.value) sidebarRef.value.refreshChatList()
   })
@@ -201,7 +201,7 @@ const startSignalR = async () => {
     }
   })
 
-  signalRConnection.value.on('ReceiveHandoverAlert', (payload, cancellationToken) => {
+  signalRConnection.value.on('ReceiveHandoverAlert', (payload) => {
     console.log('[Event: ReceiveHandoverAlert]', payload)
     if (payload && payload.roomId === selectedRoomId.value) {
       handleClearRoom()
@@ -256,6 +256,12 @@ watch(
   { immediate: true }
 )
 
+const handleUpdateChatStatus = (payload: { index: number; status: 'send' | 'failed' | 'pending' }) => {
+  if (chats.value[payload.index]) {
+    chats.value[payload.index].Send_Status = payload.status
+  }
+}
+
 onMounted(() => {
   startSignalR()
 })
@@ -303,6 +309,8 @@ onBeforeUnmount(() => {
             @clearRoom="handleClearRoom" 
             @usernameChange="handleUsernameChange" 
             @takeOverStatus="handleTakeOverStatus"
+            @addChat="chats.push($event)"
+            @updateChatStatus="handleUpdateChatStatus"
           />
         </div>
       </div>

@@ -32,7 +32,7 @@ const props = defineProps<{
   lastMessageId: string
 }>()
 
-const emit = defineEmits(['imageLoaded'])
+defineEmits(['imageLoaded'])
 
 const isMe = computed(() => {
   const role = (props.chat.Tipe_User || '').toLowerCase()

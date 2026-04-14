@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { reactive } from 'vue'
 
 export interface BusinessSettings {
+  appName: string
   description: string
   address: string
   phone: string
@@ -19,6 +20,7 @@ export interface BotSettings {
 }
 
 const DEFAULT_BUSINESS: BusinessSettings = {
+  appName: 'Rumah Bejo',
   description: 'Rumah Bejo adalah platform properti premium yang berkomitmen memberikan pengalaman transaksi hunian paling aman, transparan, dan profesional di Indonesia.',
   address: 'Jl. Asia Afrika No.123, SCBD, Jakarta Selatan 12190',
   phone: '+62 895-3538-37000',

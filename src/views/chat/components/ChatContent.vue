@@ -2,7 +2,7 @@
 import { ref, onMounted, onBeforeUnmount, onUpdated, nextTick, computed, watch } from 'vue'
 import { Icon } from '@iconify/vue'
 import { confirm, success, fail } from '@/utils/sweet-alert'
-import type { CalendarOptions, EventClickArg } from '@fullcalendar/core'
+import type { CalendarOptions } from '@fullcalendar/core'
 import type { DateClickArg } from '@fullcalendar/interaction'
 import FullCalendar from '@fullcalendar/vue3'
 import dayGridPlugin from '@fullcalendar/daygrid'
@@ -57,7 +57,6 @@ const addMoreInput = ref<HTMLInputElement | null>(null)
 const props = defineProps<{
   roomId: string | null
   idLawan: string
-  username: string
   phoneNumber: string
   activeTab: string
   chats: Chat[]
@@ -70,6 +69,8 @@ const emit = defineEmits<{
   (e: 'clearRoom'): void
   (e: 'usernameChange', value: string): void
   (e: 'takeOverStatus', value: string[]): void
+  (e: 'addChat', value: Chat): void
+  (e: 'updateChatStatus', value: { index: number; status: 'send' | 'failed' | 'pending' }): void
 }>()
 
 const handleClickOutside = (event: MouseEvent) => {
@@ -124,10 +125,9 @@ const calendarOptions = computed<CalendarOptions>(() => ({
       success('berhasil')
     }
   },
-  eventClick(info: EventClickArg) {
-    const event = info.event
-    const data = event.extendedProps
-    // console.log(data.customer)
+  eventClick() {
+    // const event = info.event
+    // const data = event.extendedProps
     openSchedule.value = false
   }
 }))
@@ -248,7 +248,7 @@ const sendProduct = async (product: any) => {
 
           urlMedia = await new Promise((resolve) => {
             const reader = new FileReader()
-            reader.onloadend = () => resolve(reader.result)
+            reader.onloadend = () => resolve(reader.result as string)
             reader.readAsDataURL(blob)
           })
         } catch (error) {
@@ -413,7 +413,7 @@ const sendChat = async (type: string, url?: string, targetRoomId?: string, targe
   const tempIndex = props.chats.length
 
   if (isCurrentActiveRoom) {
-    props.chats.push({
+    emit('addChat', {
       Message: type == 'system_image' ? url : messageText,
       Sent_At: sentAt,
       Sender_Id: myId,
@@ -422,7 +422,7 @@ const sendChat = async (type: string, url?: string, targetRoomId?: string, targe
       Send_Status: 'pending',
       Room_Id: activeRoomId,
       User_Ids: currentUserIds,
-      Username_User: username,
+      Username_User: username || '',
       Telepon_User: myId,
       Media_Url: mediaUrl || ''
     } as unknown as Chat)
@@ -468,8 +468,8 @@ const sendChat = async (type: string, url?: string, targetRoomId?: string, targe
       { headers: { 'X-Jenis-User': 'admin' } }
     )
 
-    if (isCurrentActiveRoom && props.chats[tempIndex]) {
-      props.chats[tempIndex].Send_Status = 'send'
+    if (isCurrentActiveRoom) {
+      emit('updateChatStatus', { index: tempIndex, status: 'send' })
     }
 
     if (type === 'system_keluar' && isCurrentActiveRoom) {
@@ -478,8 +478,8 @@ const sendChat = async (type: string, url?: string, targetRoomId?: string, targe
   } catch (err: any) {
     console.error('Gagal mengirim chat:', err.response?.data || err.message)
 
-    if (isCurrentActiveRoom && props.chats[tempIndex]) {
-      props.chats[tempIndex].Send_Status = 'failed'
+    if (isCurrentActiveRoom) {
+      emit('updateChatStatus', { index: tempIndex, status: 'failed' })
     }
   }
 }
@@ -681,7 +681,7 @@ watch(
     if (newVal && newVal.length > 0) {
       const takeOverSuccess: string[] = []
 
-      for (const [idx, item] of newVal.entries()) {
+      for (const [, item] of newVal.entries()) {
         try {
           await takeOverChat(item.status, item.phoneNumber, item.room)
           takeOverSuccess.push(item.room)

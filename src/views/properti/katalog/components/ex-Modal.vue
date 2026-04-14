@@ -492,7 +492,8 @@ const submitForm = async () => {
         Flag_Sewa: form.value.Status_Transaksi?.includes('Sewa') ? 'Ya' : 'Tidak'
       }
 
-      const { MediaUrls, ...cleanPayload } = payload
+      const cleanPayload = { ...payload }
+      delete (cleanPayload as any).MediaUrls
 
       // Sanitasi: Hapus No_Id jika kosong saat create agar tidak error di server
       if (!isEdit && !cleanPayload.No_Id) {
@@ -553,10 +554,12 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
             <div class="col-span-2 space-y-2 !mb-3">
               <label class="label block">Gambar Produk</label>
               <div ref="scrollContainer" class="preview-container flex flex-nowrap gap-3 overflow-x-auto pb-2 custom-scroll">
-                <div v-if="previewPhotos.length >= 1" v-for="(img, i) in previewPhotos" :key="i" class="preview-box relative size-24 flex-shrink-0">
-                  <img :src="img.Id_Media" class="size-full object-cover rounded-xl border border-slate-200" />
-                  <button @click="removePhoto(i)" class="preview-delete">✕</button>
-                </div>
+                <template v-if="previewPhotos.length >= 1">
+                  <div v-for="(img, i) in previewPhotos" :key="i" class="preview-box relative size-24 flex-shrink-0">
+                    <img :src="img.Id_Media" class="size-full object-cover rounded-xl border border-slate-200" />
+                    <button @click="removePhoto(i)" class="preview-delete">✕</button>
+                  </div>
+                </template>
 
                 <label class="size-24 border-2 border-dashed border-slate-200 rounded-xl flex flex-shrink-0 flex-col items-center justify-center cursor-pointer hover:bg-slate-50 hover:border-primary/50 transition-all text-slate-400 group">
                   <Icon icon="lucide:plus" class="size-6 group-hover:text-primary transition-colors" />

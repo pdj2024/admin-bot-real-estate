@@ -19,6 +19,8 @@ interface Admin {
 const isModalOpen = ref(false)
 const selectedAdmin = ref<Admin | null>(null)
 const tableRef = ref()
+const searchQuery = ref('')
+const statusFilter = ref('')
 
 const refreshTable = () => {
   if (tableRef.value?.fetchData) {
@@ -51,7 +53,7 @@ const openEditModal = (admin: any) => {
           </div>
           
           <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <Filter />
+            <Filter @search="searchQuery = $event" @filterStatus="statusFilter = $event" />
             <button 
               @click="openAddModal"
               class="px-6 h-11 bg-bejo-500 hover:bg-bejo-600 text-white rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-bejo-500/20 transition-all flex items-center gap-2 active:scale-95 whitespace-nowrap"
@@ -63,7 +65,7 @@ const openEditModal = (admin: any) => {
         </div>
 
         <div class="p-2 md:p-4">
-          <Table ref="tableRef" @edit="openEditModal" @success="refreshTable"/>
+          <Table ref="tableRef" :searchQuery="searchQuery" :statusFilter="statusFilter" @edit="openEditModal" @success="refreshTable"/>
         </div>
       </div>
     </div>

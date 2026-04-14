@@ -2,6 +2,8 @@
 import { ref, computed } from 'vue'
 import Vertical from '@/layouts/vertical.vue'
 import { Icon } from '@iconify/vue'
+import WilayahModal from './components/WilayahModal.vue'
+import { confirm as confirmAlert, success as successAlert } from '@/utils/sweet-alert'
 
 // Tab definitions
 const tabs = [
@@ -13,50 +15,87 @@ const tabs = [
 ]
 
 const activeTab = ref('kota')
+const isModalOpen = ref(false)
+const selectedItem = ref<any>(null)
 
 // Dummy Data
-const dummyData = {
+const dummyData = ref({
   kota: [
-    { id: 1, nama: 'Jakarta Selatan' },
-    { id: 2, nama: 'Jakarta Barat' },
-    { id: 3, nama: 'Jakarta Timur' },
-    { id: 4, nama: 'Bandung' },
-    { id: 5, nama: 'Surabaya' }
+    { id: 'k1', nama: 'Surabaya' },
+    { id: 'k2', nama: 'Sidoarjo' },
+    { id: 'k3', nama: 'Gresik' }
   ],
   area: [
-    { id: 1, nama: 'Pusat Bisnis' },
-    { id: 2, nama: 'Residensi Elite' },
-    { id: 3, nama: 'Kawasan Industri' },
-    { id: 4, nama: 'CBD Sudirman' }
+    { id: 'a1', nama: 'Surabaya Barat', kotaId: 'k1' },
+    { id: 'a2', nama: 'Surabaya Timur', kotaId: 'k1' },
+    { id: 'a3', nama: 'Surabaya Pusat', kotaId: 'k1' },
+    { id: 'a4', nama: 'Waru', kotaId: 'k2' }
   ],
   kecamatan: [
-    { id: 1, nama: 'Kebayoran Baru' },
-    { id: 2, nama: 'Cilandak' },
-    { id: 3, nama: 'Tebet' },
-    { id: 4, nama: 'Setiabudi' }
+    { id: 'kec1', nama: 'Sambikerep', areaId: 'a1' },
+    { id: 'kec2', nama: 'Lakarsantri', areaId: 'a1' },
+    { id: 'kec3', nama: 'Gubeng', areaId: 'a2' },
+    { id: 'kec4', nama: 'Mulyorejo', areaId: 'a3' }
   ],
   kelurahan: [
-    { id: 1, nama: 'Senayan' },
-    { id: 2, nama: 'Melawai' },
-    { id: 3, nama: 'Pondok Indah' },
-    { id: 4, nama: 'Lebak Bulus' }
+    { id: 'kel1', nama: 'Lontar', kecamatanId: 'kec1' },
+    { id: 'kel2', nama: 'Made', kecamatanId: 'kec1' },
+    { id: 'kel3', nama: 'Citraland', kecamatanId: 'kec2' },
+    { id: 'kel4', nama: 'Airlangga', kecamatanId: 'kec3' }
   ],
   prioritas: [
-    { id: 1, nama: 'High Priority' },
-    { id: 2, nama: 'Medium Priority' },
-    { id: 3, nama: 'Low Priority' },
-    { id: 4, nama: 'Urgent' }
+    { id: 'p1', nama: 'High Priority (Surabaya Barat)', areaId: 'a1', level: 'High' },
+    { id: 'p2', nama: 'Medium Priority (Surabaya Timur)', areaId: 'a2', level: 'Medium' },
+    { id: 'p3', nama: 'Low Priority (Surabaya Pusat)', areaId: 'a3', level: 'Low' }
   ]
-}
+})
 
-const currentData = computed(() => dummyData[activeTab.value as keyof typeof dummyData] || [])
+const currentData = computed(() => {
+  const data = dummyData.value[activeTab.value as keyof typeof dummyData.value] || []
+  
+  // Enhancement: Add parent names for better context in table
+  return data.map((item: any) => {
+    let parentName = ''
+    if (activeTab.value === 'area') {
+      parentName = dummyData.value.kota.find(k => k.id === item.kotaId)?.nama || ''
+    } else if (activeTab.value === 'kecamatan') {
+      parentName = dummyData.value.area.find(a => a.id === item.areaId)?.nama || ''
+    } else if (activeTab.value === 'kelurahan') {
+      parentName = dummyData.value.kecamatan.find(k => k.id === item.kecamatanId)?.nama || ''
+    } else if (activeTab.value === 'prioritas') {
+      parentName = dummyData.value.area.find(a => a.id === item.areaId)?.nama || ''
+    }
+    return { ...item, parentName }
+  })
+})
+
+const handleAdd = () => {
+  selectedItem.value = null
+  isModalOpen.value = true
+}
 
 const handleEdit = (item: any) => {
-  console.log('Edit:', item)
+  selectedItem.value = item
+  isModalOpen.value = true
 }
 
-const handleDelete = (id: number) => {
-  console.log('Delete:', id)
+const handleDelete = (id: string) => {
+  confirmAlert(`Ingin menghapus data ${activeTab.value} ini?`, () => {
+    const list = (dummyData.value as any)[activeTab.value];
+    (dummyData.value as any)[activeTab.value] = list.filter((i: any) => i.id !== id)
+    successAlert('Data berhasil dihapus')
+  })
+}
+
+const handleSuccess = ({ type, data, isEdit }: { type: string, data: any, isEdit: boolean }) => {
+  const list = (dummyData.value as any)[type]
+  if (isEdit) {
+    const index = list.findIndex((i: any) => i.id === data.id)
+    if (index !== -1) list[index] = data
+  } else {
+    data.id = `${type.charAt(0)}${Math.floor(Math.random() * 1000)}`
+    list.push(data)
+  }
 }
 </script>
 
@@ -70,9 +109,12 @@ const handleDelete = (id: number) => {
           <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Kelola data geografis dan prioritas area</p>
         </div>
         
-        <button class="px-6 py-3 bg-bejo-500 hover:bg-bejo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-bejo-500/20 transition-all flex items-center gap-2 active:scale-95">
+        <button 
+          @click="handleAdd"
+          class="px-6 py-3 bg-bejo-500 hover:bg-bejo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-bejo-500/20 transition-all flex items-center gap-2 active:scale-95"
+        >
           <Icon icon="lucide:plus" class="size-4" />
-          Tambah Data
+          Tambah {{ tabs.find(t => t.id === activeTab)?.label }}
         </button>
       </div>
 
@@ -102,6 +144,7 @@ const handleDelete = (id: number) => {
               <tr class="bg-slate-50/50 border-b border-slate-50">
                 <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest w-20">No</th>
                 <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Nama {{ tabs.find(t => t.id === activeTab)?.label }}</th>
+                <th v-if="activeTab !== 'kota'" class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Parent / Lokasi</th>
                 <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Aksi</th>
               </tr>
             </thead>
@@ -114,7 +157,11 @@ const handleDelete = (id: number) => {
                       {{ item.nama.charAt(0) }}
                     </div>
                     <span class="text-sm font-black text-slate-900">{{ item.nama }}</span>
+                    <span v-if="item.level" class="text-[9px] font-black bg-bejo-100 text-bejo-600 px-2 py-0.5 rounded-full uppercase tracking-widest">{{ item.level }}</span>
                   </div>
+                </td>
+                <td v-if="activeTab !== 'kota'" class="px-8 py-5">
+                  <span class="text-xs font-bold text-slate-500">{{ item.parentName || '-' }}</span>
                 </td>
                 <td class="px-8 py-5">
                   <div class="flex items-center justify-end gap-2 outline-none">
@@ -146,6 +193,15 @@ const handleDelete = (id: number) => {
         </div>
       </div>
     </div>
+
+    <WilayahModal
+      :show="isModalOpen"
+      :type="activeTab"
+      :editData="selectedItem"
+      :allData="dummyData as any"
+      @close="isModalOpen = false"
+      @success="handleSuccess"
+    />
   </Vertical>
 </template>
 

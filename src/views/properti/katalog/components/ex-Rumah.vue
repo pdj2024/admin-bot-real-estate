@@ -15,7 +15,7 @@ const selectedItem = ref<Product | null>(null)
 const sorting = ref<SortingState>([])
 const selectedSort = ref('Terbaru')
 
-const props = defineProps<{
+defineProps<{
   isAdmin: boolean
 }>()
 
@@ -192,7 +192,7 @@ const deleteProduct = async (data: Product) => {
         }
       })
 
-      fetchData
+      fetchData()
       success('Berhasil hapus produk')
     } catch (err: any) {
       console.log(err.message)
