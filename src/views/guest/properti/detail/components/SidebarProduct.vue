@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { Icon } from '@iconify/vue'
+import { useSettings } from '@/stores/settings'
 import type { Product } from '../index.vue'
+
+const settingsStore = useSettings()
 
 const props = defineProps<{
   product: Product | null
@@ -84,8 +87,11 @@ const handleDragEnd = (e: TouchEvent | MouseEvent) => {
 
 const handleWaContact = () => {
   const url = window.location.href
-  const text = `Halo, saya ingin menanyakan lebih lanjut mengenai properti "${props.product?.Nama_Produk}". Berikut tautannya: ${url}`
-  window.open(`https://wa.me/62895353837000?text=${encodeURIComponent(text)}`, '_blank')
+  const defaultGreeting = `Halo Admin Rumah Bejo, saya tertarik untuk menanyakan lebih lanjut mengenai properti "${props.product?.Nama_Produk}" yang saya lihat di situs.`
+  const text = `${defaultGreeting}\n\nTautan: ${url}`
+  const targetNumber = settingsStore.business.whatsapp || '62895353837000'
+  
+  window.open(`https://wa.me/${targetNumber}?text=${encodeURIComponent(text)}`, '_blank')
 }
 
 const startTimer = () => {

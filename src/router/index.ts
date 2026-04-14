@@ -154,15 +154,69 @@ const router = createRouter({
       },
       component: () => import('@/views/pengaturan/index.vue')
     },
+
+    // Error Pages
+    {
+      path: '/403',
+      name: 'Forbidden',
+      meta: {
+        title: 'Akses Dibatalkan',
+        requiresAuth: false
+      },
+      component: () => import('@/views/errors/ForbiddenView.vue')
+    },
+    {
+      path: '/error',
+      name: 'ServerError',
+      meta: {
+        title: 'Sistem Bermasalah',
+        requiresAuth: false
+      },
+      component: () => import('@/views/errors/ServerErrorView.vue')
+    },
+    {
+      path: '/maintenance',
+      name: 'Maintenance',
+      meta: {
+        title: 'Sistem Sedang Diperbaiki',
+        requiresAuth: false
+      },
+      component: () => import('@/views/errors/MaintenanceView.vue')
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'NotFound',
+      meta: {
+        title: 'Halaman Tidak Ditemukan',
+        requiresAuth: false
+      },
+      component: () => import('@/views/errors/NotFoundView.vue')
+    },
   ]
 })
 
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token');
   const refreshToken = localStorage.getItem('refreshToken');
+  
+  // Check maintenance mode from localStorage (synced with Pinia store)
+  const storedApp = localStorage.getItem('app_global_status');
+  const isMaintenance = storedApp ? JSON.parse(storedApp).isMaintenance : false;
 
   // Cek keberadaan sesi
   const hasTokens = !!token && token !== 'undefined' && !!refreshToken && refreshToken !== 'undefined';
+
+  // Maintenance mode handling
+  if (isMaintenance) {
+    // Allow access to maintenance page itself, login, and admin routes
+    const isMaintenancePage = to.name === 'Maintenance';
+    const isLoginPage = to.name === 'Login';
+    const isAdminRoute = to.meta.requiresAuth === true;
+
+    if (!isMaintenancePage && !isLoginPage && !isAdminRoute) {
+      return next({ name: 'Maintenance' });
+    }
+  }
 
   // Jika mencoba ke halaman login tapi sudah punya sesi
   if (to.path === '/login' && hasTokens) {
@@ -177,6 +231,10 @@ router.beforeEach((to, from, next) => {
     // Lanjutkan, biarkan Axios menangani refresh jika token utama expired
     next();
   } else {
+    // If maintenance mode is off, but trying to access maintenance page directly -> Redirect Beranda
+    if (!isMaintenance && to.name === 'Maintenance') {
+      return next({ name: 'Beranda' });
+    }
     next();
   }
 });

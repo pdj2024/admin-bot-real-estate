@@ -5,7 +5,7 @@
         Menampilkan Daftar <span class="text-bejo-600 font-black text-base">{{ table.getFilteredRowModel().rows.length }}</span> Properti
       </div>
 
-      <div class="flex items-center gap-3 w-full sm:w-auto relative">
+      <div class="grid grid-cols-2 sm:flex sm:items-center gap-3 w-full sm:w-auto relative mb-6 sm:mb-0">
         <button @click="$emit('openFilter')" class="lg:hidden flex-1 flex items-center justify-center gap-2 px-4 py-2 border border-slate-200 rounded-xl bg-slate-50 text-sm font-bold text-slate-700"><Icon icon="lucide:filter" class="size-4" /> Filter</button>
 
         <div id="transaksi-container" class="relative flex-1 sm:flex-none">
@@ -18,12 +18,32 @@
           </button>
 
           <Transition enter-active-class="transition duration-100 ease-out" enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100" leave-active-class="transition duration-75 ease-in" leave-from-class="transform scale-100 opacity-100" leave-to-class="transform scale-95 opacity-0">
-            <div v-show="isTransaksiOpen" class="absolute right-0 sm:left-0 sm:right-auto top-full mt-2 z-50 min-w-[180px] bg-white border border-slate-200 shadow-lg shadow-slate-200/50 p-2 rounded-2xl">
+            <div v-show="isTransaksiOpen" class="absolute right-0 top-full mt-2 z-50 min-w-[180px] bg-white border border-slate-200 shadow-xl shadow-slate-200/50 p-2 rounded-2xl">
               <button @click="handleTransaksi('Semua Label')" class="dropdown-item">Semua Label</button>
               <hr class="my-2 border-slate-100" />
               <button @click="handleTransaksi('Jual Saja')" class="dropdown-item">Jual Saja</button>
               <button @click="handleTransaksi('Sewa Saja')" class="dropdown-item">Sewa Saja</button>
               <button @click="handleTransaksi('Jual & Sewa')" class="dropdown-item">Jual & Sewa</button>
+            </div>
+          </Transition>
+        </div>
+
+        <div id="type-container" class="relative flex-1 sm:flex-none">
+          <button @click="isTypeOpen = !isTypeOpen" class="w-full flex items-center justify-between gap-3 px-4 py-2 border border-slate-200 rounded-xl bg-white text-sm font-bold hover:bg-slate-50 hover:border-slate-300 transition-all text-slate-700">
+            <div class="flex items-center gap-2">
+              <Icon icon="lucide:home" class="size-4 text-bejo-500" />
+              <span>{{ selectedType }}</span>
+            </div>
+            <Icon icon="lucide:chevron-down" class="size-4 opacity-50" />
+          </button>
+
+          <Transition enter-active-class="transition duration-100 ease-out" enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100" leave-active-class="transition duration-75 ease-in" leave-from-class="transform scale-100 opacity-100" leave-to-class="transform scale-95 opacity-0">
+            <div v-show="isTypeOpen" class="absolute left-0 sm:right-0 top-full mt-2 z-50 min-w-[180px] max-h-60 overflow-y-auto bg-white border border-slate-200 shadow-xl shadow-slate-200/50 p-2 rounded-2xl custom-scroll">
+              <button @click="handleType('Semua Tipe')" class="dropdown-item">Semua Tipe</button>
+              <hr class="my-2 border-slate-100" />
+              <button v-for="t in propertyTypes" :key="t" @click="handleType(t)" class="dropdown-item flex items-center justify-between">
+                {{ t }} <Icon v-if="selectedType === t" icon="lucide:check" class="size-3 text-bejo-500" />
+              </button>
             </div>
           </Transition>
         </div>
@@ -52,9 +72,28 @@
       </div>
     </div>
 
-    <div class="grid xl:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 min-[2000px]:grid-cols-4 min-[2600px]:grid-cols-5 min-[3200px]:grid-cols-6 gap-6">
       <template v-if="isLoading">
         <ProductCard v-for="i in 6" :key="i" :product="{}" is-loading />
+      </template>
+      <template v-else-if="table.getRowModel().rows.length === 0">
+        <div class="col-span-full py-20 flex flex-col items-center justify-center text-center bg-white rounded-[2.5rem] border border-dashed border-slate-200 shadow-sm relative overflow-hidden">
+          <div class="absolute -top-24 -right-24 size-48 bg-bejo-50 rounded-full blur-3xl opacity-50"></div>
+          <div class="absolute -bottom-24 -left-24 size-48 bg-slate-50 rounded-full blur-3xl opacity-50"></div>
+          <div class="p-6 bg-slate-50 rounded-full mb-6 relative z-10">
+            <Icon icon="lucide:building-2" class="size-16 text-slate-300" />
+            <div class="absolute -right-2 -bottom-2 size-10 bg-white rounded-full flex items-center justify-center shadow-lg">
+              <Icon icon="lucide:search-x" class="size-6 text-bejo-500" />
+            </div>
+          </div>
+          <h3 class="text-2xl font-black text-slate-900 mb-3 relative z-10">Oops! Properti Tidak Ditemukan</h3>
+          <p class="text-slate-500 font-medium max-w-sm mx-auto leading-relaxed relative z-10 mb-8">
+            Kami tidak dapat menemukan properti yang sesuai dengan kriteria Anda. Cobalah untuk mengubah filter atau kata kunci pencarian Anda.
+          </p>
+          <button @click="resetFilters" class="px-10 py-3.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-bejo-600 transition-all hover:shadow-lg hover:shadow-bejo-600/30">
+            Reset Semua Filter
+          </button>
+        </div>
       </template>
       <template v-else>
         <ProductCard 
@@ -103,10 +142,26 @@ const sorting = ref<SortingState>([])
 const selectedSort = ref('Terbaru')
 const isTransaksiOpen = ref(false)
 const selectedTransaksi = ref('Semua Label')
+const selectedType = ref('Semua Tipe')
+const isTypeOpen = ref(false)
 
 const props = defineProps<{
   isAdmin: boolean
+  searchQuery: string
 }>()
+
+const propertyTypes = ['Rumah', 'Tanah', 'Ruko', 'Apartemen', 'Gudang', 'Villa', 'SOHO', 'Pabrik', 'Perkantoran', 'Hotel', 'Rumah Kos', 'Stand', 'Toko', 'Gedung', 'Condotel', 'Lain-lain']
+
+const resetFilters = () => {
+  selectedTransaksi.value = 'Semua Label'
+  selectedType.value = 'Semua Tipe'
+  selectedSort.value = 'Terbaru'
+  sorting.value = []
+  // Jika filter adalah state internal, reset juga
+  filter.value = ''
+  // Mengirim event reset ke parent jika perlu menyingkronkan searchQuery di GuestLayout
+  // Tapi untuk saat ini cukup reset state internal
+}
 
 interface MediaUrl {
   Url: string | null
@@ -179,15 +234,38 @@ const handleTransaksi = (type: string) => {
   isTransaksiOpen.value = false
 }
 
+const handleType = (type: string) => {
+  selectedType.value = type
+  isTypeOpen.value = false
+}
+
 const filteredProducts = computed(() => {
-  if (selectedTransaksi.value === 'Jual Saja') {
-    return products.value.filter(p => p.Status_Transaksi?.includes('Jual') && !p.Status_Transaksi?.includes('Sewa'))
-  } else if (selectedTransaksi.value === 'Sewa Saja') {
-    return products.value.filter(p => !p.Status_Transaksi?.includes('Jual') && p.Status_Transaksi?.includes('Sewa'))
-  } else if (selectedTransaksi.value === 'Jual & Sewa') {
-    return products.value.filter(p => p.Status_Transaksi?.includes('Jual') && p.Status_Transaksi?.includes('Sewa'))
+  let result = products.value
+
+  // Filter Nama (Search Query)
+  if (props.searchQuery) {
+    const q = props.searchQuery.toLowerCase()
+    result = result.filter(p => 
+      (p.Nama_Produk?.toLowerCase() || '').includes(q) || 
+      (p.Alamat?.toLowerCase() || '').includes(q)
+    )
   }
-  return products.value
+
+  // Filter Transaksi
+  if (selectedTransaksi.value === 'Jual Saja') {
+    result = result.filter(p => p.Status_Transaksi?.includes('Jual') && !p.Status_Transaksi?.includes('Sewa'))
+  } else if (selectedTransaksi.value === 'Sewa Saja') {
+    result = result.filter(p => !p.Status_Transaksi?.includes('Jual') && p.Status_Transaksi?.includes('Sewa'))
+  } else if (selectedTransaksi.value === 'Jual & Sewa') {
+    result = result.filter(p => p.Status_Transaksi?.includes('Jual') && p.Status_Transaksi?.includes('Sewa'))
+  }
+
+  // Filter Tipe Unit
+  if (selectedType.value !== 'Semua Tipe') {
+    result = result.filter(p => p.Tipe === selectedType.value)
+  }
+
+  return result
 })
 
 const table = useVueTable({
@@ -298,6 +376,9 @@ window.addEventListener('click', (e) => {
   }
   if (!target.closest('#transaksi-container')) {
     isTransaksiOpen.value = false
+  }
+  if (!target.closest('#type-container')) {
+    isTypeOpen.value = false
   }
 })
 

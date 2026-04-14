@@ -58,6 +58,7 @@
       <aside class="lg:col-span-1">
         <Filter
           v-model:openFilter="isFilterOpen"
+          v-model:searchQuery="searchQuery"
           :isAdmin="isAdmin"
           class="lg:sticky lg:top-24 border border-slate-200"
         />
@@ -66,6 +67,7 @@
       <section class="lg:col-span-3">
         <Rumah
           @openFilter="toggleFilter"
+          :searchQuery="searchQuery"
           :isAdmin="isAdmin"
         />
       </section>
@@ -88,6 +90,7 @@ const route = useRoute()
 
 // State untuk mengontrol filter di tampilan mobile
 const isFilterOpen = ref(false)
+const searchQuery = ref('')
 
 const toggleFilter = () => {
   isFilterOpen.value = !isFilterOpen.value

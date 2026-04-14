@@ -23,6 +23,8 @@ const contextMenuPosition = ref({ x: 0, y: 0 })
 const selectedChatForMenu = ref<Chat | null>(null)
 const selectedChatIdx = ref<number>(-1)
 const selectedChatGroup = ref<string>('')
+const unreadCounts = ref<Record<string, number>>({})
+const firstUnreadIds = ref<Record<string, string>>({})
 
 const selectedBotChats = ref<Chat[]>([])
 const selectedAssignChats = ref<Chat[]>([])
@@ -50,6 +52,22 @@ const selectChat = (idx: number, group: string, id: string, idLawan: string, use
   }
   closeSidebar()
   selectedChatId.value = id
+
+  // Capture first unread message ID for the divider
+  const firstUnreadId = firstUnreadIds.value[id] || ''
+  emit('lastMessageId', firstUnreadId)
+
+  // Reset unread count for the selected chat
+  unreadCounts.value[id] = 0
+  firstUnreadIds.value[id] = ''
+  
+  const updateCountInList = (list: Chat[]) => {
+    const item = list.find(c => c.Room_Id === id)
+    if (item) item.New_Message_Count = 0
+  }
+  updateCountInList(chatsBot.value)
+  updateCountInList(chatsAktif.value)
+  updateCountInList(chatsAssign.value)
 }
 
 const props = withDefaults(
@@ -143,6 +161,12 @@ const fetchData = async (tab: 'bot' | 'chat_saya') => {
 
       data.Data.forEach((item: any) => {
         if (item.Username_Lawan !== '' && item.Telepon_User_Lawan !== '') {
+          // Merge local unread counts
+          if (unreadCounts.value[item.Room_Id] !== undefined) {
+            item.New_Message_Count = unreadCounts.value[item.Room_Id]
+          } else {
+            unreadCounts.value[item.Room_Id] = item.New_Message_Count || 0
+          }
           chatsBot.value.push(item)
           roomIdsBot.value.push(item.Room_Id)
         }
@@ -159,12 +183,24 @@ const fetchData = async (tab: 'bot' | 'chat_saya') => {
 
       resHandle.data.Data.forEach((item: any) => {
         if (item.Username_Lawan !== '' && item.Telepon_User_Lawan !== '') {
+          // Merge local unread counts
+          if (unreadCounts.value[item.Room_Id] !== undefined) {
+            item.New_Message_Count = unreadCounts.value[item.Room_Id]
+          } else {
+            unreadCounts.value[item.Room_Id] = item.New_Message_Count || 0
+          }
           chatsAssign.value.push(item)
           roomIdsAssign.value.push(item.Room_Id)
         }
       })
       resBalasan.data.Data.forEach((item: any, idx: number) => {
         if (item.Username_Lawan !== '' && (item.Telepon_User_Lawan !== '' || idx == 0)) {
+          // Merge local unread counts
+          if (unreadCounts.value[item.Room_Id] !== undefined) {
+            item.New_Message_Count = unreadCounts.value[item.Room_Id]
+          } else {
+            unreadCounts.value[item.Room_Id] = item.New_Message_Count || 0
+          }
           chatsAktif.value.push(item)
           roomIdsAktif.value.push(item.Room_Id)
         }
@@ -197,17 +233,30 @@ const forceRefreshToUntukSaya = () => {
 const refreshChatList = (data?: any) => {
   if (data && data.roomId) {
     const formattedDate = data.sentAt ? data.sentAt.substring(0, 19) : ''
+    const roomIdStr = String(data.roomId)
+
+    // Update unread logic
+    const isRoomOpen = roomIdStr === String(props.activeRoomId)
+    const isSystemReply = data.tipeUser === 'admin' || data.tipeUser === 'ai'
+
+    if (isRoomOpen || isSystemReply) {
+      unreadCounts.value[roomIdStr] = 0
+      firstUnreadIds.value[roomIdStr] = ''
+    } else {
+      // Catch the first unread message ID when the bubble starts appearing
+      if (!unreadCounts.value[roomIdStr] || unreadCounts.value[roomIdStr] === 0) {
+        firstUnreadIds.value[roomIdStr] = data.messageId
+      }
+      unreadCounts.value[roomIdStr] = (unreadCounts.value[roomIdStr] || 0) + 1
+    }
 
     const updateLocalChat = (chatList: any[]) => {
-      const index = chatList.findIndex((c) => c.Room_Id === String(data.roomId))
+      const index = chatList.findIndex((c) => String(c.Room_Id) === roomIdStr)
 
       if (index !== -1) {
-        const currentCount = chatList[index].New_Message_Count || 0
-
         chatList[index].Last_Message = data.message
         chatList[index].Last_Message_At = formattedDate
-        chatList[index].New_Message_Count = currentCount + 1
-        chatList[index].Last_Id_Message_Viewed = data.messageId
+        chatList[index].New_Message_Count = unreadCounts.value[roomIdStr]
 
         const updatedChat = chatList.splice(index, 1)[0]
         chatList.unshift(updatedChat)
@@ -217,14 +266,15 @@ const refreshChatList = (data?: any) => {
     updateLocalChat(chatsBot.value)
     updateLocalChat(chatsAktif.value)
     updateLocalChat(chatsAssign.value)
-    if (data.roomId != selectedChatId) {
+
+    if (roomIdStr !== String(props.activeRoomId) && !isSystemReply) {
       audio.play().catch((error) => {
         console.error('Gagal memutar audio:', error)
       })
     }
 
-    if (!chatsBot.value.some((chat) => chat.Room_Id === data.roomId) && !roomIdsBot.value.includes(data.roomId)) {
-      roomIdsBot.value.push(data.roomId)
+    if (!chatsBot.value.some((chat) => String(chat.Room_Id) === roomIdStr) && !roomIdsBot.value.includes(roomIdStr)) {
+      roomIdsBot.value.push(roomIdStr)
       emit('allRoomIds', roomIdsBot.value, roomIdsAktif.value, roomIdsAssign.value)
     }
   }

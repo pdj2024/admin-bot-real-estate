@@ -87,9 +87,9 @@ const formatCurrency = (value: number) => {
                 { icon: 'lucide:land-plot', label: 'L. Tanah', val: product?.Luas_Tanah + ' m²' },
                 { icon: 'lucide:home', label: 'L. Bangunan', val: product?.Luas_Bangunan + ' m²' },
                 { icon: 'lucide:layers', label: 'Lantai', val: product?.Jumlah_Lantai },
+                { icon: 'lucide:car', label: 'Carport', val: product?.Jumlah_Carpot },
                 { icon: 'lucide:bed', label: 'K. Tidur', val: product?.Jumlah_Kamar_Tidur },
-                { icon: 'lucide:bath', label: 'K. Mandi', val: product?.Jumlah_Kamar_Mandi },
-                { icon: 'lucide:car', label: 'Carport', val: product?.Jumlah_Carpot }
+                { icon: 'lucide:bath', label: 'K. Mandi', val: product?.Jumlah_Kamar_Mandi }
               ]"
               :key="idx"
               class="flex flex-col items-center py-4 rounded-2xl border border-slate-100 hover:bg-slate-50 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-slate-200/50"

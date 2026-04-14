@@ -41,7 +41,7 @@
 
         <!-- Access Road Stickers Bottom Right -->
         <div class="absolute bottom-4 right-4 flex flex-col gap-1.5 items-end z-10" v-if="product.Akses_Jalan">
-          <span v-for="(akses, idx) in product.Akses_Jalan.slice(0, 2)" :key="idx" class="bg-white/90 backdrop-blur-md text-slate-700 text-[10px] font-bold px-2.5 py-1 rounded-md border-l-4 border-bejo-600 shadow-sm flex items-center gap-1.5">
+          <span v-for="(akses, idx) in product.Akses_Jalan.slice(0, 3)" :key="idx" class="bg-white/90 backdrop-blur-md text-slate-700 text-[10px] font-bold px-2.5 py-1 rounded-md border-l-4 border-bejo-600 shadow-sm flex items-center gap-1.5">
             <Icon icon="lucide:map-pin" class="size-2.5 text-bejo-600" />
             {{ akses }}
           </span>
@@ -101,19 +101,19 @@
           <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0">
             <Icon icon="lucide:car" class="size-3.5 text-bejo-600" />
           </div>
-          <span class="text-xs font-bold text-slate-700">{{ product.Jumlah_Carpot || 0 }} Mob</span>
+          <span class="text-xs font-bold text-slate-700">{{ product.Jumlah_Carpot || 0 }} Mobil</span>
         </div>
         <div class="flex items-center gap-2">
           <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0" :class="isLoading ? 'opacity-50 grayscale' : ''">
             <Icon icon="lucide:bed" class="size-3.5 text-bejo-600" />
           </div>
-          <span class="text-xs font-bold" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-8' : 'text-slate-700'">{{ isLoading ? 0 : (product.Jumlah_Kamar_Tidur || 0) }} Kmr</span>
+          <span class="text-xs font-bold" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-8' : 'text-slate-700'">{{ isLoading ? 0 : (product.Jumlah_Kamar_Tidur || 0) }} KT</span>
         </div>
         <div class="flex items-center gap-2">
           <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0" :class="isLoading ? 'opacity-50 grayscale' : ''">
             <Icon icon="lucide:bath" class="size-3.5 text-bejo-600" />
           </div>
-          <span class="text-xs font-bold" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-8' : 'text-slate-700'">{{ isLoading ? 0 : (product.Jumlah_Kamar_Mandi || 0) }} Kmr</span>
+          <span class="text-xs font-bold" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-8' : 'text-slate-700'">{{ isLoading ? 0 : (product.Jumlah_Kamar_Mandi || 0) }} KM</span>
         </div>
       </div>
 

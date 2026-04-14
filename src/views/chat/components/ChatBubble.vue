@@ -145,6 +145,11 @@ watch(
       </span>
     </div>
 
+    <div v-if="chat.Message_Id === props.lastMessageId" class="w-full my-6 flex items-center justify-center relative">
+      <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-red-200/50 border-dashed"></div></div>
+      <span class="relative px-4 py-1 bg-red-50 text-red-500 border border-red-100 rounded-full text-[10px] font-bold shadow-sm uppercase tracking-wider"> Pesan Belum Terbaca </span>
+    </div>
+
     <div v-if="(chat.Message || '').includes('_X7#mQ9!vW2_')" class="w-full my-6 flex justify-center px-4">
       <div class="flex flex-col items-center justify-center text-center px-6 py-2.5 bg-slate-50/80 backdrop-blur-md border border-slate-100 rounded-2xl shadow-sm max-w-[85%] transition-all hover:bg-white hover:shadow-md group">
         <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 opacity-70 group-hover:opacity-100 transition-opacity">
@@ -183,7 +188,7 @@ watch(
             <template v-if="!isCustomer">
               <Icon v-if="chat.Send_Status === 'pending'" icon="lucide:clock" class="size-3" />
               <Icon v-else-if="chat.Send_Status === 'failed'" icon="lucide:circle-alert" class="size-3 text-red-500" />
-              <Icon v-else icon="lucide:check-check" class="size-3 text-white/90" />
+              <Icon v-else icon="lucide:check-check" class="size-3 text-default-600" />
             </template>
           </div>
         </div>
@@ -195,11 +200,6 @@ watch(
         </div>
         <div v-else-if="chat.Tipe_User === 'admin' && chat.Sender_Id === 'adm_bot'" class="avatar-ai relative flex items-center justify-center rounded-xl size-8 bg-gradient-to-br from-amber-400 to-amber-500 text-white border-2 border-white shadow-lg shadow-amber-500/20 font-black text-[10px] tracking-tighter">AI</div>
       </div>
-    </div>
-
-    <div v-if="chat.Message_Id == props.lastMessageId && idx < chats.length - 1" class="w-full my-6 flex items-center justify-center relative">
-      <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-red-200/50 border-dashed"></div></div>
-      <span class="relative px-4 py-1 bg-red-50 text-red-500 border border-red-100 rounded-full text-[10px] font-bold shadow-sm uppercase tracking-wider"> Pesan Belum Terbaca </span>
     </div>
   </div>
 </template>

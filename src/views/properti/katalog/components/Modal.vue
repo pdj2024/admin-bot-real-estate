@@ -20,6 +20,7 @@ const dropdownCityRef = ref<HTMLElement | null>(null)
 const scrollContainer = ref<HTMLElement | null>(null)
 
 const isLoading = ref(false)
+const openType = ref(false)
 const openProvince = ref(false)
 const openCity = ref(false)
 const selectedProvinceId = ref('')
@@ -27,6 +28,12 @@ const selectedProvinceName = ref('')
 const selectedCityName = ref('')
 const searchProvince = ref('')
 const searchCity = ref('')
+const searchType = ref('')
+const dropdownTypeRef = ref<HTMLElement | null>(null)
+
+const openCertificate = ref(false)
+const searchCertificate = ref('')
+const dropdownCertificateRef = ref<HTMLElement | null>(null)
 
 const props = defineProps<{
   showModal: boolean
@@ -199,6 +206,18 @@ const filteredProvinces = computed(() => {
   return provinces.value.filter((p) => p.name.toLowerCase().includes(searchProvince.value.toLowerCase()))
 })
 
+const propertyTypes = ['Rumah', 'Tanah', 'Ruko', 'Apartemen', 'Gudang', 'Villa', 'SOHO', 'Pabrik', 'Perkantoran', 'Hotel', 'Rumah Kos', 'Stand', 'Toko', 'Gedung', 'Condotel', 'Lain-lain']
+
+const filteredTypes = computed(() => {
+  return propertyTypes.filter((t) => t.toLowerCase().includes(searchType.value.toLowerCase()))
+})
+
+const certificateTypes = ['SHM', 'SHGB', 'HGU', 'HP', 'HMRS', 'Girik', 'Petok D', 'AJB', 'PPJB', 'Surat Ijo', 'Lainnya']
+
+const filteredCertificates = computed(() => {
+  return certificateTypes.filter((t) => t.toLowerCase().includes(searchCertificate.value.toLowerCase()))
+})
+
 // Filter Kota berdasarkan input search
 const filteredCities = computed(() => {
   return cities.value.filter((c) => c.name.toLowerCase().includes(searchCity.value.toLowerCase()))
@@ -220,6 +239,18 @@ const selectCity = (c: City) => {
   form.value.Area[0] = `${c.name}, ${provinceName}`
   searchCity.value = '' // Reset search
   openCity.value = false
+}
+
+const selectType = (type: string) => {
+  form.value.Tipe = type
+  searchType.value = ''
+  openType.value = false
+}
+
+const selectCertificate = (type: string) => {
+  form.value.Jenis_Sertifikat = type
+  searchCertificate.value = ''
+  openCertificate.value = false
 }
 const getProvince = async () => {
   try {
@@ -347,6 +378,12 @@ const handleClickOutside = (e: MouseEvent) => {
   if (!dropdownCityRef.value?.contains(e.target as Node)) {
     openCity.value = false
   }
+  if (!dropdownTypeRef.value?.contains(e.target as Node)) {
+    openType.value = false
+  }
+  if (!dropdownCertificateRef.value?.contains(e.target as Node)) {
+    openCertificate.value = false
+  }
 }
 
 const reqUploadUrl = async () => {
@@ -423,6 +460,7 @@ const confirmMediaBatch = async (filesMetadata: any[]) => {
       }
     )
     console.log(data)
+    console.table(data)
     return data.MediaIds
   } catch (err) {
     console.error('Gagal konfirmasi batch:', err)
@@ -475,6 +513,11 @@ const submitForm = async () => {
 
       const { MediaUrls, ...cleanPayload } = payload
 
+      // Sanitasi: Hapus No_Id jika kosong saat create agar tidak error di server
+      if (!isEdit && !cleanPayload.No_Id) {
+        delete (cleanPayload as any).No_Id
+      }
+
       console.log('FINAL PAYLOAD:', cleanPayload)
 
       await api[isEdit ? 'put' : 'post'](targetUrl, cleanPayload, {
@@ -485,8 +528,12 @@ const submitForm = async () => {
       emit('success')
       emit('update:showModal', false)
     } catch (err: any) {
-      console.error('Submit Error:', err)
-      fail(err.response?.data?.message || err.message || 'Gagal menyimpan data.')
+      console.error('Submit Error Response Data:', err.response?.data)
+      console.error('Submit Error Full:', err)
+
+      const serverMsg = err.response?.data?.message || err.response?.data?.Message || err.response?.data?.error || err.response?.data?.ExceptionMessage || (typeof err.response?.data === 'string' ? err.response.data : null)
+
+      fail(serverMsg || err.message || 'Gagal menyimpan data.')
     } finally {
       isLoading.value = false
     }
@@ -540,16 +587,27 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
               </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div class="field">
+              <div class="field" ref="dropdownTypeRef">
                 <label class="label">Tipe Properti</label>
                 <div class="relative">
-                  <select v-model="form.Tipe" class="field-input !pl-4 w-full appearance-none">
-                    <option value="Rumah">Rumah</option>
-                    <option value="Apartemen">Apartemen</option>
-                    <option value="Villa">Villa</option>
-                    <option value="Mansion">Mansion</option>
-                  </select>
-                  <Icon icon="lucide:chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 size-4 pointer-events-none text-slate-400" />
+                  <div @click.stop="openType = !openType" class="field-input cursor-pointer truncate flex justify-between items-center !pl-4">
+                    <span>{{ form.Tipe || 'Pilih Tipe' }}</span>
+                    <Icon icon="lucide:chevron-down" class="size-4 text-slate-400" />
+                  </div>
+
+                  <div v-if="openType" class="absolute top-full left-0 mt-1 w-full min-w-[200px] max-h-62 z-[9999] bg-card rounded-2xl shadow-2xl border border-slate-200 flex flex-col">
+                    <div class="px-4 py-2 border-b bg-slate-50">
+                      <div class="relative">
+                        <Icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
+                        <input v-model="searchType" type="text" placeholder="Cari Tipe..." class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" @click.stop />
+                      </div>
+                    </div>
+                    <div class="max-h-60 overflow-y-auto p-2 custom-scroll flex flex-col">
+                      <button v-for="t in filteredTypes" :key="t" @click="selectType(t)" type="button" class="dropdown-item text-left w-full">
+                        {{ t }}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -578,7 +636,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
                       <Icon icon="lucide:chevron-down" class="size-4 text-slate-400" />
                     </div>
 
-                    <div v-if="openProvince" class="absolute bottom-full left-0 mb-1 w-full max-w-[420px] max-h-62 z-[9999] bg-card rounded-2xl shadow-2xl border border-slate-200 flex flex-col">
+                    <div v-if="openProvince" class="absolute top-full left-0 mt-1 w-full max-w-[420px] max-h-62 z-[9999] bg-card rounded-2xl shadow-2xl border border-slate-200 flex flex-col">
                       <div class="px-4 py-2 border-b bg-slate-50">
                         <div class="relative">
                           <Icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
@@ -599,7 +657,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
                       <Icon icon="lucide:chevron-down" class="size-4 text-slate-400" />
                     </div>
 
-                    <div v-if="openCity" class="absolute bottom-full left-0 mb-1 w-full max-w-[420px] max-h-62 z-[9999] bg-card rounded-2xl shadow-2xl border border-slate-200 flex flex-col">
+                    <div v-if="openCity" class="absolute top-full left-0 mt-1 w-full max-w-[420px] max-h-62 z-[9999] bg-card rounded-2xl shadow-2xl border border-slate-200 flex flex-col">
                       <div class="px-4 py-2 border-b bg-slate-50">
                         <div class="relative">
                           <Icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
@@ -705,15 +763,29 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
                 <input v-model="form.Slug" class="field-input" readonly />
               </div>
             </div>
-
             <div class="grid grid-cols-2 gap-3">
-              <div class="field">
+              <div class="field" ref="dropdownCertificateRef">
                 <label class="label">Sertifikat</label>
-                <select v-model="form.Jenis_Sertifikat" class="field-input !pl-4">
-                  <option value="SHM">SHM</option>
-                  <option value="SHGB">SHGB</option>
-                  <option value="Lainnya">Lainnya</option>
-                </select>
+                <div class="relative">
+                  <div @click.stop="openCertificate = !openCertificate" class="field-input cursor-pointer truncate flex justify-between items-center !pl-4">
+                    <span>{{ form.Jenis_Sertifikat || 'Pilih Sertifikat' }}</span>
+                    <Icon icon="lucide:chevron-down" class="size-4 text-slate-400" />
+                  </div>
+
+                  <div v-if="openCertificate" class="absolute top-full left-0 mt-1 w-full min-w-[200px] max-h-62 z-[9999] bg-card rounded-2xl shadow-2xl border border-slate-200 flex flex-col">
+                    <div class="px-4 py-2 border-b bg-slate-50">
+                      <div class="relative">
+                        <Icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
+                        <input v-model="searchCertificate" type="text" placeholder="Cari Sertifikat..." class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" @click.stop />
+                      </div>
+                    </div>
+                    <div class="max-h-60 overflow-y-auto p-2 custom-scroll flex flex-col">
+                      <button v-for="t in filteredCertificates" :key="t" @click="selectCertificate(t)" type="button" class="dropdown-item text-left w-full">
+                        {{ t }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
               <div class="field">
                 <label class="label">Dimensi (P x L)</label>

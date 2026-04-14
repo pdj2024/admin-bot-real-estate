@@ -38,9 +38,9 @@
           </div>
           <h3 class="text-xl font-black text-slate-900 mb-3">Kantor Utama</h3>
           <p class="text-sm font-medium text-slate-500 leading-relaxed mb-6">
-            Gedung Bejo Residence Tower 8, Jl. Asia Afrika No.123, SCBD, Jakarta Selatan 12190
+            {{ settingsStore.business.address || 'Alamat Kantor Pusat Rumah Bejo' }}
           </p>
-          <a href="#" class="inline-flex items-center gap-2 text-sm font-bold text-indigo-600 hover:text-indigo-700 transition-colors">
+          <a :href="settingsStore.business.mapUrl" target="_blank" class="inline-flex items-center gap-2 text-sm font-bold text-indigo-600 hover:text-indigo-700 transition-colors">
             Lihat di Google Maps <Icon icon="lucide:arrow-right" class="size-4" />
           </a>
         </div>
@@ -54,8 +54,8 @@
           <p class="text-sm font-medium text-slate-500 leading-relaxed mb-6">
             Layanan cepat (Fast Response) Senin—Jumat (08:00 - 18:00 WIB). Tersedia khusus Chat WhatsApp.
           </p>
-          <a href="https://wa.me/62895353837000" target="_blank" class="inline-flex items-center gap-2 text-sm font-bold text-emerald-600 hover:text-emerald-700 transition-colors">
-            +62 895-3538-37000 <Icon icon="lucide:arrow-right" class="size-4" />
+          <a :href="'https://wa.me/' + (settingsStore.business.whatsapp || '62895353837000')" target="_blank" class="inline-flex items-center gap-2 text-sm font-bold text-emerald-600 hover:text-emerald-700 transition-colors">
+            {{ settingsStore.business.phone || '+62 895-3538-37000' }} <Icon icon="lucide:arrow-right" class="size-4" />
           </a>
         </div>
 
@@ -68,8 +68,8 @@
           <p class="text-sm font-medium text-slate-500 leading-relaxed mb-6">
             Kirimkan pertanyaan resmi, dokumen legalitas, atau penawaran kerja sama investasi ke kotak masuk kami.
           </p>
-          <a href="mailto:halo@rumahbejo.com" class="inline-flex items-center gap-2 text-sm font-bold text-bejo-600 hover:text-bejo-700 transition-colors">
-            halo@rumahbejo.com <Icon icon="lucide:arrow-right" class="size-4" />
+          <a :href="'mailto:' + (settingsStore.business.email || 'halo@rumahbejo.com')" class="inline-flex items-center gap-2 text-sm font-bold text-bejo-600 hover:text-bejo-700 transition-colors">
+            {{ settingsStore.business.email || 'halo@rumahbejo.com' }} <Icon icon="lucide:arrow-right" class="size-4" />
           </a>
         </div>
 
@@ -82,6 +82,9 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
 import GuestLayout from '@/layouts/guest.vue'
+import { useSettings } from '@/stores/settings'
+
+const settingsStore = useSettings()
 </script>
 
 <style scoped>

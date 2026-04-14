@@ -1,83 +1,106 @@
 <template>
   <div class="wrapper min-h-screen bg-[#F8F9FA]">
-    <div
-      v-if="layout.isMobileMenuOpen"
-      class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[90] transition-opacity duration-300 cursor-pointer lg:hidden"
-      @click="layoutStore.closeAllMenus()"
-    ></div>
+    <template v-if="!hideHeader">
+      <div
+        v-if="layout.isMobileMenuOpen"
+        class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[90] transition-opacity duration-300 cursor-pointer lg:hidden"
+        @click="layoutStore.closeAllMenus()"
+      ></div>
 
-    <!-- Mobile Menu Sidebar -->
-    <div 
-      class="fixed inset-y-0 left-0 z-[100] w-64 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col lg:hidden"
-      :class="layout.isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'"
-    >
-      <div class="p-6 pb-4 border-b border-slate-100 flex justify-between items-center">
-          <img :src="logo" alt="Logo" class="h-8 w-auto" />
-          <button @click="layoutStore.toggleMobileMenu()" class="p-1.5 text-slate-400 hover:text-slate-800 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors">
-            <Icon icon="lucide:x" class="size-4" />
-          </button>
+      <!-- Mobile Menu Sidebar -->
+      <div 
+        class="fixed inset-y-0 left-0 z-[100] w-64 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col lg:hidden"
+        :class="layout.isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'"
+      >
+        <div class="p-6 pb-4 border-b border-slate-100 flex justify-between items-center">
+            <img :src="logo" alt="Logo" class="h-8 w-auto" />
+            <button @click="layoutStore.toggleMobileMenu()" class="p-1.5 text-slate-400 hover:text-slate-800 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors">
+              <Icon icon="lucide:x" class="size-4" />
+            </button>
+        </div>
+        <nav class="flex flex-col p-4 gap-2">
+          <RouterLink to="/" active-class="bg-bejo-50 text-bejo-600 [&>svg]:text-bejo-500" exact-active-class="bg-bejo-50 text-bejo-600 [&>svg]:text-bejo-500" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 hover:text-bejo-600 hover:bg-bejo-50 rounded-xl transition-all group">
+            <Icon icon="lucide:home" class="size-4 text-slate-400 group-hover:text-bejo-500 transition-colors" /> Beranda
+          </RouterLink>
+          <RouterLink to="/katalog" active-class="bg-bejo-50 text-bejo-600 [&>svg]:text-bejo-500" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 hover:text-bejo-600 hover:bg-bejo-50 rounded-xl transition-all group">
+            <Icon icon="lucide:building" class="size-4 text-slate-400 group-hover:text-bejo-500 transition-colors" /> Katalog Properti
+          </RouterLink>
+          <RouterLink to="/simulasi-kpr" active-class="bg-bejo-50 text-bejo-600 [&>svg]:text-bejo-500" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 hover:text-bejo-600 hover:bg-bejo-50 rounded-xl transition-all group">
+            <Icon icon="lucide:calculator" class="size-4 text-slate-400 group-hover:text-bejo-500 transition-colors" /> Simulasi KPR
+          </RouterLink>
+          <RouterLink v-if="isLoggedIn" to="/dashboard" active-class="bg-bejo-50 text-bejo-600 [&>svg]:text-bejo-500" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-bejo-600 bg-bejo-50/50 hover:bg-bejo-50 rounded-xl transition-all group">
+            <Icon icon="lucide:layout-dashboard" class="size-4 text-bejo-500" /> Dashboard Admin
+          </RouterLink>
+          <div class="h-px w-full bg-slate-100 my-2"></div>
+          <RouterLink to="/tentang-kami" active-class="bg-bejo-50 text-bejo-600 [&>svg]:text-bejo-500" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 hover:text-bejo-600 hover:bg-bejo-50 rounded-xl transition-all group">
+            <Icon icon="lucide:users" class="size-4 text-slate-400 group-hover:text-bejo-500 transition-colors" /> Tentang Kami
+          </RouterLink>
+          <RouterLink to="/kontak" active-class="bg-bejo-50 text-bejo-600 [&>svg]:text-bejo-500" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 hover:text-bejo-600 hover:bg-bejo-50 rounded-xl transition-all group">
+            <Icon icon="lucide:phone" class="size-4 text-slate-400 group-hover:text-bejo-500 transition-colors" /> Kontak
+          </RouterLink>
+        </nav>
       </div>
-      <nav class="flex flex-col p-4 gap-2">
-        <RouterLink to="/" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 hover:text-bejo-600 hover:bg-bejo-50 rounded-xl transition-all group">
-          <Icon icon="lucide:home" class="size-4 text-slate-400 group-hover:text-bejo-500" /> Beranda
-        </RouterLink>
-        <RouterLink to="/katalog" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 hover:text-bejo-600 hover:bg-bejo-50 rounded-xl transition-all group">
-          <Icon icon="lucide:building" class="size-4 text-slate-400 group-hover:text-bejo-500" /> Katalog Properti
-        </RouterLink>
-        <RouterLink to="/simulasi-kpr" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 hover:text-bejo-600 hover:bg-bejo-50 rounded-xl transition-all group">
-          <Icon icon="lucide:calculator" class="size-4 text-slate-400 group-hover:text-bejo-500" /> Simulasi KPR
-        </RouterLink>
-        <div class="h-px w-full bg-slate-100 my-2"></div>
-        <RouterLink to="/tentang-kami" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 hover:text-bejo-600 hover:bg-bejo-50 rounded-xl transition-all group">
-          <Icon icon="lucide:users" class="size-4 text-slate-400 group-hover:text-bejo-500" /> Tentang Kami
-        </RouterLink>
-        <RouterLink to="/kontak" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 hover:text-bejo-600 hover:bg-bejo-50 rounded-xl transition-all group">
-          <Icon icon="lucide:phone" class="size-4 text-slate-400 group-hover:text-bejo-500" /> Kontak
-        </RouterLink>
-      </nav>
-    </div>
+    </template>
 
     <div class="flex flex-col min-h-screen w-full flex-grow">
-      <header class="bg-white/80 backdrop-blur-xl border-b border-white/50 sticky top-0 z-[80] shadow-sm shadow-slate-200/50 transition-all duration-300">
+      <header v-if="!hideHeader" class="bg-white/80 backdrop-blur-xl border-b border-white/50 sticky top-0 z-[80] shadow-sm shadow-slate-200/50 transition-all duration-300">
         <div class="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-bejo-200 to-transparent opacity-50"></div>
-        <div class="container mx-auto max-w-7xl px-4 h-20 flex items-center justify-between">
+        <div class="w-full !px-2.5 sm:!px-8 lg:!px-12 h-20 flex items-center justify-between mx-auto">
           
-          <div class="flex items-center gap-10">
+          <div class="flex items-center gap-3 sm:gap-10">
             <RouterLink to="/" class="shrink-0 group flex items-center gap-2">
               <img :src="logo" alt="Logo" class="h-9 md:h-11 w-auto transition-transform group-hover:scale-105" />
+              <span class="text-lg sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight block">Rumah <span class="text-bejo-500">Bejo</span></span>
             </RouterLink>
 
             <nav class="hidden lg:flex items-center gap-8">
-              <RouterLink to="/" class="relative text-sm font-bold text-slate-600 hover:text-bejo-600 transition-colors group py-2">
+              <RouterLink to="/" active-class="text-bejo-600 [&>span]:scale-x-100" exact-active-class="text-bejo-600 [&>span]:scale-x-100" class="relative text-sm font-bold text-slate-600 hover:text-bejo-600 transition-colors group py-2">
                 Beranda
                 <span class="absolute inset-x-0 -bottom-1 h-1 bg-bejo-500 rounded-t-full transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
               </RouterLink>
-              <RouterLink to="/katalog" class="relative text-sm font-bold text-slate-600 hover:text-bejo-600 transition-colors group py-2">
+              <RouterLink to="/katalog" active-class="text-bejo-600 [&>span]:scale-x-100" class="relative text-sm font-bold text-slate-600 hover:text-bejo-600 transition-colors group py-2">
                 Katalog
                 <span class="absolute inset-x-0 -bottom-1 h-1 bg-bejo-500 rounded-t-full transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
               </RouterLink>
-              <RouterLink to="/simulasi-kpr" class="relative text-sm font-bold text-slate-600 hover:text-bejo-600 transition-colors group py-2">
+              <RouterLink to="/simulasi-kpr" active-class="text-bejo-600 [&>span]:scale-x-100" class="relative text-sm font-bold text-slate-600 hover:text-bejo-600 transition-colors group py-2">
                 Simulasi KPR
                 <span class="absolute inset-x-0 -bottom-1 h-1 bg-bejo-500 rounded-t-full transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
               </RouterLink>
-              <RouterLink to="/tentang-kami" class="relative text-sm font-bold text-slate-600 hover:text-bejo-600 transition-colors group py-2">
+              <RouterLink to="/tentang-kami" active-class="text-bejo-600 [&>span]:scale-x-100" class="relative text-sm font-bold text-slate-600 hover:text-bejo-600 transition-colors group py-2">
                 Tentang Kami
                 <span class="absolute inset-x-0 -bottom-1 h-1 bg-bejo-500 rounded-t-full transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
               </RouterLink>
-              <RouterLink to="/kontak" class="relative text-sm font-bold text-slate-600 hover:text-bejo-600 transition-colors group py-2">
+              <RouterLink to="/kontak" active-class="text-bejo-600 [&>span]:scale-x-100" class="relative text-sm font-bold text-slate-600 hover:text-bejo-600 transition-colors group py-2">
                 Kontak
+                <span class="absolute inset-x-0 -bottom-1 h-1 bg-bejo-500 rounded-t-full transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
+              </RouterLink>
+              <RouterLink v-if="isLoggedIn" to="/dashboard" active-class="text-bejo-600 [&>span]:scale-x-100" class="relative text-sm font-bold text-bejo-600 hover:text-bejo-700 transition-colors group py-2">
+                Dashboard
                 <span class="absolute inset-x-0 -bottom-1 h-1 bg-bejo-500 rounded-t-full transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
               </RouterLink>
             </nav>
           </div>
 
           <div class="flex items-center gap-4">
-            <a href="/login" class="hidden sm:flex items-center gap-2 px-5 py-2.5 rounded-full bg-slate-900 border border-slate-800 text-white hover:bg-bejo-600 hover:border-bejo-600 hover:shadow-lg hover:shadow-bejo-600/30 transition-all font-bold text-sm">
-              <Icon icon="lucide:user" class="size-4" /> Masuk / Dasbor
-            </a>
-            <a href="/login" class="sm:hidden size-10 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors">
-              <Icon icon="lucide:user" class="size-5 text-slate-700" />
-            </a>
+            <template v-if="!isLoggedIn">
+              <a href="/login" class="hidden sm:flex items-center gap-2 px-5 py-2.5 rounded-full bg-slate-900 border border-slate-800 text-white hover:bg-bejo-600 hover:border-bejo-600 hover:shadow-lg hover:shadow-bejo-600/30 transition-all font-bold text-sm">
+                <Icon icon="lucide:user" class="size-4" /> Masuk / Dasbor
+              </a>
+              <a href="/login" class="sm:hidden size-10 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors">
+                <Icon icon="lucide:user" class="size-5 text-slate-700" />
+              </a>
+            </template>
+            <template v-else>
+              <RouterLink to="/dashboard" class="hidden sm:flex items-center gap-3 px-4 py-2 rounded-full bg-slate-900 border border-slate-800 text-white hover:bg-bejo-600 hover:border-bejo-600 hover:shadow-lg hover:shadow-bejo-600/30 transition-all font-bold text-sm group">
+                <div class="size-7 rounded-full bg-bejo-500 flex items-center justify-center text-white ring-2 ring-slate-800 group-hover:ring-bejo-400 transition-all">
+                  <Icon icon="lucide:user" class="size-4" />
+                </div>
+                <span>Halo, {{ userName }}</span>
+              </RouterLink>
+              <RouterLink to="/dashboard" class="sm:hidden size-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-bejo-600 transition-all">
+                <Icon icon="lucide:user" class="size-5 text-white" />
+              </RouterLink>
+            </template>
 
             <button @click="layoutStore.toggleMobileMenu()" class="lg:hidden p-2 text-slate-700 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition-colors">
               <Icon icon="lucide:menu" class="size-5" />
@@ -88,34 +111,37 @@
 
 
 
-      <main :class="['flex-grow container mx-auto max-w-7xl px-4 py-6', mainClass]">
+      <main :class="['flex-grow w-full !px-2.5 sm:!px-8 lg:!px-12 py-6', mainClass]">
         <slot />
       </main>
 
-      <footer class="bg-slate-950 text-slate-400 pt-20 pb-10 border-t-[4px] border-bejo-600 relative overflow-hidden">
+      <footer v-if="!hideFooter" class="bg-slate-950 text-slate-400 pt-20 pb-10 border-t-[4px] border-bejo-600 relative overflow-hidden">
         <!-- Background Decor -->
         <div class="absolute -top-40 -left-40 size-80 bg-bejo-600/10 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
         <div class="absolute top-0 right-0 w-1/4 h-full bg-gradient-to-l from-white/5 to-transparent pointer-events-none"></div>
 
-        <div class="container mx-auto max-w-7xl px-4">
+        <div class="w-full !px-2.5 sm:!px-8 lg:!px-12">
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-16 mb-16">
             
             <!-- Company Info -->
             <div class="lg:col-span-4 space-y-6">
               <img :src="logo" alt="Logo" class="h-10 md:h-12 w-auto brightness-0 invert opacity-100 mb-6" />
               <p class="text-sm leading-relaxed max-w-sm text-slate-400 font-medium">
-                Rumah Bejo adalah platform properti premium yang berkomitmen memberikan pengalaman transaksi hunian paling aman, transparan, dan profesional di Indonesia.
+                {{ settingsStore.business.description }}
               </p>
               <!-- Social Media -->
               <div class="flex items-center gap-4 pt-4">
-                <a href="https://www.instagram.com/rumahbejo99/" target="_blank" class="size-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:bg-bejo-600 hover:border-bejo-500 transition-all group">
+                <a v-if="settingsStore.business.instagram" :href="settingsStore.business.instagram" target="_blank" class="size-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:bg-bejo-600 hover:border-bejo-500 transition-all group">
                   <Icon icon="lucide:instagram" class="size-5 group-hover:scale-110 transition-transform" />
                 </a>
-                <a href="#" class="size-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:bg-bejo-600 transition-all group">
+                <a v-if="settingsStore.business.facebook" :href="settingsStore.business.facebook" target="_blank" class="size-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:bg-bejo-600 transition-all group">
                   <Icon icon="lucide:facebook" class="size-5 group-hover:scale-110 transition-transform" />
                 </a>
-                <a href="#" class="size-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:bg-bejo-600 transition-all group">
+                <a v-if="settingsStore.business.twitter" :href="settingsStore.business.twitter" target="_blank" class="size-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:bg-bejo-600 transition-all group">
                   <Icon icon="lucide:twitter" class="size-5 group-hover:scale-110 transition-transform" />
+                </a>
+                <a v-if="settingsStore.business.tiktok" :href="settingsStore.business.tiktok" target="_blank" class="size-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:bg-bejo-600 transition-all group">
+                  <Icon icon="lucide:music" class="size-5 group-hover:scale-110 transition-transform" />
                 </a>
               </div>
             </div>
@@ -142,7 +168,7 @@
                   </div>
                   <div class="text-sm">
                     <span class="block text-white font-black mb-1">Kantor Pusat</span>
-                    <p class="text-slate-400 font-medium leading-relaxed">Jl. Asia Afrika No.123, SCBD, Jakarta Selatan 12190</p>
+                    <p class="text-slate-400 font-medium leading-relaxed">{{ settingsStore.business.address }}</p>
                   </div>
                 </li>
                 <li class="flex items-start gap-4 group">
@@ -151,7 +177,7 @@
                   </div>
                   <div class="text-sm">
                     <span class="block text-white font-black mb-1">Telepon / WA</span>
-                    <p class="text-slate-400 font-medium leading-relaxed">+62 895-3538-37000</p>
+                    <p class="text-slate-400 font-medium leading-relaxed">{{ settingsStore.business.phone }}</p>
                   </div>
                 </li>
               </ul>
@@ -174,9 +200,9 @@
                    </div>
                 </div>
                 
-                <div class="absolute bottom-3 inset-x-3 text-center">
+                <a :href="settingsStore.business.mapUrl" target="_blank" class="absolute bottom-3 inset-x-3 text-center">
                   <span class="text-[10px] font-black text-white uppercase tracking-widest bg-slate-900/80 backdrop-blur px-3 py-1.5 rounded-lg border border-white/10">Buka di Google Maps</span>
-                </div>
+                </a>
               </div>
             </div>
 
@@ -184,7 +210,7 @@
 
           <!-- Bottom Footer -->
           <div class="pt-8 border-t border-slate-900 flex flex-col md:flex-row items-center justify-between gap-6">
-            <p class="text-sm font-medium">© 2026 Rumah Bejo. All rights reserved.</p>
+            <p class="text-sm font-medium">© {{ new Date().getFullYear() }} {{ settingsStore.business.appName || 'Rumah Bejo' }}. All rights reserved.</p>
             <div class="flex items-center flex-wrap justify-center gap-6 text-xs font-bold uppercase tracking-widest text-slate-500">
               <a href="#" class="hover:text-bejo-400 transition-colors">Kebijakan Privasi</a>
               <a href="#" class="hover:text-bejo-400 transition-colors">Syarat & Ketentuan</a>
@@ -198,16 +224,26 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useLayout } from '@/stores/layout'
+import { useSettings } from '@/stores/settings'
 import { storeToRefs } from 'pinia'
 import { Icon } from '@iconify/vue'
 import logo from '@/assets/images/logo-sm.png'
-defineProps<{ mainClass?: string }>()
+
+defineProps<{ 
+  mainClass?: string,
+  hideHeader?: boolean,
+  hideFooter?: boolean
+}>()
 
 const layoutStore = useLayout()
+const settingsStore = useSettings()
 const { layout } = storeToRefs(layoutStore)
 const { setSideNavSize } = layoutStore
+
+const isLoggedIn = ref(false)
+const userName = ref('')
 
 const resize = () => {
   if (window.innerWidth <= 1024) { // Biasanya mobile/tablet sampai 1024px
@@ -219,6 +255,16 @@ const resize = () => {
 
 onMounted(() => {
   layoutStore.init()
+  settingsStore.init()
+  
+  // Check login session
+  const token = localStorage.getItem('token')
+  const name = localStorage.getItem('nama_display')
+  if (token && token !== 'undefined') {
+    isLoggedIn.value = true
+    userName.value = name || 'User'
+  }
+
   resize()
   window.addEventListener('resize', resize)
 })

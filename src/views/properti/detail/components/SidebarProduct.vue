@@ -200,7 +200,7 @@ onUnmounted(() => clearInterval(timer))
           <div class="grid grid-cols-2 gap-3 relative">
             <button @click="handleWaContact" class="flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm tracking-wide transition-all shadow-md bg-bejo-600 text-white hover:bg-bejo-700 hover:shadow-bejo-600/30">
               <Icon icon="lucide:headset" class="size-4" />
-              Preview WA
+              Tanya Kami
             </button>
             <button type="button" @click.prevent="shareProduct" class="flex w-full items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm tracking-wide transition-all shadow-sm border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300">
               <Icon icon="lucide:share-2" class="size-4" />

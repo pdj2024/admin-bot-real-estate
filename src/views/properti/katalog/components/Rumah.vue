@@ -38,6 +38,14 @@ const transactionFilter = ref('Semua')
 const selectedItem = ref<Product | null>(null)
 const sorting = ref<SortingState>([])
 const selectedSort = ref('Terbaru')
+const typeFilter = ref('Semua')
+const isTypeOpen = ref(false)
+
+const props = defineProps<{
+  searchQuery: string
+}>()
+
+const propertyTypes = ['Rumah', 'Tanah', 'Ruko', 'Apartemen', 'Gudang', 'Villa', 'SOHO', 'Pabrik', 'Perkantoran', 'Hotel', 'Rumah Kos', 'Stand', 'Toko', 'Gedung', 'Condotel', 'Lain-lain']
 
 interface MediaUrl {
   Url: string | null
@@ -95,9 +103,34 @@ const handleTransactionFilter = (type: string) => {
   isTransactionOpen.value = false
 }
 
+const handleTypeFilter = (type: string) => {
+  typeFilter.value = type
+  isTypeOpen.value = false
+}
+
 const filteredProducts = computed(() => {
-  if (transactionFilter.value === 'Semua') return products.value
-  return products.value.filter(p => p.Status_Transaksi.includes(transactionFilter.value))
+  let result = products.value
+
+  // Filter Nama (Search Query)
+  if (props.searchQuery) {
+    const q = props.searchQuery.toLowerCase()
+    result = result.filter(p => 
+      (p.Nama_Produk?.toLowerCase() || '').includes(q) || 
+      (p.Alamat?.toLowerCase() || '').includes(q)
+    )
+  }
+
+  // Filter Transaksi
+  if (transactionFilter.value !== 'Semua') {
+    result = result.filter(p => p.Status_Transaksi.includes(transactionFilter.value))
+  }
+
+  // Filter Tipe Unit
+  if (typeFilter.value !== 'Semua') {
+    result = result.filter(p => p.Tipe === typeFilter.value)
+  }
+
+  return result
 })
 
 const table = useVueTable({
@@ -210,6 +243,7 @@ window.addEventListener('click', (e) => {
     activeDropdownId.value = null
     isSortOpen.value = false
     isTransactionOpen.value = false
+    isTypeOpen.value = false
   }
 })
 
@@ -253,6 +287,22 @@ defineExpose({ openAddModal })
               <button @click="handleTransactionFilter('Semua')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Semua <Icon v-if="transactionFilter === 'Semua'" icon="lucide:check" class="size-3 text-bejo-500" /></button>
               <button @click="handleTransactionFilter('Jual')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Jual Saja <Icon v-if="transactionFilter === 'Jual'" icon="lucide:check" class="size-3 text-bejo-500" /></button>
               <button @click="handleTransactionFilter('Sewa')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Sewa Saja <Icon v-if="transactionFilter === 'Sewa'" icon="lucide:check" class="size-3 text-bejo-500" /></button>
+            </div>
+          </Transition>
+        </div>
+
+        <!-- Filter Tipe Unit -->
+        <div class="relative inline-flex">
+          <button type="button" @click="isTypeOpen = !isTypeOpen" class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[11px] font-black text-slate-700 hover:bg-slate-50 transition-all shadow-sm uppercase tracking-wider">
+            <Icon icon="lucide:home" class="size-3.5 me-2 inline text-bejo-500" />
+            {{ typeFilter === 'Semua' ? 'Semua Tipe' : typeFilter }}
+          </button>
+          <Transition enter-active-class="transition duration-100 ease-out" enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100" leave-active-class="transition duration-75 ease-in" leave-from-class="transform scale-100 opacity-100" leave-to-class="transform scale-95 opacity-0">
+            <div v-show="isTypeOpen" class="absolute right-0 top-full mt-2 z-50 min-w-48 max-h-60 overflow-y-auto bg-white border border-slate-100 rounded-2xl shadow-2xl p-2 custom-scroll">
+              <button @click="handleTypeFilter('Semua')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Semua Tipe <Icon v-if="typeFilter === 'Semua'" icon="lucide:check" class="size-3 text-bejo-500" /></button>
+              <button v-for="t in propertyTypes" :key="t" @click="handleTypeFilter(t)" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">
+                {{ t }} <Icon v-if="typeFilter === t" icon="lucide:check" class="size-3 text-bejo-500" />
+              </button>
             </div>
           </Transition>
         </div>
@@ -313,7 +363,7 @@ defineExpose({ openAddModal })
           </div>
 
           <div class="absolute bottom-4 right-4 flex flex-col gap-1.5 items-end z-10">
-            <span v-for="(akses, idx) in row.original.Akses_Jalan.slice(0, 2)" :key="idx" class="bg-card/90 backdrop-blur-md text-default-700 text-[10px] font-bold px-2.5 py-1 rounded-md border-l-4 border-primary shadow-sm flex items-center gap-1.5">
+            <span v-for="(akses, idx) in row.original.Akses_Jalan.slice(0, 3)" :key="idx" class="bg-card/90 backdrop-blur-md text-default-700 text-[10px] font-bold px-2.5 py-1 rounded-md border-l-4 border-primary shadow-sm flex items-center gap-1.5">
               <Icon icon="lucide:map-pin" class="size-2.5 text-primary" />
               {{ akses }}
             </span>

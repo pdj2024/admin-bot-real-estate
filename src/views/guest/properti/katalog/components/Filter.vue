@@ -4,12 +4,18 @@
       <div class="p-6">
         <div class="flex items-center justify-between mb-6">
           <h6 class="text-lg font-bold text-slate-800 tracking-tight uppercase">Filter</h6>
-          <button class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest hover:text-red-500 transition-colors underline underline-offset-4 decoration-transparent hover:decoration-red-500">Hapus Semua</button>
+          <button @click="$emit('update:searchQuery', '')" class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest hover:text-red-500 transition-colors underline underline-offset-4 decoration-transparent hover:decoration-red-500">Hapus Semua</button>
         </div>
 
         <div class="space-y-5">
           <div class="relative group">
-            <input type="text" class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:border-bejo-500 focus:bg-white transition-all outline-none focus:ring-4 focus:ring-bejo-500/10" placeholder="Cari nama atau lokasi..." />
+            <input 
+              :value="searchQuery"
+              @input="(e) => $emit('update:searchQuery', (e.target as HTMLInputElement).value)"
+              type="text" 
+              class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:border-bejo-500 focus:bg-white transition-all outline-none focus:ring-4 focus:ring-bejo-500/10" 
+              placeholder="Cari nama atau lokasi..." 
+            />
             <Icon icon="lucide:search" class="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-bejo-600 transition-colors" />
           </div>
 
@@ -100,10 +106,14 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 interface Props {
   openFilter: boolean
+  searchQuery: string
 }
 
 const props = defineProps<Props>()
-const emit = defineEmits<{ (e: 'update:openFilter', value: boolean): void }>()
+const emit = defineEmits<{ 
+  (e: 'update:openFilter', value: boolean): void 
+  (e: 'update:searchQuery', value: string): void
+}>()
 
 const filterRef = ref<HTMLElement | null>(null)
 

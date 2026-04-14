@@ -91,7 +91,7 @@
 
         <!-- Result Section -->
         <div class="xl:col-span-5 flex flex-col justify-center relative z-10 mt-6 xl:mt-0">
-          <div class="bg-slate-900 rounded-[2rem] p-8 shadow-2xl w-full flex flex-col border border-white/10 relative overflow-hidden mb-5">
+          <div class="bg-slate-900 rounded-[2rem] p-5 sm:p-8 shadow-2xl w-full flex flex-col border border-white/10 relative overflow-hidden mb-5">
             <div class="absolute top-0 right-0 size-32 bg-bejo-600 rounded-full blur-3xl opacity-20 pointer-events-none"></div>
             
             <h3 class="text-xl font-black text-white mb-8 pb-4 border-b border-white/10">Hasil Simulasi KPR</h3>
@@ -111,7 +111,7 @@
               </div>
             </div>
 
-            <button @click="handleKprWa" class="w-full py-4 bg-bejo-500 hover:bg-bejo-600 text-white rounded-2xl font-black text-base transition-all hover:shadow-xl hover:shadow-bejo-500/40 flex justify-center items-center gap-2 group hover:-translate-y-1 mt-auto focus:ring-4 focus:ring-bejo-500/50">
+            <button @click="handleKprWa" class="w-full px-6 py-4 bg-bejo-500 hover:bg-bejo-600 text-white rounded-2xl font-black text-base transition-all hover:shadow-xl hover:shadow-bejo-500/40 flex justify-center items-center gap-2 group hover:-translate-y-1 mt-auto focus:ring-4 focus:ring-bejo-500/50">
               <Icon icon="lucide:message-circle" class="size-5" />
               Konsultasikan Melalui WhatsApp
               <Icon icon="lucide:arrow-right" class="size-4 group-hover:translate-x-1 transition-transform opacity-60" />
@@ -129,7 +129,7 @@
       </div>
 
       <!-- Persyaratan Section -->
-      <div class="bg-white border border-slate-100 rounded-[2.5rem] shadow-xl shadow-slate-200/40 p-8 sm:p-12 mb-10 overflow-hidden relative">
+      <div class="bg-white border border-slate-100 rounded-[2.5rem] shadow-xl shadow-slate-200/40 p-6 sm:p-12 mb-10 overflow-hidden relative">
         <!-- Deco -->
         <div class="absolute -top-24 -right-24 size-48 bg-slate-50 rounded-full blur-2xl"></div>
         
@@ -161,7 +161,7 @@
           </div>
 
           <!-- Data Pekerjaan -->
-          <div class="bg-white rounded-3xl p-8 border border-slate-200 shadow-lg shadow-slate-200/50 hover:-translate-y-1 transition-transform group">
+          <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-lg shadow-slate-200/50 hover:-translate-y-1 transition-transform group">
             <div class="flex items-center justify-between mb-8">
               <h4 class="text-lg font-black text-slate-800 tracking-tight">Status Pekerjaan</h4>
               <div class="p-3 bg-slate-50 group-hover:bg-bejo-50 rounded-xl text-slate-400 group-hover:text-bejo-600 transition-colors">
@@ -177,7 +177,7 @@
           </div>
 
           <!-- Data Agunan/Tambahan -->
-          <div class="bg-white rounded-3xl p-8 border border-slate-200 shadow-lg shadow-slate-200/50 hover:-translate-y-1 transition-transform group">
+          <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-lg shadow-slate-200/50 hover:-translate-y-1 transition-transform group">
             <div class="flex items-center justify-between mb-8">
               <h4 class="text-lg font-black text-slate-800 tracking-tight">Data Tambahan</h4>
               <div class="p-3 bg-slate-50 group-hover:bg-bejo-50 rounded-xl text-slate-400 group-hover:text-bejo-600 transition-colors">
@@ -202,6 +202,9 @@
 import { ref, computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import GuestLayout from '@/layouts/guest.vue'
+import { useSettings } from '@/stores/settings'
+
+const settingsStore = useSettings()
 
 const formatCurrency = (value: number) => {
   if (isNaN(value)) return '0'
@@ -266,11 +269,11 @@ const angsuran = computed(() => {
 })
 
 const handleKprWa = () => {
-  const url = window.location.origin
-  const message = `Halo, saya ingin menanyakan perihal Simulasi KPR.\n\nBerikut simulasi anggaran saya:\n- Harga Properti: Rp ${formatCurrency(propertyPrice.value)}\n- DP / Uang Muka (${dpPercentage.value}%): Rp ${formatCurrency(dpValue.value)}\n- Pinjaman Bank: Rp ${formatCurrency(totalPinjaman.value)}\n- Suku Bunga: ${interestRate.value}%\n- Tenor Waktu: ${years.value} thn\n\n📌 *Estimasi Angsuran:* Rp ${formatCurrency(angsuran.value)}/bln\n\nApakah pihak agen bisa mencarikan properti dengan spesifikasi anggaran ini?`
+  const defaultGreeting = 'Halo Admin Rumah Bejo, saya baru saja melakukan simulasi KPR di situs dan ingin berkonsultasi lebih lanjut.'
+  const message = `${defaultGreeting}\n\nBerikut simulasi anggaran saya:\n- Harga Properti: Rp ${formatCurrency(propertyPrice.value)}\n- DP / Uang Muka (${dpPercentage.value}%): Rp ${formatCurrency(dpValue.value)}\n- Pinjaman Bank: Rp ${formatCurrency(totalPinjaman.value)}\n- Suku Bunga: ${interestRate.value}%\n- Tenor Waktu: ${years.value} thn\n\n*Estimasi Angsuran:* Rp ${formatCurrency(angsuran.value)}/bln\n\nApakah pihak agen bisa membantu merekomendasikan properti yang sesuai dengan anggaran saya?`
+  const targetNumber = settingsStore.business.whatsapp || '62895353837000'
   
-  // Asumsi nomor default WA
-  window.open(`https://wa.me/62895353837000?text=${encodeURIComponent(message)}`, '_blank')
+  window.open(`https://wa.me/${targetNumber}?text=${encodeURIComponent(message)}`, '_blank')
 }
 
 // Persyaratan Dokumen Dummmy Data

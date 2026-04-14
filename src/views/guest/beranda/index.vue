@@ -1,11 +1,11 @@
 <template>
-  <GuestLayout main-class="p-0 max-w-none">
+  <GuestLayout main-class="max-w-none">
     <!-- Hero Section Beranda -->
-    <section class="relative min-h-[90vh] flex flex-col justify-center items-center py-20 px-4 mt-0 overflow-hidden bg-slate-900 border-b-[8px] border-bejo-500">
+    <section class="relative min-h-[90vh] flex flex-col justify-center items-center py-20 mt-0 overflow-hidden bg-slate-900 border-b-[8px] border-bejo-500">
       <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80" alt="Rumah Mewah" class="absolute inset-0 w-full h-full object-cover opacity-40 mix-blend-luminosity select-none pointer-events-none" draggable="false" />
       <div class="absolute inset-0 bg-gradient-to-b from-slate-900/50 via-slate-900/80 to-slate-900"></div>
       
-      <div class="relative z-10 w-full max-w-5xl mx-auto text-center space-y-8">
+      <div class="relative z-10 w-full mx-auto text-center space-y-8 !px-2.5 sm:!px-8 lg:!px-12">
         <span class="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full text-bejo-400 font-bold tracking-widest text-xs uppercase shadow-2xl border border-white/5 mx-auto">
           <Icon icon="lucide:sparkles" class="size-4" /> Solusi Properti Terbaik
         </span>
@@ -31,8 +31,8 @@
     </section>
 
     <!-- Stats Floating Bottom -->
-    <div class="relative z-20 px-4 -mt-16 sm:-mt-20">
-      <div class="max-w-4xl mx-auto bg-white/95 backdrop-blur-xl rounded-[2.5rem] p-8 md:p-10 shadow-2xl border border-white grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-4 divide-y md:divide-y-0 md:divide-x divide-slate-100">
+    <div class="relative z-20 !px-2.5 -mt-16 sm:-mt-20">
+      <div class="w-full mx-auto bg-white/95 backdrop-blur-xl rounded-[2.5rem] p-8 md:p-10 shadow-2xl border border-white grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-4 divide-y md:divide-y-0 md:divide-x divide-slate-100 !px-2.5 sm:!px-8 lg:!px-12">
         <div class="text-center px-4">
           <h4 class="text-4xl lg:text-5xl font-black text-slate-900 mb-2">1,2k<span class="text-bejo-500">+</span></h4>
           <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Listing Terverifikasi</p>
@@ -50,7 +50,7 @@
 
     <!-- Layanan Kami Section -->
     <section class="py-24 sm:py-32 px-4 bg-white relative overflow-hidden">
-      <div class="container mx-auto max-w-7xl">
+      <div class="w-full !px-2.5 sm:!px-8 lg:!px-12">
         <div class="text-center mb-16 space-y-4">
           <span class="text-bejo-600 font-black uppercase tracking-widest text-xs">Layanan Ekosistem</span>
           <h2 class="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">Solusi Properti <span class="text-bejo-500">End-to-End</span></h2>
@@ -91,11 +91,11 @@
     </section>
 
     <!-- Why Us Section -->
-    <section class="py-24 sm:py-32 px-4 bg-slate-50 border-y border-slate-200 relative overflow-hidden">
+    <section class="py-24 sm:py-32 bg-slate-50 border-y border-slate-200 relative overflow-hidden">
       <!-- Decor -->
       <div class="absolute -top-40 -left-40 size-96 bg-bejo-400 opacity-10 rounded-full blur-[100px] pointer-events-none"></div>
       
-      <div class="container mx-auto max-w-7xl relative z-10">
+      <div class="w-full px-2.5 sm:px-8 lg:px-12 relative z-10">
         <div class="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
           <div class="relative">
              <div class="aspect-square rounded-[3rem] overflow-hidden shadow-2xl relative z-10 border-[12px] border-white">
@@ -156,7 +156,7 @@
       <!-- Decor -->
       <div class="absolute -right-40 top-20 size-96 bg-bejo-200 rounded-full blur-3xl opacity-30 pointer-events-none"></div>
       
-      <div class="container mx-auto max-w-7xl">
+      <div class="w-full !px-2.5 sm:!px-8 lg:!px-12">
         <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6 relative z-10">
           <div class="max-w-2xl">
             <span class="text-bejo-600 font-bold uppercase tracking-widest text-sm flex items-center gap-2 mb-2">
@@ -178,7 +178,7 @@
           <ProductCard v-for="i in 3" :key="i" :product="{}" is-loading />
         </div>
 
-        <div v-else class="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-8 relative z-10">
+        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 min-[2000px]:grid-cols-4 gap-8 relative z-10">
           <ProductCard 
             v-for="row in displayedProducts" 
             :key="row.id || row.No_Id" 

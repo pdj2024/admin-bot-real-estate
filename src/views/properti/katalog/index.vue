@@ -6,6 +6,7 @@ import Filter from './components/Filter.vue'
 import Rumah from './components/Rumah.vue'
 
 const isFilterOpen = ref(false)
+const searchQuery = ref('')
 const rumahRef = ref<any>(null)
 
 const toggleFilter = () => {
@@ -25,6 +26,7 @@ const openAddModal = () => {
         <aside class="lg:col-span-1">
           <Filter 
             v-model:openFilter="isFilterOpen" 
+            v-model:searchQuery="searchQuery"
             class="lg:sticky lg:top-24"
           />
         </aside>
@@ -32,6 +34,7 @@ const openAddModal = () => {
         <section class="lg:col-span-3">
           <Rumah 
             ref="rumahRef"
+            :searchQuery="searchQuery"
             @openFilter="toggleFilter" 
           />
         </section>

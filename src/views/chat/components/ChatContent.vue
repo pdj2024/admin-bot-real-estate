@@ -732,7 +732,7 @@ onUpdated(() => {
               {{ username.substring(0, 2).toUpperCase() }}
             </span>
             <Icon v-else icon="lucide:user" class="size-5 md:size-7 text-bejo-300" />
-            <span class="absolute -bottom-1 -right-1 size-3.5 md:size-5 border-2 border-white rounded-full bg-green-500 shadow-lg shadow-green-500/20 ring-1 ring-green-500/20"></span>
+            <span class="absolute -bottom-1 -right-1 size-2.5 md:size-4 border-2 border-white rounded-full bg-green-500 shadow-lg shadow-green-500/20 ring-1 ring-green-500/20"></span>
           </div>
 
           <div class="min-w-0 flex-1 overflow-hidden">

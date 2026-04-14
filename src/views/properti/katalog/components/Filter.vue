@@ -5,7 +5,7 @@
       <div class="flex items-center justify-between gap-3 mb-6 border-b border-slate-50 pb-4">
         <h6 class="text-lg font-black text-slate-900">Filter</h6>
         <div class="shrink-0">
-          <RouterLink to="" class="text-[10px] font-black uppercase tracking-widest text-bejo-600 hover:text-bejo-700 transition-colors">Hapus Semua</RouterLink>
+          <button @click="emit('update:searchQuery', '')" type="button" class="text-[10px] font-black uppercase tracking-widest text-bejo-600 hover:text-bejo-700 transition-colors">Hapus Semua</button>
         </div>
       </div>
 
@@ -13,7 +13,13 @@
         <!-- Search -->
         <div>
           <div class="relative">
-            <input type="text" class="ps-10 py-3 bg-slate-50 border-transparent rounded-xl text-sm w-full focus:bg-white focus:border-bejo-500 focus:ring-4 focus:ring-bejo-500/10 transition-all font-bold placeholder:text-slate-400 placeholder:font-medium" placeholder="Masukkan kata kunci" />
+            <input 
+              :value="searchQuery"
+              @input="emit('update:searchQuery', ($event.target as HTMLInputElement).value)"
+              type="text" 
+              class="ps-10 py-3 bg-slate-50 border-transparent rounded-xl text-sm w-full focus:bg-white focus:border-bejo-500 focus:ring-4 focus:ring-bejo-500/10 transition-all font-bold placeholder:text-slate-400 placeholder:font-medium" 
+              placeholder="Masukkan kata kunci" 
+            />
             <div class="absolute inset-y-0 start-0 flex items-center ps-3.5">
               <Icon icon="lucide:search" class="size-4 text-slate-400"></Icon>
             </div>
@@ -98,12 +104,14 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 interface Props {
   openFilter: boolean
+  searchQuery: string
 }
 
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
   (e: 'update:openFilter', value: boolean): void
+  (e: 'update:searchQuery', value: string): void
 }>()
 
 const filterRef = ref<HTMLElement | null>(null)

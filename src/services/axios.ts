@@ -9,24 +9,14 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' }
 })
 
-let isRefreshing = false
-let failedQueue: any[] = []
+// --- SINGLETON REFRESH PROMISE ---
+// Menghindari race condition: hanya satu proses refresh yang boleh berjalan
+let refreshPromise: Promise<string | null> | null = null
 
 /**
- * Process the queue of requests waiting for a new token.
+ * Melakukan pemanggilan API refresh token.
  */
-const processQueue = (error: any, token: string | null = null) => {
-  failedQueue.forEach((prom) => {
-    if (error) prom.reject(error)
-    else prom.resolve(token)
-  })
-  failedQueue = []
-}
-
-/**
- * Perform the actual token refresh call.
- */
-const performRefresh = async () => {
+const performRefresh = async (): Promise<string | null> => {
   const refreshToken = localStorage.getItem('refreshToken')
   const roleUser = localStorage.getItem('role_user') || 'admin'
   
@@ -34,7 +24,7 @@ const performRefresh = async () => {
 
   try {
     const { data } = await axios.post(`${baseURL}/api/auth/refresh`, 
-      { refreshToken, Jenis_User: roleUser }, // Kirim di body juga agar aman
+      { refreshToken, Jenis_User: roleUser }, 
       { headers: { 'X-Jenis-User': roleUser } }
     )
 
@@ -49,44 +39,42 @@ const performRefresh = async () => {
 
     return newToken
   } catch (err: any) {
-    // Hanya hapus session jika server merespon dengan kegagalan autentikasi
+    // Hanya logout jika server mengembalikan 401/403 (Token benar-benar mati)
     if (err.response?.status === 401 || err.response?.status === 403) {
-      console.error('Refresh token expired or invalid')
+      console.error('Session expired: Refresh token is invalid')
       localStorage.clear()
       router.push({ path: '/login', query: { expired: '1' } })
     }
+    // Jika error jaringan atau 500, biarkan sesi tetap ada tapi lempar error agar request gagal
     throw err
   }
+}
+
+// Global Reusable Refresh Logic
+const getOrStartRefresh = (): Promise<string | null> => {
+  if (!refreshPromise) {
+    refreshPromise = performRefresh().finally(() => {
+      refreshPromise = null
+    })
+  }
+  return refreshPromise
 }
 
 // Request Interceptor: Proactive Refresh
 api.interceptors.request.use(async (config) => {
   let token = localStorage.getItem('token')
 
-  // Cek secara proaktif jika token akan habis
   if (token && isTokenExpired(token)) {
-    const refreshToken = localStorage.getItem('refreshToken')
-    
-    if (refreshToken && !isRefreshing) {
-      isRefreshing = true
-      try {
-        const newToken = await performRefresh()
-        processQueue(null, newToken)
-        token = newToken
-      } catch (err) {
-        processQueue(err, null)
-      } finally {
-        isRefreshing = false
+    try {
+      // Cek apakah tab lain sudah me-refresh token baru
+      const possiblyNewToken = localStorage.getItem('token')
+      if (possiblyNewToken && !isTokenExpired(possiblyNewToken)) {
+         token = possiblyNewToken
+      } else {
+         token = await getOrStartRefresh()
       }
-    } else if (isRefreshing) {
-      // Jika sedang me-refresh, tunggu sampai selesai
-      try {
-        token = await new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject })
-        })
-      } catch (err) {
-        // Biarkan request berlanjut (akan tertangkap 401 di response)
-      }
+    } catch (err) {
+      // Refresh gagal, biarkan request lanjut (akan tertangkap 401 di response)
     }
   }
 
@@ -96,37 +84,23 @@ api.interceptors.request.use(async (config) => {
   return config
 }, (error) => Promise.reject(error))
 
-// Response Interceptor: Reactive Refresh (Safety Net)
+// Response Interceptor: Reactive Refresh
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config
 
     if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject })
-        })
-          .then((token) => {
-            originalRequest.headers.Authorization = 'Bearer ' + token
-            return api(originalRequest)
-          })
-          .catch((err) => Promise.reject(err))
-      }
-
       originalRequest._retry = true
-      isRefreshing = true
 
       try {
-        const newToken = await performRefresh()
-        processQueue(null, newToken)
-        originalRequest.headers.Authorization = `Bearer ${newToken}`
-        return api(originalRequest)
+        const newToken = await getOrStartRefresh()
+        if (newToken) {
+          originalRequest.headers.Authorization = `Bearer ${newToken}`
+          return api(originalRequest)
+        }
       } catch (err) {
-        processQueue(err, null)
         return Promise.reject(err)
-      } finally {
-        isRefreshing = false
       }
     }
     return Promise.reject(error)
