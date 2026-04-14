@@ -49,7 +49,7 @@ const searchCS = ref('')
 const isFetchingAdmins = ref(false)
 const isSearchingChat = ref(false)
 const searchChatQuery = ref('')
-const searchChatResults = ref<number[]>([])
+const searchChatResults = ref<{ chatIndex: number; matchIndex: number }[]>([])
 const currentSearchMatch = ref(-1)
 const searchChatInputRef = ref<HTMLInputElement | null>(null)
 
@@ -58,6 +58,14 @@ const bgLightUrl = `url(${bgChat})`
 const bgDarkUrl = `url(${bgChatDark})`
 
 const isPreviewMode = computed(() => previewImages.value.length > 0)
+const activeSearchChatIndex = computed(() => {
+  if (currentSearchMatch.value === -1 || searchChatResults.value.length === 0) return -1
+  return searchChatResults.value[currentSearchMatch.value].chatIndex
+})
+const activeSearchMatchIndex = computed(() => {
+  if (currentSearchMatch.value === -1 || searchChatResults.value.length === 0) return -1
+  return searchChatResults.value[currentSearchMatch.value].matchIndex
+})
 const isPreviewOpen = ref(false)
 const previewImages = ref<PreviewImage[]>([])
 const activeIndex = ref(0)
@@ -86,9 +94,13 @@ const emit = defineEmits<{
 const handleClickOutside = (event: MouseEvent) => {
   const target = event.target as Node
 
-  // Auto-close search if clicking outside search header
+  // Auto-close search if clicking outside search header, but only if not clicking interactive toggle elements
   if (isSearchingChat.value && searchHeaderRef.value && !searchHeaderRef.value.contains(target)) {
-    toggleSearchChat()
+    // Check if we're clicking the toggle button or more-vertical which are outside searchHeaderRef in some layouts
+    const isSearchToggle = (target as HTMLElement).closest('button[title="Cari dalam obrolan"]')
+    if (!isSearchToggle) {
+      toggleSearchChat()
+    }
   }
 
   const interactiveRefs = [containerRef.value, etalaseRef.value, appointmentFormRef.value, tukarCSRef.value, scheduleRef.value, filterRef.value?.$el, searchHeaderRef.value]
@@ -179,7 +191,7 @@ const fetchAdmins = async () => {
     const res = await api.get('/api/admin/getAll?orderby=Tgl_Created&orderdir=desc', {
       headers: { 'X-Jenis-User': 'admin' }
     })
-    adminsList.value = res.data.data
+    adminsList.value = res.data.Data || []
   } catch {
     fail('Gagal mengambil data admin')
   } finally {
@@ -188,18 +200,30 @@ const fetchAdmins = async () => {
 }
 
 const filteredAdmins = computed(() => {
-  if (!searchCS.value) return adminsList.value
-  return adminsList.value.filter((admin) => admin.Nama_User.toLowerCase().includes(searchCS.value.toLowerCase()))
+  const myId = localStorage.getItem('no_id')
+  let list = adminsList.value || []
+  
+  // Filter out self
+  if (myId) {
+    list = list.filter(admin => String(admin.No_Id) !== String(myId))
+  }
+  
+  if (!searchCS.value) return list
+  return list.filter((admin) => 
+    (admin.Nama_User || '').toLowerCase().includes(searchCS.value.toLowerCase())
+  )
 })
 
 const handleTransferChat = (targetAdmin: any) => {
   confirm(`Alihkan percakapan ke ${targetAdmin.Nama_User}?`, async () => {
     const myId = localStorage.getItem('no_id')
     const phone = props.phoneNumber.replace(/\D/g, '')
-    const formattedPhone = phone.startsWith('0') ? '62' + phone.substring(1) : phone
+    let formattedPhone = phone
+    if (formattedPhone.startsWith('0')) {
+      formattedPhone = '62' + formattedPhone.substring(1)
+    }
 
     try {
-      // 1. Toggle for current admin (status_bot: true)
       await api.post(
         '/api/chat/toggle-bot',
         {
@@ -209,8 +233,10 @@ const handleTransferChat = (targetAdmin: any) => {
         },
         { headers: { 'X-Jenis-User': 'admin' } }
       )
+      
+      await sendChat('system_keluar_tukar', undefined, props.roomId!, formattedPhone)
+      console.log('dari asal :system_keluar_tukar')
 
-      // 2. Toggle for target admin (status_bot: false)
       await api.post(
         '/api/chat/toggle-bot',
         {
@@ -220,12 +246,20 @@ const handleTransferChat = (targetAdmin: any) => {
         },
         { headers: { 'X-Jenis-User': 'admin' } }
       )
+      
+      await sendChat('system_masuk_tukar', undefined, props.roomId!, formattedPhone)
+      console.log('dari asal : system_masuk_tukar')
 
       success(`Berhasil mengalihkan ke ${targetAdmin.Nama_User}`)
       openTukarCS.value = false
       emit('clearRoom')
-    } catch (err) {
-      fail('Gagal mengalihkan percakapan')
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.Message || ''
+      if (errorMessage.includes('sudah diambil alih')) {
+        fail('Gagal: Percakapan ini sudah dialihkan')
+      } else {
+        fail('Gagal mengalihkan percakapan')
+      }
       console.error(err)
     }
   })
@@ -251,13 +285,34 @@ const handleSearchChat = () => {
   }
 
   const query = searchChatQuery.value.toLowerCase()
-  searchChatResults.value = props.chats
-    .map((c, i) => ((c.Message as string) || '').toLowerCase().includes(query) ? i : -1)
-    .filter((i) => i !== -1)
+  const results: { chatIndex: number; matchIndex: number }[] = []
+  
+  props.chats.forEach((c, i) => {
+    let msg = (c.Message as string) || ''
+    // Clean up metadata
+    if (msg.includes('_data:image/')) {
+      msg = msg.split('_data:image/')[0]
+    }
+    
+    // Find all occurrences in this message
+    const searchString = msg.toLowerCase()
+    let pos = searchString.indexOf(query)
+    let occurrenceIdx = 0
+    
+    while (pos !== -1) {
+      results.push({ chatIndex: i, matchIndex: occurrenceIdx })
+      occurrenceIdx++
+      pos = searchString.indexOf(query, pos + query.length)
+    }
+  })
+
+  searchChatResults.value = results
 
   if (searchChatResults.value.length > 0) {
-    currentSearchMatch.value = 0
-    scrollToMatch(searchChatResults.value[0])
+    if (currentSearchMatch.value === -1 || currentSearchMatch.value >= searchChatResults.value.length) {
+      currentSearchMatch.value = 0
+    }
+    scrollToMatch(searchChatResults.value[currentSearchMatch.value])
   } else {
     currentSearchMatch.value = -1
   }
@@ -275,10 +330,31 @@ const prevSearchMatch = () => {
   scrollToMatch(searchChatResults.value[currentSearchMatch.value])
 }
 
-const scrollToMatch = (idx: number) => {
-  const el = document.getElementById(`chat-message-${idx}`)
+const scrollToMatch = (res: { chatIndex: number; matchIndex: number }) => {
+  // Priority 1: Target the specific match highlight span
+  const matchId = `match-${res.chatIndex}-${res.matchIndex}`
+  let el = document.getElementById(matchId)
+  
+  // Priority 2: Fallback to the whole chat bubble if span ID not found yet (e.g. initial render)
+  if (!el) {
+    el = document.getElementById(`chat-message-${res.chatIndex}`)
+  }
+
   if (el) {
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    const scrollElement = chatContainer.value?.getScrollElement()
+    if (scrollElement) {
+      const elRect = el.getBoundingClientRect()
+      const containerRect = scrollElement.getBoundingClientRect()
+      
+      const targetScrollTop = scrollElement.scrollTop + (elRect.top - containerRect.top) - (containerRect.height / 2) + (elRect.height / 2)
+      
+      scrollElement.scrollTo({
+        top: targetScrollTop,
+        behavior: 'smooth'
+      })
+    } else {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
   }
 }
 
@@ -481,13 +557,15 @@ const scrollToBottom = async () => {
 }
 
 const sendChat = async (type: string, url?: string, targetRoomId?: string, targetPhone?: string, idPaket?: string, mediaUrl?: string) => {
+  console.log('kiriman :'+type)
   if (!type.includes('system') && !sendChatContent.value.trim()) return
+  
 
   const activeRoomId = targetRoomId || props.roomId
   const activePhone = targetPhone || props.phoneNumber
 
+console.log('Masuk :'+type)
   if (!activeRoomId) return
-
   const myId = localStorage.getItem('no_id') || ''
   const role = localStorage.getItem('role_user') || ''
   const username = localStorage.getItem('nama_display') || ''
@@ -504,7 +582,7 @@ const sendChat = async (type: string, url?: string, targetRoomId?: string, targe
   let currentUserIds: string[] = [myId]
 
   const isCurrentActiveRoom = activeRoomId === props.roomId
-
+  
   if (isCurrentActiveRoom && props.chats && props.chats.length > 0) {
     const lastChat = props.chats[props.chats.length - 1]
     if (lastChat.User_Ids && Array.isArray(lastChat.User_Ids)) {
@@ -522,13 +600,14 @@ const sendChat = async (type: string, url?: string, targetRoomId?: string, targe
   }
 
   let messageText = ''
-  if (type === 'system_masuk') {
+  if (type === 'system_masuk' || type === 'system_masuk_tukar') {
     messageText = username + '_X7#mQ9!vW2_Bergabung'
-  } else if (type === 'system_keluar') {
+  } else if (type === 'system_keluar' || type === 'system_keluar_tukar') {
     messageText = username + '_X7#mQ9!vW2_Keluar'
   } else {
     messageText = sendChatContent.value
   }
+  console.log(messageText)
 
   const tempIndex = props.chats.length
 
@@ -592,7 +671,7 @@ const sendChat = async (type: string, url?: string, targetRoomId?: string, targe
       emit('updateChatStatus', { index: tempIndex, status: 'send' })
     }
 
-    if (type === 'system_keluar' && isCurrentActiveRoom) {
+    if ((type === 'system_keluar' || type === 'system_masuk_tukar') && isCurrentActiveRoom) {
       emit('clearRoom')
     }
   } catch (err: any) {
@@ -630,9 +709,8 @@ const takeOverChat = async (status: boolean, phoneNumber?: string, roomId?: stri
     const errorMessage = err.response?.data?.Message || ''
     if (errorMessage.includes('Percakapan ini sudah diambil alih')) {
       fail('Percakapan ini sudah diambil alih Admin lain')
-      emit('chatTakeOver')
     } else {
-      fail('Ambil alih percakapan gagal')
+      fail(status == false ? 'Ambil alih percakapan gagal' : 'Akhiri percakapan gagal')
       console.error('Error take over:', err.response?.data || err.message)
     }
   }
@@ -787,12 +865,62 @@ watch(
   }
 )
 
+const adjustInputHeight = () => {
+  const textarea = chatInputRef.value
+  if (!textarea) return
+
+  textarea.style.height = '40px'
+  const newHeight = Math.min(textarea.scrollHeight, 150)
+  textarea.style.height = `${newHeight}px`
+}
+
+const handleKeydown = (e: KeyboardEvent) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault()
+    sendChat('text')
+  }
+}
+
+const initScrollListener = () => {
+  // Use a targeted selector to ensure we find the correct scroll layer reliably
+  setTimeout(() => {
+    const scrollElement = document.querySelector('#chat-scroll-container .simplebar-content-wrapper')
+    if (scrollElement) {
+      scrollElement.removeEventListener('scroll', handleScroll)
+      scrollElement.addEventListener('scroll', handleScroll)
+      handleScroll()
+    }
+  }, 100)
+}
+
+const handleScroll = () => {
+  const scrollElement = document.querySelector('#chat-scroll-container .simplebar-content-wrapper')
+  if (scrollElement) {
+    const { scrollTop, scrollHeight, clientHeight } = scrollElement
+    // Robust buffer (15px) for reliable detection across different browser engines and zoom levels
+    const isAtBottom = scrollHeight - Math.ceil(scrollTop + clientHeight) <= 15
+    showScrollToBottom.value = scrollHeight > clientHeight && !isAtBottom
+  }
+}
+
+// Re-ordered Watchers and Lifecycle Hooks (Placed after function definitions)
 watch(
   () => props.chats,
   () => {
     scrollToBottom()
+    // Re-verify scroll button state after content or message updates
+    setTimeout(handleScroll, 200)
   },
   { deep: true, immediate: true }
+)
+
+watch(
+  () => props.roomId,
+  () => {
+    showScrollToBottom.value = false
+    initScrollListener()
+  },
+  { immediate: true }
 )
 
 watch(
@@ -816,56 +944,32 @@ watch(
   { deep: true }
 )
 
+watch(sendChatContent, () => {
+  nextTick(() => {
+    adjustInputHeight()
+  })
+})
+
 onMounted(() => {
   isMobile.value = window.innerWidth < 640
   document.addEventListener('click', handleClickOutside)
   reinitPreline()
   scrollToBottom()
-
-  // Scroll indicator logic
-  const scrollElement = chatContainer.value?.getScrollElement()
-  if (scrollElement) {
-    scrollElement.addEventListener('scroll', () => {
-      const { scrollTop, scrollHeight, clientHeight } = scrollElement
-      // Show button if user is more than 300px away from bottom
-      showScrollToBottom.value = scrollHeight - scrollTop - clientHeight > 300
-    })
-  }
-})
-
-onBeforeUnmount(() => {
-  document.removeEventListener('click', handleClickOutside)
+  initScrollListener()
 })
 
 onUpdated(() => {
   reinitPreline()
 })
 
-const adjustInputHeight = () => {
-  const textarea = chatInputRef.value
-  if (!textarea) return
-
-  textarea.style.height = '40px'
-  const newHeight = Math.min(textarea.scrollHeight, 150)
-  textarea.style.height = `${newHeight}px`
-}
-
-const handleKeydown = (e: KeyboardEvent) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault()
-    sendChat('text')
-  }
-}
-
-watch(sendChatContent, () => {
-  nextTick(() => {
-    adjustInputHeight()
-  })
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside)
 })
 </script>
 
 <template>
-  <div v-if="roomId" class="w-full h-full flex flex-col bg-white">
+  <div class="chat-content-container w-full h-full overflow-hidden">
+    <div v-if="roomId" class="w-full h-full flex flex-col bg-white">
     <!-- Header: Premium Profile Section -->
     <div class="relative z-20 px-4 py-3 md:px-8 md:py-5 border-b border-slate-50 bg-white group">
       <!-- Ambient Background Decoration -->
@@ -926,21 +1030,21 @@ watch(sendChatContent, () => {
               {{ currentSearchMatch + 1 }} / {{ searchChatResults.length }}
             </span>
             <div class="flex items-center gap-0.5 md:gap-1">
-              <button @click="prevSearchMatch" class="size-8 md:size-10 flex items-center justify-center rounded-lg md:rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-bejo-600 hover:bg-bejo-50 transition-all active:scale-90 shadow-sm">
+              <button @click.stop="prevSearchMatch" class="size-8 md:size-10 flex items-center justify-center rounded-lg md:rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-bejo-600 hover:bg-bejo-50 transition-all active:scale-90 shadow-sm">
                 <Icon icon="lucide:chevron-up" class="size-4 md:size-5" />
               </button>
-              <button @click="nextSearchMatch" class="size-8 md:size-10 flex items-center justify-center rounded-lg md:rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-bejo-600 hover:bg-bejo-50 transition-all active:scale-90 shadow-sm">
+              <button @click.stop="nextSearchMatch" class="size-8 md:size-10 flex items-center justify-center rounded-lg md:rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-bejo-600 hover:bg-bejo-50 transition-all active:scale-90 shadow-sm">
                 <Icon icon="lucide:chevron-down" class="size-4 md:size-5" />
               </button>
             </div>
           </div>
-          <button @click="toggleSearchChat" class="size-8 md:size-10 flex items-center justify-center rounded-lg md:rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all active:scale-90 shadow-sm">
+          <button @click.stop="toggleSearchChat" class="size-8 md:size-10 flex items-center justify-center rounded-lg md:rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all active:scale-90 shadow-sm">
             <Icon icon="lucide:x" class="size-4 md:size-5" />
           </button>
         </div>
 
         <div v-if="!isSearchingChat" class="flex items-center gap-2 sm:gap-3">
-          <button @click="toggleSearchChat" class="size-9 sm:size-10 rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-bejo-600 hover:border-bejo-100 hover:bg-bejo-50 hover:shadow-lg hover:shadow-bejo-500/10 transition-all duration-300 flex items-center justify-center">
+          <button @click.stop="toggleSearchChat" class="size-9 sm:size-10 rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-bejo-600 hover:border-bejo-100 hover:bg-bejo-50 hover:shadow-lg hover:shadow-bejo-500/10 transition-all duration-300 flex items-center justify-center">
             <Icon icon="lucide:search" class="size-4 sm:size-5"></Icon>
           </button>
           <button class="size-10 rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-slate-900 hover:border-slate-200 hover:shadow-sm transition-all duration-300 flex items-center justify-center">
@@ -1012,44 +1116,49 @@ watch(sendChatContent, () => {
       <input type="file" ref="addMoreInput" multiple hidden accept="image/*" @change="handleAddMore" />
     </div>
 
-    <simplebar id="chat-scroll-container" ref="chatContainer" class="flex-grow bg-slate-50 relative h-0 container bg-chat/5" :class="{ hidden: isPreviewMode }">
-      <!-- Ambient Overlay for Chat Board -->
-      <div class="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent pointer-events-none"></div>
+    <div class="flex-grow min-h-0 relative overflow-hidden" :class="{ hidden: isPreviewMode }">
+      <simplebar id="chat-scroll-container" ref="chatContainer" class="h-full w-full bg-slate-50 bg-chat/5">
+        <!-- Ambient Overlay for Chat Board -->
+        <div class="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent pointer-events-none"></div>
 
-      <div class="relative z-10 flex flex-col gap-6 px-4 py-6 sm:px-8 sm:py-10">
-        <ChatBubble 
-          v-for="(chat, i) in chats" 
-          :id="'chat-message-' + i"
-          :key="i" 
-          :idx="i" 
-          :chat="chat" 
-          :chats="chats" 
-          :lastMessageId="props.lastMessageId" 
-          :highlight="searchChatQuery"
-          :isActiveMatch="i === searchChatResults[currentSearchMatch]"
-          @imageLoaded="scrollToBottom" 
-        />
-      </div>
+        <div class="relative z-10 flex flex-col gap-6 px-4 py-6 sm:px-8 sm:py-10">
+          <ChatBubble 
+            v-for="(chat, i) in chats" 
+            :id="'chat-message-' + i"
+            :key="i" 
+            :idx="i" 
+            :chat="chat" 
+            :chats="chats" 
+            :lastMessageId="props.lastMessageId" 
+            :highlight="searchChatQuery"
+            :isActiveMatch="i === activeSearchChatIndex"
+            :activeMatchIndex="activeSearchMatchIndex"
+            @imageLoaded="scrollToBottom" 
+          />
+        </div>
+      </simplebar>
 
-      <!-- Scroll to Bottom Button (WhatsApp Style) -->
+      <!-- Scroll to Bottom Button (WhatsApp Style - Centered) -->
       <Transition
         enter-active-class="transition duration-300 ease-out"
-        enter-from-class="transform translate-y-4 opacity-0"
-        enter-to-class="transform translate-y-0 opacity-100"
+        enter-from-class="transform translate-y-4 opacity-0 scale-95"
+        enter-to-class="transform translate-y-0 opacity-100 scale-100"
         leave-active-class="transition duration-200 ease-in"
-        leave-from-class="transform translate-y-0 opacity-100"
-        leave-to-class="transform translate-y-4 opacity-0"
+        leave-from-class="transform translate-y-0 opacity-100 scale-100"
+        leave-to-class="transform translate-y-4 opacity-0 scale-95"
       >
         <button 
           v-if="showScrollToBottom" 
           @click="scrollToBottom" 
-          class="absolute bottom-6 right-6 size-10 md:size-12 rounded-full bg-white shadow-xl shadow-slate-900/10 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-bejo-600 hover:border-bejo-200 hover:scale-110 active:scale-95 transition-all z-20 group"
+          class="absolute bottom-6 left-1/2 -translate-x-1/2 h-10 md:h-12 px-5 rounded-full bg-white shadow-xl shadow-slate-900/10 border border-slate-100 flex items-center gap-2 text-bejo-600 hover:bg-bejo-50 hover:scale-105 active:scale-95 transition-all z-50 group"
+          title="Geser ke bawah"
         >
-          <Icon icon="lucide:chevron-down" class="size-5 md:size-6 group-hover:animate-bounce" />
+          <span class="text-xs md:text-sm font-black uppercase tracking-wider">Scroll</span>
+          <Icon icon="lucide:chevron-down" class="size-4 md:size-5 group-hover:animate-bounce" />
           <div class="absolute inset-0 rounded-full bg-bejo-500/5 scale-0 group-hover:scale-100 transition-transform duration-500"></div>
         </button>
       </Transition>
-    </simplebar>
+    </div>
 
     <div class="p-1 md:p-6 bg-white border-t border-slate-50" :class="{ hidden: isPreviewMode }">
       <div v-if="activeTab != 'bot'" class="flex gap-1 md:gap-4 items-center bg-slate-50 p-1.5 md:p-2.5 pl-2 md:pl-4 rounded-xl md:rounded-[1.5rem] border border-transparent focus-within:border-bejo-500/20 focus-within:bg-white focus-within:ring-8 focus-within:ring-bejo-500/5 focus-within:shadow-xl focus-within:shadow-bejo-500/5 transition-all duration-300">
@@ -1091,7 +1200,7 @@ watch(sendChatContent, () => {
           ref="chatInputRef"
           v-model="sendChatContent"
           @keydown="handleKeydown"
-          class="flex-1 min-w-0 bg-transparent border-none focus:ring-0 text-sm font-bold text-slate-700 placeholder:text-slate-400 placeholder:font-bold px-1 md:px-2 py-2 resize-none overflow-y-auto custom-scrollbar transition-all duration-200"
+          class="flex-1 min-w-0 bg-transparent border-none focus:ring-0 text-sm font-bold text-slate-700 placeholder:text-slate-400 placeholder:font-bold px-1 md:px-2 py-[11px] resize-none overflow-y-auto custom-scrollbar transition-all duration-200"
           placeholder="Tulis pesan..."
           rows="1"
           style="height: 40px; min-height: 40px;"
@@ -1235,8 +1344,8 @@ watch(sendChatContent, () => {
               <Icon icon="lucide:check" class="size-4" />
             </button>
           </div>
-
-          <div v-if="filteredAdmins.length === 0 && !isFetchingAdmins" class="flex flex-col items-center justify-center py-8 text-slate-400">
+          
+          <div v-if="filteredAdmins && filteredAdmins.length === 0 && !isFetchingAdmins" class="flex flex-col items-center justify-center py-8 text-slate-400">
             <Icon icon="lucide:users" class="size-8 mb-2 opacity-20" />
             <p class="text-xs font-bold uppercase tracking-widest">Tidak ada CS</p>
           </div>
@@ -1265,6 +1374,7 @@ watch(sendChatContent, () => {
 
       <h4 class="text-xl font-extrabold text-slate-800 tracking-tight">Mulai Percakapan</h4>
       <p class="text-sm text-slate-500 mt-2.5 leading-relaxed font-medium">Pilih pelanggan dari daftar di samping untuk mulai melihat dan membalas pesan.</p>
+    </div>
     </div>
   </div>
 </template>

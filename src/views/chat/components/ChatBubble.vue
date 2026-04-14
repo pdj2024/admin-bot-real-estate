@@ -32,6 +32,7 @@ const props = defineProps<{
   lastMessageId: string
   highlight?: string
   isActiveMatch?: boolean
+  activeMatchIndex?: number
 }>()
 
 defineEmits(['imageLoaded'])
@@ -88,9 +89,10 @@ const getDateChat = (date: any): string => {
   }).format(d)
 }
 
-const formatMessage = (msg: string) => {
+const formatMessage = (msg: string, active: boolean = false) => {
   if (!msg) return ''
 
+  // Pre-process message for display
   let formatted = msg
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -99,13 +101,25 @@ const formatMessage = (msg: string) => {
 
   if (props.highlight && props.highlight.trim()) {
     try {
-      const query = props.highlight.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
-      const regex = new RegExp(`(${query})`, 'gi')
-      const highlightClass = props.isActiveMatch 
-        ? 'bg-bejo-500 text-white rounded-md px-1 font-bold shadow-sm ring-2 ring-bejo-500/20' 
-        : 'bg-amber-200 text-slate-900 rounded-md px-1'
+      const escapedQuery = props.highlight.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const regex = new RegExp(`(${escapedQuery})`, 'gi')
       
-      formatted = formatted.replace(regex, `<span class="${highlightClass}">$1</span>`)
+      let matchCounter = 0
+      formatted = formatted.replace(regex, (match) => {
+        const currentMatchIdx = matchCounter++
+        
+        // Only mark as active if THIS specific occurrence is the targeted one
+        const isThisMatchActive = active && props.activeMatchIndex === currentMatchIdx
+        
+        const highlightClass = isThisMatchActive 
+          ? 'bg-bejo-500 text-white rounded-md px-1 font-bold shadow-sm ring-2 ring-bejo-500/20' 
+          : 'bg-amber-200 text-slate-900 rounded-md px-1'
+        
+        // Assign a unique ID to this specific occurrence for scrolling
+        const matchId = `match-${props.idx}-${currentMatchIdx}`
+        
+        return `<span id="${matchId}" class="${highlightClass}">${match}</span>`
+      })
     } catch (e) {
       console.error('Highlight regex error:', e)
     }
@@ -185,7 +199,7 @@ watch(
             <img v-if="imageUrl || chat.Media_Url" :src="imageUrl || chat.Media_Url" @load="$emit('imageLoaded')" class="w-full h-auto object-cover max-h-72 hover:scale-105 transition-transform duration-500 cursor-pointer" />
             <img v-else-if="(chat.Message || '').includes('_data:image/')" :src="(chat.Message || '').includes('_data:image/') ? 'data:image/' + (chat.Message || '').split('_data:image/')[1] : imageUrl" @load="$emit('imageLoaded')" class="w-full h-auto object-cover max-h-72 hover:scale-105 transition-transform duration-500 cursor-pointer" />
           </div>
-          <span v-if="chat.Message" class="block break-words leading-relaxed tracking-tight" v-html="formatMessage((chat.Message || '').includes('_data:image/') ? (chat.Message || '').split('_data:image/')[0] : chat.Message || '')"></span>
+          <span v-if="chat.Message" class="block break-words leading-relaxed tracking-tight" v-html="formatMessage((chat.Message || '').includes('_data:image/') ? (chat.Message || '').split('_data:image/')[0] : chat.Message || '', isActiveMatch)"></span>
           <div v-if="chat.Tipe_User === 'admin' && chat.Sender_Id === 'adm_bot'" class="ai-indicator mt-3 pt-2 border-t border-amber-200/40 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-amber-700">
             <div class="size-4 bg-amber-500 rounded-md flex items-center justify-center text-white">
               <Icon icon="lucide:bot" class="size-3" />

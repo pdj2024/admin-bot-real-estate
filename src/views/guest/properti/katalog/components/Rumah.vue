@@ -72,9 +72,9 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 min-[2000px]:grid-cols-4 min-[2600px]:grid-cols-5 min-[3200px]:grid-cols-6 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-6">
       <template v-if="isLoading">
-        <ProductCard v-for="i in 6" :key="i" :product="{}" is-loading />
+        <ProductCard v-for="i in 15" :key="i" :product="{}" is-loading />
       </template>
       <template v-else-if="table.getRowModel().rows.length === 0">
         <div class="col-span-full py-20 flex flex-col items-center justify-center text-center bg-white rounded-[2.5rem] border border-dashed border-slate-200 shadow-sm relative overflow-hidden">
@@ -295,7 +295,7 @@ const table = useVueTable({
   getSortedRowModel: getSortedRowModel(),
   getFilteredRowModel: getFilteredRowModel(),
   initialState: {
-    pagination: { pageSize: 6 }
+    pagination: { pageSize: 15 }
   }
 })
 

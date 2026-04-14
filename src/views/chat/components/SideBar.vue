@@ -23,6 +23,7 @@ const selectedChatIdx = ref<number>(-1)
 const selectedChatGroup = ref<string>('')
 const unreadCounts = ref<Record<string, number>>({})
 const firstUnreadIds = ref<Record<string, string>>({})
+const searchQuery = ref('')
 
 const selectedBotChats = ref<Chat[]>([])
 const selectedAssignChats = ref<Chat[]>([])
@@ -431,42 +432,65 @@ const handleBatchTakeOverAssign = () => {
 
 const isAllBotChatsSelected = computed({
   get: () => {
-    return chatsBot.value.length > 0 && selectedBotChats.value.length === chatsBot.value.length
+    const list = filteredChatsBot.value
+    return list.length > 0 && list.every(c => selectedBotChats.value.includes(c))
   },
   set: (value) => {
+    const list = filteredChatsBot.value
     if (value) {
-      selectedBotChats.value = [...chatsBot.value]
+      const toAdd = list.filter(c => !selectedBotChats.value.includes(c))
+      selectedBotChats.value = [...selectedBotChats.value, ...toAdd]
     } else {
-      selectedBotChats.value = []
+      selectedBotChats.value = selectedBotChats.value.filter(c => !list.includes(c))
     }
   }
 })
 
 const isAllAssignChatsSelected = computed({
   get: () => {
-    return chatsAssign.value.length > 0 && selectedAssignChats.value.length === chatsAssign.value.length
+    const list = filteredChatsAssign.value
+    return list.length > 0 && list.every(c => selectedAssignChats.value.includes(c))
   },
   set: (value) => {
+    const list = filteredChatsAssign.value
     if (value) {
-      selectedAssignChats.value = [...chatsAssign.value]
+      const toAdd = list.filter(c => !selectedAssignChats.value.includes(c))
+      selectedAssignChats.value = [...selectedAssignChats.value, ...toAdd]
     } else {
-      selectedAssignChats.value = []
+      selectedAssignChats.value = selectedAssignChats.value.filter(c => !list.includes(c))
     }
   }
 })
 
 const isAllActiveChatsSelected = computed({
   get: () => {
-    return chatsAktif.value.length > 0 && selectedActiveChats.value.length === chatsAktif.value.length
+    const list = filteredChatsAktif.value
+    return list.length > 0 && list.every(c => selectedActiveChats.value.includes(c))
   },
   set: (value) => {
+    const list = filteredChatsAktif.value
     if (value) {
-      selectedActiveChats.value = [...chatsAktif.value]
+      const toAdd = list.filter(c => !selectedActiveChats.value.includes(c))
+      selectedActiveChats.value = [...selectedActiveChats.value, ...toAdd]
     } else {
-      selectedActiveChats.value = []
+      selectedActiveChats.value = selectedActiveChats.value.filter(c => !list.includes(c))
     }
   }
 })
+
+const filterList = (list: Chat[]) => {
+  if (!searchQuery.value.trim()) return list
+  const query = searchQuery.value.toLowerCase()
+  return list.filter(chat => 
+    (chat.Username_Lawan || '').toLowerCase().includes(query) ||
+    (chat.Room_Name || '').toLowerCase().includes(query) ||
+    (chat.Telepon_User_Lawan || '').toLowerCase().includes(query)
+  )
+}
+
+const filteredChatsBot = computed(() => filterList(chatsBot.value))
+const filteredChatsAktif = computed(() => filterList(chatsAktif.value))
+const filteredChatsAssign = computed(() => filterList(chatsAssign.value))
 
 watch(
   () => props.usernameChange,
@@ -505,13 +529,15 @@ defineExpose({
 </script>
 
 <template>
-  <div class="lg:border-e border-slate-200 bg-white">
+  <div class="sidebar-container h-full">
+    <div class="lg:border-e border-slate-200 bg-white">
     <div id="hs-offcanvas-left" class="hs-overlay [--auto-close:lg] lg:block lg:translate-x-0 lg:static lg:end-auto lg:bottom-0 w-80 hs-overlay-open:translate-x-0 -translate-x-full transition-all duration-300 transform h-full hidden fixed top-0 start-0 bottom-0 overflow-hidden z-60" role="dialog" tabindex="-1" aria-label="Sidebar">
       <div class="card rounded-none shadow-none relative flex flex-row h-full max-h-full overflow-hidden divide-x divide-slate-200 bg-white">
         <div class="w-80 flex flex-col h-full">
           <div class="px-6 py-5 border-b border-slate-50 shrink-0 bg-white">
             <div class="relative group">
               <input 
+                v-model="searchQuery"
                 type="text" 
                 class="ps-11 block w-full text-sm bg-slate-50 border-transparent rounded-2xl focus:border-bejo-500 focus:ring-4 focus:ring-bejo-500/10 focus:bg-white transition-all duration-300" 
                 placeholder="Cari obrolan..." 
@@ -547,12 +573,12 @@ defineExpose({
 
             <div v-else class="flex flex-col flex-1 min-h-0">
               <div v-if="activeTab === 'bot'" class="flex flex-col flex-1 min-h-0 relative">
-                <div v-if="chatsBot.length === 0" class="text-center py-10 text-sm text-slate-400">Tidak ada obrolan ditemukan.</div>
+                <div v-if="filteredChatsBot.length === 0" class="text-center py-10 text-sm text-slate-400">Tidak ada obrolan ditemukan.</div>
 
-                <div v-if="chatsBot.length > 0" class="px-4 py-2 bg-slate-50 border-b border-slate-200 shrink-0 flex items-center justify-between">
+                <div v-if="filteredChatsBot.length > 0" class="px-4 py-2 bg-slate-50 border-b border-slate-200 shrink-0 flex items-center justify-between">
                   <div class="flex items-center gap-2">
                     <input type="checkbox" v-model="isAllBotChatsSelected" class="w-4 h-4 rounded form-checkbox cursor-pointer accent-bejo-600" title="Pilih Semua Bot" />
-                    <p class="text-default-700 font-bold text-[11px] uppercase tracking-widest">Bot ({{ chatsBot.length }})</p>
+                    <p class="text-default-700 font-bold text-[11px] uppercase tracking-widest">Bot ({{ filteredChatsBot.length }})</p>
                   </div>
 
                   <button v-if="selectedBotChats.length > 0" @click="handleBatchTakeOverBot" class="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold text-[var(--color-bejo-700)] bg-[var(--color-bejo-100)] hover:bg-[var(--color-bejo-200)] border border-[var(--color-bejo-300)] rounded transition-colors shadow-sm">
@@ -561,10 +587,10 @@ defineExpose({
                   </button>
                 </div>
 
-                <div v-if="chatsBot.length > 0" class="flex-1 min-h-0 overflow-y-auto overscroll-contain [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 hover:[&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full">
+                <div v-if="filteredChatsBot.length > 0" class="flex-1 min-h-0 overflow-y-auto overscroll-contain [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 hover:[&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full">
                     <RouterLink
                       to=""
-                      v-for="(chat, idx) in chatsBot"
+                      v-for="(chat, idx) in filteredChatsBot"
                       :key="'bot-' + idx"
                       @click="selectChat(idx, 'bot', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan || chat.Room_Name, chat.Telepon_User_Lawan)"
                       @contextmenu.prevent="openContextMenu($event, chat, 'bot', idx)"
@@ -606,13 +632,15 @@ defineExpose({
               </div>
 
               <div v-if="activeTab === 'chat_saya'" class="flex flex-col flex-1 min-h-0">
-                <div v-if="chatsAktif.length === 0 && chatsAssign.length === 0" class="text-center py-10 text-sm text-slate-400">Bagus! Tidak ada antrean pesan saat ini.</div>
+                <div v-if="filteredChatsAktif.length === 0 && filteredChatsAssign.length === 0" class="text-center py-10 text-sm text-slate-400">
+                  {{ searchQuery ? 'Tidak ada obrolan yang cocok dengan pencarian.' : 'Bagus! Tidak ada antrean pesan saat ini.' }}
+                </div>
 
-                <div v-if="chatsAssign.length > 0" class="flex flex-col shrink-0">
+                <div v-if="filteredChatsAssign.length > 0" class="flex flex-col shrink-0">
                   <div class="px-4 py-2 bg-slate-50 border-y border-slate-200 flex items-center justify-between">
                     <div class="flex items-center gap-2">
                       <input type="checkbox" v-model="isAllAssignChatsSelected" class="w-4 h-4 rounded form-checkbox cursor-pointer accent-bejo-600" title="Pilih Semua Unassigned" />
-                      <p class="text-[var(--text-bejo-800)] font-bold text-[11px] uppercase tracking-widest">Belum Di-Assign ({{ chatsAssign.length }})</p>
+                      <p class="text-[var(--text-bejo-800)] font-bold text-[11px] uppercase tracking-widest">Belum Di-Assign ({{ filteredChatsAssign.length }})</p>
                     </div>
 
                     <button v-if="selectedAssignChats.length > 0" @click="handleBatchTakeOverAssign" class="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold text-[var(--color-bejo-700)] bg-[var(--color-bejo-100)] hover:bg-[var(--color-bejo-200)] border border-[var(--color-bejo-300)] rounded transition-colors shadow-sm">
@@ -625,7 +653,7 @@ defineExpose({
                   <div class="max-h-[200px] overflow-y-auto overscroll-contain [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 hover:[&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full">
                     <RouterLink
                       to=""
-                      v-for="(chat, idx) in chatsAssign.slice().reverse()"
+                      v-for="(chat, idx) in filteredChatsAssign.slice().reverse()"
                       :key="chat.Room_Id"
                       @click="selectChat(idx, 'chat_saya', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan || chat.Room_Name, chat.Telepon_User_Lawan)"
                       @contextmenu.prevent="openContextMenu($event, chat, 'assign', idx)"
@@ -666,11 +694,11 @@ defineExpose({
                   </div>
                 </div>
 
-                <div v-if="chatsAktif.length > 0" class="flex flex-col flex-1 min-h-0 relative">
+                <div v-if="filteredChatsAktif.length > 0" class="flex flex-col flex-1 min-h-0 relative">
                   <div class="px-4 py-2 bg-slate-50 border-y border-slate-200 shrink-0 flex items-center justify-between">
                     <div class="flex items-center gap-2">
                       <input type="checkbox" v-model="isAllActiveChatsSelected" class="w-4 h-4 rounded form-checkbox cursor-pointer accent-bejo-600" title="Pilih Semua Aktif" />
-                      <p class="text-default-700 font-bold text-[11px] uppercase tracking-widest">Chat Aktif({{ chatsAktif.length }})</p>
+                      <p class="text-default-700 font-bold text-[11px] uppercase tracking-widest">Chat Aktif({{ filteredChatsAktif.length }})</p>
                     </div>
 
                     <button v-if="selectedActiveChats.length > 0" @click="handleBatchEndActive" class="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold text-white bg-red-500 hover:bg-red-600 rounded transition-colors shadow-sm">
@@ -682,7 +710,7 @@ defineExpose({
                   <div class="flex-1 min-h-0 overflow-y-auto overscroll-contain [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 hover:[&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full">
                     <RouterLink
                       to=""
-                      v-for="(chat, idx) in chatsAktif"
+                      v-for="(chat, idx) in filteredChatsAktif"
                       :key="'balasan-' + idx"
                       @click="selectChat(idx, 'chat_saya', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan || chat.Room_Name, chat.Telepon_User_Lawan)"
                       @contextmenu.prevent="openContextMenu($event, chat, 'aktif', idx)"
@@ -758,5 +786,6 @@ defineExpose({
       <Icon icon="lucide:message-square-plus" class="size-5 text-[var(--color-bejo-500)]" />
       Ambil Alih Percakapan
     </button>
+    </div>
   </div>
 </template>

@@ -90,7 +90,7 @@ const handleWaContact = () => {
   const defaultGreeting = `Halo Admin Rumah Bejo, saya tertarik untuk menanyakan lebih lanjut mengenai properti "${props.product?.Nama_Produk}" yang saya lihat di situs.`
   const text = `${defaultGreeting}\n\nTautan: ${url}`
   const targetNumber = settingsStore.business.whatsapp || '62895353837000'
-  
+
   window.open(`https://wa.me/${targetNumber}?text=${encodeURIComponent(text)}`, '_blank')
 }
 
@@ -143,15 +143,19 @@ watch(
   { immediate: true }
 )
 
-watch(currentIndex, (newIndex) => {
-  preloadNextMedia(newIndex)
-  if (videoMap.value[currentMediaUrl.value]) {
-    isVideoLoading.value = true
-  } else {
-    // Let image load event fire, default to loading
-    isVideoLoading.value = true
-  }
-}, { immediate: true })
+watch(
+  currentIndex,
+  (newIndex) => {
+    preloadNextMedia(newIndex)
+    if (videoMap.value[currentMediaUrl.value]) {
+      isVideoLoading.value = true
+    } else {
+      // Let image load event fire, default to loading
+      isVideoLoading.value = true
+    }
+  },
+  { immediate: true }
+)
 
 const isLightboxOpen = ref(false)
 
@@ -201,20 +205,13 @@ onUnmounted(() => {
       <div class="card mb-4 border-none shadow-sm bg-white overflow-hidden rounded-xl">
         <div class="card-body p-4 relative">
           <!-- Main Carousel -->
-          <div 
-            class="relative overflow-hidden mb-4 rounded-lg h-[350px] md:h-[420px] group bg-default-50 shadow-inner cursor-zoom-in active:cursor-grabbing" 
-            @mousedown="handleDragStart" 
-            @mouseup="handleDragEnd" 
-            @mouseleave="handleDragEnd" 
-            @touchstart="handleDragStart" 
-            @touchend="handleDragEnd"
-          >
+          <div class="relative overflow-hidden mb-4 rounded-lg h-[350px] md:h-[420px] group bg-default-50 shadow-inner cursor-zoom-in active:cursor-grabbing" @mousedown="handleDragStart" @mouseup="handleDragEnd" @mouseleave="handleDragEnd" @touchstart="handleDragStart" @touchend="handleDragEnd">
             <!-- Label Status -->
             <div v-if="product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia')" class="absolute inset-0 bg-black/40 backdrop-grayscale-[60%] z-[5] pointer-events-none transition-all duration-500"></div>
             <div v-if="product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia')" class="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
               <div class="px-2 py-1 bg-black/30 backdrop-blur-md rounded-xl border border-white/10 shadow-2xl transform transition-transform duration-500 group-hover:scale-110">
                 <span class="text-xs md:text-sm font-black uppercase tracking-widest text-white/90">
-                  {{ product.Status_Display !== 'Aktif' ? 'Nonaktif' : product.Status_Properti }}
+                  {{ product.Status_Properti != 'Tersedia' ? product.Status_Properti : product.Status_Display }}
                 </span>
               </div>
             </div>
@@ -279,20 +276,10 @@ onUnmounted(() => {
 
   <!-- Media Lightbox (Full Screen) -->
   <Teleport to="body">
-    <Transition
-      enter-active-class="transition duration-300 ease-out"
-      enter-from-class="opacity-0"
-      enter-to-class="opacity-100"
-      leave-active-class="transition duration-200 ease-in"
-      leave-from-class="opacity-100"
-      leave-to-class="opacity-0"
-    >
+    <Transition enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0" enter-to-class="opacity-100" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0">
       <div v-if="isLightboxOpen" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 backdrop-blur-xl">
         <!-- Close Button -->
-        <button 
-          @click="closeLightbox" 
-          class="absolute top-6 right-6 z-[10000] size-14 flex items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md border border-white/20 hover:bg-bejo-600 transition-all"
-        >
+        <button @click="closeLightbox" class="absolute top-6 right-6 z-[10000] size-14 flex items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md border border-white/20 hover:bg-bejo-600 transition-all">
           <Icon icon="lucide:x" class="size-7" />
         </button>
 
@@ -305,37 +292,16 @@ onUnmounted(() => {
         </button>
 
         <!-- Media Display -->
-        <Transition
-          mode="out-in"
-          enter-active-class="transition duration-300 ease-out"
-          enter-from-class="opacity-0 scale-95"
-          enter-to-class="opacity-100 scale-100"
-          leave-active-class="transition duration-200 ease-in"
-          leave-from-class="opacity-100 scale-100"
-          leave-to-class="opacity-0 scale-95"
-        >
+        <Transition mode="out-in" enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0 scale-95" enter-to-class="opacity-100 scale-100" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100 scale-100" leave-to-class="opacity-0 scale-95">
           <div :key="currentMediaUrl" class="w-full h-full flex items-center justify-center p-12 lg:p-24">
-            <video 
-              v-if="videoMap[currentMediaUrl]" 
-              :src="currentMediaUrl" 
-              class="max-h-full max-w-full rounded-2xl shadow-2xl" 
-              controls 
-              autoplay
-            ></video>
-            <img 
-              v-else 
-              :src="currentMediaUrl" 
-              class="max-h-full max-w-full rounded-2xl shadow-2xl object-contain select-none"
-              content="no-referrer"
-            />
+            <video v-if="videoMap[currentMediaUrl]" :src="currentMediaUrl" class="max-h-full max-w-full rounded-2xl shadow-2xl" controls autoplay></video>
+            <img v-else :src="currentMediaUrl" class="max-h-full max-w-full rounded-2xl shadow-2xl object-contain select-none" content="no-referrer" />
           </div>
         </Transition>
 
         <!-- Status & Indicators -->
         <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 z-[10000]">
-          <div class="px-5 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/10 text-white font-black uppercase tracking-[0.3em] text-[10px]">
-            {{ currentIndex + 1 }} / {{ product?.MediaUrls?.length }}
-          </div>
+          <div class="px-5 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/10 text-white font-black uppercase tracking-[0.3em] text-[10px]">{{ currentIndex + 1 }} / {{ product?.MediaUrls?.length }}</div>
           <div class="flex gap-2.5">
             <button v-for="(_, index) in product?.MediaUrls?.length" :key="index" @click="goToSlide(index)" class="size-2 rounded-full transition-all duration-300 shadow-sm" :class="currentIndex === index ? 'bg-bejo-500 w-8' : 'bg-white/30 hover:bg-white/50'"></button>
           </div>
@@ -346,7 +312,8 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-video, img {
+video,
+img {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }

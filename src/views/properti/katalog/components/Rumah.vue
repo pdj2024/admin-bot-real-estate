@@ -108,20 +108,17 @@ const filteredProducts = computed(() => {
   // Filter Nama (Search Query)
   if (props.searchQuery) {
     const q = props.searchQuery.toLowerCase()
-    result = result.filter(p => 
-      (p.Nama_Produk?.toLowerCase() || '').includes(q) || 
-      (p.Alamat?.toLowerCase() || '').includes(q)
-    )
+    result = result.filter((p) => (p.Nama_Produk?.toLowerCase() || '').includes(q) || (p.Alamat?.toLowerCase() || '').includes(q))
   }
 
   // Filter Transaksi
   if (transactionFilter.value !== 'Semua') {
-    result = result.filter(p => p.Status_Transaksi.includes(transactionFilter.value))
+    result = result.filter((p) => p.Status_Transaksi.includes(transactionFilter.value))
   }
 
   // Filter Tipe Unit
   if (typeFilter.value !== 'Semua') {
-    result = result.filter(p => p.Tipe === typeFilter.value)
+    result = result.filter((p) => p.Tipe === typeFilter.value)
   }
 
   return result
@@ -154,7 +151,7 @@ const table = useVueTable({
   getSortedRowModel: getSortedRowModel(),
   getFilteredRowModel: getFilteredRowModel(),
   initialState: {
-    pagination: { pageSize: 6 }
+    pagination: { pageSize: 15 }
   }
 })
 
@@ -244,7 +241,9 @@ window.addEventListener('click', (e) => {
 
 onMounted(async () => {
   await fetchData()
-  nextTick(() => { window.HSStaticMethods?.autoInit() })
+  nextTick(() => {
+    window.HSStaticMethods?.autoInit()
+  })
 })
 
 const emit = defineEmits<{
@@ -295,9 +294,7 @@ defineExpose({ openAddModal })
           <Transition enter-active-class="transition duration-100 ease-out" enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100" leave-active-class="transition duration-75 ease-in" leave-from-class="transform scale-100 opacity-100" leave-to-class="transform scale-95 opacity-0">
             <div v-show="isTypeOpen" class="absolute right-0 top-full mt-2 z-50 min-w-48 max-h-60 overflow-y-auto bg-white border border-slate-100 rounded-2xl shadow-2xl p-2 custom-scroll">
               <button @click="handleTypeFilter('Semua')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Semua Tipe <Icon v-if="typeFilter === 'Semua'" icon="lucide:check" class="size-3 text-bejo-500" /></button>
-              <button v-for="t in propertyTypes" :key="t" @click="handleTypeFilter(t)" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">
-                {{ t }} <Icon v-if="typeFilter === t" icon="lucide:check" class="size-3 text-bejo-500" />
-              </button>
+              <button v-for="t in propertyTypes" :key="t" @click="handleTypeFilter(t)" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">{{ t }} <Icon v-if="typeFilter === t" icon="lucide:check" class="size-3 text-bejo-500" /></button>
             </div>
           </Transition>
         </div>
@@ -325,15 +322,15 @@ defineExpose({ openAddModal })
       </div>
     </div>
 
-    <div class="grid xl:grid-cols-3 lg:grid-cols-2 md:grid-cols-2 grid-cols-1 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-6">
       <div v-for="row in table.getRowModel().rows" :key="row.id" class="card group flex flex-col h-full rounded-2xl overflow-hidden border transition-all duration-500 hover:-translate-y-1 relative bg-card border-default-150 hover:border-primary/30 hover:shadow-lg">
         <div class="relative h-60 overflow-hidden">
-          <div v-if="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia'" class="absolute inset-0 bg-black/40 backdrop-grayscale-[60%] z-[5] pointer-events-none transition-all duration-500"></div>
+          <div v-if="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia'" class="absolute inset-0 bg-black/40 backdrop-grayscale-[60%] z-[20] pointer-events-none transition-all duration-500"></div>
 
-          <div v-if="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia'" class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+          <div v-if="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia'" class="absolute inset-0 flex items-center justify-center z-25 pointer-events-none">
             <div class="px-2 py-1 bg-black/20 backdrop-blur-md rounded-xl border border-white/10 shadow-2xl transform transition-transform duration-500 group-hover:scale-110">
               <span class="text-md font-black uppercase tracking-widest text-white/90">
-                {{ row.original.Status_Display != 'Aktif' ? 'Nonaktif' : row.original.Status_Properti }}
+                {{ row.original.Status_Properti != 'Tersedia' ? row.original.Status_Properti : row.original.Status_Display }}
               </span>
             </div>
           </div>
@@ -439,9 +436,7 @@ defineExpose({ openAddModal })
                   <span class="text-[11px] text-red-500 line-through decoration-red-500/50">
                     {{ formatShortCurrency(row.original.Harga_Sewa1) }}
                   </span>
-                  <span class="text-[10px] font-black bg-red-50 text-red-500 px-1 rounded uppercase tracking-tighter">
-                    -{{ calculateDiscount(row.original.Harga_Sewa1, row.original.Harga_Sewa2) }}%
-                  </span>
+                  <span class="text-[10px] font-black bg-red-50 text-red-500 px-1 rounded uppercase tracking-tighter"> -{{ calculateDiscount(row.original.Harga_Sewa1, row.original.Harga_Sewa2) }}% </span>
                 </div>
                 <span class="text-[11px] text-default-400 italic">/{{ row.original.Satuan_Minimal_Sewa || 'thn' }}</span>
               </div>
@@ -457,9 +452,7 @@ defineExpose({ openAddModal })
                   <span class="text-[11px] text-red-500 line-through decoration-red-500/50">
                     {{ formatShortCurrency(row.original.Harga_Jual1) }}
                   </span>
-                  <span class="text-[10px] font-black bg-red-50 text-red-500 px-1 rounded uppercase tracking-tighter">
-                    -{{ calculateDiscount(row.original.Harga_Jual1, row.original.Harga_Jual2) }}%
-                  </span>
+                  <span class="text-[10px] font-black bg-red-50 text-red-500 px-1 rounded uppercase tracking-tighter"> -{{ calculateDiscount(row.original.Harga_Jual1, row.original.Harga_Jual2) }}% </span>
                 </div>
               </div>
             </div>
