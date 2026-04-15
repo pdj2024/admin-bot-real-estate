@@ -193,7 +193,7 @@
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
 const props = withDefaults(
   defineProps<{
@@ -216,9 +216,6 @@ const props = withDefaults(
     isExpanded: false
   }
 )
-
-const isExpandedLocal = ref(false)
-// No local ref needed if prop is used
 
 const emit = defineEmits(['toggleDropdown', 'updateStatus', 'delete', 'edit', 'select', 'toggleExpand'])
 

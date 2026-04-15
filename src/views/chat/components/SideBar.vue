@@ -590,6 +590,7 @@ defineExpose({
                     <div
                       v-for="(chat, idx) in filteredChatsBot"
                       :key="chat.Room_Id"
+                      v-memo="[chat.Room_Id, chat.Last_Message_At, chat.New_Message_Count, selectedChatId === chat.Room_Id, selectedBotChats.includes(chat)]"
                       @click="selectChat(idx, 'bot', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan || chat.Room_Name, chat.Telepon_User_Lawan)"
                       @contextmenu.prevent="openContextMenu($event, chat, 'bot', idx)"
                       class="relative flex items-center gap-4 py-4.5 px-6 bg-white cursor-pointer border-b border-slate-50 hover:bg-slate-50/80 transition-all duration-300 group"
@@ -652,6 +653,7 @@ defineExpose({
                     <div
                       v-for="(chat, idx) in filteredChatsAssign.slice().reverse()"
                       :key="chat.Room_Id"
+                      v-memo="[chat.Room_Id, chat.Last_Message_At, chat.New_Message_Count, selectedChatId === chat.Room_Id, selectedAssignChats.includes(chat)]"
                       @click="selectChat(idx, 'chat_saya', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan || chat.Room_Name, chat.Telepon_User_Lawan)"
                       @contextmenu.prevent="openContextMenu($event, chat, 'assign', idx)"
                       class="relative flex items-center gap-4 py-4.5 px-6 bg-white cursor-pointer border-b border-slate-50 hover:bg-slate-50/80 transition-all duration-300 group"
@@ -708,6 +710,7 @@ defineExpose({
                     <div
                       v-for="(chat, idx) in filteredChatsAktif"
                       :key="chat.Room_Id"
+                      v-memo="[chat.Room_Id, chat.Last_Message_At, chat.New_Message_Count, selectedChatId === chat.Room_Id, selectedActiveChats.includes(chat)]"
                       @click="selectChat(idx, 'chat_saya', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan || chat.Room_Name, chat.Telepon_User_Lawan)"
                       @contextmenu.prevent="openContextMenu($event, chat, 'aktif', idx)"
                       class="relative flex items-center gap-4 py-4.5 px-6 bg-white cursor-pointer border-b border-slate-50 hover:bg-slate-50/80 transition-all duration-300 group"

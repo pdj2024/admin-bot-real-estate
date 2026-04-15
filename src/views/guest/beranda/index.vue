@@ -183,7 +183,7 @@
             v-for="row in displayedProducts" 
             :key="row.id || row.No_Id" 
             :product="row" 
-            @click="(slug) => $router.push(`/detail/${slug}`)"
+            @click="(slug: string) => $router.push(`/detail/${slug}`)"
           />
         </div>
       </div>

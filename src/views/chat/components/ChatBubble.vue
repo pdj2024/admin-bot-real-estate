@@ -174,6 +174,7 @@ watch(
     </div>
 
     <div v-if="chat.Message_Id === props.lastMessageId" class="w-full my-6 flex items-center justify-center relative">
+      <div v-once class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 20px 20px"></div>
       <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-red-200/50 border-dashed"></div></div>
       <span class="relative px-4 py-1 bg-red-50 text-red-500 border border-red-100 rounded-full text-[10px] font-bold shadow-sm uppercase tracking-wider"> Pesan Belum Terbaca </span>
     </div>
@@ -222,18 +223,17 @@ watch(
           </div>
         </div>
       </div>
-
       <div v-if="!isCustomer && !(chat.Message || '').includes('_X7#mQ9!vW2_')" class="hidden md:flex items-end self-end h-fit flex-shrink-0 mb-1 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 relative group/avatar z-[100]">
         <!-- Admin/AI Name Hover Modal -->
         <div class="absolute bottom-full right-0 mb-3 opacity-0 group-hover/avatar:opacity-100 pointer-events-none transition-all duration-300 transform group-hover/avatar:-translate-y-1 z-[110]">
           <div class="bg-white/90 backdrop-blur-xl border border-white shadow-2xl rounded-2xl p-4 min-w-[180px] shadow-bejo-500/10 scale-90 group-hover/avatar:scale-100 transition-transform origin-bottom-right">
             <div class="flex items-center gap-3 mb-2">
-              <div class="size-10 rounded-xl flex items-center justify-center text-white shadow-lg" :class="chat.Sender_Id === 'adm_bot' ? 'bg-gradient-to-br from-amber-400 to-amber-500 shadow-amber-500/20' : 'bg-gradient-to-br from-cyan-400 to-cyan-500 shadow-cyan-500/20'">
+              <div v-once class="size-10 rounded-xl flex items-center justify-center text-white shadow-lg" :class="chat.Sender_Id === 'adm_bot' ? 'bg-gradient-to-br from-amber-400 to-amber-500 shadow-amber-500/20' : 'bg-gradient-to-br from-cyan-400 to-cyan-500 shadow-cyan-500/20'">
                 <Icon :icon="chat.Sender_Id === 'adm_bot' ? 'lucide:bot' : 'lucide:headset'" class="size-5" />
               </div>
               <div>
                 <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none mb-1">{{ chat.Sender_Id === 'adm_bot' ? 'AI Assistant' : 'Admin Agent' }}</p>
-                <h5 class="text-xs font-black text-slate-800 leading-none">{{ chat.Nama_Display_User || chat.Username_User || 'Sistem' }}</h5>
+                <h5 class="text-xs font-black text-slate-800 leading-none">{{ chat.Sender_Id === 'adm_bot' ? 'Sistem' : 'Admin' }}</h5>
               </div>
             </div>
             <div class="flex items-center gap-1.5 pt-2 border-t border-slate-100">

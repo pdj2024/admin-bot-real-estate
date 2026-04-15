@@ -117,6 +117,7 @@ const props = defineProps<{
   lastMessageId: string
   takeOverBatch: TakeOverPayload[]
   isLoadingChat?: boolean
+  isDark?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -946,7 +947,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
           </div>
 
           <div v-else class="relative z-10 flex flex-col gap-6 px-4 py-6 sm:px-8 sm:py-10">
-            <ChatBubble v-for="(chat, i) in chats" :id="'chat-message-' + i" :key="i" :idx="i" :chat="chat" :chats="chats" :lastMessageId="props.lastMessageId" :highlight="searchChatQuery" :isActiveMatch="i === activeSearchChatIndex" :activeMatchIndex="activeSearchMatchIndex" @imageLoaded="scrollToBottom" />
+            <ChatBubble v-for="(chat, i) in chats" v-memo="[chat.Message_Id || chat.Sent_At, chat.Send_Status === 'pending', i === activeSearchChatIndex]" :id="'chat-message-' + i" :key="i" :idx="i" :chat="chat" :chats="chats" :lastMessageId="props.lastMessageId" :highlight="searchChatQuery" :isActiveMatch="i === activeSearchChatIndex" :activeMatchIndex="activeSearchMatchIndex" @imageLoaded="scrollToBottom" />
           </div>
         </simplebar>
 
@@ -1053,7 +1054,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
         <div v-if="openEtalase || openAppointment" class="fixed inset-0 z-[150] flex items-center justify-center p-3 md:p-8">
           <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="closeEtalase" />
 
-          <div ref="etalaseRef" class="relative w-full max-w-5xl max-h-[90vh] bg-white rounded-[2rem] shadow-2xl p-6 md:p-8 border border-slate-50 overflow-hidden flex flex-col z-10 animate-fade-in-up">
+          <div ref="etalaseRef" class="relative w-full max-w-[1044px] max-h-[90vh] bg-white rounded-[2rem] shadow-2xl p-6 md:p-8 border border-slate-50 overflow-hidden flex flex-col z-10 animate-fade-in-up">
             <div v-if="isSendingImage && openEtalase" class="absolute inset-0 z-[100] bg-white/70 backdrop-blur-sm flex flex-col items-center justify-center">
               <div class="size-16 relative mb-4">
                 <div class="absolute inset-0 border-4 border-slate-100 rounded-full"></div>
@@ -1121,7 +1122,26 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
               </button>
             </div>
 
-            <div class="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[380px_1fr] overflow-hidden">
+            <div class="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_380px] overflow-hidden">
+              <!-- Main Calendar Content Right -->
+              <div class="overflow-y-auto p-4 md:p-8 bg-white custom-scrollbar flex flex-col">
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-500 bg-slate-100 border border-slate-200 px-4 py-2 rounded-full"><span class="size-2 rounded-full bg-slate-400 shrink-0"></span>Terisi</span>
+                    <span class="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-bejo-600 bg-bejo-50 border border-bejo-100 px-4 py-2 rounded-full"><span class="size-2 rounded-full bg-bejo-500 shrink-0"></span>Tersedia</span>
+                  </div>
+                  <Transition enter-active-class="transition duration-300" enter-from-class="opacity-0 -translate-y-2" enter-to-class="opacity-100 translate-y-0">
+                    <div v-if="appointmentForm.tanggal" class="flex items-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-100 px-4 py-2.5 rounded-2xl shadow-sm">
+                      <Icon icon="lucide:check-circle" class="size-4" />
+                      <span class="text-[11px] font-black uppercase tracking-widest">Dipilih: {{ appointmentForm.tanggal }}</span>
+                    </div>
+                  </Transition>
+                </div>
+
+                <div class="flex-1 bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-900/5 overflow-hidden p-2 md:p-6 transition-all hover:shadow-2xl hover:shadow-slate-900/10">
+                  <FullCalendar :options="appointmentCalendarOptions" />
+                </div>
+              </div>
               <!-- Sidebar Form Left -->
               <div class="overflow-y-auto p-5 md:p-7 border-b lg:border-b-0 lg:border-r border-slate-100 bg-slate-50/40 custom-scrollbar flex flex-col">
                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Detail Janji Temu</p>
@@ -1178,26 +1198,6 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
                     <Icon icon="lucide:save" class="size-4" />
                     Simpan
                   </button>
-                </div>
-              </div>
-
-              <!-- Main Calendar Content Right -->
-              <div class="overflow-y-auto p-4 md:p-8 bg-white custom-scrollbar flex flex-col">
-                <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
-                  <div class="flex flex-wrap items-center gap-2">
-                    <span class="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-500 bg-slate-100 border border-slate-200 px-4 py-2 rounded-full"><span class="size-2 rounded-full bg-slate-400 shrink-0"></span>Terisi</span>
-                    <span class="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-bejo-600 bg-bejo-50 border border-bejo-100 px-4 py-2 rounded-full"><span class="size-2 rounded-full bg-bejo-500 shrink-0"></span>Tersedia</span>
-                  </div>
-                  <Transition enter-active-class="transition duration-300" enter-from-class="opacity-0 -translate-y-2" enter-to-class="opacity-100 translate-y-0">
-                    <div v-if="appointmentForm.tanggal" class="flex items-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-100 px-4 py-2.5 rounded-2xl shadow-sm">
-                      <Icon icon="lucide:check-circle" class="size-4" />
-                      <span class="text-[11px] font-black uppercase tracking-widest">Dipilih: {{ appointmentForm.tanggal }}</span>
-                    </div>
-                  </Transition>
-                </div>
-
-                <div class="flex-1 bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-900/5 overflow-hidden p-2 md:p-6 transition-all hover:shadow-2xl hover:shadow-slate-900/10">
-                  <FullCalendar :options="appointmentCalendarOptions" />
                 </div>
               </div>
             </div>
