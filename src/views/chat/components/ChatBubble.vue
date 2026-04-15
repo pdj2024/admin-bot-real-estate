@@ -89,10 +89,17 @@ const getDateChat = (date: any): string => {
   }).format(d)
 }
 
-const formatMessage = (msg: string, active: boolean = false) => {
+// Extract the text part of the message (strip embedded image data)
+const cleanMsg = computed(() => {
+  const msg = props.chat.Message || ''
+  return msg.includes('_data:image/') ? msg.split('_data:image/')[0] : msg
+})
+
+// Memoized formatter — only re-runs when message text, highlight query, or active match changes
+const formattedMsg = computed(() => {
+  const msg = cleanMsg.value
   if (!msg) return ''
 
-  // Pre-process message for display
   let formatted = msg
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -103,21 +110,14 @@ const formatMessage = (msg: string, active: boolean = false) => {
     try {
       const escapedQuery = props.highlight.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
       const regex = new RegExp(`(${escapedQuery})`, 'gi')
-      
       let matchCounter = 0
       formatted = formatted.replace(regex, (match) => {
         const currentMatchIdx = matchCounter++
-        
-        // Only mark as active if THIS specific occurrence is the targeted one
-        const isThisMatchActive = active && props.activeMatchIndex === currentMatchIdx
-        
-        const highlightClass = isThisMatchActive 
-          ? 'bg-bejo-500 text-white rounded-md px-1 font-bold shadow-sm ring-2 ring-bejo-500/20' 
+        const isThisMatchActive = props.isActiveMatch && props.activeMatchIndex === currentMatchIdx
+        const highlightClass = isThisMatchActive
+          ? 'bg-bejo-500 text-white rounded-md px-1 font-bold shadow-md shadow-bejo-500/20 ring-2 ring-bejo-500 ring-offset-1 transform scale-110 inline-block'
           : 'bg-amber-200 text-slate-900 rounded-md px-1'
-        
-        // Assign a unique ID to this specific occurrence for scrolling
         const matchId = `match-${props.idx}-${currentMatchIdx}`
-        
         return `<span id="${matchId}" class="${highlightClass}">${match}</span>`
       })
     } catch (e) {
@@ -126,7 +126,7 @@ const formatMessage = (msg: string, active: boolean = false) => {
   }
 
   return formatted
-}
+})
 
 const getMediaId = (paket?: string) => {
   return paket?.split('_').slice(2).join('_') || ''
@@ -195,11 +195,13 @@ watch(
 
       <div class="flex flex-col max-w-[85%] md:max-w-[70%]" :class="isMe ? 'items-end' : 'items-start'">
         <div v-if="!(chat.Message || '').includes('_X7#mQ9!vW2_')" class="px-3 py-2 md:px-5 md:py-3.5 rounded-2xl text-[13px] md:text-sm relative transition-all duration-300 hover:shadow-xl" :class="[bubbleStyle, isMe ? 'hover:translate-x-1' : 'hover:-translate-x-1']">
+
+
           <div v-if="chat.Id_Paket != null || chat.Media_Url || (chat.Message || '').includes('_data:image')" class="mb-3 overflow-hidden rounded-xl border border-black/5 shadow-inner bg-slate-50/50">
             <img v-if="imageUrl || chat.Media_Url" :src="imageUrl || chat.Media_Url" @load="$emit('imageLoaded')" class="w-full h-auto object-cover max-h-72 hover:scale-105 transition-transform duration-500 cursor-pointer" />
             <img v-else-if="(chat.Message || '').includes('_data:image/')" :src="(chat.Message || '').includes('_data:image/') ? 'data:image/' + (chat.Message || '').split('_data:image/')[1] : imageUrl" @load="$emit('imageLoaded')" class="w-full h-auto object-cover max-h-72 hover:scale-105 transition-transform duration-500 cursor-pointer" />
           </div>
-          <span v-if="chat.Message" class="block break-words leading-relaxed tracking-tight" v-html="formatMessage((chat.Message || '').includes('_data:image/') ? (chat.Message || '').split('_data:image/')[0] : chat.Message || '', isActiveMatch)"></span>
+          <span v-if="chat.Message" class="block break-words leading-relaxed tracking-tight" v-html="formattedMsg"></span>
           <div v-if="chat.Tipe_User === 'admin' && chat.Sender_Id === 'adm_bot'" class="ai-indicator mt-3 pt-2 border-t border-amber-200/40 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-amber-700">
             <div class="size-4 bg-amber-500 rounded-md flex items-center justify-center text-white">
               <Icon icon="lucide:bot" class="size-3" />

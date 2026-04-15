@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, onUpdated, nextTick, computed, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, nextTick, computed, watch, defineAsyncComponent } from 'vue'
 import { Icon } from '@iconify/vue'
 import { confirm, success, fail } from '@/utils/sweet-alert'
 import type { CalendarOptions } from '@fullcalendar/core'
 import type { DateClickArg } from '@fullcalendar/interaction'
-import FullCalendar from '@fullcalendar/vue3'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import listPlugin from '@fullcalendar/list'
@@ -14,18 +13,19 @@ import api from '@/services/axios'
 import ChatBubble from './ChatBubble.vue'
 import bgChat from '@/assets/images/background-chat.png'
 import bgChatDark from '@/assets/images/background-chat-dark.png'
-
 import simplebar from 'simplebar-vue'
-import Filter from './Filter.vue'
-import ProductCard from '@/components/ProductCard.vue'
 import { type Chat, type PreviewImage, calendarEvents } from './data'
 import { type TakeOverPayload } from './SideBar.vue'
 
+// Lazy-load heavy UI components — only fetched when the user opens that panel
+const FullCalendar = defineAsyncComponent(() => import('@fullcalendar/vue3'))
+const Filter = defineAsyncComponent(() => import('./Filter.vue'))
+const ProductCard = defineAsyncComponent(() => import('@/components/ProductCard.vue'))
+
+
 const etalaseRef = ref<HTMLElement | null>(null)
-const appointmentFormRef = ref<HTMLElement | null>(null)
 const tukarCSRef = ref<HTMLElement | null>(null)
 const filterRef = ref<any | null>(null)
-const scheduleRef = ref<HTMLElement | null>(null)
 const containerRef = ref<HTMLElement | null>(null)
 const chatContainer = ref<any>(null)
 const searchHeaderRef = ref<HTMLElement | null>(null)
@@ -34,10 +34,26 @@ const showScrollToBottom = ref(false)
 const openMenu = ref(false)
 const openEtalase = ref(false)
 const openAppointment = ref(false)
-const openAppointmentForm = ref(false)
 const openTukarCS = ref(false)
 const openFilter = ref(false)
-const openSchedule = ref(false)
+
+const showAppointmentModal = ref(false)
+const appointmentForm = ref({
+  namaLengkap: '',
+  noTelp: '',
+  lokasi: '',
+  catatan: '',
+  tanggal: '',
+  waktu: '',
+  properti: ''
+})
+
+const bookedDates = computed(() => {
+  return calendarEvents.map((ev) => {
+    const d = new Date(ev.start)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  })
+})
 const isMobile = ref(false)
 const changeUsername = ref(false)
 const sendChatContent = ref('')
@@ -80,6 +96,7 @@ const props = defineProps<{
   chats: Chat[]
   lastMessageId: string
   takeOverBatch: TakeOverPayload[]
+  isLoadingChat?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -103,18 +120,15 @@ const handleClickOutside = (event: MouseEvent) => {
     }
   }
 
-  const interactiveRefs = [containerRef.value, etalaseRef.value, appointmentFormRef.value, tukarCSRef.value, scheduleRef.value, filterRef.value?.$el, searchHeaderRef.value]
+  const interactiveRefs = [containerRef.value, etalaseRef.value, tukarCSRef.value, filterRef.value?.$el, searchHeaderRef.value]
 
   if (interactiveRefs.some((el) => el && el.contains(target))) {
     return
   }
 
-  if (!openFilter.value && !openAppointmentForm.value && !openSchedule.value) {
-    openMenu.value = false
-    openEtalase.value = false
-    openAppointment.value = false
-    openTukarCS.value = false
-  }
+  openMenu.value = false
+  openEtalase.value = false
+  openTukarCS.value = false
 }
 
 const calendarOptions = computed<CalendarOptions>(() => ({
@@ -153,9 +167,7 @@ const calendarOptions = computed<CalendarOptions>(() => ({
     }
   },
   eventClick() {
-    // const event = info.event
-    // const data = event.extendedProps
-    openSchedule.value = false
+    // event details readonly
   }
 }))
 
@@ -173,6 +185,83 @@ const handleOpenEtalase = () => {
     openTukarCS.value = false
     openMenu.value = false
   }
+}
+
+// Opens the new large split-modal (calendar + form)
+const handleOpenAppointment = () => {
+  openMenu.value = false
+  // Pre-fill phone from current customer
+  appointmentForm.value = {
+    namaLengkap: props.username ?? '',
+    noTelp: props.phoneNumber ?? '',
+    lokasi: '',
+    catatan: '',
+    tanggal: '',
+    waktu: '',
+    properti: ''
+  }
+  showAppointmentModal.value = true
+}
+
+const handleCalendarDateClick = (info: { dateStr: string; date: Date }) => {
+  const clickedDate = info.dateStr.slice(0, 10) // YYYY-MM-DD
+
+  if (bookedDates.value.includes(clickedDate)) {
+    fail('Tanggal ini sudah ada janji temu. Pilih tanggal lain.')
+    return
+  }
+
+  appointmentForm.value.tanggal = clickedDate
+
+  // Suggest 09:00 but allow manual edit
+  if (!appointmentForm.value.waktu) {
+    const timeStr = info.dateStr.length > 10 ? info.dateStr.slice(11, 16) : '09:00'
+    appointmentForm.value.waktu = timeStr
+  }
+}
+
+// Calendar options specifically for the appointment modal
+const appointmentCalendarOptions = computed<CalendarOptions>(() => ({
+  plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin],
+  initialView: 'dayGridMonth',
+  locale: idLocale,
+  height: 'auto',
+  selectable: true,
+  dateClick: handleCalendarDateClick,
+  dayCellClassNames: (arg) => {
+    const d = arg.date
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    if (bookedDates.value.includes(key)) return ['fc-day-booked']
+    return []
+  },
+  events: calendarEvents.map((ev) => ({
+    title: ev.title,
+    start: ev.start,
+    backgroundColor: '#94a3b8', // Subtle slate for booked
+    borderColor: '#94a3b8',
+    textColor: '#ffffff',
+    extendedProps: ev.extendedProps
+  })),
+  headerToolbar: {
+    left: 'prev,next today',
+    center: 'title',
+    right: ''
+  },
+  eventClick: () => { /* readonly */ }
+}))
+
+const saveNewAppointment = async () => {
+  const f = appointmentForm.value
+  if (!f.namaLengkap.trim()) { fail('Nama lengkap wajib diisi'); return }
+  if (!f.tanggal) { fail('Pilih tanggal pada kalender terlebih dahulu'); return }
+  if (!f.waktu) { fail('Waktu wajib diisi'); return }
+
+  const msg = `📅 *Janji Temu Baru*\n\n*Nama:* ${f.namaLengkap}\n*Telepon:* ${f.noTelp || '-'}\n*Tanggal:* ${new Intl.DateTimeFormat('id-ID', { dateStyle: 'full' }).format(new Date(f.tanggal))}\n*Waktu:* ${f.waktu} WIB\n*Properti:* ${f.properti || '-'}\n*Lokasi:* ${f.lokasi || '-'}\n*Catatan:* ${f.catatan || '-'}`
+
+  sendChatContent.value = msg
+  showAppointmentModal.value = false
+  await sendChat('text')
+  success('Janji temu berhasil dibuat!')
 }
 
 const handleOpenTukarCS = () => {
@@ -235,7 +324,6 @@ const handleTransferChat = (targetAdmin: any) => {
       )
       
       await sendChat('system_keluar_tukar', undefined, props.roomId!, formattedPhone)
-      console.log('dari asal :system_keluar_tukar')
 
       await api.post(
         '/api/chat/toggle-bot',
@@ -248,7 +336,6 @@ const handleTransferChat = (targetAdmin: any) => {
       )
       
       await sendChat('system_masuk_tukar', undefined, props.roomId!, formattedPhone)
-      console.log('dari asal : system_masuk_tukar')
 
       success(`Berhasil mengalihkan ke ${targetAdmin.Nama_User}`)
       openTukarCS.value = false
@@ -318,54 +405,52 @@ const handleSearchChat = () => {
   }
 }
 
-const nextSearchMatch = () => {
+const nextSearchMatch = async () => {
   if (searchChatResults.value.length === 0) return
   currentSearchMatch.value = (currentSearchMatch.value + 1) % searchChatResults.value.length
+  await nextTick()
   scrollToMatch(searchChatResults.value[currentSearchMatch.value])
 }
 
-const prevSearchMatch = () => {
+const prevSearchMatch = async () => {
   if (searchChatResults.value.length === 0) return
   currentSearchMatch.value = (currentSearchMatch.value - 1 + searchChatResults.value.length) % searchChatResults.value.length
+  await nextTick()
   scrollToMatch(searchChatResults.value[currentSearchMatch.value])
 }
 
 const scrollToMatch = (res: { chatIndex: number; matchIndex: number }) => {
-  // Priority 1: Target the specific match highlight span
-  const matchId = `match-${res.chatIndex}-${res.matchIndex}`
-  let el = document.getElementById(matchId)
-  
-  // Priority 2: Fallback to the whole chat bubble if span ID not found yet (e.g. initial render)
-  if (!el) {
-    el = document.getElementById(`chat-message-${res.chatIndex}`)
-  }
+  // Wait for Vue to render highlighted spans before measuring positions
+  setTimeout(() => {
+    // Prefer the exact match span, fall back to the whole message wrapper
+    const matchId = `match-${res.chatIndex}-${res.matchIndex}`
+    let el = document.getElementById(matchId)
 
-  if (el) {
-    const scrollElement = chatContainer.value?.getScrollElement()
-    if (scrollElement) {
+    if (!el) {
+      el = document.getElementById(`chat-message-${res.chatIndex}`)
+    }
+
+    if (!el) return
+
+    // Reuse cached scroll element — avoids repeated querySelector on every search nav
+    const scrollEl = (cachedScrollEl as HTMLElement) ??
+      document.querySelector<HTMLElement>('#chat-scroll-container .simplebar-content-wrapper')
+
+    if (scrollEl) {
       const elRect = el.getBoundingClientRect()
-      const containerRect = scrollElement.getBoundingClientRect()
-      
-      const targetScrollTop = scrollElement.scrollTop + (elRect.top - containerRect.top) - (containerRect.height / 2) + (elRect.height / 2)
-      
-      scrollElement.scrollTo({
-        top: targetScrollTop,
-        behavior: 'smooth'
-      })
+      const containerRect = scrollEl.getBoundingClientRect()
+      const targetScrollTop =
+        scrollEl.scrollTop +
+        (elRect.top - containerRect.top) -
+        containerRect.height / 2 +
+        elRect.height / 2
+      scrollEl.scrollTo({ top: targetScrollTop, behavior: 'smooth' })
     } else {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
-  }
+  }, 150)
 }
 
-const handleOpenAppointment = () => {
-  openAppointment.value = !openAppointment.value
-  if (openAppointment.value) {
-    openEtalase.value = false
-    openTukarCS.value = false
-    openMenu.value = false
-  }
-}
 
 
 const products = ref<any[]>([])
@@ -497,23 +582,6 @@ const sendProduct = async (product: any) => {
   }
 }
 
-const closeAppointment = () => {
-  openAppointment.value = !openAppointment.value
-  if (openFilter.value == true) {
-    openFilter.value = !openFilter.value
-  }
-  if (openAppointmentForm.value == true) {
-    openAppointmentForm.value = !openAppointmentForm.value
-  }
-}
-
-const saveAppointment = () => {
-  confirm('Apakah isian data sudah benar?', () => {
-    openAppointmentForm.value = false
-    openAppointment.value = false
-    success('Berhasil membuat janji temu')
-  })
-}
 
 const endChat = () => {
   takeOverChat(true)
@@ -535,37 +603,32 @@ const openSidebar = (): void => {
   }
 }
 
+// Cached reference to the simplebar scroll wrapper — updated once per room
+let cachedScrollEl: Element | null = null
+
 const scrollToBottom = async () => {
   await nextTick()
-
   setTimeout(() => {
-    // Gunakan ID spesifik agar tidak terbentur dengan simplebar di komponen lain (misal sidebar)
-    const scrollElement = document.querySelector('#chat-scroll-container .simplebar-content-wrapper')
-
-    if (scrollElement) {
+    if (cachedScrollEl && typeof (cachedScrollEl as HTMLElement).scrollTo === 'function') {
       requestAnimationFrame(() => {
-        if (typeof scrollElement.scrollTo === 'function') {
-          scrollElement.scrollTo({
-            top: scrollElement.scrollHeight + 5000,
-            behavior: 'auto'
-          })
-        }
-        scrollElement.scrollTop = scrollElement.scrollHeight + 5000
+        ;(cachedScrollEl as HTMLElement).scrollTo({
+          top: cachedScrollEl!.scrollHeight + 5000,
+          behavior: 'auto'
+        })
+        ;(cachedScrollEl as HTMLElement).scrollTop = cachedScrollEl!.scrollHeight + 5000
       })
     }
-  }, 100)
+  }, 80)
 }
 
 const sendChat = async (type: string, url?: string, targetRoomId?: string, targetPhone?: string, idPaket?: string, mediaUrl?: string) => {
-  console.log('kiriman :'+type)
   if (!type.includes('system') && !sendChatContent.value.trim()) return
   
-
   const activeRoomId = targetRoomId || props.roomId
   const activePhone = targetPhone || props.phoneNumber
 
-console.log('Masuk :'+type)
   if (!activeRoomId) return
+  
   const myId = localStorage.getItem('no_id') || ''
   const role = localStorage.getItem('role_user') || ''
   const username = localStorage.getItem('nama_display') || ''
@@ -607,7 +670,6 @@ console.log('Masuk :'+type)
   } else {
     messageText = sendChatContent.value
   }
-  console.log(messageText)
 
   const tempIndex = props.chats.length
 
@@ -807,7 +869,6 @@ const sendImages = async () => {
   isSendingImage.value = true
 
   const config = { headers: { 'X-Jenis-User': 'admin' } }
-  // console.log('Mengirim data gambar beserta caption:')
 
   try {
     const payloads = await Promise.all(
@@ -882,43 +943,42 @@ const handleKeydown = (e: KeyboardEvent) => {
 }
 
 const initScrollListener = () => {
-  // Use a targeted selector to ensure we find the correct scroll layer reliably
   setTimeout(() => {
-    const scrollElement = document.querySelector('#chat-scroll-container .simplebar-content-wrapper')
-    if (scrollElement) {
-      scrollElement.removeEventListener('scroll', handleScroll)
-      scrollElement.addEventListener('scroll', handleScroll)
+    cachedScrollEl = document.querySelector('#chat-scroll-container .simplebar-content-wrapper')
+    if (cachedScrollEl) {
+      cachedScrollEl.removeEventListener('scroll', handleScroll)
+      cachedScrollEl.addEventListener('scroll', handleScroll)
       handleScroll()
     }
   }, 100)
 }
 
 const handleScroll = () => {
-  const scrollElement = document.querySelector('#chat-scroll-container .simplebar-content-wrapper')
-  if (scrollElement) {
-    const { scrollTop, scrollHeight, clientHeight } = scrollElement
-    // Robust buffer (15px) for reliable detection across different browser engines and zoom levels
-    const isAtBottom = scrollHeight - Math.ceil(scrollTop + clientHeight) <= 15
-    showScrollToBottom.value = scrollHeight > clientHeight && !isAtBottom
-  }
+  if (!cachedScrollEl) return
+  const { scrollTop, scrollHeight, clientHeight } = cachedScrollEl as HTMLElement
+  const isAtBottom = scrollHeight - Math.ceil(scrollTop + clientHeight) <= 15
+  showScrollToBottom.value = scrollHeight > clientHeight && !isAtBottom
 }
 
-// Re-ordered Watchers and Lifecycle Hooks (Placed after function definitions)
+// Watch only the length — avoids deep scanning all chat properties on every push
 watch(
-  () => props.chats,
+  () => props.chats.length,
   () => {
     scrollToBottom()
-    // Re-verify scroll button state after content or message updates
-    setTimeout(handleScroll, 200)
+    setTimeout(handleScroll, 150)
   },
-  { deep: true, immediate: true }
+  { immediate: true }
 )
 
 watch(
   () => props.roomId,
   () => {
+    // Reset cached scroll element when room changes — will be re-acquired by initScrollListener
+    cachedScrollEl = null
     showScrollToBottom.value = false
     initScrollListener()
+    // Re-init Preline when room changes (replaces the removed onUpdated hook)
+    nextTick(() => reinitPreline())
   },
   { immediate: true }
 )
@@ -958,9 +1018,8 @@ onMounted(() => {
   initScrollListener()
 })
 
-onUpdated(() => {
-  reinitPreline()
-})
+// onUpdated removed — reinitPreline on every DOM mutation caused render jank.
+// Preline is now only initialized on mount and when roomId changes.
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside)
@@ -987,7 +1046,7 @@ onBeforeUnmount(() => {
               {{ username.substring(0, 2).toUpperCase() }}
             </span>
             <Icon v-else icon="lucide:user" class="size-5 md:size-7 text-bejo-300" />
-            <span class="absolute -bottom-1 -right-1 size-2.5 md:size-4 border-2 border-white rounded-full bg-green-500 shadow-lg shadow-green-500/20 ring-1 ring-green-500/20"></span>
+            <span class="absolute -bottom-1 -right-1 size-2.5 md:size-4 border-2 border-white rounded-full bg-bejo-500 shadow-lg shadow-bejo-500/20 ring-1 ring-bejo-500/20"></span>
           </div>
 
           <div class="min-w-0 flex-1 overflow-hidden">
@@ -1012,16 +1071,21 @@ onBeforeUnmount(() => {
         </div>
 
         <div v-else class="flex-1 flex items-center gap-2 sm:gap-4 bg-slate-50/50 p-1 md:p-2 rounded-2xl border border-slate-100 animate-fade-in-right">
-          <div class="relative flex-1">
-            <Icon icon="lucide:search" class="size-4 absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+          <div class="relative flex-1 group/search">
+            <button 
+              @click="handleSearchChat"
+              class="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-bejo-600 transition-colors z-10"
+              title="Cari"
+            >
+              <Icon icon="lucide:search" class="size-4" />
+            </button>
             <input 
+              v-model="searchChatQuery"
               ref="searchChatInputRef"
-              v-model="searchChatQuery" 
               type="text" 
               placeholder="Cari dalam obrolan..." 
               class="w-full bg-white border border-slate-200 rounded-xl py-2 md:py-2.5 pl-9 md:pl-11 pr-4 text-xs md:text-sm font-bold focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500 transition-all outline-none"
-              @input="handleSearchChat"
-              @keydown.enter="nextSearchMatch"
+              @keydown.enter="handleSearchChat"
               @keydown.esc="toggleSearchChat"
             />
           </div>
@@ -1099,7 +1163,7 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="px-4 border-l border-bejo-200 h-full flex items-center justify-center">
-          <button @click="sendImages" :disabled="isSendingImage" class="bg-green-500 hover:bg-green-600 text-white rounded-xl px-5 py-3 font-bold flex items-center gap-2 transition-all shadow-md" :class="isSendingImage ? 'opacity-75 cursor-not-allowed' : 'active:scale-95'">
+          <button @click="sendImages" :disabled="isSendingImage" class="bg-bejo-500 hover:bg-bejo-600 text-white rounded-xl px-5 py-3 font-bold flex items-center gap-2 transition-all shadow-md" :class="isSendingImage ? 'opacity-75 cursor-not-allowed' : 'active:scale-95'">
             <span class="hidden sm:inline text-sm">{{ isSendingImage ? 'Mengirim...' : 'Kirim' }}</span>
             <Icon v-if="isSendingImage" icon="lucide:loader-2" class="size-4 animate-spin"></Icon>
             <Icon v-else icon="lucide:send" class="size-4"></Icon>
@@ -1121,7 +1185,17 @@ onBeforeUnmount(() => {
         <!-- Ambient Overlay for Chat Board -->
         <div class="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent pointer-events-none"></div>
 
-        <div class="relative z-10 flex flex-col gap-6 px-4 py-6 sm:px-8 sm:py-10">
+        <!-- Skeleton loader while chat history is being fetched -->
+        <div v-if="props.isLoadingChat" class="relative z-10 flex flex-col gap-6 px-4 py-6 sm:px-8 sm:py-10">
+          <div v-for="n in 5" :key="n" class="flex w-full" :class="n % 2 === 0 ? 'justify-end' : 'justify-start'">
+            <div class="flex flex-col gap-2" :class="n % 2 === 0 ? 'items-end' : 'items-start'" style="max-width:65%">
+              <div class="h-10 rounded-2xl bg-slate-200 animate-pulse" :style="{ width: (40 + (n * 17) % 45) + '%', minWidth: '120px' }"></div>
+              <div class="h-3 w-12 rounded-full bg-slate-100 animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+
+        <div v-else class="relative z-10 flex flex-col gap-6 px-4 py-6 sm:px-8 sm:py-10">
           <ChatBubble 
             v-for="(chat, i) in chats" 
             :id="'chat-message-' + i"
@@ -1181,7 +1255,7 @@ onBeforeUnmount(() => {
               @click.stop="handleOpenAppointment"
               class="flex items-center gap-3.5 w-full text-left px-4 py-3 hover:bg-bejo-50 text-slate-600 hover:text-bejo-600 rounded-xl text-[13px] font-bold transition-all"
             >
-              <div class="size-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
+              <div class="size-8 rounded-lg bg-bejo-100 flex items-center justify-center text-bejo-600">
                 <Icon icon="lucide:calendar-plus" class="size-4" />
               </div>
               <span>Buat Janji Temu</span>
@@ -1240,12 +1314,8 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="flex items-center justify-between mb-6 px-2">
-          <h4 v-if="openEtalase" class="text-slate-900 font-extrabold text-lg tracking-tight">Pilih Etalase</h4>
-          <h4 v-if="openAppointment" class="text-slate-900 font-extrabold text-lg tracking-tight">Pilih Unit Properti</h4>
-          <button v-if="openEtalase" @click.stop="closeEtalase" class="size-9 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all">
-            <Icon icon="lucide:x" class="size-5" />
-          </button>
-          <button v-if="openAppointment" @click.stop="closeAppointment" class="size-9 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all">
+          <h4 class="text-slate-900 font-extrabold text-lg tracking-tight">Pilih Etalase</h4>
+          <button @click.stop="closeEtalase" class="size-9 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all">
             <Icon icon="lucide:x" class="size-5" />
           </button>
         </div>
@@ -1270,49 +1340,6 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <div v-if="openAppointmentForm" ref="appointmentFormRef" class="z-[65] fixed bottom-55 left-1/2 -translate-x-1/2 w-[95vw] sm:w-[380px] sm:bottom-45 sm:right-30 sm:left-auto sm:translate-x-0 bg-white rounded-[2rem] shadow-2xl p-6 border border-slate-50 animate-fade-in-up">
-        <div class="flex items-center justify-between mb-6 px-2">
-          <h4 class="text-slate-900 font-extrabold text-lg tracking-tight">Form Janji Temu</h4>
-          <button @click.stop="openAppointmentForm = false" class="size-8 flex items-center justify-center rounded-lg bg-slate-50 text-slate-400 hover:text-red-500 transition-all">
-            <Icon icon="lucide:x" class="size-5" />
-          </button>
-        </div>
-        <div class="space-y-4 px-2">
-          <div>
-            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block"> Nama Customer </label>
-            <input type="text" placeholder="Nama customer..." class="w-full bg-slate-50 border-slate-100 rounded-xl py-2.5 px-4 text-sm font-bold focus:bg-white focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500 transition-all shadow-inner" />
-          </div>
-          <div>
-            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block"> Nama Sales </label>
-            <input type="text" placeholder="Nama sales..." class="w-full bg-slate-50 border-slate-100 rounded-xl py-2.5 px-4 text-sm font-bold focus:bg-white focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500 transition-all shadow-inner" />
-          </div>
-          <button @click.stop="openSchedule = !openSchedule" class="w-full py-3 bg-bejo-50 hover:bg-bejo-100 text-bejo-600 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 border border-bejo-200"><Icon icon="lucide:calendar" class="size-4" /> Pilih Jadwal</button>
-          <div>
-            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block"> Waktu </label>
-            <input type="time" class="w-full bg-slate-50 border-slate-100 rounded-xl py-2.5 px-4 text-sm font-bold focus:bg-white focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500 transition-all shadow-inner" />
-          </div>
-        </div>
-        <div class="flex justify-end gap-3 mt-8 px-2">
-          <button @click.stop="openAppointmentForm = false" class="px-5 py-2.5 bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-xl text-xs font-black uppercase tracking-widest transition-all">Batal</button>
-          <button @click="saveAppointment" class="px-6 py-2.5 bg-bejo-500 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-bejo-500/20 hover:bg-bejo-600 transition-all">Simpan</button>
-        </div>
-      </div>
-
-      <div v-if="openSchedule" ref="scheduleRef" class="z-[70] fixed bottom-55 left-1/2 -translate-x-1/2 w-[95vw] sm:w-[650px] sm:bottom-5 sm:right-15 sm:left-auto sm:translate-x-0 bg-white rounded-2xl shadow-2xl py-4 border border-default-100">
-        <div class="flex items-center justify-between mb-4 px-6">
-          <h4 class="text-default-900 font-bold text-base">Pilih Jadwal</h4>
-          <button @click.stop="openSchedule = false" class="text-default-400 hover:text-default-900 transition-all">
-            <Icon icon="lucide:x" class="size-5" />
-          </button>
-        </div>
-        <div class="px-2">
-          <div class="card border border-default-100 shadow-none">
-            <div class="card-body">
-              <FullCalendar ref="fullCalendarRef" :options="calendarOptions" />
-            </div>
-          </div>
-        </div>
-      </div>
 
       <div v-if="openTukarCS" ref="tukarCSRef" class="z-[60] fixed bottom-20 left-1/2 -translate-x-1/2 w-[92vw] max-w-[390px] sm:bottom-24 sm:right-5 sm:left-auto sm:translate-x-0 bg-white/95 backdrop-blur-md rounded-[2rem] shadow-2xl p-6 border border-slate-50 animate-fade-in-up">
         <div class="flex items-center justify-between mb-6 px-2">
@@ -1377,6 +1404,195 @@ onBeforeUnmount(() => {
     </div>
     </div>
   </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- MODAL BUAT JANJI TEMU — Split: Kalender (kiri) + Form (kanan) -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <Teleport to="body">
+    <Transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="opacity-0 scale-95"
+      enter-to-class="opacity-100 scale-100"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="opacity-100 scale-100"
+      leave-to-class="opacity-0 scale-95"
+    >
+      <div v-if="showAppointmentModal" class="fixed inset-0 z-[200] flex items-center justify-center p-3 md:p-8">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="showAppointmentModal = false" />
+
+        <!-- Modal Container -->
+        <div class="relative w-full max-w-6xl max-h-[94vh] bg-white rounded-[2rem] shadow-2xl shadow-slate-900/20 flex flex-col overflow-hidden z-10 animate-fade-in-up">
+
+          <!-- Header -->
+          <div class="shrink-0 flex items-center justify-between px-6 md:px-8 py-4 md:py-5 border-b border-slate-100 bg-white">
+            <div class="flex items-center gap-3">
+              <div class="size-10 rounded-2xl bg-gradient-to-br from-bejo-50 to-bejo-100 flex items-center justify-center text-bejo-600 shadow-sm shadow-bejo-500/10">
+                <Icon icon="lucide:calendar-plus" class="size-5" />
+              </div>
+              <div>
+                <h3 class="text-slate-900 font-black text-base md:text-lg tracking-tight leading-none">Buat Janji Temu</h3>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5 hidden sm:block">Klik tanggal pada kalender · Abu-abu = sudah ada jadwal</p>
+              </div>
+            </div>
+            <button @click="showAppointmentModal = false" class="size-9 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all active:scale-90">
+              <Icon icon="lucide:x" class="size-5" />
+            </button>
+          </div>
+
+          <!-- Split Body -->
+          <div class="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_390px] overflow-hidden">
+
+            <!-- ─── LEFT: Kalender ─────────────────────────────── -->
+            <div class="overflow-y-auto p-5 md:p-6 border-b lg:border-b-0 lg:border-r border-slate-100 bg-slate-50/40 custom-scrollbar">
+              <!-- Legend -->
+              <div class="flex flex-wrap items-center gap-2 mb-4">
+                <span class="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-500 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-full">
+                  <span class="size-2 rounded-full bg-slate-400 shrink-0"></span>
+                  Sudah ada janji
+                </span>
+                <span class="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-bejo-600 bg-bejo-50 border border-bejo-100 px-3 py-1.5 rounded-full">
+                  <span class="size-2 rounded-full bg-bejo-500 shrink-0"></span>
+                  Klik untuk memilih
+                </span>
+                <Transition enter-active-class="transition duration-200" enter-from-class="opacity-0 scale-90" enter-to-class="opacity-100 scale-100">
+                  <span v-if="appointmentForm.tanggal" class="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-bejo-700 bg-bejo-50 border border-bejo-200 px-3 py-1.5 rounded-full">
+                    <Icon icon="lucide:check-circle" class="size-3" />
+                    Dipilih: {{ appointmentForm.tanggal }}
+                  </span>
+                </Transition>
+              </div>
+              <!-- Calendar Card -->
+              <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden p-3 md:p-4">
+                <FullCalendar :options="appointmentCalendarOptions" />
+              </div>
+            </div>
+
+            <!-- ─── RIGHT: Form ────────────────────────────────── -->
+            <div class="overflow-y-auto p-5 md:p-6 custom-scrollbar flex flex-col">
+              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-5">Detail Janji Temu</p>
+
+              <div class="space-y-3.5 flex-1">
+
+                <!-- Tanggal -->
+                <div>
+                  <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Tanggal Terpilih</label>
+                  <div class="relative">
+                    <Icon icon="lucide:calendar" class="absolute left-3.5 top-1/2 -translate-y-1/2 size-4" :class="appointmentForm.tanggal ? 'text-bejo-500' : 'text-slate-300'" />
+                    <input
+                      type="text"
+                      :value="appointmentForm.tanggal
+                        ? new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(appointmentForm.tanggal))
+                        : 'Pilih pada kalender...'"
+                      disabled
+                      class="w-full rounded-xl py-2.5 pl-10 pr-10 text-sm font-bold cursor-not-allowed shadow-inner transition-colors"
+                      :class="appointmentForm.tanggal ? 'bg-bejo-50 border border-bejo-200 text-bejo-700' : 'bg-slate-50 border border-slate-100 text-slate-400'"
+                    />
+                    <Transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0 scale-75" enter-to-class="opacity-100 scale-100">
+                      <span v-if="appointmentForm.tanggal" class="absolute right-3 top-1/2 -translate-y-1/2 size-5 flex items-center justify-center bg-bejo-500 rounded-full shadow-sm">
+                        <Icon icon="lucide:check" class="size-3 text-white" />
+                      </span>
+                    </Transition>
+                  </div>
+                </div>
+
+                <!-- Waktu (MANUAL) -->
+                <div>
+                  <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Waktu <span class="text-red-400">*</span></label>
+                  <div class="relative group">
+                    <Icon icon="lucide:clock" class="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 group-focus-within:text-bejo-500 transition-colors" :class="appointmentForm.waktu ? 'text-bejo-500' : 'text-slate-300'" />
+                    <input
+                      type="time"
+                      v-model="appointmentForm.waktu"
+                      class="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 pl-10 pr-4 text-sm font-bold focus:bg-white focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500 transition-all shadow-inner outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div class="h-px bg-slate-100"></div>
+
+                <!-- Nama Lengkap -->
+                <div>
+                  <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">
+                    Nama Lengkap <span class="text-red-400">*</span>
+                  </label>
+                  <input
+                    v-model="appointmentForm.namaLengkap"
+                    type="text"
+                    placeholder="Masukkan nama lengkap customer..."
+                    class="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-4 text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500 transition-all shadow-inner outline-none"
+                  />
+                </div>
+
+                <!-- No. Telepon -->
+                <div>
+                  <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">No. Telepon</label>
+                  <input
+                    v-model="appointmentForm.noTelp"
+                    type="text"
+                    placeholder="Nomor telepon customer..."
+                    class="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-4 text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500 transition-all shadow-inner outline-none"
+                  />
+                </div>
+
+                <!-- Properti / Unit -->
+                <div>
+                  <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Properti / Unit</label>
+                  <input
+                    v-model="appointmentForm.properti"
+                    type="text"
+                    placeholder="Nama properti yang diminati..."
+                    class="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-4 text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500 transition-all shadow-inner outline-none"
+                  />
+                </div>
+
+                <!-- Lokasi Survey -->
+                <div>
+                  <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Lokasi Survey</label>
+                  <input
+                    v-model="appointmentForm.lokasi"
+                    type="text"
+                    placeholder="Alamat lokasi survey..."
+                    class="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-4 text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500 transition-all shadow-inner outline-none"
+                  />
+                </div>
+
+                <!-- Catatan -->
+                <div>
+                  <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Catatan Tambahan</label>
+                  <textarea
+                    v-model="appointmentForm.catatan"
+                    placeholder="Catatan atau permintaan khusus..."
+                    rows="3"
+                    class="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-4 text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500 transition-all shadow-inner outline-none resize-none"
+                  />
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="flex gap-3 mt-5 pt-4 border-t border-slate-100 shrink-0">
+                <button
+                  @click="showAppointmentModal = false"
+                  class="flex-1 py-3 bg-slate-50 text-slate-500 hover:bg-slate-100 hover:text-slate-700 rounded-xl text-xs font-black uppercase tracking-widest transition-all active:scale-95"
+                >
+                  Batal
+                </button>
+                <button
+                  @click="saveNewAppointment"
+                  class="px-6 py-3 bg-gradient-to-r from-bejo-500 to-bejo-600 hover:from-bejo-600 hover:to-bejo-700 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-bejo-500/20 transition-all active:scale-95 flex items-center gap-2"
+                >
+                  <Icon icon="lucide:calendar-check" class="size-4" />
+                  Buat Janji Temu
+                </button>
+              </div>
+            </div>
+
+          </div><!-- end split -->
+        </div><!-- end modal container -->
+      </div>
+    </Transition>
+  </Teleport>
+
 </template>
 
 <style scoped>
@@ -1438,5 +1654,27 @@ onBeforeUnmount(() => {
 
 .snap-start {
   scroll-snap-align: start;
+}
+
+/* Booked calendar days — slate gray tint */
+:deep(.fc-day-booked) {
+  background-color: #f8fafc !important;
+  cursor: not-allowed !important;
+  position: relative;
+}
+
+:deep(.fc-day-booked::after) {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 8px;
+  border: 1.5px dashed #cbd5e1;
+  pointer-events: none;
+}
+
+:deep(.fc-day-booked .fc-daygrid-day-number) {
+  color: #94a3b8 !important;
+  font-weight: 900;
+  text-decoration: line-through;
 }
 </style>

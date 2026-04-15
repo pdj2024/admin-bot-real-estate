@@ -204,47 +204,44 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem('token');
-  const refreshToken = localStorage.getItem('refreshToken');
-  
-  // Check maintenance mode from localStorage (synced with Pinia store)
-  const storedApp = localStorage.getItem('app_global_status');
-  const isMaintenance = storedApp ? JSON.parse(storedApp).isMaintenance : false;
+  const token = localStorage.getItem('token')
+  const refreshToken = localStorage.getItem('refreshToken')
+  const hasTokens =
+    !!token && token !== 'undefined' && !!refreshToken && refreshToken !== 'undefined'
 
-  // Cek keberadaan sesi
-  const hasTokens = !!token && token !== 'undefined' && !!refreshToken && refreshToken !== 'undefined';
-
-  // Maintenance mode handling
-  if (isMaintenance) {
-    // Allow access to maintenance page itself, login, and admin routes
-    const isMaintenancePage = to.name === 'Maintenance';
-    const isLoginPage = to.name === 'Login';
-    const isAdminRoute = to.meta.requiresAuth === true;
-
-    if (!isMaintenancePage && !isLoginPage && !isAdminRoute) {
-      return next({ name: 'Maintenance' });
-    }
-  }
-
-  // Jika mencoba ke halaman login tapi sudah punya sesi
-  if (to.path === '/login' && hasTokens) {
-    return next({ name: 'Dashboard' });
-  }
-
-  // Jika rute butuh autentikasi
+  // PRIORITY 1: Auth check — runs first, unconditionally.
+  // Unauthenticated users always go to /login, never to /maintenance.
   if (to.meta.requiresAuth) {
     if (!hasTokens) {
-      return next({ name: 'Login', query: { redirect: to.fullPath } });
+      return next({ name: 'Login', query: { redirect: to.fullPath } })
     }
-    // Lanjutkan, biarkan Axios menangani refresh jika token utama expired
-    next();
-  } else {
-    // If maintenance mode is off, but trying to access maintenance page directly -> Redirect Beranda
-    if (!isMaintenance && to.name === 'Maintenance') {
-      return next({ name: 'Beranda' });
-    }
-    next();
+    return next()
   }
-});
+
+  // PRIORITY 2: Redirect authenticated user away from login page.
+  if (to.name === 'Login' && hasTokens) {
+    return next({ name: 'Dashboard' })
+  }
+
+  // PRIORITY 3: Maintenance mode — only applies to public (guest) pages.
+  // Admin routes already handled above. Login page is excluded.
+  const storedApp = localStorage.getItem('app_global_status')
+  const isMaintenance = storedApp ? JSON.parse(storedApp).isMaintenance : false
+
+  if (isMaintenance) {
+    const isMaintenancePage = to.name === 'Maintenance'
+    const isLoginPage = to.name === 'Login'
+    if (!isMaintenancePage && !isLoginPage) {
+      return next({ name: 'Maintenance' })
+    }
+  } else {
+    // Maintenance OFF: prevent direct access to /maintenance
+    if (to.name === 'Maintenance') {
+      return next({ name: 'Beranda' })
+    }
+  }
+
+  next()
+})
 
 export default router

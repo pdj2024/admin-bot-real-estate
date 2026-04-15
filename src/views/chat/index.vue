@@ -26,6 +26,7 @@ const sidebarRef = ref<any>(null)
 const chatContentRef = ref<any>(null)
 
 const chats = ref<any[]>([])
+const isLoadingChat = ref(false)
 const signalRConnection = ref<signalR.HubConnection | null>(null)
 const audio = new Audio('/sounds/Ding.mp3')
 
@@ -234,6 +235,7 @@ const startSignalR = async () => {
 }
 
 const fetchChatContent = async (id: string) => {
+  isLoadingChat.value = true
   try {
     const response = await api.get(`/api/chat/getAll?room_id=${id}`, {
       headers: { 'X-Jenis-User': 'Admin' }
@@ -241,16 +243,18 @@ const fetchChatContent = async (id: string) => {
     chats.value = response.data.Data
   } catch (error) {
     console.error('Gagal memuat chat:', error)
+  } finally {
+    isLoadingChat.value = false
   }
 }
 
 watch(
   selectedRoomId,
   (newId) => {
+    // Clear previous chats immediately to avoid flash of stale content
+    chats.value = []
     if (newId) {
       fetchChatContent(newId)
-    } else {
-      chats.value = []
     }
   },
   { immediate: true }
@@ -296,12 +300,15 @@ onBeforeUnmount(() => {
 
           <ChatContent 
             ref="chatContentRef" 
-            class="flex-1 w-full min-w-0"            :roomId="selectedRoomId" 
+            :key="selectedRoomId ?? 'empty'"
+            class="flex-1 w-full min-w-0"
+            :roomId="selectedRoomId" 
             :idLawan="selectedIdLawan" 
             :username="selectedUsername" 
             :phoneNumber="selectedPhone" 
             :activeTab="currentActiveTab" 
             :chats="chats" 
+            :isLoadingChat="isLoadingChat"
             :lastMessageId="lastMessageId" 
             :takeOverBatch="takeOverBatch" 
             :takeOverStatus="takeOverSuccess" 

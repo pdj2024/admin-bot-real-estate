@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
+import { ref, onMounted, onUnmounted, watch, computed, markRaw } from 'vue'
 import { Icon } from '@iconify/vue'
-import { RouterLink } from 'vue-router'
 import api from '@/services/axios'
-const audio = new Audio('/sounds/Ding.mp3')
+const audio = markRaw(new Audio('/sounds/Ding.mp3'))
 
 const chatsBot = ref<Chat[]>([])
 const chatsAktif = ref<Chat[]>([])
@@ -588,10 +587,9 @@ defineExpose({
                 </div>
 
                 <div v-if="filteredChatsBot.length > 0" class="flex-1 min-h-0 overflow-y-auto overscroll-contain [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 hover:[&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full">
-                    <RouterLink
-                      to=""
+                    <div
                       v-for="(chat, idx) in filteredChatsBot"
-                      :key="'bot-' + idx"
+                      :key="chat.Room_Id"
                       @click="selectChat(idx, 'bot', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan || chat.Room_Name, chat.Telepon_User_Lawan)"
                       @contextmenu.prevent="openContextMenu($event, chat, 'bot', idx)"
                       class="relative flex items-center gap-4 py-4.5 px-6 bg-white cursor-pointer border-b border-slate-50 hover:bg-slate-50/80 transition-all duration-300 group"
@@ -627,7 +625,7 @@ defineExpose({
                           </div>
                         </div>
                       </div>
-                    </RouterLink>
+                    </div>
                 </div>
               </div>
 
@@ -651,8 +649,7 @@ defineExpose({
                   </div>
 
                   <div class="max-h-[200px] overflow-y-auto overscroll-contain [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 hover:[&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full">
-                    <RouterLink
-                      to=""
+                    <div
                       v-for="(chat, idx) in filteredChatsAssign.slice().reverse()"
                       :key="chat.Room_Id"
                       @click="selectChat(idx, 'chat_saya', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan || chat.Room_Name, chat.Telepon_User_Lawan)"
@@ -690,7 +687,7 @@ defineExpose({
                           </div>
                         </div>
                       </div>
-                    </RouterLink>
+                    </div>
                   </div>
                 </div>
 
@@ -708,10 +705,9 @@ defineExpose({
                   </div>
 
                   <div class="flex-1 min-h-0 overflow-y-auto overscroll-contain [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 hover:[&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full">
-                    <RouterLink
-                      to=""
+                    <div
                       v-for="(chat, idx) in filteredChatsAktif"
-                      :key="'balasan-' + idx"
+                      :key="chat.Room_Id"
                       @click="selectChat(idx, 'chat_saya', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan || chat.Room_Name, chat.Telepon_User_Lawan)"
                       @contextmenu.prevent="openContextMenu($event, chat, 'aktif', idx)"
                       class="relative flex items-center gap-4 py-4.5 px-6 bg-white cursor-pointer border-b border-slate-50 hover:bg-slate-50/80 transition-all duration-300 group"
@@ -747,7 +743,7 @@ defineExpose({
                           </div>
                         </div>
                       </div>
-                    </RouterLink>
+                    </div>
                   </div>
                 </div>
               </div>
