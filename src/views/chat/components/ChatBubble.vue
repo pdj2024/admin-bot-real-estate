@@ -160,6 +160,14 @@ watch(
   },
   { immediate: true }
 )
+
+watch(
+  () => props.chat.No_Penawaran,
+  (val) => {
+    if (val) getImageUrl(val)
+  },
+  { immediate: true }
+)
 </script>
 
 <template>
@@ -197,7 +205,7 @@ watch(
         <div v-if="!(chat.Message || '').includes('_X7#mQ9!vW2_')" class="px-3 py-2 md:px-5 md:py-3.5 rounded-2xl text-[13px] md:text-sm relative transition-all duration-300 hover:shadow-xl" :class="[bubbleStyle, isMe ? 'hover:translate-x-1' : 'hover:-translate-x-1']">
 
 
-          <div v-if="chat.Id_Paket != null || chat.Media_Url || (chat.Message || '').includes('_data:image')" class="mb-3 overflow-hidden rounded-xl border border-black/5 shadow-inner bg-slate-50/50">
+          <div v-if="chat.Id_Paket != null || chat.No_Penawaran != null || chat.Media_Url || (chat.Message || '').includes('_data:image')" class="mb-3 overflow-hidden rounded-xl border border-black/5 shadow-inner bg-slate-50/50">
             <img v-if="imageUrl || chat.Media_Url" :src="imageUrl || chat.Media_Url" @load="$emit('imageLoaded')" class="w-full h-auto object-cover max-h-72 hover:scale-105 transition-transform duration-500 cursor-pointer" />
             <img v-else-if="(chat.Message || '').includes('_data:image/')" :src="(chat.Message || '').includes('_data:image/') ? 'data:image/' + (chat.Message || '').split('_data:image/')[1] : imageUrl" @load="$emit('imageLoaded')" class="w-full h-auto object-cover max-h-72 hover:scale-105 transition-transform duration-500 cursor-pointer" />
           </div>
