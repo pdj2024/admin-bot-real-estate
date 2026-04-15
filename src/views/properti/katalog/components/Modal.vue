@@ -452,6 +452,12 @@ const confirmMediaBatch = async (filesMetadata: any[]) => {
 const submitForm = async () => {
   if (isLoading.value) return
 
+  // Validasi Keterangan (Maks 250 karakter)
+  if (form.value.Keterangan && form.value.Keterangan.length > 250) {
+    fail('Keterangan tidak boleh lebih dari 250 karakter!')
+    return
+  }
+
   const isEdit = !!form.value.No_Id
 
   confirm(`Apakah Anda yakin ingin ${isEdit ? 'mengubah' : 'menambah'} data ini?`, async () => {
@@ -804,8 +810,14 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
             </div>
 
             <div class="field flex flex-col flex-1">
-              <label class="label">Keterangan</label>
-              <textarea v-model="form.Keterangan" class="field-input !pl-4 pt-2 resize-none flex-1 w-full" placeholder="Ceritakan keunggulan properti..."></textarea>
+              <div class="flex justify-between items-center mb-1.5">
+                <label class="label !mb-0">Keterangan</label>
+                <span class="text-[10px] font-bold" :class="(form.Keterangan?.length || 0) > 250 ? 'text-red-500' : 'text-slate-400'">
+                  {{ form.Keterangan?.length || 0 }}/250
+                </span>
+              </div>
+              <textarea v-model="form.Keterangan" maxlength="250" class="field-input !pl-4 pt-2 resize-none flex-1 w-full" placeholder="Ceritakan keunggulan properti..."></textarea>
+              <p v-if="(form.Keterangan?.length || 0) >= 250" class="text-[9px] text-red-500 font-bold mt-1 uppercase tracking-wider">⚠️ Batas maksimum 250 karakter tercapai</p>
             </div>
           </div>
         </div>

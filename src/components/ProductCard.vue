@@ -1,7 +1,7 @@
 <template>
-  <div v-if="product.Status_Display == 'Aktif' && product.Status_Properti == 'Tersedia'" class="group flex flex-col h-full rounded-[2.5rem] overflow-hidden border transition-all duration-500 relative bg-white border-slate-100 shadow-xl shadow-slate-200/30" :class="!isLoading ? 'hover:-translate-y-2 hover:shadow-2xl hover:border-bejo-200 hover:shadow-bejo-600/10 cursor-pointer' : ''" @click="handleClick">
+  <div v-if="isLoading || (product.Status_Display == 'Aktif' && product.Status_Properti == 'Tersedia')" class="group flex flex-col h-fit rounded-[2.5rem] border transition-all duration-500 relative bg-white border-slate-100 shadow-xl shadow-slate-200/30" :class="!isLoading ? (showSelectButton ? '' : 'hover:-translate-y-2 hover:shadow-2xl hover:border-bejo-200 hover:shadow-bejo-600/10 cursor-pointer') : ''" @click="showSelectButton ? null : handleClick">
     <!-- Card Image Header -->
-    <div class="relative h-60 overflow-hidden" :class="isLoading ? 'bg-slate-200 animate-pulse' : 'bg-slate-100 p-3'">
+    <div class="relative h-60 overflow-hidden rounded-t-[2.5rem]" :class="isLoading ? 'bg-slate-200 animate-pulse' : 'bg-slate-100 p-3 pb-0'">
       <div v-if="!isLoading" class="w-full h-full rounded-[2rem] overflow-hidden relative">
         <!-- Overlay for Non-Active -->
         <div v-if="product.Status_Display != 'Aktif' || product.Status_Properti != 'Tersedia'" class="absolute inset-0 bg-black/40 backdrop-grayscale-[60%] z-[20] pointer-events-none transition-all duration-500"></div>
@@ -61,10 +61,10 @@
       </div>
 
       <!-- Title -->
-      <h6 class="text-xl text-slate-900 font-black transition-colors line-clamp-2 mb-2 leading-tight" :class="isLoading ? 'text-transparent bg-slate-200 animate-pulse rounded w-full' : 'group-hover:text-bejo-600'">
+      <h6 class="text-xl text-slate-900 font-black transition-colors line-clamp-2 mb-2 leading-tight min-h-[3rem]" :class="[isLoading ? 'text-transparent bg-slate-200 animate-pulse rounded-xl w-full' : '', !showSelectButton ? 'group-hover:text-bejo-600' : '']">
         <RouterLink v-if="!isLoading && !disableRouting" :to="targetUrl" class="before:absolute before:inset-0">{{ product.Nama_Produk }}</RouterLink>
         <div v-else-if="!isLoading && disableRouting" class="before:absolute before:inset-0">{{ product.Nama_Produk }}</div>
-        <span v-else>Memuat Nama Katalog Properti Terbaru</span>
+        <span v-else>.</span>
       </h6>
 
       <!-- Type & Size Info -->
@@ -73,44 +73,55 @@
         <span v-else>...</span>
       </p>
 
-      <!-- Specs Grid -->
-      <div class="grid grid-cols-2 gap-3 rounded-2xl p-4 mb-5 border border-slate-100 bg-gradient-to-br from-slate-50 to-white/50 shadow-inner">
-        <div class="flex items-center gap-2">
-          <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0" :class="isLoading ? 'opacity-50 grayscale' : ''">
-            <Icon icon="lucide:land-plot" class="size-3.5 text-bejo-600" />
+      <!-- Specs Details (Collapsible) -->
+      <div v-if="collapsibleDetails" class="mb-4 relative">
+        <button type="button" @click.stop="emit('toggleExpand', product.No_Id)" class="flex items-center justify-between w-full px-4 py-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-100 transition-all group/expand cursor-pointer relative z-30">
+          <span class="text-[11px] font-black uppercase tracking-widest text-slate-500 pointer-events-none">Detail Unit</span>
+          <Icon :icon="props.isExpanded ? 'lucide:chevron-up' : 'lucide:chevron-down'" class="size-4 text-slate-400 group-hover/expand:text-bejo-600 transition-transform pointer-events-none" />
+        </button>
+
+        <Transition enter-active-class="transition-all duration-500 ease-in-out" enter-from-class="max-h-0 opacity-0" enter-to-class="max-h-[800px] opacity-100" leave-active-class="transition-all duration-300 ease-in-out" leave-from-class="max-h-[800px] opacity-100" leave-to-class="max-h-0 opacity-0">
+          <div v-if="isLoading || !collapsibleDetails || props.isExpanded" class="absolute top-full left-0 right-0 z-[100] mt-2 bg-white/95 backdrop-blur-xl border border-slate-100 shadow-2xl rounded-3xl" @click.stop>
+            <div class="grid grid-cols-2 gap-3 rounded-2xl p-4 mb-5 border border-slate-100 bg-gradient-to-br from-slate-50 to-white/50 shadow-inner">
+              <div class="flex items-center gap-2">
+                <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0" :class="isLoading ? 'opacity-50 grayscale' : ''">
+                  <Icon icon="lucide:land-plot" class="size-3.5 text-bejo-600" />
+                </div>
+                <span class="text-xs font-bold" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-12' : 'text-slate-700'">LT {{ isLoading ? 0 : product.Luas_Tanah || 0 }} m²</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0" :class="isLoading ? 'opacity-50 grayscale' : ''">
+                  <Icon icon="lucide:home" class="size-3.5 text-bejo-600" />
+                </div>
+                <span class="text-xs font-bold" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-12' : 'text-slate-700'">LB {{ isLoading ? 0 : product.Luas_Bangunan || 0 }} m²</span>
+              </div>
+              <div class="flex items-center gap-2" v-if="!isLoading">
+                <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0">
+                  <Icon icon="lucide:layers" class="size-3.5 text-bejo-600" />
+                </div>
+                <span class="text-xs font-bold text-slate-700">{{ product.Jumlah_Lantai || 0 }} Lt</span>
+              </div>
+              <div class="flex items-center gap-2" v-if="!isLoading">
+                <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0">
+                  <Icon icon="lucide:car" class="size-3.5 text-bejo-600" />
+                </div>
+                <span class="text-xs font-bold text-slate-700">{{ product.Jumlah_Carpot || 0 }} Mobil</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0" :class="isLoading ? 'opacity-50 grayscale' : ''">
+                  <Icon icon="lucide:bed" class="size-3.5 text-bejo-600" />
+                </div>
+                <span class="text-xs font-bold" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-8' : 'text-slate-700'">{{ isLoading ? 0 : product.Jumlah_Kamar_Tidur || 0 }} KT</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0" :class="isLoading ? 'opacity-50 grayscale' : ''">
+                  <Icon icon="lucide:bath" class="size-3.5 text-bejo-600" />
+                </div>
+                <span class="text-xs font-bold" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-8' : 'text-slate-700'">{{ isLoading ? 0 : product.Jumlah_Kamar_Mandi || 0 }} KM</span>
+              </div>
+            </div>
           </div>
-          <span class="text-xs font-bold" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-12' : 'text-slate-700'">LT {{ isLoading ? 0 : product.Luas_Tanah || 0 }} m²</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0" :class="isLoading ? 'opacity-50 grayscale' : ''">
-            <Icon icon="lucide:home" class="size-3.5 text-bejo-600" />
-          </div>
-          <span class="text-xs font-bold" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-12' : 'text-slate-700'">LB {{ isLoading ? 0 : product.Luas_Bangunan || 0 }} m²</span>
-        </div>
-        <div class="flex items-center gap-2" v-if="!isLoading">
-          <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0">
-            <Icon icon="lucide:layers" class="size-3.5 text-bejo-600" />
-          </div>
-          <span class="text-xs font-bold text-slate-700">{{ product.Jumlah_Lantai || 0 }} Lt</span>
-        </div>
-        <div class="flex items-center gap-2" v-if="!isLoading">
-          <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0">
-            <Icon icon="lucide:car" class="size-3.5 text-bejo-600" />
-          </div>
-          <span class="text-xs font-bold text-slate-700">{{ product.Jumlah_Carpot || 0 }} Mobil</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0" :class="isLoading ? 'opacity-50 grayscale' : ''">
-            <Icon icon="lucide:bed" class="size-3.5 text-bejo-600" />
-          </div>
-          <span class="text-xs font-bold" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-8' : 'text-slate-700'">{{ isLoading ? 0 : product.Jumlah_Kamar_Tidur || 0 }} KT</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0" :class="isLoading ? 'opacity-50 grayscale' : ''">
-            <Icon icon="lucide:bath" class="size-3.5 text-bejo-600" />
-          </div>
-          <span class="text-xs font-bold" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-8' : 'text-slate-700'">{{ isLoading ? 0 : product.Jumlah_Kamar_Mandi || 0 }} KM</span>
-        </div>
+        </Transition>
       </div>
 
       <!-- Pricing Info -->
@@ -150,6 +161,14 @@
           </div>
         </div>
 
+        <!-- Selection Action Button -->
+        <div v-if="showSelectButton && !isLoading" class="mt-auto px-1 pb-6 pt-4">
+          <button @click.stop="handleClick" class="w-full py-4 bg-bejo-500 hover:bg-bejo-600 text-white font-black text-[11px] uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-bejo-500/20 active:scale-95 transition-all flex items-center justify-center gap-2">
+            <Icon icon="lucide:check-circle" class="size-4" />
+            Pilih Unit Ini
+          </button>
+        </div>
+
         <!-- Admin Actions Dropdown -->
         <div v-if="isAdmin && !isLoading" class="absolute bottom-1 right-0 z-20" @click.stop>
           <button @click="$emit('toggleDropdown', product.No_Id)" class="size-10 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:bg-bejo-600 hover:text-white transition-all shadow-sm">
@@ -174,7 +193,7 @@
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 const props = withDefaults(
   defineProps<{
@@ -183,16 +202,25 @@ const props = withDefaults(
     isAdmin?: boolean
     activeDropdownId?: string | null
     disableRouting?: boolean
+    collapsibleDetails?: boolean
+    showSelectButton?: boolean
+    isExpanded?: boolean
   }>(),
   {
     isLoading: false,
     isAdmin: false,
     activeDropdownId: null,
-    disableRouting: false
+    disableRouting: false,
+    collapsibleDetails: false,
+    showSelectButton: false,
+    isExpanded: false
   }
 )
 
-const emit = defineEmits(['toggleDropdown', 'updateStatus', 'delete', 'edit', 'click'])
+const isExpandedLocal = ref(false)
+// No local ref needed if prop is used
+
+const emit = defineEmits(['toggleDropdown', 'updateStatus', 'delete', 'edit', 'select', 'toggleExpand'])
 
 const targetUrl = computed(() => {
   return props.isAdmin ? `/admin/properti/edit/${props.product.Slug}` : `/detail/${props.product.Slug}`
@@ -208,7 +236,7 @@ const formatCurrency = (value: number) => {
 
 const handleClick = () => {
   if (!props.isLoading) {
-    emit('click', props.product.Slug)
+    emit('select', props.product)
   }
 }
 </script>

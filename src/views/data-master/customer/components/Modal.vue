@@ -154,7 +154,7 @@ const handleClose = () => {
             <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Alamat Email</label>
             <div class="relative group">
               <Icon icon="lucide:mail" class="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-bejo-500 transition-colors" />
-              <input v-model="form.Email" type="email" required class="form-input-premium ps-11" placeholder="customer@mail.com" />
+              <input v-model="form.Email" type="email" required class="form-input-premium !ps-11" placeholder="customer@mail.com" />
             </div>
           </div>
 

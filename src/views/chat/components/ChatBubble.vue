@@ -23,6 +23,8 @@ interface Chat {
   No_Penawaran: string
   Receiver_Ids: string[]
   Media_Url?: string
+  Username_User?: string
+  Nama_Display_User?: string
 }
 
 const props = defineProps<{
@@ -65,10 +67,8 @@ const timeColor = computed(() => {
 
 const isNewDate = computed(() => {
   if (props.idx === 0) return true
-
   const prevDate = new Date(props.chats[props.idx - 1].Sent_At).setHours(0, 0, 0, 0)
   const currDate = new Date(props.chat.Sent_At).setHours(0, 0, 0, 0)
-
   return prevDate !== currDate
 })
 
@@ -89,13 +89,11 @@ const getDateChat = (date: any): string => {
   }).format(d)
 }
 
-// Extract the text part of the message (strip embedded image data)
 const cleanMsg = computed(() => {
   const msg = props.chat.Message || ''
   return msg.includes('_data:image/') ? msg.split('_data:image/')[0] : msg
 })
 
-// Memoized formatter — only re-runs when message text, highlight query, or active match changes
 const formattedMsg = computed(() => {
   const msg = cleanMsg.value
   if (!msg) return ''
@@ -114,9 +112,7 @@ const formattedMsg = computed(() => {
       formatted = formatted.replace(regex, (match) => {
         const currentMatchIdx = matchCounter++
         const isThisMatchActive = props.isActiveMatch && props.activeMatchIndex === currentMatchIdx
-        const highlightClass = isThisMatchActive
-          ? 'bg-bejo-500 text-white rounded-md px-1 font-bold shadow-md shadow-bejo-500/20 ring-2 ring-bejo-500 ring-offset-1 transform scale-110 inline-block'
-          : 'bg-amber-200 text-slate-900 rounded-md px-1'
+        const highlightClass = isThisMatchActive ? 'bg-bejo-500 text-white rounded-md px-1 font-bold shadow-md shadow-bejo-500/20 ring-2 ring-bejo-500 ring-offset-1 transform scale-110 inline-block' : 'bg-amber-200 text-slate-900 rounded-md px-1'
         const matchId = `match-${props.idx}-${currentMatchIdx}`
         return `<span id="${matchId}" class="${highlightClass}">${match}</span>`
       })
@@ -124,8 +120,18 @@ const formattedMsg = computed(() => {
       console.error('Highlight regex error:', e)
     }
   }
-
   return formatted
+})
+
+// === LOGIKA GAMBAR DIBUAT LEBIH BERSIH ===
+const imageSource = computed(() => {
+  if (imageUrl.value) return imageUrl.value
+  if (props.chat.Media_Url) return props.chat.Media_Url
+  const msg = props.chat.Message || ''
+  if (msg.includes('_data:image/')) {
+    return 'data:image/' + msg.split('_data:image/')[1]
+  }
+  return ''
 })
 
 const getMediaId = (paket?: string) => {
@@ -135,18 +141,8 @@ const getMediaId = (paket?: string) => {
 const getImageUrl = async (paket?: string) => {
   const id = getMediaId(paket)
   if (!id) return
-
   try {
-    const { data } = await api.post(
-      '/api/mediacloud/read-url-batch',
-      {
-        ids: [id]
-      },
-      {
-        headers: { 'X-Jenis-User': 'admin' }
-      }
-    )
-
+    const { data } = await api.post('/api/mediacloud/read-url-batch', { ids: [id] }, { headers: { 'X-Jenis-User': 'admin' } })
     imageUrl.value = data?.success?.[id]?.Url || ''
   } catch (err: any) {
     console.error('ERROR:', err)
@@ -160,7 +156,6 @@ watch(
   },
   { immediate: true }
 )
-
 watch(
   () => props.chat.No_Penawaran,
   (val) => {
@@ -203,13 +198,12 @@ watch(
 
       <div class="flex flex-col max-w-[85%] md:max-w-[70%]" :class="isMe ? 'items-end' : 'items-start'">
         <div v-if="!(chat.Message || '').includes('_X7#mQ9!vW2_')" class="px-3 py-2 md:px-5 md:py-3.5 rounded-2xl text-[13px] md:text-sm relative transition-all duration-300 hover:shadow-xl" :class="[bubbleStyle, isMe ? 'hover:translate-x-1' : 'hover:-translate-x-1']">
-
-
-          <div v-if="chat.Id_Paket != null || chat.No_Penawaran != null || chat.Media_Url || (chat.Message || '').includes('_data:image')" class="mb-3 overflow-hidden rounded-xl border border-black/5 shadow-inner bg-slate-50/50">
-            <img v-if="imageUrl || chat.Media_Url" :src="imageUrl || chat.Media_Url" @load="$emit('imageLoaded')" class="w-full h-auto object-cover max-h-72 hover:scale-105 transition-transform duration-500 cursor-pointer" />
-            <img v-else-if="(chat.Message || '').includes('_data:image/')" :src="(chat.Message || '').includes('_data:image/') ? 'data:image/' + (chat.Message || '').split('_data:image/')[1] : imageUrl" @load="$emit('imageLoaded')" class="w-full h-auto object-cover max-h-72 hover:scale-105 transition-transform duration-500 cursor-pointer" />
+          <div v-if="imageSource" class="mb-3 overflow-hidden rounded-xl border border-black/5 shadow-inner bg-slate-50/50">
+            <img :src="imageSource" @load="$emit('imageLoaded')" class="w-full h-auto object-cover max-h-72 hover:scale-105 transition-transform duration-500 cursor-pointer" />
           </div>
+
           <span v-if="chat.Message" class="block break-words leading-relaxed tracking-tight" v-html="formattedMsg"></span>
+
           <div v-if="chat.Tipe_User === 'admin' && chat.Sender_Id === 'adm_bot'" class="ai-indicator mt-3 pt-2 border-t border-amber-200/40 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-amber-700">
             <div class="size-4 bg-amber-500 rounded-md flex items-center justify-center text-white">
               <Icon icon="lucide:bot" class="size-3" />
@@ -229,7 +223,28 @@ watch(
         </div>
       </div>
 
-      <div v-if="!isCustomer && !(chat.Message || '').includes('_X7#mQ9!vW2_')" class="hidden md:flex items-end flex-shrink-0 mb-1 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+      <div v-if="!isCustomer && !(chat.Message || '').includes('_X7#mQ9!vW2_')" class="hidden md:flex items-end self-end h-fit flex-shrink-0 mb-1 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 relative group/avatar z-[100]">
+        <!-- Admin/AI Name Hover Modal -->
+        <div class="absolute bottom-full right-0 mb-3 opacity-0 group-hover/avatar:opacity-100 pointer-events-none transition-all duration-300 transform group-hover/avatar:-translate-y-1 z-[110]">
+          <div class="bg-white/90 backdrop-blur-xl border border-white shadow-2xl rounded-2xl p-4 min-w-[180px] shadow-bejo-500/10 scale-90 group-hover/avatar:scale-100 transition-transform origin-bottom-right">
+            <div class="flex items-center gap-3 mb-2">
+              <div class="size-10 rounded-xl flex items-center justify-center text-white shadow-lg" :class="chat.Sender_Id === 'adm_bot' ? 'bg-gradient-to-br from-amber-400 to-amber-500 shadow-amber-500/20' : 'bg-gradient-to-br from-cyan-400 to-cyan-500 shadow-cyan-500/20'">
+                <Icon :icon="chat.Sender_Id === 'adm_bot' ? 'lucide:bot' : 'lucide:headset'" class="size-5" />
+              </div>
+              <div>
+                <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none mb-1">{{ chat.Sender_Id === 'adm_bot' ? 'AI Assistant' : 'Admin Agent' }}</p>
+                <h5 class="text-xs font-black text-slate-800 leading-none">{{ chat.Nama_Display_User || chat.Username_User || 'Sistem' }}</h5>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 pt-2 border-t border-slate-100">
+              <span class="size-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span class="text-[9px] font-bold text-emerald-600 uppercase tracking-wider">Online & Aktif</span>
+            </div>
+            <!-- Arrow -->
+            <div class="absolute -bottom-1.5 right-2.5 w-3 h-3 bg-white/90 border-r border-b border-white rotate-45"></div>
+          </div>
+        </div>
+
         <div v-if="chat.Tipe_User === 'admin' && chat.Sender_Id != 'adm_bot'" class="avatar-admin relative flex items-center justify-center rounded-xl size-8 bg-gradient-to-br from-cyan-400 to-cyan-500 text-white border-2 border-white shadow-lg shadow-cyan-500/20">
           <Icon icon="lucide:headset" class="size-4" />
         </div>
@@ -245,7 +260,6 @@ watch(
 .animate-fade-in-up {
   animation: fadeInUp 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
-
 @keyframes fadeInUp {
   0% {
     opacity: 0;

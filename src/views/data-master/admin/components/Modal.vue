@@ -19,10 +19,10 @@ const form = reactive({
   Keterangan: '',
   Role_User: 'admin',
   Status: 'aktif',
-  Id_Media: 'media_1'
+  Id_Media: null,
+  Password: ''
 })
 
-// Fungsi Reset Form
 const resetForm = () => {
   Object.assign(form, {
     No_Id: '',
@@ -31,7 +31,8 @@ const resetForm = () => {
     Keterangan: '',
     Role_User: 'admin',
     Status: 'aktif',
-    Id_Media: null
+    Id_Media: null,
+    Password: ''
   })
 }
 
@@ -120,14 +121,22 @@ const handleClose = () => {
 
           <div class="space-y-1.5">
             <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Nama Lengkap</label>
-            <input v-model="form.Nama_User" type="text" required class="form-input-premium" placeholder="Misal: Ahmad Fauzi" />
+            <input v-model="form.Nama_User" type="text" required class="form-input-premium" placeholder="Misal: Ahmad Syahroni" />
           </div>
 
           <div class="space-y-1.5">
             <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Alamat Email</label>
             <div class="relative group">
               <Icon icon="lucide:mail" class="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-bejo-500 transition-colors" />
-              <input v-model="form.Email" type="email" required class="form-input-premium ps-11" placeholder="admin@rumahbejo.com" />
+              <input v-model="form.Email" type="email" required class="form-input-premium !ps-11" placeholder="admin@rumahbejo.com" />
+            </div>
+          </div>
+          
+          <div class="space-y-1.5">
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Password</label>
+            <div class="relative group">
+              <Icon icon="lucide:lock" class="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-bejo-500 transition-colors" />
+              <input v-model="form.Password" type="password" :required="!editData" class="form-input-premium !ps-11" placeholder="••••••••" />
             </div>
           </div>
 

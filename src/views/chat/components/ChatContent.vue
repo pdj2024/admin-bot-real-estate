@@ -3,7 +3,6 @@ import { ref, onMounted, onBeforeUnmount, nextTick, computed, watch, defineAsync
 import { Icon } from '@iconify/vue'
 import { confirm, success, fail } from '@/utils/sweet-alert'
 import type { CalendarOptions } from '@fullcalendar/core'
-import type { DateClickArg } from '@fullcalendar/interaction'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import listPlugin from '@fullcalendar/list'
@@ -14,7 +13,7 @@ import ChatBubble from './ChatBubble.vue'
 import bgChat from '@/assets/images/background-chat.png'
 import bgChatDark from '@/assets/images/background-chat-dark.png'
 import simplebar from 'simplebar-vue'
-import { type Chat, type PreviewImage, calendarEvents } from './data'
+import { type Chat, type PreviewImage, calendarEvents, commonEmojis } from './data'
 import { type TakeOverPayload } from './SideBar.vue'
 
 // Lazy-load heavy UI components — only fetched when the user opens that panel
@@ -63,6 +62,17 @@ const changeUsername = ref(false)
 const sendChatContent = ref('')
 const isSendingImage = ref(false)
 const searchKatalog = ref('')
+const debouncedSearchKatalog = ref('')
+const activeExpandedProductId = ref<string | null>(null)
+let katalogTimeout: any = null
+
+watch(searchKatalog, (newVal) => {
+  if (katalogTimeout) clearTimeout(katalogTimeout)
+  katalogTimeout = setTimeout(() => {
+    debouncedSearchKatalog.value = newVal
+  }, 500)
+})
+
 const chatInputRef = ref<HTMLTextAreaElement | null>(null)
 const adminsList = ref<any[]>([])
 const searchCS = ref('')
@@ -72,6 +82,12 @@ const searchChatQuery = ref('')
 const searchChatResults = ref<{ chatIndex: number; matchIndex: number }[]>([])
 const currentSearchMatch = ref(-1)
 const searchChatInputRef = ref<HTMLInputElement | null>(null)
+const showEmojiPicker = ref(false)
+
+const addEmoji = (emoji: string) => {
+  sendChatContent.value += emoji
+  chatInputRef.value?.focus()
+}
 
 const username = defineModel<string>('username')
 const bgLightUrl = `url(${bgChat})`
@@ -127,28 +143,8 @@ const handleClickOutside = (event: MouseEvent) => {
   openMenu.value = false
   openEtalase.value = false
   openTukarCS.value = false
+  showEmojiPicker.value = false
 }
-
-const calendarOptions = computed<CalendarOptions>(() => ({
-  plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin],
-  initialView: 'dayGridMonth',
-  locale: idLocale,
-  height: 'auto',
-  contentHeight: 650,
-  aspectRatio: 1.8,
-  headerToolbar: isMobile.value ? { left: 'prev,next', center: 'title', right: '' } : { left: 'prev,next,today', center: 'title', right: 'dayGridMonth,timeGridWeek,dayGridDay,listWeek' },
-  footerToolbar: isMobile.value ? { center: 'dayGridMonth,timeGridWeek,listWeek' } : (false as const),
-  editable: true,
-  selectable: true,
-  events: calendarEvents,
-  dateClick(info: DateClickArg) {
-    if (Array.isArray(info)) fail('Jadwal telah terisi ' + info)
-    else success('berhasil')
-  },
-  eventClick() {
-    /* readonly */
-  }
-}))
 
 const closeEtalase = () => {
   openEtalase.value = false
@@ -171,7 +167,7 @@ const handleOpenAppointment = () => {
   openMenu.value = false
 
   appointmentForm.value = {
-    namaLengkap: props.username ?? '',
+    namaLengkap: username.value ?? '',
     noTelp: props.phoneNumber ?? '',
     lokasi: '',
     catatan: '',
@@ -217,6 +213,9 @@ const appointmentCalendarOptions = computed<CalendarOptions>(() => ({
   locale: idLocale,
   height: 'auto',
   selectable: true,
+  validRange: {
+    start: new Date().toISOString().split('T')[0]
+  },
   dateClick: handleCalendarDateClick,
   dayCellClassNames: (arg) => {
     const d = arg.date
@@ -243,7 +242,22 @@ const saveNewAppointment = async () => {
   if (!f.tanggal) return fail('Pilih tanggal pada kalender terlebih dahulu')
   if (!f.waktu) return fail('Waktu wajib diisi')
 
-  const msg = `📅 *Janji Temu Baru*\n\n*Nama:* ${f.namaLengkap}\n*Telepon:* ${f.noTelp || '-'}\n*Tanggal:* ${new Intl.DateTimeFormat('id-ID', { dateStyle: 'full' }).format(new Date(f.tanggal))}\n*Waktu:* ${f.waktu} WIB\n*Properti:* ${f.properti || '-'}\n*Lokasi:* ${f.lokasi || '-'}\n*Catatan:* ${f.catatan || '-'}`
+  const dateObj = new Date(f.tanggal)
+  const formattedDate = new Intl.DateTimeFormat('id-ID', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  }).format(dateObj)
+
+  const msg = `Halo Kak ${f.namaLengkap}, salam kenal! 👋\n\n` +
+    `Jadwal kunjungannya udah kita amankan nih. Biar nggak lupa, ini ya detailnya:\n\n` +
+    `🏢 *${f.properti}*\n` +
+    `📍 ${f.lokasi}\n` +
+    `📅 ${formattedDate}, jam ${f.waktu} WIB\n` +
+    `📝 Catatan dari kakak: ${f.catatan || '-'}\n\n` +
+    `Tim kita bakal nunggu di lokasi sesuai jam di atas ya. Kalau misal nanti nyasar atau ada perubahan rencana, chat ke nomor ini aja.\n\n` +
+    `See you di lokasi ya, Kak! 🏙️`
 
   let urlMedia = ''
   const idMedia = f.mediaUrl || ''
@@ -318,7 +332,7 @@ const handleTransferChat = (targetAdmin: any) => {
       await api.post('/api/chat/toggle-bot', { customer_phone: formattedPhone, admin_id: myId, status_bot: true }, { headers: { 'X-Jenis-User': 'admin' } })
       await sendChat('system_keluar_tukar', undefined, props.roomId!, formattedPhone)
       await api.post('/api/chat/toggle-bot', { customer_phone: formattedPhone, admin_id: targetAdmin.No_Id, status_bot: false }, { headers: { 'X-Jenis-User': 'admin' } })
-      await sendChat('system_masuk_tukar', undefined, props.roomId!, formattedPhone)
+      await sendChat('system_masuk_tukar', undefined, props.roomId!, formattedPhone, undefined, undefined, targetAdmin.Nama_User)
 
       success(`Berhasil mengalihkan ke ${targetAdmin.Nama_User}`)
       openTukarCS.value = false
@@ -390,7 +404,7 @@ const prevSearchMatch = async () => {
 const scrollToMatch = (res: { chatIndex: number; matchIndex: number }) => {
   setTimeout(() => {
     const matchId = `match-${res.chatIndex}-${res.matchIndex}`
-    let el = document.getElementById(matchId) || document.getElementById(`chat-message-${res.chatIndex}`)
+    const el = document.getElementById(matchId) || document.getElementById(`chat-message-${res.chatIndex}`)
     if (!el) return
     const scrollEl = (cachedScrollEl as HTMLElement) ?? document.querySelector<HTMLElement>('#chat-scroll-container .simplebar-content-wrapper')
     if (scrollEl) {
@@ -405,8 +419,8 @@ const scrollToMatch = (res: { chatIndex: number; matchIndex: number }) => {
 const products = ref<any[]>([])
 const isLoadingProducts = ref(false)
 const filteredProducts = computed(() => {
-  if (!searchKatalog.value) return products.value
-  const query = searchKatalog.value.toLowerCase()
+  if (!debouncedSearchKatalog.value) return products.value
+  const query = debouncedSearchKatalog.value.toLowerCase()
   return products.value.filter((p) => p.Nama_Produk?.toLowerCase().includes(query) || p.Slug?.toLowerCase().includes(query))
 })
 
@@ -424,7 +438,10 @@ const fetchProducts = async () => {
 }
 
 watch([openEtalase, openAppointment], ([newEtalase, newAppointment]) => {
-  if (newEtalase || newAppointment) fetchProducts()
+  if (newEtalase || newAppointment) {
+    if (products.value.length === 0) isLoadingProducts.value = true
+    fetchProducts()
+  }
 })
 
 const sendProduct = async (product: any) => {
@@ -441,7 +458,7 @@ const sendProduct = async (product: any) => {
 
     const isSewa = product.Status_Transaksi && product.Status_Transaksi.includes('Sewa')
     const hargaType = isSewa ? 'Sewa' : 'Jual'
-    let hargaValue = hargaType == 'Sewa' ? (product.Harga_Sewa2 == 0 ? product.Harga_Sewa1 : product.Harga_Sewa1) : product.Harga_Jual2 == 0 ? product.Harga_Jual1 : product.Harga_Jual1
+    const hargaValue = hargaType == 'Sewa' ? (product.Harga_Sewa2 == 0 ? product.Harga_Sewa1 : product.Harga_Sewa1) : product.Harga_Jual2 == 0 ? product.Harga_Jual1 : product.Harga_Jual1
 
     template += `💰 *Harga ${hargaType}: ${formatCurrency(hargaValue)}*\n\n`
     template += `📐 LT: ${product.Luas_Tanah || 0} m² | LB: ${product.Luas_Bangunan || 0} m²\n`
@@ -490,7 +507,7 @@ const sendProduct = async (product: any) => {
     await sendChat('system_image_product', template, undefined, undefined, idPaket, urlMedia)
 
     openEtalase.value = false
-  } catch (err) {
+  } catch {
     fail('Gagal mengirim properti ke WhatsApp')
   } finally {
     isSendingImage.value = false
@@ -514,16 +531,20 @@ const openSidebar = (): void => {
 let cachedScrollEl: Element | null = null
 const scrollToBottom = async () => {
   await nextTick()
-  setTimeout(() => {
+  const scroll = () => {
     if (cachedScrollEl && typeof (cachedScrollEl as HTMLElement).scrollTo === 'function') {
-      requestAnimationFrame(() => {
-        ;(cachedScrollEl as HTMLElement).scrollTo({ top: cachedScrollEl!.scrollHeight + 5000, behavior: 'auto' })
-      })
+      const el = cachedScrollEl as HTMLElement
+      el.scrollTo({ top: el.scrollHeight + 5000, behavior: 'auto' })
     }
-  }, 80)
+  }
+
+  // Double trigger to ensure we catch layout changes
+  requestAnimationFrame(scroll)
+  setTimeout(scroll, 50)
+  setTimeout(scroll, 200) // Safety for slow image loads
 }
 
-const sendChat = async (type: string, url?: string, targetRoomId?: string, targetPhone?: string, idPaket?: string, mediaUrl?: string) => {
+const sendChat = async (type: string, url?: string, targetRoomId?: string, targetPhone?: string, idPaket?: string, mediaUrl?: string, usernameCS?: string) => {
   if (!type.includes('system') && !sendChatContent.value.trim()) return
 
   const activeRoomId = targetRoomId || props.roomId
@@ -532,7 +553,7 @@ const sendChat = async (type: string, url?: string, targetRoomId?: string, targe
 
   const myId = localStorage.getItem('no_id') || ''
   const role = localStorage.getItem('role_user') || ''
-  const username = localStorage.getItem('nama_display') || ''
+  const username = type === 'system_masuk_tukar' ? usernameCS : localStorage.getItem('nama_display')
   const now = new Date()
   const sentAt = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 19)
 
@@ -679,7 +700,6 @@ const sendImages = async () => {
       sendChat('system_image', item.Caption + '_' + item.FileUrl)
     }
     closePreview()
-  } catch (error) {
   } finally {
     isSendingImage.value = false
   }
@@ -713,8 +733,8 @@ watch(
 const adjustInputHeight = () => {
   const textarea = chatInputRef.value
   if (!textarea) return
-  textarea.style.height = '40px'
-  const newHeight = Math.min(textarea.scrollHeight, 150)
+  textarea.style.height = 'auto' // Important: reset height to auto to calculate scrollHeight correctly
+  const newHeight = Math.min(Math.max(textarea.scrollHeight, 40), 150)
   textarea.style.height = `${newHeight}px`
 }
 
@@ -772,7 +792,7 @@ watch(
         try {
           await takeOverChat(item.status, item.phoneNumber, item.room)
           takeOverSuccess.push(item.room)
-        } catch (err: any) {}
+        } catch {}
       }
       emit('takeOverStatus', takeOverSuccess)
     }
@@ -781,6 +801,15 @@ watch(
 )
 
 watch(sendChatContent, () => nextTick(() => adjustInputHeight()))
+let chatSearchTimeout: any = null
+watch(searchChatQuery, (newVal) => {
+  if (chatSearchTimeout) clearTimeout(chatSearchTimeout)
+  chatSearchTimeout = setTimeout(() => {
+    if (newVal.trim().length >= 2 || newVal.trim().length === 0) {
+      handleSearchChat()
+    }
+  }, 500)
+})
 
 onMounted(() => {
   isMobile.value = window.innerWidth < 640
@@ -852,8 +881,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 
           <div v-if="!isSearchingChat" class="flex items-center gap-2 sm:gap-3">
             <button @click.stop="toggleSearchChat" class="size-9 sm:size-10 rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-bejo-600 hover:border-bejo-100 hover:bg-bejo-50 hover:shadow-lg hover:shadow-bejo-500/10 transition-all duration-300 flex items-center justify-center"><Icon icon="lucide:search" class="size-4 sm:size-5"></Icon></button>
-            <button class="size-10 rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-slate-900 hover:border-slate-200 hover:shadow-sm transition-all duration-300 flex items-center justify-center"><Icon icon="lucide:more-vertical" class="size-5"></Icon></button>
-            <button @click="endChat" title="Akhiri Percakapan" class="h-9 sm:h-10 px-3 sm:px-4 rounded-xl bg-red-500 border border-red-100 text-white hover:bg-red-600 hover:text-white hover:shadow-lg hover:shadow-red-500/20 transition-all duration-300 flex items-center justify-center gap-2 group"><Icon icon="lucide:log-out" class="size-4"></Icon><span class="hidden sm:inline text-[10px] font-black uppercase tracking-widest">Akhiri</span></button>
+            <button v-if="props.activeTab == 'chat_saya'" @click="endChat" title="Akhiri Percakapan" class="h-9 sm:h-10 px-3 sm:px-4 rounded-xl bg-red-500 border border-red-100 text-white hover:bg-red-600 hover:text-white hover:shadow-lg hover:shadow-red-500/20 transition-all duration-300 flex items-center justify-center gap-2 group"><Icon icon="lucide:log-out" class="size-4"></Icon><span class="hidden sm:inline text-[10px] font-black uppercase tracking-widest">Akhiri</span></button>
           </div>
         </div>
       </div>
@@ -900,8 +928,13 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
       </div>
 
       <div class="flex-grow min-h-0 relative overflow-hidden" :class="{ hidden: isPreviewMode }">
-        <simplebar id="chat-scroll-container" ref="chatContainer" class="h-full w-full bg-slate-50 bg-chat/5">
-          <div class="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent pointer-events-none"></div>
+        <!-- Persistent Background Layer -->
+        <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+          <img :src="props.isDark ? bgChatDark : bgChat" class="w-full h-full object-cover opacity-15 grayscale-[20%] contrast-125" alt="" />
+        </div>
+
+        <simplebar id="chat-scroll-container" ref="chatContainer" class="h-full w-full relative z-10 bg-transparent">
+          <div class="absolute inset-0 bg-gradient-to-b from-white/30 via-transparent to-white/10 pointer-events-none"></div>
 
           <div v-if="props.isLoadingChat" class="relative z-10 flex flex-col gap-6 px-4 py-6 sm:px-8 sm:py-10">
             <div v-for="n in 5" :key="n" class="flex w-full" :class="n % 2 === 0 ? 'justify-end' : 'justify-start'">
@@ -918,15 +951,15 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
         </simplebar>
 
         <Transition enter-active-class="transition duration-300 ease-out" enter-from-class="transform translate-y-4 opacity-0 scale-95" enter-to-class="transform translate-y-0 opacity-100 scale-100" leave-active-class="transition duration-200 ease-in" leave-from-class="transform translate-y-0 opacity-100 scale-100" leave-to-class="transform translate-y-4 opacity-0 scale-95">
-          <button v-if="showScrollToBottom" @click="scrollToBottom" class="absolute bottom-6 left-1/2 -translate-x-1/2 h-10 md:h-12 px-5 rounded-full bg-white shadow-xl shadow-slate-900/10 border border-slate-100 flex items-center gap-2 text-bejo-600 hover:bg-bejo-50 hover:scale-105 active:scale-95 transition-all z-50 group" title="Geser ke bawah">
+          <button v-if="showScrollToBottom" @click="scrollToBottom" class="absolute bottom-6 left-1/2 -translate-x-1/2 h-10 md:h-12 px-5 rounded-full bg-slate-400/50 backdrop-blur-md shadow-xl shadow-slate-900/10 border border-white/20 flex items-center gap-2 text-white hover:bg-slate-400/70 hover:scale-105 active:scale-95 transition-all z-50 group" title="Geser ke bawah">
             <span class="text-xs md:text-sm font-black uppercase tracking-wider">Scroll</span>
             <Icon icon="lucide:chevron-down" class="size-4 md:size-5 group-hover:animate-bounce" />
-            <div class="absolute inset-0 rounded-full bg-bejo-500/5 scale-0 group-hover:scale-100 transition-transform duration-500"></div>
+            <div class="absolute inset-0 rounded-full bg-white/5 scale-0 group-hover:scale-100 transition-transform duration-500"></div>
           </button>
         </Transition>
       </div>
 
-      <div class="p-1 md:p-6 bg-white border-t border-slate-50" :class="{ hidden: isPreviewMode }">
+      <div v-if="!isLoadingChat" class="p-1 md:p-6 bg-white border-t border-slate-50" :class="{ hidden: isPreviewMode }">
         <div v-if="activeTab != 'bot'" class="flex gap-1 md:gap-4 items-center bg-slate-50 p-1.5 md:p-2.5 pl-2 md:pl-4 rounded-xl md:rounded-[1.5rem] border border-transparent focus-within:border-bejo-500/20 focus-within:bg-white focus-within:ring-8 focus-within:ring-bejo-500/5 focus-within:shadow-xl focus-within:shadow-bejo-500/5 transition-all duration-300">
           <div class="relative" ref="dropdownRef">
             <button @click.stop="openMenu = !openMenu" class="size-9 md:size-11 rounded-xl md:rounded-2xl bg-white border border-slate-100 text-slate-400 hover:text-bejo-600 hover:border-bejo-100 hover:shadow-lg hover:shadow-bejo-500/10 transition-all duration-300 flex items-center justify-center">
@@ -959,11 +992,28 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
           <textarea ref="chatInputRef" v-model="sendChatContent" @keydown="handleKeydown" class="flex-1 min-w-0 bg-transparent border-none focus:ring-0 text-sm font-bold text-slate-700 placeholder:text-slate-400 placeholder:font-bold px-1 md:px-2 py-[11px] resize-none overflow-y-auto custom-scrollbar transition-all duration-200" placeholder="Tulis pesan..." rows="1" style="height: 40px; min-height: 40px"></textarea>
 
           <div ref="containerRef" class="flex-shrink-0 flex items-center gap-1 md:gap-3 relative">
+            <div class="relative">
+              <button @click="showEmojiPicker = !showEmojiPicker" class="size-8 md:size-11 rounded-xl md:rounded-2xl bg-white border border-slate-100 text-slate-400 flex-shrink-0 flex items-center justify-center cursor-pointer hover:bg-slate-50 transition-all" :class="{ 'text-bejo-600 border-bejo-200 bg-bejo-50': showEmojiPicker }">
+                <Icon icon="lucide:smile" class="size-4.5 md:size-6"></Icon>
+              </button>
+
+              <div v-if="showEmojiPicker" class="absolute bottom-[calc(100%+16px)] right-0 w-[280px] md:w-[320px] bg-white shadow-2xl shadow-slate-900/15 border border-slate-50 rounded-[1.5rem] p-3 z-[60] animate-fade-in-up">
+                <div class="flex items-center justify-between mb-3 px-1">
+                  <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Pilih Emoji</span>
+                  <button @click="showEmojiPicker = false" class="text-slate-400 hover:text-slate-600"><Icon icon="lucide:x" class="size-4" /></button>
+                </div>
+                <div class="grid grid-cols-7 gap-1 max-h-[220px] overflow-y-auto custom-scrollbar pr-1">
+                  <button v-for="emoji in commonEmojis" :key="emoji" @click="addEmoji(emoji)" class="size-8 md:size-9 flex items-center justify-center text-lg md:text-xl hover:bg-slate-50 rounded-lg transition-all active:scale-90 select-none">
+                    {{ emoji }}
+                  </button>
+                </div>
+              </div>
+            </div>
             <label class="size-8 md:size-11 rounded-xl md:rounded-2xl bg-white border border-slate-100 text-slate-400 flex-shrink-0 flex items-center justify-center cursor-pointer hover:bg-slate-50 transition-all">
               <Icon icon="lucide:image" class="size-4.5 md:size-6"></Icon>
               <input type="file" multiple hidden @change="chooseImages" accept="image/*" />
             </label>
-            <button @click="sendChat('text')" class="h-8 px-3 md:px-6 rounded-xl md:rounded-2xl bg-bejo-500 hover:bg-bejo-600 text-white font-black text-[10px] md:text-xs uppercase tracking-widest flex items-center gap-1.5 md:gap-3 shadow-xl shadow-bejo-500/20 active:scale-95 transition-all flex-shrink-0">
+            <button @click="sendChat('text')" class="h-8 px-3 md:px-6 rounded-xl md:rounded-2xl bg-green-500 hover:bg-green-600 text-white font-black text-[10px] md:text-xs uppercase tracking-widest flex items-center gap-1.5 md:gap-3 shadow-xl shadow-bejo-500/20 active:scale-95 transition-all flex-shrink-0">
               <span class="hidden md:inline">Kirim</span>
               <Icon icon="lucide:send" class="size-3.5 md:size-4"></Icon>
             </button>
@@ -1041,10 +1091,10 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 
             <div class="overflow-y-auto px-2 custom-scrollbar flex-1 min-h-0">
               <div v-if="isLoadingProducts" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
-                <ProductCard v-for="i in 6" :key="'loading-' + i" :product="{}" is-loading />
+                <ProductCard v-for="i in 3" :key="'loading-' + i" :product="{}" is-loading />
               </div>
               <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
-                <ProductCard v-for="product in filteredProducts" :key="product.No_Id" :product="product" :disable-routing="true" @click="openAppointment ? handleSelectUnitForAppointment(product) : sendProduct(product)" />
+                <ProductCard v-for="product in filteredProducts" :key="product.No_Id" :product="product" :disable-routing="true" :collapsible-details="true" :show-select-button="true" :is-expanded="activeExpandedProductId === product.No_Id" @toggle-expand="activeExpandedProductId = ($event === activeExpandedProductId ? null : $event)" @select="openAppointment ? handleSelectUnitForAppointment($event) : sendProduct($event)" />
               </div>
             </div>
           </div>
@@ -1071,72 +1121,83 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
               </button>
             </div>
 
-            <div class="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_390px] overflow-hidden">
-              <div class="overflow-y-auto p-5 md:p-6 border-b lg:border-b-0 lg:border-r border-slate-100 bg-slate-50/40 custom-scrollbar">
-                <div class="flex flex-wrap items-center gap-2 mb-4">
-                  <span class="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-500 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-full"><span class="size-2 rounded-full bg-slate-400 shrink-0"></span>Sudah ada janji</span>
-                  <span class="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-bejo-600 bg-bejo-50 border border-bejo-100 px-3 py-1.5 rounded-full"><span class="size-2 rounded-full bg-bejo-500 shrink-0"></span>Klik untuk memilih</span>
-                  <Transition enter-active-class="transition duration-200" enter-from-class="opacity-0 scale-90" enter-to-class="opacity-100 scale-100">
-                    <span v-if="appointmentForm.tanggal" class="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-bejo-700 bg-bejo-50 border border-bejo-200 px-3 py-1.5 rounded-full"> <Icon icon="lucide:check-circle" class="size-3" /> Dipilih: {{ appointmentForm.tanggal }} </span>
-                  </Transition>
-                </div>
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden p-3 md:p-4">
-                  <FullCalendar :options="appointmentCalendarOptions" />
-                </div>
-              </div>
-
-              <div class="overflow-y-auto p-5 md:p-6 custom-scrollbar flex flex-col">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-5">Detail Janji Temu</p>
-                <div class="space-y-3.5 flex-1">
+            <div class="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[380px_1fr] overflow-hidden">
+              <!-- Sidebar Form Left -->
+              <div class="overflow-y-auto p-5 md:p-7 border-b lg:border-b-0 lg:border-r border-slate-100 bg-slate-50/40 custom-scrollbar flex flex-col">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Detail Janji Temu</p>
+                <div class="space-y-4 flex-1">
                   <div>
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Tanggal Terpilih</label>
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Tanggal Terpilih</label>
                     <div class="relative">
                       <Icon icon="lucide:calendar" class="absolute left-3.5 top-1/2 -translate-y-1/2 size-4" :class="appointmentForm.tanggal ? 'text-bejo-500' : 'text-slate-300'" />
                       <input
                         type="text"
                         :value="appointmentForm.tanggal ? new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(appointmentForm.tanggal)) : 'Pilih pada kalender...'"
                         disabled
-                        class="w-full rounded-xl py-2.5 pl-10 pr-10 text-sm font-bold cursor-not-allowed shadow-inner transition-colors"
+                        class="w-full rounded-2xl py-3 pl-11 pr-11 text-sm font-bold cursor-not-allowed shadow-inner transition-colors"
                         :class="appointmentForm.tanggal ? 'bg-bejo-50 border border-bejo-200 text-bejo-700' : 'bg-slate-50 border border-slate-100 text-slate-400'"
                       />
                       <Transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0 scale-75" enter-to-class="opacity-100 scale-100">
-                        <span v-if="appointmentForm.tanggal" class="absolute right-3 top-1/2 -translate-y-1/2 size-5 flex items-center justify-center bg-bejo-500 rounded-full shadow-sm"><Icon icon="lucide:check" class="size-3 text-white" /></span>
+                        <span v-if="appointmentForm.tanggal" class="absolute right-3.5 top-1/2 -translate-y-1/2 size-6 flex items-center justify-center bg-bejo-500 rounded-full shadow-lg shadow-bejo-500/20"><Icon icon="lucide:check" class="size-3.5 text-white" /></span>
                       </Transition>
                     </div>
                   </div>
                   <div>
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Waktu <span class="text-red-400">*</span></label>
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Waktu <span class="text-red-400">*</span></label>
                     <div class="relative group">
                       <Icon icon="lucide:clock" class="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 group-focus-within:text-bejo-500 transition-colors" :class="appointmentForm.waktu ? 'text-bejo-500' : 'text-slate-300'" />
-                      <input type="time" v-model="appointmentForm.waktu" class="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 pl-10 pr-4 text-sm font-bold focus:bg-white focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500 transition-all shadow-inner outline-none" />
+                      <input type="time" v-model="appointmentForm.waktu" class="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 pl-11 pr-4 text-sm font-bold focus:bg-white focus:ring-8 focus:ring-bejo-500/5 focus:border-bejo-500 transition-all shadow-inner outline-none" />
                     </div>
                   </div>
-                  <div class="h-px bg-slate-100"></div>
+                  <div class="h-px bg-slate-100 my-2"></div>
                   <div>
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block"> Nama Lengkap <span class="text-red-400">*</span> </label>
-                    <input v-model="appointmentForm.namaLengkap" type="text" placeholder="Masukkan nama lengkap customer..." class="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-4 text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500 transition-all shadow-inner outline-none" />
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block"> Nama Lengkap <span class="text-red-400">*</span> </label>
+                    <input v-model="appointmentForm.namaLengkap" type="text" placeholder="Nama lengkap customer..." class="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:ring-8 focus:ring-bejo-500/5 focus:border-bejo-500 transition-all shadow-inner outline-none" />
                   </div>
                   <div>
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">No. Telepon</label>
-                    <input v-model="appointmentForm.noTelp" type="text" placeholder="Nomor telepon customer..." class="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-4 text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500 transition-all shadow-inner outline-none" />
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">No. Telepon</label>
+                    <input v-model="appointmentForm.noTelp" type="text" placeholder="Nomor telepon..." class="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:ring-8 focus:ring-bejo-500/5 focus:border-bejo-500 transition-all shadow-inner outline-none" />
                   </div>
                   <div>
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Properti / Unit</label>
-                    <input v-model="appointmentForm.properti" type="text" placeholder="Pilih unit terlebih dahulu..." disabled class="w-full bg-slate-100 border border-slate-200 rounded-xl py-2.5 px-4 text-sm font-bold text-slate-500 cursor-not-allowed shadow-inner outline-none" />
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Properti / Unit</label>
+                    <input v-model="appointmentForm.properti" type="text" disabled class="w-full bg-slate-100 border border-slate-200 rounded-2xl py-3 px-4 text-sm font-bold text-slate-500 cursor-not-allowed shadow-inner outline-none" />
                   </div>
                   <div>
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Lokasi Survey</label>
-                    <input v-model="appointmentForm.lokasi" type="text" placeholder="Alamat lokasi survey..." disabled class="w-full bg-slate-100 border border-slate-200 rounded-xl py-2.5 px-4 text-sm font-bold text-slate-500 cursor-not-allowed shadow-inner outline-none" />
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Lokasi Survey</label>
+                    <input v-model="appointmentForm.lokasi" type="text" disabled class="w-full bg-slate-100 border border-slate-200 rounded-2xl py-3 px-4 text-sm font-bold text-slate-500 cursor-not-allowed shadow-inner outline-none" />
                   </div>
                   <div>
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Catatan Tambahan</label>
-                    <textarea v-model="appointmentForm.catatan" placeholder="Catatan atau permintaan khusus..." rows="3" class="w-full bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-4 text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500 transition-all shadow-inner outline-none resize-none" />
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Catatan Tambahan</label>
+                    <textarea v-model="appointmentForm.catatan" placeholder="Catatan khusus..." rows="3" class="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:ring-8 focus:ring-bejo-500/5 focus:border-bejo-500 transition-all shadow-inner outline-none resize-none" />
                   </div>
                 </div>
 
-                <div class="flex gap-3 mt-5 pt-4 border-t border-slate-100 shrink-0">
-                  <button @click="showAppointmentModal = false" class="flex-1 py-3 bg-slate-50 text-slate-500 hover:bg-slate-100 hover:text-slate-700 rounded-xl text-xs font-black uppercase tracking-widest transition-all active:scale-95">Batal</button>
-                  <button @click="saveNewAppointment" class="px-6 py-3 bg-gradient-to-r from-bejo-500 to-bejo-600 hover:from-bejo-600 hover:to-bejo-700 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-bejo-500/20 transition-all active:scale-95 flex items-center gap-2"><Icon icon="lucide:calendar-check" class="size-4" /> Buat Janji Temu</button>
+                <div class="mt-8 flex gap-3">
+                  <button @click="showAppointmentModal = false" class="flex-1 py-4 bg-white border border-slate-100 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-sm">Batal</button>
+                  <button @click="saveNewAppointment" class="flex-[2] py-4 bg-gradient-to-r from-bejo-500 to-bejo-600 hover:from-bejo-600 hover:to-bejo-700 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-bejo-500/20 transition-all active:scale-95 flex items-center justify-center gap-2.5">
+                    <Icon icon="lucide:save" class="size-4" />
+                    Simpan
+                  </button>
+                </div>
+              </div>
+
+              <!-- Main Calendar Content Right -->
+              <div class="overflow-y-auto p-4 md:p-8 bg-white custom-scrollbar flex flex-col">
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-500 bg-slate-100 border border-slate-200 px-4 py-2 rounded-full"><span class="size-2 rounded-full bg-slate-400 shrink-0"></span>Terisi</span>
+                    <span class="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-bejo-600 bg-bejo-50 border border-bejo-100 px-4 py-2 rounded-full"><span class="size-2 rounded-full bg-bejo-500 shrink-0"></span>Tersedia</span>
+                  </div>
+                  <Transition enter-active-class="transition duration-300" enter-from-class="opacity-0 -translate-y-2" enter-to-class="opacity-100 translate-y-0">
+                    <div v-if="appointmentForm.tanggal" class="flex items-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-100 px-4 py-2.5 rounded-2xl shadow-sm">
+                      <Icon icon="lucide:check-circle" class="size-4" />
+                      <span class="text-[11px] font-black uppercase tracking-widest">Dipilih: {{ appointmentForm.tanggal }}</span>
+                    </div>
+                  </Transition>
+                </div>
+
+                <div class="flex-1 bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-900/5 overflow-hidden p-2 md:p-6 transition-all hover:shadow-2xl hover:shadow-slate-900/10">
+                  <FullCalendar :options="appointmentCalendarOptions" />
                 </div>
               </div>
             </div>
@@ -1220,6 +1281,16 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 :deep(.simplebar-track.simplebar-vertical) {
   width: 10px !important;
   background-color: transparent !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-slate-200 rounded-full hover:bg-slate-300 transition-colors;
 }
 
 .minimal-scrollbar {
