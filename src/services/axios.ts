@@ -43,7 +43,11 @@ const performRefresh = async (): Promise<string | null> => {
     if (err.response?.status === 401 || err.response?.status === 403) {
       console.error('Session expired: Refresh token is invalid')
       localStorage.clear()
-      router.push({ path: '/login', query: { expired: '1' } })
+      
+      // Only redirect if current route requires auth
+      if (router.currentRoute.value.meta.requiresAuth) {
+        router.push({ path: '/login', query: { expired: '1' } })
+      }
     }
     // Jika error jaringan atau 500, biarkan sesi tetap ada tapi lempar error agar request gagal
     throw err
