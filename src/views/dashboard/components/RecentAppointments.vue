@@ -1,11 +1,21 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
+
+const isLoading = ref(true)
+
 const recentVisits = [
   { agent: 'Budi Pratama', email: 'budi@rumahbejo.com', unit: 'Griya Asri Cluster A-12', time: 'Besok, 10:00 AM', status: 'Dikonfirmasi', statusClass: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
   { agent: 'Siti Aminah', email: 'siti@rumahbejo.com', unit: 'Apartemen Skyview B-05', time: '12 Apr, 14:30 PM', status: 'Menunggu', statusClass: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
   { agent: 'Andi Wijaya', email: 'andi@rumahbejo.com', unit: 'Ruko Central Park No. 8', time: '13 Apr, 09:00 AM', status: 'Dikonfirmasi', statusClass: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
   { agent: 'Dewi Lestari', email: 'dewi@rumahbejo.com', unit: 'Griya Asri Cluster C-02', time: '14 Apr, 16:00 PM', status: 'Dibatalkan', statusClass: 'bg-slate-500/10 text-slate-600 border-slate-500/20' },
 ]
+
+onMounted(() => {
+  setTimeout(() => {
+    isLoading.value = false
+  }, 1000)
+})
 </script>
 
 <template>
@@ -31,7 +41,35 @@ const recentVisits = [
             <th class="px-8 py-5 text-right font-black">Aksi</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-slate-50">
+        <tbody v-if="isLoading">
+          <tr v-for="i in 4" :key="i" class="animate-pulse">
+            <td class="px-8 py-6">
+              <div class="flex items-center gap-4">
+                <div class="size-10 rounded-2xl bg-slate-100"></div>
+                <div class="space-y-2">
+                  <div class="h-3 w-28 bg-slate-100 rounded"></div>
+                  <div class="h-2 w-20 bg-slate-50 rounded"></div>
+                </div>
+              </div>
+            </td>
+            <td class="px-8 py-6">
+              <div class="space-y-2">
+                <div class="h-3 w-32 bg-slate-100 rounded"></div>
+                <div class="h-2 w-16 bg-slate-50 rounded"></div>
+              </div>
+            </td>
+            <td class="px-8 py-6">
+              <div class="h-3 w-24 bg-slate-50 rounded"></div>
+            </td>
+            <td class="px-8 py-6 flex justify-center">
+              <div class="h-6 w-20 bg-slate-50 rounded-xl"></div>
+            </td>
+            <td class="px-8 py-6 text-right">
+              <div class="size-10 bg-slate-50 rounded-xl ml-auto"></div>
+            </td>
+          </tr>
+        </tbody>
+        <tbody v-else class="divide-y divide-slate-50">
           <tr v-for="(visit, idx) in recentVisits" :key="idx" class="group hover:bg-slate-50/50 transition-all cursor-pointer">
             <td class="px-8 py-6">
               <div class="flex items-center gap-4">

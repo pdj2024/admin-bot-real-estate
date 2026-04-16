@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, nextTick, computed } from 'vue'
+import { onMounted, ref, nextTick, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { RouterLink } from 'vue-router'
 import api from '@/services/axios'
@@ -62,30 +62,38 @@ const product = ref<Product | null>(null)
 const suggestions = ref<Product[]>([])
 const isLoading = ref(true)
 
-const fetchData = async () => {
+const fetchData = async (currentSlug: string) => {
   isLoading.value = true
   try {
-    const { data } = await api.get('/api/realEstate/getAll?limit=5&sort=desc', {
+    // Fetch a larger set to ensure we have enough active suggestions
+    const { data } = await api.get('/api/realEstate/getAll?limit=20&sort=desc', {
       headers: { 'X-Jenis-User': 'Admin' }
     })
 
-    // Find our main product
-    const mainProduct = data.Data.find((p: Product) => p.Slug === slug)
-    // If not found in limit=5, we fetch it directly
+    // 1. Find the main product
+    let mainProduct = data.Data.find((p: Product) => p.Slug === currentSlug)
+    
+    // If not found in the latest 20, fetch specifically by slug
     if (!mainProduct) {
-      const { data: exactData } = await api.get('/api/realEstate/getAll?slug=' + slug, {
+      const { data: exactData } = await api.get('/api/realEstate/getAll?slug=' + currentSlug, {
         headers: { 'X-Jenis-User': 'Admin' }
       })
-      product.value = exactData.Data[0]
-      // Populate suggestions from the first fetch
-      suggestions.value = data.Data.slice(0, 3)
-    } else {
-      product.value = mainProduct
-      // Populate suggestions from remaining
-      suggestions.value = data.Data.filter((p: Product) => p.Slug !== slug).slice(0, 3)
+      mainProduct = exactData.Data[0]
     }
+    
+    product.value = mainProduct
+
+    // 2. Populate suggestions (Must be Aktif, Tersedia, and NOT the current product)
+    suggestions.value = data.Data
+      .filter((p: Product) => 
+        p.Slug !== currentSlug && 
+        p.Status_Display === 'Aktif' && 
+        p.Status_Properti === 'Tersedia'
+      )
+      .slice(0, 3)
+      
   } catch (err) {
-    console.error(err)
+    console.error('Error fetching product detail:', err)
   } finally {
     isLoading.value = false
   }
@@ -95,8 +103,16 @@ const isAdmin = computed(() => {
   return localStorage.getItem('role_user') == 'admin' && route.path.startsWith('/properti/detail')
 })
 
+// Watch for route changes to refresh data without full page reload
+watch(() => route.params.slug, async (newSlug) => {
+  if (newSlug) {
+    await fetchData(newSlug as string)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+})
+
 onMounted(async () => {
-  await fetchData()
+  await fetchData(route.params.slug as string)
   nextTick(() => {
     window.HSStaticMethods?.autoInit()
   })

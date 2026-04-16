@@ -1,9 +1,9 @@
 import type { ApexOptions } from 'apexcharts'
 
-// Chart: Tren Leads vs Kunjungan (LeadAnalytics.vue)
-export const leadSeries = [
+// Chart: Tren Prospek vs Kunjungan (ProspectAnalytics.vue)
+export const prospectSeries = [
   {
-    name: 'Leads Baru',
+    name: 'Prospek Baru',
     data: [45, 52, 38, 65, 48, 72, 55, 61, 49, 70, 85, 92]
   },
   {
@@ -12,7 +12,7 @@ export const leadSeries = [
   }
 ]
 
-export const leadOptions: ApexOptions = {
+export const prospectOptions: ApexOptions = {
   chart: {
     type: 'area',
     height: 300,
@@ -105,11 +105,18 @@ export const operationalStats = [
     trend: '3 dikonfirmasi'
   },
   { 
-    label: 'Total Leads (Bulan Ini)', 
+    label: 'Total Prospek (Bulan Ini)', 
     value: '142', 
     icon: 'lucide:user-plus', 
     color: 'emerald',
-    trend: '+24 leads baru'
+    trend: '+24 prospek baru'
+  },
+  {
+    label: 'Rasio Closing (Bulan Ini)',
+    value: '12%',
+    icon: 'lucide:target',
+    color: 'bejo',
+    trend: 'Peringkat Stabil'
   }
 ]
 
@@ -119,4 +126,15 @@ export const inventoryStats = [
   { label: 'Terjual', value: '150', icon: 'lucide:award', color: 'bejo' },
   { label: 'Tersewa', value: '89', icon: 'lucide:key', color: 'amber' },
   { label: 'Total Unit', value: '263', icon: 'lucide:layers', color: 'slate' },
+]
+
+// Data: Management Insights (index.vue)
+export const managementInsights = [
+  'Efisiensi manajemen adalah kunci pertumbuhan. Pastikan setiap prospek terlayani tepat waktu dan inventori selalu ter-update.',
+  'Kepercayaan klien dibangun di atas akurasi data. Selalu perbarui status inventori Anda sesegera mungkin.',
+  'Follow-up yang cepat meningkatkan peluang closing hingga 70%. Jangan biarkan prospek menunggu terlalu lama.',
+  'Kualitas listing menentukan ketertarikan pertama. Pastikan deskripsi dan foto unit dalam kondisi terbaik.',
+  'Kolaborasi tim yang solid adalah aset terbesar. Bagikan insight antar agen untuk mencapai sukses bersama.',
+  'Analisis data hari ini adalah strategi kemenangan hari esok. Gunakan dashboard untuk pengambilan keputusan.',
+  'Pelayanan yang personal menciptakan loyalitas. Kenali kebutuhan detail dan spesifik dari setiap calon pembeli.'
 ]

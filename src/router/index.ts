@@ -69,6 +69,24 @@ const router = createRouter({
       },
       component: () => import('@/views/guest/kontak/index.vue')
     },
+    {
+      path: '/test',
+      name: 'Test Address',
+      meta: {
+        title: 'Test Pencarian Alamat',
+        requiresAuth: false
+      },
+      component: () => import('@/views/guest/test/index.vue')
+    },
+    {
+      path: '/test2',
+      name: 'Test Address Google',
+      meta: {
+        title: 'Test Google Maps Address Picker',
+        requiresAuth: false
+      },
+      component: () => import('@/views/guest/test2/index.vue')
+    },
 
 
     // Role Admin

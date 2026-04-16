@@ -27,7 +27,7 @@ const settingsStore = useSettings()
 const activeTab = ref('appearance')
 const tabs = [
   { id: 'appearance', name: 'Tampilan', icon: 'lucide:monitor-smartphone', description: 'Atur tema, warna brand, dan tata letak sidebar.' },
-  { id: 'business', name: 'Identitas Bisnis', icon: 'lucide:building-2', description: 'Kelola info perusahaan, kontak, dan media sosial.' },
+  { id: 'business', name: 'Profil Perusahaan', icon: 'lucide:building-2', description: 'Kelola identitas, kontak resmi, dan info operasional.' },
   { id: 'system', name: 'Sistem', icon: 'lucide:settings-2', description: 'Kontrol global, mode perbaikan, dan status situs.' },
   { id: 'security', name: 'Keamanan', icon: 'lucide:shield-check', description: 'Perbarui kata sandi akses administrator.' }
 ]

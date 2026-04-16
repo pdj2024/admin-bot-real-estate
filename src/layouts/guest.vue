@@ -111,7 +111,7 @@
 
 
 
-      <main :class="['flex-grow w-full !px-2.5 sm:!px-8 lg:!px-12 py-6', mainClass]">
+      <main :class="['flex-grow w-full !px-1 sm:!px-4 lg:!px-0 py-6', mainClass]">
         <slot />
       </main>
 

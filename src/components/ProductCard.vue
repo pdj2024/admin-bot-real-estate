@@ -73,16 +73,26 @@
         <span v-else>...</span>
       </p>
 
-      <!-- Specs Details (Collapsible) -->
-      <div v-if="collapsibleDetails" class="mb-4 relative">
-        <button type="button" @click.stop="emit('toggleExpand', product.No_Id)" class="flex items-center justify-between w-full px-4 py-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-100 transition-all group/expand cursor-pointer relative z-30">
+      <!-- Specs Details -->
+      <div v-if="!props.hideSpecs" class="mb-4 relative">
+        <button v-if="collapsibleDetails" type="button" @click.stop="emit('toggleExpand', product.No_Id)" class="flex items-center justify-between w-full px-4 py-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-100 transition-all group/expand cursor-pointer relative z-30">
           <span class="text-[11px] font-black uppercase tracking-widest text-slate-500 pointer-events-none">Detail Unit</span>
           <Icon :icon="props.isExpanded ? 'lucide:chevron-up' : 'lucide:chevron-down'" class="size-4 text-slate-400 group-hover/expand:text-bejo-600 transition-transform pointer-events-none" />
         </button>
 
-        <Transition enter-active-class="transition-all duration-500 ease-in-out" enter-from-class="max-h-0 opacity-0" enter-to-class="max-h-[800px] opacity-100" leave-active-class="transition-all duration-300 ease-in-out" leave-from-class="max-h-[800px] opacity-100" leave-to-class="max-h-0 opacity-0">
-          <div v-if="isLoading || !collapsibleDetails || props.isExpanded" class="absolute top-full left-0 right-0 z-[100] mt-2 bg-white/95 backdrop-blur-xl border border-slate-100 shadow-2xl rounded-3xl" @click.stop>
-            <div class="grid grid-cols-2 gap-3 rounded-2xl p-4 mb-5 border border-slate-100 bg-gradient-to-br from-slate-50 to-white/50 shadow-inner">
+        <Transition 
+          enter-active-class="transition-all duration-500 ease-in-out" 
+          enter-from-class="max-h-0 opacity-0" 
+          enter-to-class="max-h-[800px] opacity-100" 
+          leave-active-class="transition-all duration-300 ease-in-out" 
+          leave-from-class="max-h-[800px] opacity-100" 
+          leave-to-class="max-h-0 opacity-0"
+          :disabled="!collapsibleDetails"
+        >
+          <div v-if="isLoading || !collapsibleDetails || props.isExpanded" 
+               :class="collapsibleDetails ? 'absolute top-full left-0 right-0 z-[100] mt-2 bg-white/95 backdrop-blur-xl border border-slate-100 shadow-2xl rounded-3xl' : 'bg-slate-50/50 border border-slate-100 rounded-2xl'"
+               @click.stop>
+            <div class="grid grid-cols-2 gap-3 p-3 shadow-inner" :class="collapsibleDetails ? 'p-4' : 'p-3'">
               <div class="flex items-center gap-2">
                 <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0" :class="isLoading ? 'opacity-50 grayscale' : ''">
                   <Icon icon="lucide:land-plot" class="size-3.5 text-bejo-600" />
@@ -99,13 +109,13 @@
                 <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0">
                   <Icon icon="lucide:layers" class="size-3.5 text-bejo-600" />
                 </div>
-                <span class="text-xs font-bold text-slate-700">{{ product.Jumlah_Lantai || 0 }} Lt</span>
+                <span class="text-xs font-bold text-slate-700 font-bold text-slate-700">{{ product.Jumlah_Lantai || 0 }} Lt</span>
               </div>
               <div class="flex items-center gap-2" v-if="!isLoading">
                 <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0">
                   <Icon icon="lucide:car" class="size-3.5 text-bejo-600" />
                 </div>
-                <span class="text-xs font-bold text-slate-700">{{ product.Jumlah_Carpot || 0 }} Mobil</span>
+                <span class="text-xs font-bold text-slate-700 font-bold text-slate-700">{{ product.Jumlah_Carpot || 0 }} Mobil</span>
               </div>
               <div class="flex items-center gap-2">
                 <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0" :class="isLoading ? 'opacity-50 grayscale' : ''">
@@ -205,6 +215,7 @@ const props = withDefaults(
     collapsibleDetails?: boolean
     showSelectButton?: boolean
     isExpanded?: boolean
+    hideSpecs?: boolean
   }>(),
   {
     isLoading: false,
@@ -213,7 +224,8 @@ const props = withDefaults(
     disableRouting: false,
     collapsibleDetails: false,
     showSelectButton: false,
-    isExpanded: false
+    isExpanded: false,
+    hideSpecs: false
   }
 )
 

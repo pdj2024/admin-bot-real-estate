@@ -11,9 +11,7 @@ defineProps<{
 const router = useRouter()
 
 const goToDetail = (slug: string) => {
-  router.push(`/detail/${slug}`).then(() => {
-    window.location.reload()
-  })
+  router.push(`/detail/${slug}`)
 }
 </script>
 

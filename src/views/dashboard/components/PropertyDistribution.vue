@@ -1,11 +1,134 @@
 <script setup lang="ts">
+import { ref, onMounted, computed } from 'vue'
 import { Icon } from '@iconify/vue'
-import { distributionOptions, distributionSeries } from './data'
+import api from '@/services/axios'
 import VueApexCharts from 'vue3-apexcharts'
+import { distributionOptions as baseOptions } from './data'
+
+const typeColorMap: Record<string, string> = {
+  'Rumah': '#f75211',
+  'Tanah': '#0ea5e9',
+  'Ruko': '#6366f1',
+  'Apartemen': '#10b981',
+  'Gudang': '#f59e0b',
+  'Villa': '#ef4444',
+  'SOHO': '#8b5cf6',
+  'Pabrik': '#ec4899',
+  'Perkantoran': '#22c55e',
+  'Hotel': '#3b82f6',
+  'Rumah Kos': '#a855f7',
+  'Stand': '#fb923c',
+  'Toko': '#06b6d4',
+  'Gedung': '#64748b',
+  'Condotel': '#475569',
+  'Lain-lain': '#94a3b8'
+}
+
+const propertyTypes = Object.keys(typeColorMap)
+
+const series = ref<number[]>([])
+const labels = ref<string[]>([])
+const chartColors = ref<string[]>([])
+const totalUnit = ref(0)
+
+const chartOptions = computed(() => ({
+  ...baseOptions,
+  labels: labels.value,
+  colors: chartColors.value,
+  plotOptions: {
+    ...baseOptions.plotOptions,
+    pie: {
+      ...baseOptions.plotOptions?.pie,
+      donut: {
+        ...baseOptions.plotOptions?.pie?.donut,
+        labels: {
+          show: true,
+          name: {
+            show: true,
+            fontSize: '14px',
+            fontWeight: '900',
+            color: '#64748b',
+            offsetY: -10
+          },
+          value: {
+            show: true,
+            fontSize: '28px',
+            fontWeight: '900',
+            color: '#0f172a',
+            offsetY: 10,
+            formatter: (val: string) => val
+          },
+          total: {
+            show: true,
+            label: 'Total Unit',
+            fontSize: '12px',
+            fontWeight: '900',
+            color: '#64748b',
+            formatter: () => String(totalUnit.value)
+          }
+        }
+      }
+    }
+  },
+  legend: {
+    ...baseOptions.legend,
+    show: true,
+    position: 'bottom',
+    horizontalAlign: 'center',
+    markers: {
+      radius: 12
+    },
+    itemMargin: {
+      horizontal: 10,
+      vertical: 5
+    }
+  }
+}))
+
+const isLoading = ref(true)
+
+const fetchData = async () => {
+  try {
+    isLoading.value = true
+    const { data } = await api.get('/api/realEstate/getAll', { 
+      headers: { 
+        'X-Jenis-User': 'Admin',
+        'Api-Key': 'realestate_key_2024'
+      } 
+    })
+    const products = data.Data || []
+    totalUnit.value = products.length
+
+    const counts: Record<string, number> = {}
+    propertyTypes.forEach(type => counts[type] = 0)
+
+    products.forEach((p: any) => {
+      const tipe = p.Tipe
+      if (counts[tipe] !== undefined) {
+        counts[tipe]++
+      } else {
+        counts['Lain-lain']++
+      }
+    })
+
+    // Filter only types that have at least 1 unit
+    const activeTypes = propertyTypes.filter(type => counts[type] > 0)
+    
+    labels.value = activeTypes
+    series.value = activeTypes.map(type => counts[type])
+    chartColors.value = activeTypes.map(type => typeColorMap[type])
+  } catch (err) {
+    console.error('Fetch distribution data error:', err)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(fetchData)
 </script>
 
 <template>
-  <div class="card bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/50">
+  <div class="card bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/50 min-h-[460px]">
     <div class="flex items-center justify-between mb-8">
       <div>
         <h4 class="text-lg font-black text-slate-900 leading-tight">Portofolio Unit</h4>
@@ -16,8 +139,26 @@ import VueApexCharts from 'vue3-apexcharts'
       </button>
     </div>
 
-    <div class="flex items-center justify-center -mx-4">
-      <VueApexCharts type="donut" height="240" :options="distributionOptions" :series="distributionSeries" />
+    <!-- Skeleton Loader -->
+    <div v-if="isLoading" class="flex flex-col items-center animate-pulse">
+      <div class="relative size-[240px] rounded-full border-[30px] border-slate-50 flex items-center justify-center">
+         <div class="space-y-2 text-center">
+            <div class="h-4 w-16 bg-slate-50 rounded mx-auto"></div>
+            <div class="h-8 w-12 bg-slate-100 rounded mx-auto"></div>
+         </div>
+      </div>
+      <div class="mt-12 grid grid-cols-2 gap-x-8 gap-y-4 w-full px-4">
+        <div v-for="i in 6" :key="i" class="flex items-center gap-3">
+          <div class="size-3 rounded-full bg-slate-100"></div>
+          <div class="h-3 w-20 bg-slate-50 rounded"></div>
+        </div>
+      </div>
+    </div>
+
+    <div v-else class="flex flex-col items-center">
+      <div class="flex items-center justify-center -mx-4">
+        <VueApexCharts type="donut" height="240" :options="chartOptions" :series="series" />
+      </div>
     </div>
   </div>
 </template>

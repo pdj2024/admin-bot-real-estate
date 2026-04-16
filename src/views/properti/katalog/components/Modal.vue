@@ -10,8 +10,9 @@ const panjang = ref('')
 const lebar = ref('')
 const photos = ref<File[]>([])
 const extensionsPhotos = ref<string[]>([])
-const previewPhotos = ref<MediaItem[]>([])
+const previewPhotos = ref<any[]>([])
 const selectedFiles = ref<File[]>([])
+const deletedMediaIds = ref<string[]>([])
 const provinces = ref<Province[]>([])
 const cities = ref<City[]>([])
 const dropdownProvinceRef = ref<HTMLElement | null>(null)
@@ -46,6 +47,7 @@ interface MediaUrl {
   ThumbUrl: string | null
   Size: number
   Id_Media: string
+  No_Id_Media: string
 }
 
 interface RealEstateForm {
@@ -159,9 +161,16 @@ watch(
   () => props.showModal,
   (newVal) => {
     if (newVal) {
-      console.log('Masuk')
+      // Clear all photo-related state on every modal opening
+      photos.value = []
+      extensionsPhotos.value = []
+      selectedFiles.value = []
+      previewPhotos.value = []
+      deletedMediaIds.value = []
+
       if (props.itemData) {
-        form.value = { ...props.itemData }
+        // Deep copy the item data to avoid mutating props or shared refs
+        form.value = JSON.parse(JSON.stringify(props.itemData))
 
         if (props.itemData.Tipe_Ukuran) {
           const splitUkuran = props.itemData.Tipe_Ukuran.split('x')
@@ -169,11 +178,9 @@ watch(
           lebar.value = splitUkuran[1] || ''
         }
 
-        if (props.itemData.File_Image) {
-          console.log(props.itemData.MediaUrls)
-          previewPhotos.value = props.itemData.MediaUrls
-        } else {
-          previewPhotos.value = []
+        // Initialize preview from existing MediaUrls
+        if (props.itemData.File_Image && props.itemData.MediaUrls) {
+          previewPhotos.value = [...props.itemData.MediaUrls]
         }
 
         if (props.itemData.Minimal_Sewa != null && props.itemData.Minimal_Sewa > 0) {
@@ -314,11 +321,40 @@ const handlePhoto = (event: Event) => {
 }
 
 const removePhoto = (index: number) => {
-  form.value.File_Image?.splice(index, 1)
-  photos.value.splice(index, 1)
-  extensionsPhotos.value.splice(index, 1)
+  const photoToRemove = previewPhotos.value[index]
+
+  if (photoToRemove.No_Id_Media === 'new_upload') {
+    // 1. If it's a new upload, we must remove it from the upload queue
+    // Find its relative index in the 'photos' array
+    let newUploadIndex = -1
+    let currentNewUploadCount = 0
+
+    for (let i = 0; i < index; i++) {
+      if (previewPhotos.value[i].No_Id_Media === 'new_upload') {
+        currentNewUploadCount++
+      }
+    }
+    newUploadIndex = currentNewUploadCount
+
+    if (newUploadIndex !== -1) {
+      photos.value.splice(newUploadIndex, 1)
+      extensionsPhotos.value.splice(newUploadIndex, 1)
+      selectedFiles.value.splice(newUploadIndex, 1)
+    }
+  } else {
+    // 2. If it's an existing photo, remove its ID from form and track for GCS deletion
+    const idToRemove = photoToRemove.No_Id_Media
+    if (form.value.File_Image) {
+      const idIndex = form.value.File_Image.indexOf(idToRemove)
+      if (idIndex !== -1) {
+        form.value.File_Image.splice(idIndex, 1)
+        deletedMediaIds.value.push(idToRemove)
+      }
+    }
+  }
+
+  // Remove from UI list
   previewPhotos.value.splice(index, 1)
-  selectedFiles.value.splice(index, 1)
 }
 
 watch(
@@ -509,10 +545,22 @@ const submitForm = async () => {
       console.log('FINAL PAYLOAD:', cleanPayload)
 
       await api[isEdit ? 'put' : 'post'](targetUrl, cleanPayload, {
-        headers: { 'X-Jenis-User': 'admin' }
+        headers: {
+          'X-Jenis-User': 'admin'
+        }
       })
 
-      success(`Data berhasil disimpan!`)
+      // Clean up deleted images from GCS after successful update
+      if (deletedMediaIds.value.length > 0) {
+        try {
+          await api.post('/api/mediacloud/delete-batch', { ids: deletedMediaIds.value })
+        } catch (delErr) {
+          console.error('Failed to cleanup GCS images:', delErr)
+          // We don't fail the whole process if cleanup fails, but it's good to log
+        }
+      }
+
+      success(isEdit ? 'Berhasil memperbarui properti' : 'Berhasil menambah properti')
       emit('success')
       emit('update:showModal', false)
     } catch (err: any) {

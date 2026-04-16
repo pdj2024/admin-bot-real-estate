@@ -44,9 +44,9 @@ const dummyData = ref({
     { id: 'kel4', nama: 'Airlangga', kecamatanId: 'kec3' }
   ],
   prioritas: [
-    { id: 'p1', nama: 'High Priority (Surabaya Barat)', areaId: 'a1', level: 'High' },
-    { id: 'p2', nama: 'Medium Priority (Surabaya Timur)', areaId: 'a2', level: 'Medium' },
-    { id: 'p3', nama: 'Low Priority (Surabaya Pusat)', areaId: 'a3', level: 'Low' }
+    { id: 'p1', nama: 'Pakuwon', areaId: 'a1' },
+    { id: 'p2', nama: 'Graha Famili', areaId: 'a2' },
+    { id: 'p3', nama: 'Citraland', areaId: 'a3' }
   ]
 })
 
@@ -157,7 +157,6 @@ const handleSuccess = ({ type, data, isEdit }: { type: string, data: any, isEdit
                       {{ item.nama.charAt(0) }}
                     </div>
                     <span class="text-sm font-black text-slate-900">{{ item.nama }}</span>
-                    <span v-if="item.level" class="text-[9px] font-black bg-bejo-100 text-bejo-600 px-2 py-0.5 rounded-full uppercase tracking-widest">{{ item.level }}</span>
                   </div>
                 </td>
                 <td v-if="activeTab !== 'kota'" class="px-8 py-5">

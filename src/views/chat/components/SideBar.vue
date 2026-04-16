@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, computed, markRaw } from 'vue'
+import { ref, onMounted, onUnmounted, watch, computed, markRaw, nextTick } from 'vue'
 import { Icon } from '@iconify/vue'
 import api from '@/services/axios'
 const audio = markRaw(new Audio('/sounds/Ding.mp3'))
@@ -515,6 +515,9 @@ onMounted(async () => {
   fetchData(activeTab.value)
   emit('changeTab', activeTab.value)
   window.addEventListener('click', closeContextMenu)
+  nextTick(() => {
+    window.HSStaticMethods?.autoInit()
+  })
 })
 
 onUnmounted(() => {
@@ -756,6 +759,7 @@ defineExpose({
       </div>
     </div>
   </div>
+</div>
 
   <div
     v-if="showContextMenu"
@@ -785,6 +789,5 @@ defineExpose({
       <Icon icon="lucide:message-square-plus" class="size-5 text-[var(--color-bejo-500)]" />
       Ambil Alih Percakapan
     </button>
-    </div>
   </div>
 </template>

@@ -48,8 +48,11 @@
       </div>
     </div>
 
+    <!-- Indonesia Map Distribution Section -->
+    <IndonesiaMap :properties="allProducts" />
+
     <!-- Layanan Kami Section -->
-    <section class="py-24 sm:py-32 px-4 bg-white relative overflow-hidden">
+    <section class="px-4 bg-white relative overflow-hidden">
       <div class="w-full !px-2.5 sm:!px-8 lg:!px-12">
         <div class="text-center mb-16 space-y-4">
           <span class="text-bejo-600 font-black uppercase tracking-widest text-xs">Layanan Ekosistem</span>
@@ -198,6 +201,7 @@ import { Icon } from '@iconify/vue'
 import GuestLayout from '@/layouts/guest.vue'
 import api from '@/services/axios'
 import ProductCard from '@/components/ProductCard.vue'
+import IndonesiaMap from './components/IndonesiaMap.vue'
 
 interface ProductPreview {
   id?: string
@@ -223,14 +227,19 @@ interface ProductPreview {
 
 const isLoading = ref(true)
 const displayedProducts = ref<ProductPreview[]>([])
+const allProducts = ref<ProductPreview[]>([])
 
 const fetchData = async () => {
   try {
     const { data } = await api.get('/api/realEstate/getAll', {
-      headers: { 'X-Jenis-User': 'Admin' }
+      headers: { 
+        'X-Jenis-User': 'Admin',
+        'Api-Key': 'realestate_key_2024'
+      }
     })
     
     if (data && data.Data) {
+      allProducts.value = data.Data
       // Ambil hanya 3 terbaru. Anggap saja Data sudah sorted newest first
       displayedProducts.value = data.Data.slice(0, 3)
     }
