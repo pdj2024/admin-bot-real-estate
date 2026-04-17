@@ -42,3 +42,6 @@ __screenshots__/
 src/example-layouts
 src/example-views
 src/example-components
+
+#Keys
+/src/config/constants.ts

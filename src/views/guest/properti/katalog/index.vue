@@ -21,7 +21,7 @@
               <span class="font-black text-transparent bg-clip-text bg-gradient-to-r from-bejo-500 via-bejo-700 to-bejo-900">Rumah Bejo</span>
             </h1>
             <p class="text-slate-500 text-lg sm:text-xl font-medium leading-relaxed max-w-xl">
-              Temukan ribuan listing properti terbaik dengan desain yang elegan, terverifikasi, dan profesional di seluruh Indonesia.
+              Temukan ribuan unit properti terbaik dengan desain yang elegan, terverifikasi, dan profesional di seluruh Indonesia.
             </p>
           </div>
 
@@ -31,7 +31,7 @@
             <div class="flex flex-col items-center justify-center size-24 lg:size-28 rounded-2xl bg-gradient-to-br from-white to-bejo-50 border border-bejo-100 shadow-xl shadow-bejo-200/40 relative group hover:-translate-y-1 transition-transform">
               <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-bejo-300 to-bejo-500 rounded-t-2xl"></div>
               <span class="text-3xl font-black text-slate-800">1K<span class="text-bejo-600">+</span></span>
-              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Listing</span>
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Unit</span>
             </div>
             
             <!-- Box 2: Dark Bejo -->
@@ -39,7 +39,7 @@
                <!-- Highlight -->
               <div class="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/20 to-transparent"></div>
               <span class="text-4xl font-black drop-shadow-md">24/7</span>
-              <span class="text-[10px] sm:text-xs font-bold text-bejo-200 uppercase tracking-widest mt-2">Dukungan</span>
+              <span class="text-[10px] sm:text-xs font-bold text-bejo-200 uppercase tracking-widest mt-2">Layanan</span>
             </div>
             
             <!-- Box 3: Medium Bejo -->

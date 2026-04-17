@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, nextTick, computed } from 'vue'
+import { onMounted, ref, nextTick, computed, watch } from 'vue'
 import { Icon } from '@iconify/vue'
 import api from '@/services/axios'
 import Modal from './Modal.vue'
@@ -150,9 +150,15 @@ const table = useVueTable({
   getPaginationRowModel: getPaginationRowModel(),
   getSortedRowModel: getSortedRowModel(),
   getFilteredRowModel: getFilteredRowModel(),
+  autoResetPageIndex: false,
   initialState: {
     pagination: { pageSize: 15 }
   }
+})
+
+// Reset ke halaman pertama saat filter atau pencarian berubah
+watch([() => props.searchQuery, transactionFilter, typeFilter], () => {
+  table.setPageIndex(0)
 })
 
 const fetchData = async () => {
@@ -366,28 +372,17 @@ defineExpose({ openAddModal })
           <div class="flex items-start gap-1.5 text-primary mb-2">
             <Icon icon="lucide:map-pin" class="size-3.5 mt-0.5" />
             <div class="flex flex-col">
-              <span class="text-[11px] font-bold uppercase tracking-wider text-primary">{{ row.original.Area[0] }}</span>
-              <p class="text-[10px] font-medium text-default-500 line-clamp-1">
-                <span v-if="!row.original.Hide_alamat">{{
-                  (row.original.Alamat || '')
-                    .split(' ')
-                    .filter(
-                      (kata) =>
-                        !(row.original.Area[0] || '')
-                          .toLowerCase()
-                          .replace(/[^a-z0-9\s]/g, '')
-                          .split(/\s+/)
-                          .includes(kata.toLowerCase().replace(/[^a-z0-9]/g, ''))
-                    )
-                    .join(' ')
-                    .replace(/[,.\s]+$/, '')
-                }}</span>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-primary">
+                {{ row.original.Area[0].split(',').length > 2 ? row.original.Area[0].split(',').slice(2).join(',').trim() : row.original.Area[0] }}
+              </span>
+              <p class="text-[10px] font-medium text-default-500">
+                <span v-if="!row.original.Hide_alamat">{{ row.original.Alamat }}</span>
                 <span v-if="row.original.Area[1]"> ({{ row.original.Area[1] }})</span>
               </p>
             </div>
           </div>
 
-          <h6 class="text-lg text-default-900 font-black transition-colors line-clamp-1 mb-1 leading-tight group-hover:text-primary">
+          <h6 class="text-lg text-default-900 font-black transition-colors mb-1 leading-tight group-hover:text-primary">
             <RouterLink :to="`/properti/detail/${row.original.Slug}`">{{ row.original.Nama_Produk }}</RouterLink>
           </h6>
 
@@ -396,7 +391,7 @@ defineExpose({ openAddModal })
           </p>
 
           <div class="grid grid-cols-2 gap-3 rounded-xl p-3 mb-5 border border-default-100 bg-default-50/50">
-            <div class="flex items-center gap-2">
+            <div v-if="row.original.Luas_Tanah != 0" class="flex items-center gap-2">
               <Icon icon="lucide:land-plot" class="size-3.5 text-default-400" />
               <span class="text-xs font-bold text-default-600">LT {{ row.original.Luas_Tanah }} m²</span>
             </div>
@@ -436,7 +431,6 @@ defineExpose({ openAddModal })
                   <span class="text-[11px] text-red-500 line-through decoration-red-500/50">
                     {{ formatShortCurrency(row.original.Harga_Sewa1) }}
                   </span>
-                  <span class="text-[10px] font-black bg-red-50 text-red-500 px-1 rounded uppercase tracking-tighter"> -{{ calculateDiscount(row.original.Harga_Sewa1, row.original.Harga_Sewa2) }}% </span>
                 </div>
                 <span class="text-[11px] text-default-400 italic">/{{ row.original.Satuan_Minimal_Sewa || 'thn' }}</span>
               </div>
@@ -452,7 +446,6 @@ defineExpose({ openAddModal })
                   <span class="text-[11px] text-red-500 line-through decoration-red-500/50">
                     {{ formatShortCurrency(row.original.Harga_Jual1) }}
                   </span>
-                  <span class="text-[10px] font-black bg-red-50 text-red-500 px-1 rounded uppercase tracking-tighter"> -{{ calculateDiscount(row.original.Harga_Jual1, row.original.Harga_Jual2) }}% </span>
                 </div>
               </div>
             </div>

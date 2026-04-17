@@ -35,15 +35,15 @@
       <div class="w-full mx-auto bg-white/95 backdrop-blur-xl rounded-[2.5rem] p-8 md:p-10 shadow-2xl border border-white grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-4 divide-y md:divide-y-0 md:divide-x divide-slate-100 !px-2.5 sm:!px-8 lg:!px-12">
         <div class="text-center px-4">
           <h4 class="text-4xl lg:text-5xl font-black text-slate-900 mb-2">1,2k<span class="text-bejo-500">+</span></h4>
-          <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Listing Terverifikasi</p>
+          <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Properti Terjamin</p>
         </div>
         <div class="text-center px-4">
           <h4 class="text-4xl lg:text-5xl font-black text-slate-900 mb-2">480<span class="text-bejo-500">+</span></h4>
-          <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Klien Puas</p>
+          <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Klien Terjangkau</p>
         </div>
         <div class="text-center px-4">
           <h4 class="text-4xl lg:text-5xl font-black text-slate-900 mb-2">15<span class="text-bejo-500">+</span></h4>
-          <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Mitra Perbankan</p>
+          <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Kota</p>
         </div>
       </div>
     </div>
@@ -66,7 +66,7 @@
               <Icon icon="lucide:house-plus" class="size-7" />
             </div>
             <h3 class="text-xl font-black text-slate-900 mb-3">Jual & Beli</h3>
-            <p class="text-sm font-medium text-slate-500 leading-relaxed">Listing beragam pilihan rumah, ruko, apartemen hingga kavling tanah terbaik.</p>
+            <p class="text-sm font-medium text-slate-500 leading-relaxed">Tersedia beragam pilihan rumah, ruko, apartemen hingga kavling tanah terbaik.</p>
           </div>
           <div class="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100 hover:border-bejo-200 hover:bg-white hover:shadow-2xl hover:shadow-bejo-600/10 transition-all duration-300 group">
             <div class="size-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-bejo-600 mb-6 group-hover:bg-bejo-500 group-hover:text-white transition-all">
@@ -127,7 +127,7 @@
                   </div>
                   <div class="space-y-2 pt-1">
                     <h4 class="text-xl font-black text-slate-900">100% Data Tervalidasi</h4>
-                    <p class="text-slate-500 font-medium leading-relaxed">Semua listing melalui verifikasi lapangan oleh tim Rumah Bejo untuk menjamin akurasi info 1:1.</p>
+                    <p class="text-slate-500 font-medium leading-relaxed">Semua unit melalui verifikasi lapangan oleh tim Rumah Bejo untuk menjamin akurasi info 1:1.</p>
                   </div>
                </div>
                <div class="flex gap-6 group">
@@ -163,7 +163,7 @@
         <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6 relative z-10">
           <div class="max-w-2xl">
             <span class="text-bejo-600 font-bold uppercase tracking-widest text-sm flex items-center gap-2 mb-2">
-              <Icon icon="lucide:flame" class="size-4" /> Listing Eksklusif
+              <Icon icon="lucide:flame" class="size-4" /> Unit Properti Eksklusif
             </span>
             <h2 class="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight">
               Properti Terbaru <br />Untuk Anda
@@ -239,9 +239,86 @@ const fetchData = async () => {
     })
     
     if (data && data.Data) {
-      allProducts.value = data.Data
-      // Ambil hanya 3 terbaru. Anggap saja Data sudah sorted newest first
-      displayedProducts.value = data.Data.slice(0, 3)
+      const actualData = data.Data || []
+      allProducts.value = actualData
+      
+      // Filter Aktif & Tersedia, then sort (latest first assuming higher No_Id or index)
+      const validProducts = actualData
+        .filter((p: any) => p.Status_Display === 'Aktif' && p.Status_Properti === 'Tersedia')
+      
+      let products = validProducts.slice(0, 3)
+
+      // Pastikan tampil 3 (tambah mock jika kurang)
+      if (products.length < 3) {
+        const mockItems = [
+          {
+            No_Id: 'mock_pakuwon_1',
+            Nama_Produk: 'Pakuwon Waterplace Residence',
+            Alamat: 'Tower A, Lantai 15 (surabaya selatan)',
+            Tipe: 'Apartemen',
+            Luas_Bangunan: 56,
+            Area: ['Kelurahan, Kecamatan, Kota Surabaya, Jawa Timur', 'Surabaya Selatan'],
+            Status_Display: 'Aktif',
+            Status_Properti: 'Tersedia',
+            Status_Transaksi: ['Sewa'],
+            Harga_Sewa1: 80000000,
+            Harga_Sewa2: 55000000,
+            Satuan_Minimal_Sewa: 'Tahun',
+            Jumlah_Kamar_Tidur: 2,
+            Jumlah_Kamar_Mandi: 1,
+            Akses_Jalan: ['10 Menit ke Tol Satelit', '5 Menit ke National Hospital'],
+            MediaUrls: [{ Id_Media: 'https://images.unsplash.com/photo-1545324418-f1d3ac1ef739?auto=format&fit=crop&q=80&w=800' }]
+          },
+          {
+            No_Id: 'mock_graha_1',
+            Nama_Produk: 'Graha Famili Modern Mansion',
+            Alamat: 'Blok AA, Cluster Luxury Park',
+            Tipe: 'Rumah',
+            Luas_Bangunan: 250,
+            Area: ['Kelurahan, Kecamatan, Kota Surabaya, Jawa Timur', 'Surabaya Barat'],
+            Status_Display: 'Aktif',
+            Status_Properti: 'Tersedia',
+            Status_Transaksi: ['Jual'],
+            Harga_Jual1: 5200000000,
+            Harga_Jual2: 4900000000,
+            Jumlah_Kamar_Tidur: 4,
+            Jumlah_Kamar_Mandi: 3,
+            Akses_Jalan: ['Dekat National Hospital', 'Area Komersial Walk-in'],
+            MediaUrls: [{ Id_Media: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=800' }]
+          },
+          {
+            No_Id: 'mock_rosebay_1',
+            Nama_Produk: 'The Rosebay Low-Rise Condo',
+            Alamat: 'Graha Famili, Surabaya Barat',
+            Tipe: 'Apartemen',
+            Luas_Bangunan: 120,
+            Area: ['Kelurahan, Kecamatan, Kota Surabaya, Jawa Timur', 'Surabaya Barat'],
+            Status_Display: 'Aktif',
+            Status_Properti: 'Tersedia',
+            Status_Transaksi: ['Jual', 'Sewa'],
+            Harga_Jual1: 2800000000,
+            Harga_Jual2: 0,
+            Harga_Sewa1: 150000000,
+            Satuan_Minimal_Sewa: 'Tahun',
+            Jumlah_Kamar_Tidur: 2,
+            Jumlah_Kamar_Mandi: 2,
+            Akses_Jalan: ['Langsung ke Lapangan Golf', 'Privasi Tinggi'],
+            MediaUrls: [{ Id_Media: 'https://images.unsplash.com/photo-1567496898669-ee935f5f647a?auto=format&fit=crop&q=80&w=800' }]
+          }
+        ]
+
+        let i = 0
+        while (products.length < 3 && i < mockItems.length) {
+          const mock = mockItems[i]
+          // Jangan tambahkan kalau Nama_Produk sudah ada (biar gak duplikat item asli)
+          if (!products.some(p => p.Nama_Produk === mock.Nama_Produk)) {
+            products.push(mock as any)
+          }
+          i++
+        }
+      }
+
+      displayedProducts.value = products
     }
   } catch (error) {
     console.error('Gagal mengambil katalog prop:', error)

@@ -42,7 +42,7 @@ onMounted(() => {
         </h1>
         
         <p class="text-slate-400 font-medium text-base mb-8 max-w-md leading-relaxed">
-          Kelola listing, pantau interaksi, dan performa operasional hari ini.
+          Kelola katalog, pantau interaksi, dan performa operasional hari ini.
         </p>
 
         <div class="flex flex-wrap gap-4">

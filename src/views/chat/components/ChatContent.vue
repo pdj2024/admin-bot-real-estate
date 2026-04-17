@@ -1095,7 +1095,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
                 <ProductCard v-for="i in 3" :key="'loading-' + i" :product="{}" is-loading />
               </div>
               <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
-                <ProductCard v-for="product in filteredProducts" :key="product.No_Id" :product="product" :disable-routing="true" :hide-specs="true" :show-select-button="true" :is-expanded="activeExpandedProductId === product.No_Id" @toggle-expand="activeExpandedProductId = ($event === activeExpandedProductId ? null : $event)" @select="openAppointment ? handleSelectUnitForAppointment($event) : sendProduct($event)" />
+                <ProductCard v-for="product in filteredProducts" :key="product.No_Id" :product="product" :disable-routing="true" :collapsible-details="true" :show-select-button="true" :is-expanded="activeExpandedProductId === product.No_Id" @toggle-expand="activeExpandedProductId = ($event === activeExpandedProductId ? null : $event)" @select="openAppointment ? handleSelectUnitForAppointment($event) : sendProduct($event)" />
               </div>
             </div>
           </div>

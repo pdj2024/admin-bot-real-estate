@@ -1,5 +1,5 @@
 <template>
-  <div v-if="isLoading || (product.Status_Display == 'Aktif' && product.Status_Properti == 'Tersedia')" class="group flex flex-col h-fit rounded-[2.5rem] border transition-all duration-500 relative bg-white border-slate-100 shadow-xl shadow-slate-200/30" :class="!isLoading ? (showSelectButton ? '' : 'hover:-translate-y-2 hover:shadow-2xl hover:border-bejo-200 hover:shadow-bejo-600/10 cursor-pointer') : ''" @click="showSelectButton ? null : handleClick">
+  <div v-if="isLoading || (product.Status_Display == 'Aktif' && product.Status_Properti == 'Tersedia')" class="group flex flex-col h-full rounded-[2.5rem] border transition-all duration-500 relative bg-white border-slate-100 shadow-xl shadow-slate-200/30" :class="!isLoading ? (showSelectButton ? '' : 'hover:-translate-y-2 hover:shadow-2xl hover:border-bejo-200 hover:shadow-bejo-600/10 cursor-pointer') : ''" @click="showSelectButton ? null : handleClick">
     <!-- Card Image Header -->
     <div class="relative h-60 overflow-hidden rounded-t-[2.5rem]" :class="isLoading ? 'bg-slate-200 animate-pulse' : 'bg-slate-100 p-3 pb-0'">
       <div v-if="!isLoading" class="w-full h-full rounded-[2rem] overflow-hidden relative">
@@ -51,8 +51,10 @@
       <div class="flex items-start gap-1.5 text-bejo-600 mb-3" :class="isLoading ? 'opacity-50 grayscale' : ''">
         <Icon icon="lucide:map-pin" class="size-4 mt-0.5" />
         <div class="flex flex-col">
-          <span class="text-[11px] font-black uppercase tracking-wider" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-24 mb-1' : 'text-bejo-600'">{{ isLoading ? '.' : product.Area ? product.Area[0] : '' }}</span>
-          <p class="text-[11px] font-bold text-slate-500 line-clamp-1" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-48' : ''">
+          <span class="text-[11px] font-black uppercase tracking-wider" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-24 mb-1' : 'text-bejo-600'">
+            {{ isLoading ? '.' : (product.Area && product.Area[0]) ? (product.Area[0].split(',').length > 2 ? product.Area[0].split(',').slice(2).join(',').trim() : product.Area[0]) : '' }}
+          </span>
+          <p class="text-[11px] font-bold text-slate-500" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-48' : ''">
             <span v-if="!isLoading && !product.Hide_alamat">{{ product.Alamat }}</span>
             <span v-if="!isLoading && product.Area && product.Area[1]"> ({{ product.Area[1] }})</span>
             <span v-if="isLoading">Memuat Detail Lokasi...</span>
@@ -61,7 +63,7 @@
       </div>
 
       <!-- Title -->
-      <h6 class="text-xl text-slate-900 font-black transition-colors line-clamp-2 mb-2 leading-tight min-h-[3rem]" :class="[isLoading ? 'text-transparent bg-slate-200 animate-pulse rounded-xl w-full' : '', !showSelectButton ? 'group-hover:text-bejo-600' : '']">
+      <h6 class="text-xl text-slate-900 font-black transition-colors mb-2 leading-tight" :class="[isLoading ? 'text-transparent bg-slate-200 animate-pulse rounded-xl w-full' : '', !showSelectButton ? 'group-hover:text-bejo-600' : '']">
         <RouterLink v-if="!isLoading && !disableRouting" :to="targetUrl" class="before:absolute before:inset-0">{{ product.Nama_Produk }}</RouterLink>
         <div v-else-if="!isLoading && disableRouting" class="before:absolute before:inset-0">{{ product.Nama_Produk }}</div>
         <span v-else>.</span>
@@ -93,7 +95,7 @@
                :class="collapsibleDetails ? 'absolute top-full left-0 right-0 z-[100] mt-2 bg-white/95 backdrop-blur-xl border border-slate-100 shadow-2xl rounded-3xl' : 'bg-slate-50/50 border border-slate-100 rounded-2xl'"
                @click.stop>
             <div class="grid grid-cols-2 gap-3 p-3 shadow-inner" :class="collapsibleDetails ? 'p-4' : 'p-3'">
-              <div class="flex items-center gap-2">
+              <div v-if="product.Luas_Tanah != 0" class="flex items-center gap-2">
                 <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0" :class="isLoading ? 'opacity-50 grayscale' : ''">
                   <Icon icon="lucide:land-plot" class="size-3.5 text-bejo-600" />
                 </div>
@@ -149,7 +151,6 @@
               <span class="relative text-xs text-slate-400 font-bold px-1 line-through decoration-red-500 decoration-2">
                 {{ formatCurrency(product.Harga_Sewa1) }}
               </span>
-              <span class="bg-red-50 text-red-600 text-[10px] font-black px-2 py-0.5 rounded-lg border border-red-100"> -{{ Math.round(((product.Harga_Sewa1 - product.Harga_Sewa2) / product.Harga_Sewa1) * 100) }}% </span>
             </div>
             <span v-if="!isLoading" class="text-[10px] text-slate-400 font-bold ml-1 italic">/ {{ product.Satuan_Minimal_Sewa || 'thn' }}</span>
           </div>
@@ -166,7 +167,6 @@
               <span class="relative text-xs text-slate-400 font-bold px-1 line-through decoration-red-500 decoration-2">
                 {{ formatCurrency(product.Harga_Jual1) }}
               </span>
-              <span class="bg-red-50 text-red-600 text-[10px] font-black px-2 py-0.5 rounded-lg border border-red-100"> -{{ Math.round(((product.Harga_Jual1 - product.Harga_Jual2) / product.Harga_Jual1) * 100) }}% </span>
             </div>
           </div>
         </div>

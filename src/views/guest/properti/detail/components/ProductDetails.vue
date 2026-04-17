@@ -1,15 +1,114 @@
 <script setup lang="ts">
+import { onMounted, ref, watch, nextTick } from 'vue'
 import { Icon } from '@iconify/vue'
 import type { Product } from '../index.vue'
 
-defineProps<{
+import { GOOGLE_MAPS_API_KEY } from '@/config/constants'
+
+const props = defineProps<{
   product: Product | null
   isAdmin: boolean
 }>()
 
+const mapContainer = ref<HTMLElement | null>(null)
+const isMapLoaded = ref(false)
+let gMap: any = null
+let gMarker: any = null
+
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
 }
+
+const loadGoogleMaps = () => {
+  if (window.google?.maps?.importLibrary) {
+    initMap()
+    return
+  }
+
+  const g: any = window
+  let h: any, a: any
+  const p = 'The Google Maps JavaScript API'
+  const c = 'google'
+  const l = 'importLibrary'
+  const q = '__ib__'
+  const m = document
+  const b: any = g[c] || (g[c] = {})
+  const d = b.maps || (b.maps = {})
+  const r = new Set()
+  const e = new URLSearchParams()
+
+  const u = () =>
+    h ||
+    (h = new Promise(async (f, n) => {
+      await (a = m.createElement('script'))
+      e.set('libraries', [...r].join(','))
+      e.set('key', GOOGLE_MAPS_API_KEY)
+      e.set('v', 'beta')
+      e.set('callback', c + '.maps.' + q)
+      a.src = `https://maps.${c}apis.com/maps/api/js?` + e
+      d[q] = f
+      a.onerror = () => (h = n(Error(p + ' could not load.')))
+      a.nonce = (m.querySelector('script[nonce]') as any)?.nonce || ''
+      m.head.append(a)
+    }))
+
+  d[l] = (f: any, ...n: any[]) => r.add(f) && u().then(() => d[l](f, ...n))
+  initMap()
+}
+
+const initMap = async () => {
+  if (!mapContainer.value || !props.product?.Area?.[2]) return
+  const coords = props.product.Area[2].split(',')
+  if (coords.length < 2) return
+  
+  const lat = parseFloat(coords[0])
+  const lng = parseFloat(coords[1])
+  if (isNaN(lat) || isNaN(lng)) return
+
+  try {
+    const [libraryMap, libraryMarker] = (await Promise.all([
+      google.maps.importLibrary('maps'),
+      google.maps.importLibrary('marker')
+    ])) as [google.maps.MapsLibrary, google.maps.MarkerLibrary]
+
+    const { Map } = libraryMap
+    const { AdvancedMarkerElement } = libraryMarker
+
+    const pos = { lat, lng }
+    
+    gMap = new Map(mapContainer.value, {
+      center: pos,
+      zoom: 15,
+      mapId: 'PRODUCT_DETAIL_MAP',
+      mapTypeControl: false,
+      streetViewControl: false
+    })
+
+    gMarker = new AdvancedMarkerElement({
+      map: gMap,
+      position: pos,
+      title: props.product.Nama_Produk
+    })
+
+    isMapLoaded.value = true
+  } catch (err) {
+    console.error('Error initializing product map:', err)
+  }
+}
+
+watch(() => props.product, (newProd) => {
+  if (newProd?.Area?.[2]) {
+    nextTick(() => {
+      loadGoogleMaps()
+    })
+  }
+}, { immediate: true })
+
+onMounted(() => {
+  if (props.product?.Area?.[2]) {
+    loadGoogleMaps()
+  }
+})
 </script>
 
 <template>
@@ -157,6 +256,22 @@ const formatCurrency = (value: number) => {
               </tbody>
             </table>
           </div>
+        </div>
+        <div v-if="product?.Area?.[2]" class="mt-10 pt-10 border-t border-slate-100">
+          <h6 class="text-[11px] font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-3">
+            <span class="w-8 h-[2px] bg-bejo-500 rounded-full"></span> LOKASI PROPERTI
+          </h6>
+          <div class="relative rounded-2xl overflow-hidden border border-slate-100 shadow-sm bg-slate-50 group">
+            <div ref="mapContainer" class="w-full h-64 md:h-80 transition-opacity duration-700" :class="isMapLoaded ? 'opacity-100' : 'opacity-0'"></div>
+            <div v-if="!isMapLoaded" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-50">
+              <Icon icon="lucide:loader-2" class="size-8 animate-spin text-bejo-600 mb-2" />
+              <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Memuat Peta Lokasi...</span>
+            </div>
+          </div>
+          <p class="mt-3 text-[10px] font-bold text-slate-400 italic flex items-center gap-1.5">
+            <Icon icon="lucide:info" class="size-3" />
+            Klik dan geser peta untuk melihat area sekitar properti
+          </p>
         </div>
       </div>
     </div>

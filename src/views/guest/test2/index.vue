@@ -191,7 +191,7 @@ const loadGoogleMaps = () => {
     await (a = m.createElement("script"));
     e.set("libraries", [...r].join(","));
     e.set("key", GOOGLE_MAPS_API_KEY);
-    e.set("v", "weekly"); // Menggunakan v=weekly agar lebih stabil dan cepat
+    e.set("v", "beta"); // Menggunakan v=beta untuk fitur terbaru
     a.src = `https://maps.${c}apis.com/maps/api/js?` + e;
     d[q] = f;
     a.onerror = () => h = n(Error(p + " could not load."));
@@ -209,12 +209,10 @@ const initMap = async () => {
   if (!mapContainer.value) return;
 
   try {
-    // Memuat semua library secara paralel untuk mempercepat loading
-    const [libraryMap, libraryMarker, libraryPlaces] = await Promise.all([
-      google.maps.importLibrary("maps"),
-      google.maps.importLibrary("marker"),
-      google.maps.importLibrary("places")
-    ]) as [google.maps.MapsLibrary, google.maps.MarkerLibrary, google.maps.PlacesLibrary];
+    // Memuat library yang dibutuhkan menggunakan importLibrary
+    const libraryMap = await google.maps.importLibrary("maps") as google.maps.MapsLibrary;
+    const libraryMarker = await google.maps.importLibrary("marker") as google.maps.MarkerLibrary;
+    const libraryPlaces = await google.maps.importLibrary("places") as google.maps.PlacesLibrary;
     
     const { Map } = libraryMap;
     const { AdvancedMarkerElement } = libraryMarker;
@@ -230,9 +228,6 @@ const initMap = async () => {
       mapTypeControl: false,
       streetViewControl: false,
     });
-
-    // Peta sudah siap ditampilkan lebih awal (Optimistic UI)
-    isMapLoaded.value = true;
 
     // 2. Initialize Marker
     gMarker = new AdvancedMarkerElement({
@@ -284,7 +279,7 @@ const initMap = async () => {
       }
     });
 
-    // Menghapus baris isMapLoaded di sini karena sudah dipindah ke atas
+    isMapLoaded.value = true;
   } catch (error) {
     console.error("Gagal inisialisasi Google Maps:", error);
   }
