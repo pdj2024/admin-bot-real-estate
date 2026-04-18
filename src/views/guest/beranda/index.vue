@@ -246,7 +246,7 @@ const fetchData = async () => {
       const validProducts = actualData
         .filter((p: any) => p.Status_Display === 'Aktif' && p.Status_Properti === 'Tersedia')
       
-      let products = validProducts.slice(0, 3)
+      const products = validProducts.slice(0, 3)
 
       // Pastikan tampil 3 (tambah mock jika kurang)
       if (products.length < 3) {
@@ -311,7 +311,7 @@ const fetchData = async () => {
         while (products.length < 3 && i < mockItems.length) {
           const mock = mockItems[i]
           // Jangan tambahkan kalau Nama_Produk sudah ada (biar gak duplikat item asli)
-          if (!products.some(p => p.Nama_Produk === mock.Nama_Produk)) {
+          if (!products.some((p: ProductPreview) => p.Nama_Produk === mock.Nama_Produk)) {
             products.push(mock as any)
           }
           i++

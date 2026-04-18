@@ -10,7 +10,6 @@ const props = defineProps<{
 const mapContainer = ref<HTMLElement | null>(null)
 const isMapLoaded = ref(false)
 let gMap: any = null
-let gMarker: any = null
 
 const GOOGLE_MAPS_API_KEY = 'AIzaSyBdyGDdRYgwuUvSCv1jEKmosLnxCnbnM4c'
 
@@ -20,7 +19,7 @@ const formatCurrency = (value: number) => {
 }
 
 const loadGoogleMaps = () => {
-  if (window.google?.maps?.importLibrary) {
+  if (typeof window.google?.maps?.importLibrary === 'function') {
     initMap()
     return
   }
@@ -84,7 +83,7 @@ const initMap = async () => {
       streetViewControl: false
     })
 
-    gMarker = new AdvancedMarkerElement({
+    new AdvancedMarkerElement({
       map: gMap,
       position: pos,
       title: props.product.Nama_Produk

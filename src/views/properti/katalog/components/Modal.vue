@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, reactive, watch, onMounted, onBeforeUnmount, computed, nextTick } from 'vue'
 import { Icon } from '@iconify/vue'
-import { confirm, success, fail } from '@/utils/sweet-alert'
+import { success, fail } from '@/utils/sweet-alert'
 import api from '@/services/axios'
 import axios from 'axios'
 
@@ -16,7 +16,6 @@ const previewPhotos = ref<any[]>([])
 const selectedFiles = ref<File[]>([])
 const deletedMediaIds = ref<string[]>([])
 const autocompleteInput = ref<HTMLInputElement | null>(null)
-const placeAutocompleteRef = ref<any>(null)
 const mapContainer = ref<HTMLElement | null>(null)
 const isMapLoaded = ref(false)
 
@@ -43,7 +42,7 @@ const detectRegionWithAI = async (kecamatan: string, kota: string) => {
     )
 
     // Cari versi Flash di dalam daftar yang stabil
-    let bestModel = stableModels.find((m: any) => m.name.includes('1.5-flash')) || 
+    const bestModel = stableModels.find((m: any) => m.name.includes('1.5-flash')) || 
                     stableModels.find((m: any) => m.name.includes('flash')) ||
                     stableModels[0] || 
                     models[0]
@@ -211,26 +210,16 @@ interface RealEstateForm {
   MediaUrls: MediaUrl[]
 }
 
-interface Province {
-  id: string
-  name: string
-}
-
-interface City {
-  id: string
-  name: string
-}
-
-interface MediaItem {
-  Url: string | null
-  Expired_At: string
-  IsCompressed: boolean
-  ContentType: string
-  ThumbUrl: string | null
-  Size: number
-  Id_Media: string
-  No_Id_Media: string
-}
+// interface MediaItem {
+//   Url: string | null
+//   Expired_At: string
+//   IsCompressed: boolean
+//   ContentType: string
+//   ThumbUrl: string | null
+//   Size: number
+//   Id_Media: string
+//   No_Id_Media: string
+// }
 
 const specs = [
   { key: 'Jumlah_Kamar_Tidur', label: 'Jml Kamar', icon: 'lucide:bed' },
@@ -403,7 +392,7 @@ const areaOptions = computed(() => {
 // --- Google Maps Integration Logic ---
 const loadGoogleMaps = () => {
   // Jika sudah ada, langsung init
-  if (window.google?.maps?.importLibrary) {
+  if (typeof window.google?.maps?.importLibrary === 'function') {
     initMap()
     return
   }
@@ -609,7 +598,7 @@ const parseAddressComponents = (components: google.maps.GeocoderAddressComponent
   components.forEach((c) => {
     const types = c.types
     // Handle both old (long_name) and new (longText) API formats
-    const name = (c.longText || c.long_name || '').trim()
+    const name = ((c as any).longText || c.long_name || '').trim()
 
     if (types.includes('administrative_area_level_1')) {
       provinsi = name

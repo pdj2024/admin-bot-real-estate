@@ -13,14 +13,13 @@ const props = defineProps<{
 const mapContainer = ref<HTMLElement | null>(null)
 const isMapLoaded = ref(false)
 let gMap: any = null
-let gMarker: any = null
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
 }
 
 const loadGoogleMaps = () => {
-  if (window.google?.maps?.importLibrary) {
+  if (typeof window.google?.maps?.importLibrary === 'function') {
     initMap()
     return
   }
@@ -84,7 +83,7 @@ const initMap = async () => {
       streetViewControl: false
     })
 
-    gMarker = new AdvancedMarkerElement({
+    new AdvancedMarkerElement({
       map: gMap,
       position: pos,
       title: props.product.Nama_Produk

@@ -46,6 +46,7 @@
     "@iconify/vue": "^5.0.0",
     "@tsconfig/node22": "^22.0.2",
     "@types/dropzone": "^5.7.9",
+    "@types/google.maps": "^3.64.0",
     "@types/node": "^22.16.5",
     "@vitejs/plugin-vue": "^6.0.1",
     "@vue/eslint-config-prettier": "^10.2.0",

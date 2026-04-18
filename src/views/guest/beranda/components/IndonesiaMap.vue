@@ -46,7 +46,7 @@ const displayProvinces = computed(() => {
       const normalizedName = provinceName.toLowerCase();
       const provinceKeys = Object.keys(PROVINCE_COORDINATES).sort((a, b) => b.length - a.length);
 
-      let foundKey = provinceKeys.find(key => {
+      const foundKey = provinceKeys.find(key => {
         const lowerKey = key.toLowerCase();
         return normalizedName === lowerKey || normalizedName.includes(lowerKey);
       });

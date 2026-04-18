@@ -17,11 +17,6 @@ const formatShortCurrency = (value: number) => {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
 }
 
-const calculateDiscount = (original: number, current: number) => {
-  if (!original || !current || current >= original) return 0
-  return Math.round(((original - current) / original) * 100)
-}
-
 const isModalOpen = ref(false)
 const isSortOpen = ref(false)
 const isTransactionOpen = ref(false)

@@ -10,7 +10,6 @@ import KprSimulation from './components/KprSimulation.vue'
 import SuggestedProducts from './components/SuggestedProducts.vue'
 
 const route = useRoute()
-const slug = route.params.slug
 
 interface MediaUrl {
   Url: string | null

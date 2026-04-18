@@ -169,14 +169,14 @@ let gGeocoder: any = null;
 
 const loadGoogleMaps = () => {
   // Jika sudah ada, langsung init
-  if (window.google?.maps?.importLibrary) {
+  if (typeof window.google?.maps?.importLibrary === 'function') {
     initMap();
     return;
   }
 
   // Buat loader ala dokumentasi resmi Google Maps
   const g: any = window;
-  let h: any, a: any, k: any;
+  let h: any, a: any;
   const p = "The Google Maps JavaScript API";
   const c = "google";
   const l = "importLibrary";
@@ -249,7 +249,7 @@ const initMap = async () => {
 
     // 4. Marker Events
     // Drag: Update coordinates display in real-time
-    gMarker.addListener('drag', (e: any) => {
+    gMarker.addListener('drag', () => {
       const pos = gMarker.position;
       if (pos) {
         const lat = typeof pos.lat === 'function' ? pos.lat() : pos.lat;
