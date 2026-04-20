@@ -1365,8 +1365,46 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 
           <!-- TAB 2: SPESIFIKASI DETAIL -->
           <div v-show="activeTab === 'detail'" class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start scale-in">
-            <!-- Left Column: Transaksi & Harga -->
+            <!-- Right Column: Transaksi & Harga -->
             <div class="space-y-10">
+              <div class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div class="field">
+                    <label class="label">LUAS TANAH (M²) <span class="text-red-500">*</span></label>
+                    <input v-model="form.Luas_Tanah" type="number" class="field-input h-11 !pl-4 font-bold" placeholder="0" />
+                  </div>
+                  <div class="field">
+                    <label class="label">LUAS BANGUNAN (M²) <span class="text-red-500">*</span></label>
+                    <input v-model="form.Luas_Bangunan" type="number" class="field-input h-11 !pl-4 font-bold" placeholder="0" />
+                  </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div class="field">
+                    <label class="label">JUMLAH LANTAI</label>
+                    <input v-model="form.Jumlah_Lantai" type="number" class="field-input h-11 !pl-4 font-bold" placeholder="0" />
+                  </div>
+                  <div class="field">
+                    <label class="label">DIMENSI (P X L)</label>
+                    <div class="flex items-center gap-2">
+                      <input v-model="panjang" placeholder="P" class="field-input h-11 text-center font-bold" />
+                      <span class="text-slate-300 font-bold px-1">×</span>
+                      <input v-model="lebar" placeholder="L" class="field-input h-11 text-center font-bold" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div v-for="s in specs" :key="s.key" class="field">
+                    <label class="label">{{ s.label.toUpperCase() }}</label>
+                    <input v-model="form[s.key as keyof RealEstateForm]" type="number" class="field-input h-11 !pl-4 font-bold" placeholder="0" />
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Left Column: Specs & Description -->
+            <div class="space-y-10 lg:pl-10 lg:border-l lg:border-slate-100">
               <div class="space-y-6">
                 <div class="flex items-center justify-between pb-2 border-b border-slate-100">
                   <label class="label mb-0 text-slate-800 font-black">OPSI TRANSAKSI</label>
@@ -1459,44 +1497,6 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            <!-- Right Column: Specs & Description -->
-            <div class="space-y-10 lg:pl-10 lg:border-l lg:border-slate-100">
-              <div class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div class="field">
-                    <label class="label">LUAS TANAH (M²) <span class="text-red-500">*</span></label>
-                    <input v-model="form.Luas_Tanah" type="number" class="field-input h-11 !pl-4 font-bold" placeholder="0" />
-                  </div>
-                  <div class="field">
-                    <label class="label">LUAS BANGUNAN (M²) <span class="text-red-500">*</span></label>
-                    <input v-model="form.Luas_Bangunan" type="number" class="field-input h-11 !pl-4 font-bold" placeholder="0" />
-                  </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div class="field">
-                    <label class="label">JUMLAH LANTAI</label>
-                    <input v-model="form.Jumlah_Lantai" type="number" class="field-input h-11 !pl-4 font-bold" placeholder="0" />
-                  </div>
-                  <div class="field">
-                    <label class="label">DIMENSI (P X L)</label>
-                    <div class="flex items-center gap-2">
-                      <input v-model="panjang" placeholder="P" class="field-input h-11 text-center font-bold" />
-                      <span class="text-slate-300 font-bold px-1">×</span>
-                      <input v-model="lebar" placeholder="L" class="field-input h-11 text-center font-bold" />
-                    </div>
-                  </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div v-for="s in specs" :key="s.key" class="field">
-                    <label class="label">{{ s.label.toUpperCase() }}</label>
-                    <input v-model="form[s.key as keyof RealEstateForm]" type="number" class="field-input h-11 !pl-4 font-bold" placeholder="0" />
-                  </div>
-                </div>
-
               </div>
             </div>
           </div>
