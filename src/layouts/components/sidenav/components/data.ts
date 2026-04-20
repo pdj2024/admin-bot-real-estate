@@ -36,8 +36,8 @@ export const menuItems: MenuItemType[] = [
     url: '/properti/katalog'
   },
   {
-    key: 'kelola-data',
-    label: 'Kelola Data',
+    key: 'data',
+    label: 'Data',
     icon: 'lucide:workflow',
     children: [
       { key: 'data-admin', label: 'Admin', url: '/data/admin'},
