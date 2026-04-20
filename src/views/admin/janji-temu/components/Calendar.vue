@@ -68,10 +68,10 @@ onMounted(() => {
   --fc-button-hover-bg-color: #f1f5f9;
   --fc-button-hover-border-color: #cbd5e1;
   --fc-button-text-color: #475569;
-  --fc-button-active-bg-color: #f75211;
-  --fc-button-active-border-color: #f75211;
+  --fc-button-active-bg-color: #059669;
+  --fc-button-active-border-color: #059669;
   --fc-border-color: #f1f5f9;
-  --fc-today-bg-color: #f7521108;
+  --fc-today-bg-color: #05966908;
   --fc-page-bg-color: transparent;
   
   font-family: inherit;
@@ -98,11 +98,11 @@ onMounted(() => {
 
 :deep(.fc .fc-button-primary:not(:disabled).fc-button-active) {
   color: white;
-  box-shadow: 0 10px 15px -3px rgba(247, 82, 17, 0.3);
+  box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.3);
 }
 
 :deep(.fc .fc-button:focus) {
-  box-shadow: 0 0 0 3px rgba(247, 82, 17, 0.1) !important;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1) !important;
 }
 
 :deep(.fc .fc-col-header-cell) {
@@ -126,18 +126,48 @@ onMounted(() => {
 }
 
 :deep(.fc-daygrid-event) {
-  border-radius: 6px;
-  padding: 2px 6px;
+  border-radius: 8px;
+  padding: 4px 8px;
   font-size: 0.7rem;
-  font-weight: 700;
-  border: none;
-  background-color: #f7521115;
-  color: #f75211;
+  font-weight: 800;
+  border: 1px solid #d1fae5;
+  background-color: #ecfdf5;
+  color: #059669;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
 :deep(.fc-v-event) {
-  background-color: #f75211;
-  border-color: #f75211;
+  background-color: #ecfdf5 !important;
+  border: 1px solid #d1fae5 !important;
+  border-left: 4px solid #10b981 !important;
+  padding: 4px 6px !important;
+  color: #047857 !important;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+:deep(.fc-v-event .fc-event-main) {
+  color: #047857 !important;
+}
+
+:deep(.fc-timegrid-event-harness) {
+  margin-bottom: 2px;
+}
+
+:deep(.fc-list-event) {
+  cursor: pointer;
+}
+
+:deep(.fc-list-event:hover td) {
+  background-color: #ecfdf5 !important;
+}
+
+:deep(.fc-list-event-dot) {
+  border-color: #10b981 !important;
+}
+
+:deep(.fc-list-day-cushion) {
+  background-color: #f8fafc;
 }
 
 :deep(.fc-scrollgrid) {
