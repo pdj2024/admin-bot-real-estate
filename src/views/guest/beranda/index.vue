@@ -58,7 +58,7 @@
     <IndonesiaMap :properties="allProducts" />
 
     <!-- Layanan Kami Section -->
-    <section class="px-4 bg-white relative overflow-hidden">
+    <section class="px-4 pb-24 bg-white relative overflow-hidden">
       <div class="w-full !px-2.5 sm:!px-8 lg:!px-12">
         <div class="text-center mb-16 space-y-4">
           <span class="text-bejo-600 font-black uppercase tracking-widest text-xs">Layanan Ekosistem</span>

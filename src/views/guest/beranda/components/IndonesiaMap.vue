@@ -80,7 +80,7 @@ const handleMouseLeave = () => {
 </script>
 
 <template>
-  <div class="relative w-full overflow-hidden bg-white py-24 sm:py-32 border-y border-slate-100">
+  <div class="relative w-full overflow-hidden bg-white pt-24 pb-12  sm:pt-32 sm:pb-24 border-y border-slate-100">
     <div class="max-w-7xl mx-auto px-4 relative z-10">
       <div class="text-center mb-16 space-y-4">
         <span class="inline-flex items-center gap-2 px-3 py-1 bg-bejo-500/10 border border-bejo-500/20 rounded-full text-bejo-600 text-xs font-black uppercase tracking-widest">
