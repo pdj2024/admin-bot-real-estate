@@ -1599,8 +1599,8 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
   width: 100%;
 }
 
-#place-autocomplete-container :deep(gmpx-place-autocomplete)::part(list),
-#place-autocomplete-container :deep(gmp-place-autocomplete)::part(list) {
+#place-autocomplete-container :deep(gmpx-place-autocomplete::part(list)),
+#place-autocomplete-container :deep(gmp-place-autocomplete::part(list)) {
   background-color: white !important;
   color: #1e293b !important;
   border-radius: 1rem;
@@ -1612,8 +1612,8 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
   overflow: hidden;
 }
 
-#place-autocomplete-container :deep(gmpx-place-autocomplete)::part(prediction),
-#place-autocomplete-container :deep(gmp-place-autocomplete)::part(prediction) {
+#place-autocomplete-container :deep(gmpx-place-autocomplete::part(prediction)),
+#place-autocomplete-container :deep(gmp-place-autocomplete::part(prediction)) {
   background-color: white !important;
   color: #1e293b !important;
   padding: 0.75rem 1rem;
@@ -1621,8 +1621,8 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
   cursor: pointer;
 }
 
-#place-autocomplete-container :deep(gmpx-place-autocomplete)::part(input),
-#place-autocomplete-container :deep(gmp-place-autocomplete)::part(input) {
+#place-autocomplete-container :deep(gmpx-place-autocomplete::part(input)),
+#place-autocomplete-container :deep(gmp-place-autocomplete::part(input)) {
   width: 100% !important;
   background-color: white !important;
   color: #1e293b !important;
@@ -1639,8 +1639,8 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
   outline: none !important;
 }
 
-#place-autocomplete-container :deep(gmpx-place-autocomplete)::part(input):focus,
-#place-autocomplete-container :deep(gmp-place-autocomplete)::part(input):focus {
+#place-autocomplete-container :deep(gmpx-place-autocomplete::part(input):focus),
+#place-autocomplete-container :deep(gmp-place-autocomplete::part(input):focus) {
   background-color: white !important;
   border-color: #f59e0b !important; /* Bejo Orange/Amber */
   box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1) !important;
