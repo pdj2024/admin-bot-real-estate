@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { PROVINCES } from '@/utils/regions'
 import Vertical from '@/layouts/vertical.vue'
 import Filter from './components/Filter.vue'
 import Rumah from './components/Rumah.vue'
@@ -12,11 +13,23 @@ const facilities = ref({
   carport: '',
   lantai: ''
 })
+const region = ref({
+  province: '',
+  city: '',
+  provinceId: ''
+})
+const priceRange = ref({
+  min: '',
+  max: ''
+})
 const rumahRef = ref<any>(null)
 
 const toggleFilter = () => {
   isFilterOpen.value = !isFilterOpen.value
 }
+
+const provinces = ref<any[]>(PROVINCES)
+
 </script>
 
 <template>
@@ -29,6 +42,9 @@ const toggleFilter = () => {
             v-model:openFilter="isFilterOpen" 
             v-model:searchQuery="searchQuery"
             v-model:facilities="facilities"
+            v-model:region="region"
+            v-model:priceRange="priceRange"
+            :provinces="provinces"
             class="lg:sticky lg:top-24"
           />
         </aside>
@@ -38,6 +54,8 @@ const toggleFilter = () => {
             ref="rumahRef"
             :searchQuery="searchQuery"
             :facilities="facilities"
+            :region="region"
+            :priceRange="priceRange"
             @openFilter="toggleFilter" 
           />
         </section>

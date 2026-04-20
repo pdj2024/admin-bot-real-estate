@@ -160,11 +160,14 @@ const searchType = ref('')
 const dropdownTypeRef = ref<HTMLElement | null>(null)
 
 const openCertificate = ref(false)
-// const searchCertificate = ref('')
+const searchCertificate = ref('')
 const dropdownCertificateRef = ref<HTMLElement | null>(null)
 
 const openArea = ref(false)
 const dropdownAreaRef = ref<HTMLElement | null>(null)
+
+const typeDropdownStyle = ref({})
+const certDropdownStyle = ref({})
 
 const props = defineProps<{
   showModal: boolean
@@ -810,11 +813,52 @@ const selectType = (type: string) => {
   openType.value = false
 }
 
-// const selectCertificate = (type: string) => {
-//   form.value.Jenis_Sertifikat = type
-//   searchCertificate.value = ''
-//   openCertificate.value = false
-// }
+const toggleType = () => {
+  openType.value = !openType.value
+  if (openType.value) {
+    searchType.value = ''
+    openCertificate.value = false
+    const trigger = dropdownTypeRef.value?.getBoundingClientRect()
+    if (trigger) {
+      typeDropdownStyle.value = {
+        top: `${trigger.bottom + 8}px`,
+        left: `${trigger.left}px`,
+        width: `${trigger.width}px`
+      }
+    }
+  }
+}
+
+const certificates = ['SHM', 'SHGB', 'HGU', 'HP', 'HMRS', 'Girik', 'Petok D', 'AJB', 'PPJB', 'Surat Ijo', 'Strata Title', 'Lainnya']
+
+const filteredCertificates = computed(() => {
+  if (!searchCertificate.value) return certificates
+  return certificates.filter(c => 
+    c.toLowerCase().includes(searchCertificate.value.toLowerCase())
+  )
+})
+
+const selectCertificate = (type: string) => {
+  form.value.Jenis_Sertifikat = type
+  searchCertificate.value = ''
+  openCertificate.value = false
+}
+
+const toggleCertificate = () => {
+  openCertificate.value = !openCertificate.value
+  if (openCertificate.value) {
+    searchCertificate.value = ''
+    openType.value = false
+    const trigger = dropdownCertificateRef.value?.getBoundingClientRect()
+    if (trigger) {
+      certDropdownStyle.value = {
+        top: `${trigger.bottom + 8}px`,
+        left: `${trigger.left}px`,
+        width: `${trigger.width}px`
+      }
+    }
+  }
+}
 
 const addAkses = () => {
   if (newAkses.value.trim()) {
@@ -1198,35 +1242,64 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
                   <div class="field relative" ref="dropdownTypeRef">
                     <label class="label">TIPE PROPERTI <span class="text-red-500">*</span></label>
                     <div class="relative">
-                      <div @click.stop="openType = !openType" class="field-input h-11 cursor-pointer truncate flex justify-between items-center !pl-4 pr-4">
+                      <div @click.stop="toggleType" class="field-input h-11 cursor-pointer truncate flex justify-between items-center !pl-4 pr-4">
                         <span class="font-bold text-slate-700">{{ form.Tipe || 'Pilih Kategori' }}</span>
                         <Icon icon="lucide:chevron-down" class="size-4 text-slate-400 transition-transform" :class="openType ? 'rotate-180' : ''" />
                       </div>
                     </div>
 
                     <!-- Dropdown Content -->
-                    <div v-if="openType" class="absolute top-full left-0 mt-2 w-full min-w-[240px] z-50 bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden scale-in">
-                      <div class="p-3 border-b bg-slate-50">
-                        <div class="relative">
-                          <Icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
-                          <input v-model="searchType" type="text" placeholder="Cari..." class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-primary" @click.stop />
+                    <Teleport to="body">
+                      <div v-if="openType" class="fixed z-[1100] bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden scale-in" :style="typeDropdownStyle">
+                        <div class="p-3 border-b bg-slate-50">
+                          <div class="relative">
+                            <Icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
+                            <input v-model="searchType" type="text" placeholder="Cari..." class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-primary" @click.stop />
+                          </div>
+                        </div>
+                        <div class="max-h-60 overflow-y-auto p-2 custom-scroll flex flex-col">
+                          <button v-for="t in filteredTypes" :key="t" @click="selectType(t)" type="button" class="group flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold transition-all hover:bg-slate-50 hover:text-primary">
+                            {{ t }}
+                            <Icon v-if="form.Tipe === t" icon="lucide:check" class="size-4 text-primary" />
+                          </button>
                         </div>
                       </div>
-                      <div class="max-h-60 overflow-y-auto p-2 custom-scroll flex flex-col">
-                        <button v-for="t in filteredTypes" :key="t" @click="selectType(t)" type="button" class="group flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold transition-all hover:bg-slate-50 hover:text-primary">
-                          {{ t }}
-                          <Icon v-if="form.Tipe === t" icon="lucide:check" class="size-4 text-primary" />
-                        </button>
-                      </div>
-                    </div>
+                    </Teleport>
                   </div>
-                  <div class="field">
+                  <div class="field" ref="dropdownCertificateRef">
                     <label class="label">SERTIFIKAT</label>
                     <div class="relative">
-                      <select v-model="form.Jenis_Sertifikat" class="field-input h-11 !pl-4 font-bold text-slate-700">
-                        <option value="" disabled>Pilih Sertifikat</option>
-                        <option v-for="s in ['SHM', 'SHGB', 'HGU', 'HP', 'HMRS', 'Girik', 'Petok D', 'AJB', 'PPJB', 'Surat Ijo', 'Strata Title', 'Lainnya']" :key="s" :value="s">{{ s }}</option>
-                      </select>
+                      <div @click.stop="toggleCertificate" class="field-input h-11 cursor-pointer truncate flex justify-between items-center !pl-4 pr-4">
+                        <span class="font-bold text-slate-700">{{ form.Jenis_Sertifikat || 'Pilih Sertifikat' }}</span>
+                        <Icon icon="lucide:chevron-down" class="size-4 text-slate-400 transition-transform" :class="openCertificate ? 'rotate-180' : ''" />
+                      </div>
+
+                      <!-- Dropdown Content -->
+                      <Teleport to="body">
+                        <div v-if="openCertificate" class="fixed z-[1100] bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden scale-in" :style="certDropdownStyle">
+                          <div class="p-3 border-b bg-slate-50">
+                            <div class="relative">
+                              <Icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
+                              <input v-model="searchCertificate" type="text" placeholder="Cari Sertifikat..." class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-primary" @click.stop />
+                            </div>
+                          </div>
+                          <div class="max-h-60 overflow-y-auto p-2 custom-scroll flex flex-col">
+                            <button 
+                              v-for="s in filteredCertificates" 
+                              :key="s" 
+                              @click="selectCertificate(s)" 
+                              type="button" 
+                              class="group flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold transition-all hover:bg-slate-50 hover:text-primary"
+                            >
+                              {{ s }}
+                              <Icon v-if="form.Jenis_Sertifikat === s" icon="lucide:check" class="size-4 text-primary" />
+                            </button>
+                            <div v-if="filteredCertificates.length === 0" class="p-4 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
+                              Sertifikat tidak ditemukan
+                            </div>
+                          </div>
+                        </div>
+                      </Teleport>
                     </div>
                   </div>
                 </div>

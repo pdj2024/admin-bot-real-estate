@@ -11,7 +11,7 @@
         <div id="transaksi-container" class="relative flex-1 sm:flex-none">
           <button @click="isTransaksiOpen = !isTransaksiOpen" class="w-full flex items-center justify-between gap-3 px-4 py-2 border border-slate-200 rounded-xl bg-white text-sm font-bold hover:bg-slate-50 hover:border-slate-300 transition-all text-slate-700">
             <div class="flex items-center gap-2">
-              <Icon icon="lucide:tag" class="size-4 text-bejo-500" />
+              <Icon icon="lucide:tag" class="size-4 text-bejo-600" />
               <span>{{ selectedTransaksi }}</span>
             </div>
             <Icon icon="lucide:chevron-down" class="size-4 opacity-50" />
@@ -31,7 +31,7 @@
         <div id="type-container" class="relative flex-1 sm:flex-none">
           <button @click="isTypeOpen = !isTypeOpen" class="w-full flex items-center justify-between gap-3 px-4 py-2 border border-slate-200 rounded-xl bg-white text-sm font-bold hover:bg-slate-50 hover:border-slate-300 transition-all text-slate-700">
             <div class="flex items-center gap-2">
-              <Icon icon="lucide:home" class="size-4 text-bejo-500" />
+              <Icon icon="lucide:home" class="size-4 text-bejo-600" />
               <span>{{ selectedType }}</span>
             </div>
             <Icon icon="lucide:chevron-down" class="size-4 opacity-50" />
@@ -42,7 +42,7 @@
               <button @click="handleType('Semua Tipe')" class="dropdown-item">Semua Tipe</button>
               <hr class="my-2 border-slate-100" />
               <button v-for="t in propertyTypes" :key="t" @click="handleType(t)" class="dropdown-item flex items-center justify-between">
-                {{ t }} <Icon v-if="selectedType === t" icon="lucide:check" class="size-3 text-bejo-500" />
+                {{ t }} <Icon v-if="selectedType === t" icon="lucide:check" class="size-3 text-bejo-600" />
               </button>
             </div>
           </Transition>
@@ -51,7 +51,7 @@
         <div id="sorting-container" class="relative flex-1 sm:flex-none">
           <button @click="isSortOpen = !isSortOpen" class="w-full flex items-center justify-between gap-3 px-4 py-2 border border-slate-200 rounded-xl bg-white text-sm font-bold hover:bg-slate-50 hover:border-slate-300 transition-all text-slate-700">
             <div class="flex items-center gap-2">
-              <Icon icon="lucide:arrow-up-down" class="size-4 text-bejo-500" />
+                <Icon icon="lucide:arrow-up-down" class="size-4 text-bejo-600" />
               <span>{{ selectedSort }}</span>
             </div>
             <Icon icon="lucide:chevron-down" class="size-4 opacity-50" />
@@ -93,7 +93,7 @@
       </template>
       <template v-else-if="table.getRowModel().rows.length === 0">
         <div class="col-span-full py-20 flex flex-col items-center justify-center text-center bg-white rounded-[2.5rem] border border-dashed border-slate-200 shadow-sm relative overflow-hidden">
-          <div class="absolute -top-24 -right-24 size-48 bg-bejo-50 rounded-full blur-3xl opacity-50"></div>
+          <div class="absolute -top-24 -right-24 size-48 bg-slate-50 rounded-full blur-3xl opacity-50"></div>
           <div class="absolute -bottom-24 -left-24 size-48 bg-slate-50 rounded-full blur-3xl opacity-50"></div>
           <div class="p-6 bg-slate-50 rounded-full mb-6 relative z-10">
             <Icon icon="lucide:building-2" class="size-16 text-slate-300" />
@@ -168,6 +168,15 @@ const props = defineProps<{
     kamarMandi: string
     carport: string
     lantai: string
+  }
+  region: {
+    province: string
+    city: string
+    provinceId: string
+  }
+  priceRange: {
+    min: string
+    max: string
   }
 }>()
 
@@ -261,7 +270,7 @@ const handleType = (type: string) => {
 }
 
 // Reset ke halaman pertama saat filter atau pencarian berubah
-watch([() => props.searchQuery, selectedTransaksi, selectedType, () => props.facilities], () => {
+watch([() => props.searchQuery, selectedTransaksi, selectedType, () => props.facilities, () => props.region, () => props.priceRange], () => {
   table.setPageIndex(0)
 }, { deep: true })
 
@@ -303,6 +312,32 @@ const filteredProducts = computed(() => {
   }
   if (props.facilities.lantai) {
     result = result.filter(p => (p.Jumlah_Lantai || 0) >= Number(props.facilities.lantai))
+  }
+
+  // Filter Wilayah (Provinsi & Kota)
+  if (props.region.province) {
+    const prov = props.region.province.toLowerCase()
+    result = result.filter(p => String(p.Area || '').toLowerCase().includes(prov))
+  }
+  if (props.region.city) {
+    const city = props.region.city.toLowerCase()
+    result = result.filter(p => String(p.Area || '').toLowerCase().includes(city))
+  }
+
+  // Filter Harga
+  if (props.priceRange.min) {
+    const min = Number(props.priceRange.min)
+    result = result.filter(p => {
+      const price = p.Harga_Jual1 > 0 ? p.Harga_Jual1 : p.Harga_Sewa1
+      return price >= min
+    })
+  }
+  if (props.priceRange.max) {
+    const max = Number(props.priceRange.max)
+    result = result.filter(p => {
+      const price = p.Harga_Jual1 > 0 ? p.Harga_Jual1 : p.Harga_Sewa1
+      return price <= max
+    })
   }
 
   return result

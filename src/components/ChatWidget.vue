@@ -174,7 +174,7 @@ defineExpose({
           </button>
 
           <!-- Focus Mode Header -->
-          <div v-if="isFocusedMode" class="shrink-0 px-6 py-4 bg-white border-b border-slate-100 flex items-center gap-4">
+          <div v-if="isFocusedMode" class="shrink-0 px-6 py-2.5 bg-white border-b border-slate-100 flex items-center gap-4">
             <!-- Removed 'Back' button to keep it restricted to focused customer -->
             <h5 class="text-sm font-black text-slate-900 uppercase tracking-tighter">Percakapan Customer</h5>
           </div>
@@ -199,15 +199,15 @@ defineExpose({
             
             <!-- Take Over Overlay -->
             <Transition name="fade">
-              <div v-if="selectedRoomId && !isSessionTakenOver" class="absolute inset-0 z-50 bg-slate-900/40 backdrop-blur-md flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-500">
-                <div class="size-24 bg-white rounded-[2.5rem] flex items-center justify-center mb-6 shadow-2xl animate-bounce-subtle">
+              <div v-if="selectedRoomId && !isSessionTakenOver" class="absolute inset-0 z-50 bg-slate-900/40 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-500">
+                <div class="size-20 bg-white rounded-[2.5rem] flex items-center justify-center mb-4 shadow-2xl animate-bounce-subtle">
                   <Icon icon="lucide:message-square-plus" class="size-10 text-bejo-500" />
                 </div>
-                <h4 class="text-white text-xl font-black mb-3">Ambil Alih Percakapan</h4>
-                <p class="text-white/70 text-sm mb-8 max-w-xs">Pesan customer saat ini sedang ditangani Bot atau belum terhubung dengan Anda.</p>
+                <h4 class="text-white text-lg font-black mb-2">Ambil Alih Percakapan</h4>
+                <p class="text-white/70 text-sm mb-6 max-w-xs">Pesan customer saat ini sedang ditangani Bot atau belum terhubung dengan Anda.</p>
                 <button 
                   @click="handleTakeOver"
-                  class="px-8 py-4 bg-bejo-500 hover:bg-bejo-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-2xl shadow-bejo-500/40 transition-all hover:scale-105 active:scale-95 flex items-center gap-3"
+                  class="px-8 py-3 bg-bejo-500 hover:bg-bejo-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-2xl shadow-bejo-500/40 transition-all hover:scale-105 active:scale-95 flex items-center gap-3"
                 >
                   <Icon icon="lucide:hand" class="size-5" />
                   Mulai Chat Sekarang

@@ -39,6 +39,15 @@ const props = defineProps<{
     carport: string
     lantai: string
   }
+  region: {
+    province: string
+    city: string
+    provinceId: string
+  }
+  priceRange: {
+    min: string
+    max: string
+  }
 }>()
 
 const propertyTypes = ['Rumah', 'Tanah', 'Ruko', 'Apartemen', 'Gudang', 'Villa', 'SOHO', 'Pabrik', 'Perkantoran', 'Hotel', 'Rumah Kos', 'Stand', 'Toko', 'Gedung', 'Condotel', 'Lain-lain']
@@ -137,6 +146,38 @@ const filteredProducts = computed(() => {
     result = result.filter(p => (p.Jumlah_Lantai || 0) >= Number(props.facilities.lantai))
   }
 
+  // Filter Wilayah (Provinsi & Kota)
+  if (props.region.province) {
+    const prov = props.region.province.toLowerCase()
+    result = result.filter(p => {
+      const areaStr = String(Array.isArray(p.Area) ? (p.Area[0] || '') : (p.Area || ''))
+      return areaStr.toLowerCase().includes(prov)
+    })
+  }
+  if (props.region.city) {
+    const city = props.region.city.toLowerCase()
+    result = result.filter(p => {
+      const areaStr = String(Array.isArray(p.Area) ? (p.Area[0] || '') : (p.Area || ''))
+      return areaStr.toLowerCase().includes(city)
+    })
+  }
+
+  // Filter Harga
+  if (props.priceRange.min) {
+    const min = Number(props.priceRange.min)
+    result = result.filter(p => {
+      const price = (p.Harga_Jual1 > 0 ? p.Harga_Jual1 : p.Harga_Sewa1) || 0
+      return price >= min
+    })
+  }
+  if (props.priceRange.max) {
+    const max = Number(props.priceRange.max)
+    result = result.filter(p => {
+      const price = (p.Harga_Jual1 > 0 ? p.Harga_Jual1 : p.Harga_Sewa1) || 0
+      return price <= max
+    })
+  }
+
   return result
 })
 
@@ -173,7 +214,7 @@ const table = useVueTable({
 })
 
 // Reset ke halaman pertama saat filter atau pencarian berubah
-watch([() => props.searchQuery, transactionFilter, typeFilter, () => props.facilities], () => {
+watch([() => props.searchQuery, transactionFilter, typeFilter, () => props.facilities, () => props.region, () => props.priceRange], () => {
   table.setPageIndex(0)
 }, { deep: true })
 
@@ -270,6 +311,7 @@ onMounted(async () => {
 
 const emit = defineEmits<{
   (e: 'openFilter'): void
+  (e: 'update:searchQuery', value: string): void
 }>()
 
 defineExpose({ openAddModal })
@@ -279,64 +321,58 @@ defineExpose({ openAddModal })
   <div class="lg:col-span-3 col-span-1">
     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8 print:hidden border-b border-slate-50 pb-6">
       <div>
-        <!-- <h4 class="text-xl font-black text-slate-900 tracking-tight">Katalog Properti</h4> -->
         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
           Ditemukan <span class="text-bejo-600">{{ table.getFilteredRowModel().rows.length }}</span> Properti Tersedia
         </p>
       </div>
 
       <div class="flex flex-wrap items-center gap-2 sm:gap-3">
-        <!-- Sidebar Filter Trigger (Mobile/Tablet Only) -->
-        <button type="button" @click="emit('openFilter')" class="lg:hidden px-4 py-2.5 bg-bejo-500 text-white rounded-xl text-[11px] font-black uppercase tracking-wider hover:bg-bejo-600 transition-all shadow-md shadow-bejo-500/20 flex items-center gap-2 btn-trigger-filter">
+        <button type="button" @click="emit('openFilter')" class="lg:hidden px-4 py-2.5 bg-bejo-600 text-white rounded-xl text-[11px] font-black uppercase tracking-wider hover:bg-bejo-700 transition-all shadow-md shadow-bejo-600/20 flex items-center gap-2 btn-trigger-filter">
           <Icon icon="lucide:settings-2" class="size-3.5" />
           Filter
         </button>
 
-        <!-- Filter Transaksi -->
         <div class="relative inline-flex">
           <button type="button" @click="isTransactionOpen = !isTransactionOpen" class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[11px] font-black text-slate-700 hover:bg-slate-50 transition-all shadow-sm uppercase tracking-wider">
-            <Icon icon="lucide:filter" class="size-3.5 me-2 inline text-bejo-500" />
+            <Icon icon="lucide:filter" class="size-3.5 me-2 inline text-bejo-600" />
             {{ transactionFilter }}
           </button>
           <Transition enter-active-class="transition duration-100 ease-out" enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100" leave-active-class="transition duration-75 ease-in" leave-from-class="transform scale-100 opacity-100" leave-to-class="transform scale-95 opacity-0">
             <div v-show="isTransactionOpen" class="absolute right-0 top-full mt-2 z-50 min-w-40 bg-white border border-slate-100 rounded-2xl shadow-2xl p-2">
-              <button @click="handleTransactionFilter('Semua')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Semua <Icon v-if="transactionFilter === 'Semua'" icon="lucide:check" class="size-3 text-bejo-500" /></button>
-              <button @click="handleTransactionFilter('Jual')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Jual Saja <Icon v-if="transactionFilter === 'Jual'" icon="lucide:check" class="size-3 text-bejo-500" /></button>
-              <button @click="handleTransactionFilter('Sewa')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Sewa Saja <Icon v-if="transactionFilter === 'Sewa'" icon="lucide:check" class="size-3 text-bejo-500" /></button>
+              <button @click="handleTransactionFilter('Semua')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Semua <Icon v-if="transactionFilter === 'Semua'" icon="lucide:check" class="size-3 text-bejo-600" /></button>
+              <button @click="handleTransactionFilter('Jual')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Jual Saja <Icon v-if="transactionFilter === 'Jual'" icon="lucide:check" class="size-3 text-bejo-600" /></button>
+              <button @click="handleTransactionFilter('Sewa')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Sewa Saja <Icon v-if="transactionFilter === 'Sewa'" icon="lucide:check" class="size-3 text-bejo-600" /></button>
             </div>
           </Transition>
         </div>
 
-        <!-- Filter Tipe Unit -->
         <div class="relative inline-flex">
           <button type="button" @click="isTypeOpen = !isTypeOpen" class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[11px] font-black text-slate-700 hover:bg-slate-50 transition-all shadow-sm uppercase tracking-wider">
-            <Icon icon="lucide:home" class="size-3.5 me-2 inline text-bejo-500" />
+            <Icon icon="lucide:home" class="size-3.5 me-2 inline text-bejo-600" />
             {{ typeFilter === 'Semua' ? 'Semua Tipe' : typeFilter }}
           </button>
           <Transition enter-active-class="transition duration-100 ease-out" enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100" leave-active-class="transition duration-75 ease-in" leave-from-class="transform scale-100 opacity-100" leave-to-class="transform scale-95 opacity-0">
             <div v-show="isTypeOpen" class="absolute right-0 top-full mt-2 z-50 min-w-48 max-h-60 overflow-y-auto bg-white border border-slate-100 rounded-2xl shadow-2xl p-2 custom-scroll">
-              <button @click="handleTypeFilter('Semua')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Semua Tipe <Icon v-if="typeFilter === 'Semua'" icon="lucide:check" class="size-3 text-bejo-500" /></button>
-              <button v-for="t in propertyTypes" :key="t" @click="handleTypeFilter(t)" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">{{ t }} <Icon v-if="typeFilter === t" icon="lucide:check" class="size-3 text-bejo-500" /></button>
+              <button @click="handleTypeFilter('Semua')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Semua Tipe <Icon v-if="typeFilter === 'Semua'" icon="lucide:check" class="size-3 text-bejo-600" /></button>
+              <button v-for="t in propertyTypes" :key="t" @click="handleTypeFilter(t)" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">{{ t }} <Icon v-if="typeFilter === t" icon="lucide:check" class="size-3 text-bejo-600" /></button>
             </div>
           </Transition>
         </div>
 
-        <!-- Sorting -->
         <div class="relative inline-flex">
           <button type="button" @click="isSortOpen = !isSortOpen" class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[11px] font-black text-slate-700 hover:bg-slate-50 transition-all shadow-sm uppercase tracking-wider">
-            <Icon icon="lucide:arrow-up-down" class="size-3.5 me-2 inline text-bejo-500" />
+            <Icon icon="lucide:arrow-up-down" class="size-3.5 me-2 inline text-bejo-600" />
             Urutkan
           </button>
           <Transition enter-active-class="transition duration-100 ease-out" enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100" leave-active-class="transition duration-75 ease-in" leave-from-class="transform scale-100 opacity-100" leave-to-class="transform scale-95 opacity-0">
             <div v-show="isSortOpen" class="absolute right-0 top-full mt-2 z-50 min-w-48 bg-white border border-slate-100 rounded-2xl shadow-2xl p-2">
-              <button @click="handleSort('Terbaru')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Terbaru <Icon v-if="selectedSort === 'Terbaru'" icon="lucide:check" class="size-3 text-bejo-500" /></button>
-              <button @click="handleSort('Harga Termurah')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Harga Termurah <Icon v-if="selectedSort === 'Harga Termurah'" icon="lucide:check" class="size-3 text-bejo-500" /></button>
-              <button @click="handleSort('Harga Termahal')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Harga Termahal <Icon v-if="selectedSort === 'Harga Termahal'" icon="lucide:check" class="size-3 text-bejo-500" /></button>
+              <button @click="handleSort('Terbaru')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Terbaru <Icon v-if="selectedSort === 'Terbaru'" icon="lucide:check" class="size-3 text-bejo-600" /></button>
+              <button @click="handleSort('Harga Termurah')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Harga Termurah <Icon v-if="selectedSort === 'Harga Termurah'" icon="lucide:check" class="size-3 text-bejo-600" /></button>
+              <button @click="handleSort('Harga Termahal')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Harga Termahal <Icon v-if="selectedSort === 'Harga Termahal'" icon="lucide:check" class="size-3 text-bejo-600" /></button>
             </div>
           </Transition>
         </div>
 
-        <!-- Top Pagination -->
         <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-sm sm:flex-none flex-1 justify-center">
           <button @click="table.previousPage()" :disabled="!table.getCanPreviousPage()" class="p-1 px-2 text-[10px] font-black text-slate-500 hover:text-bejo-600 disabled:opacity-30 transition-colors hover:bg-slate-50 rounded-lg uppercase tracking-wider">
             Prev
@@ -349,7 +385,6 @@ defineExpose({ openAddModal })
           </button>
         </div>
 
-        <!-- Tambah Properti Button -->
         <button @click="openAddModal" class="px-5 py-2.5 bg-bejo-600 text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-bejo-700 hover:shadow-lg hover:shadow-bejo-600/30 transition-all flex items-center gap-2">
           <Icon icon="lucide:plus" class="size-3.5" />
           Tambah Unit

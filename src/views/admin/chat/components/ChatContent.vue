@@ -826,7 +826,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 <template>
   <div class="chat-content-container w-full h-full overflow-hidden">
     <div v-if="roomId" class="w-full h-full flex flex-col bg-white">
-      <div class="relative z-20 px-4 py-3 md:px-8 md:py-5 border-b border-slate-50 bg-white group">
+      <div class="relative z-20 px-4 py-2 md:px-8 md:py-3.5 border-b border-slate-50 bg-white group">
         <div class="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-bejo-50/50 to-transparent pointer-events-none"></div>
         <div class="absolute -right-20 -top-20 size-64 bg-bejo-100/30 rounded-full blur-3xl pointer-events-none transition-all duration-500 group-hover:scale-125"></div>
 
@@ -836,15 +836,15 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
               <Icon icon="lucide:menu" class="size-4"></Icon>
             </button>
 
-            <div class="relative flex-shrink-0 flex items-center justify-center font-black rounded-xl size-9 md:size-12 bg-gradient-to-br from-bejo-50 to-bejo-100/50 text-bejo-600 border border-white shadow-lg shadow-bejo-500/10">
-              <span v-if="username" class="text-xs md:text-base tracking-tighter">{{ username.substring(0, 2).toUpperCase() }}</span>
-              <Icon v-else icon="lucide:user" class="size-4 md:size-6 text-bejo-300" />
-              <span class="absolute -bottom-0.5 -right-0.5 size-2 md:size-3.5 border-2 border-white rounded-full bg-bejo-500 shadow-lg shadow-bejo-500/20 ring-1 ring-bejo-500/20"></span>
+            <div class="relative flex-shrink-0 flex items-center justify-center font-black rounded-xl size-8 md:size-10 bg-gradient-to-br from-bejo-50 to-bejo-100/50 text-bejo-600 border border-white shadow-lg shadow-bejo-500/10">
+              <span v-if="username" class="text-[10px] md:text-sm tracking-tighter">{{ username.substring(0, 2).toUpperCase() }}</span>
+              <Icon v-else icon="lucide:user" class="size-4 md:size-5 text-bejo-300" />
+              <span class="absolute -bottom-0.5 -right-0.5 size-2 md:size-3 border-2 border-white rounded-full bg-bejo-500 shadow-lg shadow-bejo-500/20 ring-1 ring-bejo-500/20"></span>
             </div>
 
             <div class="min-w-0 flex-1 overflow-hidden">
               <div class="flex items-center gap-1.5 mb-0">
-                <h6 class="text-slate-900 font-extrabold text-xs md:text-lg tracking-tight capitalize leading-tight truncate max-w-[120px] md:max-w-none flex-1 min-w-0">
+                <h6 class="text-slate-900 font-extrabold text-xs md:text-base tracking-tight capitalize leading-tight truncate max-w-[120px] md:max-w-none flex-1 min-w-0">
                   <template v-if="changeUsername">
                     <div class="flex items-center gap-2">
                       <input v-model="username" placeholder="Ubah nama..." class="bg-slate-50 border-transparent rounded-xl py-1.5 px-3 text-sm font-bold focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500 focus:bg-white transition-all outline-none border border-slate-100 shadow-inner" />
@@ -960,7 +960,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
         </Transition>
       </div>
 
-      <div v-if="!isLoadingChat" class="p-1 md:p-6 bg-white border-t border-slate-50" :class="{ hidden: isPreviewMode }">
+      <div v-if="!isLoadingChat" class="p-1 md:p-3.5 bg-white border-t border-slate-50" :class="{ hidden: isPreviewMode }">
         <div v-if="activeTab != 'bot'" class="flex gap-1 md:gap-4 items-center bg-slate-50 p-1.5 md:p-2.5 pl-2 md:pl-4 rounded-xl md:rounded-[1.5rem] border border-transparent focus-within:border-bejo-500/20 focus-within:bg-white focus-within:ring-8 focus-within:ring-bejo-500/5 focus-within:shadow-xl focus-within:shadow-bejo-500/5 transition-all duration-300">
           <div class="relative" ref="dropdownRef">
             <button @click.stop="openMenu = !openMenu" class="size-9 md:size-11 rounded-xl md:rounded-2xl bg-white border border-slate-100 text-slate-400 hover:text-bejo-600 hover:border-bejo-100 hover:shadow-lg hover:shadow-bejo-500/10 transition-all duration-300 flex items-center justify-center">
@@ -1022,7 +1022,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
         </div>
 
         <div v-else class="w-full">
-          <button @click="takeOverChat(false)" class="w-full py-4 sm:py-4.5 bg-gradient-to-r from-bejo-500 to-bejo-600 hover:from-bejo-600 hover:to-bejo-700 text-white font-black text-[10px] sm:text-xs uppercase tracking-widest rounded-2xl sm:rounded-[1.5rem] flex justify-center items-center gap-2 sm:gap-3 shadow-xl shadow-bejo-500/20 active:scale-[0.98] transition-all px-4">
+          <button @click="takeOverChat(false)" class="w-full py-3 sm:py-3.5 bg-gradient-to-r from-bejo-500 to-bejo-600 hover:from-bejo-600 hover:to-bejo-700 text-white font-black text-[10px] sm:text-xs uppercase tracking-widest rounded-2xl sm:rounded-[1.5rem] flex justify-center items-center gap-2 sm:gap-3 shadow-xl shadow-bejo-500/20 active:scale-[0.98] transition-all px-4">
             <Icon icon="lucide:message-square-plus" class="size-4 sm:size-5" />
             <span class="hidden xs:inline">Ambil Alih Percakapan</span>
             <span class="inline xs:hidden">Ambil Alih</span>

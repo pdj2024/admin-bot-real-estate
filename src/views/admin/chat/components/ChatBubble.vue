@@ -198,7 +198,7 @@ watch(
       </div>
 
       <div class="flex flex-col max-w-[85%] md:max-w-[70%]" :class="isMe ? 'items-end' : 'items-start'">
-        <div v-if="!(chat.Message || '').includes('_X7#mQ9!vW2_')" class="px-3 py-2 md:px-5 md:py-3.5 rounded-2xl text-[13px] md:text-sm relative transition-all duration-300 hover:shadow-xl" :class="[bubbleStyle, isMe ? 'hover:translate-x-1' : 'hover:-translate-x-1']">
+        <div v-if="!(chat.Message || '').includes('_X7#mQ9!vW2_')" class="px-3 py-1.5 md:px-4 md:py-2.5 rounded-2xl text-[13px] md:text-sm relative transition-all duration-300 hover:shadow-xl" :class="[bubbleStyle, isMe ? 'hover:translate-x-1' : 'hover:-translate-x-1']">
           <div v-if="imageSource" class="mb-3 overflow-hidden rounded-xl border border-black/5 shadow-inner bg-slate-50/50">
             <img :src="imageSource" @load="$emit('imageLoaded')" class="w-full h-auto object-cover max-h-72 hover:scale-105 transition-transform duration-500 cursor-pointer" />
           </div>

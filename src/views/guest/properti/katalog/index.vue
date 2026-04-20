@@ -47,6 +47,9 @@
             v-model:openFilter="isFilterOpen"
             v-model:searchQuery="searchQuery"
             v-model:facilities="facilities"
+            v-model:region="region"
+            v-model:priceRange="priceRange"
+            :provinces="provinces"
             :isAdmin="isAdmin"
             class="lg:sticky lg:top-24 border border-slate-200"
           />
@@ -57,6 +60,8 @@
             @openFilter="toggleFilter"
             :searchQuery="searchQuery"
             :facilities="facilities"
+            :region="region"
+            :priceRange="priceRange"
             :isAdmin="isAdmin"
           />
         </section>
@@ -76,6 +81,8 @@ import GuestLayout from '@/layouts/guest.vue'
 import Filter from './components/Filter.vue'
 import Rumah from './components/Rumah.vue'
 
+import { PROVINCES } from '@/utils/regions'
+
 const route = useRoute()
 
 // State untuk mengontrol filter-filter
@@ -87,6 +94,17 @@ const facilities = ref({
   carport: '',
   lantai: ''
 })
+const region = ref({
+  province: '',
+  city: '',
+  provinceId: ''
+})
+const priceRange = ref({
+  min: '',
+  max: ''
+})
+
+const provinces = ref<any[]>(PROVINCES)
 
 const toggleFilter = () => {
   isFilterOpen.value = !isFilterOpen.value
@@ -101,6 +119,7 @@ const isAdmin = computed(() => {
   // Path disesuaikan dengan router Anda, contoh: /properti/katalog
   return role === 'admin' && route.path.includes('/properti/katalog')
 })
+
 
 /**
  * Catatan:
