@@ -4,7 +4,7 @@
       <div class="p-6">
         <div class="flex items-center justify-between mb-6">
           <h6 class="text-lg font-bold text-slate-800 tracking-tight uppercase">Filter</h6>
-          <button @click="$emit('update:searchQuery', '')" class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest hover:text-red-500 transition-colors underline underline-offset-4 decoration-transparent hover:decoration-red-500">Hapus Semua</button>
+          <button @click="clearAll" class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest hover:text-red-500 transition-colors underline underline-offset-4 decoration-transparent hover:decoration-red-500">Hapus Semua</button>
         </div>
 
         <div class="space-y-5">
@@ -65,19 +65,43 @@
                 <div class="grid grid-cols-2 gap-3 pt-4">
                   <div class="relative">
                     <Icon icon="lucide:bed" class="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
-                    <input type="text" class="w-full pl-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:border-bejo-500 focus:bg-white transition-all outline-none focus:ring-4 focus:ring-bejo-500/10" placeholder="Kamar Tidur" />
+                    <input 
+                      :value="facilities.kamarTidur"
+                      @input="(e) => handleFacilityInput('kamarTidur', (e.target as HTMLInputElement).value)"
+                      type="number" 
+                      class="w-full pl-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:border-bejo-500 focus:bg-white transition-all outline-none focus:ring-4 focus:ring-bejo-500/10" 
+                      placeholder="Km. Tidur" 
+                    />
                   </div>
                   <div class="relative">
                     <Icon icon="lucide:bath" class="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
-                    <input type="text" class="w-full pl-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:border-bejo-500 focus:bg-white transition-all outline-none focus:ring-4 focus:ring-bejo-500/10" placeholder="Kamar Mandi" />
+                    <input 
+                      :value="facilities.kamarMandi"
+                      @input="(e) => handleFacilityInput('kamarMandi', (e.target as HTMLInputElement).value)"
+                      type="number" 
+                      class="w-full pl-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:border-bejo-500 focus:bg-white transition-all outline-none focus:ring-4 focus:ring-bejo-500/10" 
+                      placeholder="Km. Mandi" 
+                    />
                   </div>
                   <div class="relative">
                     <Icon icon="lucide:car" class="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
-                    <input type="text" class="w-full pl-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:border-bejo-500 focus:bg-white transition-all outline-none focus:ring-4 focus:ring-bejo-500/10" placeholder="Mobil (Carpt)" />
+                    <input 
+                      :value="facilities.carport"
+                      @input="(e) => handleFacilityInput('carport', (e.target as HTMLInputElement).value)"
+                      type="number" 
+                      class="w-full pl-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:border-bejo-500 focus:bg-white transition-all outline-none focus:ring-4 focus:ring-bejo-500/10" 
+                      placeholder="Carport" 
+                    />
                   </div>
                   <div class="relative">
                     <Icon icon="lucide:layers" class="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
-                    <input type="text" class="w-full pl-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:border-bejo-500 focus:bg-white transition-all outline-none focus:ring-4 focus:ring-bejo-500/10" placeholder="Jml Lantai" />
+                    <input 
+                      :value="facilities.lantai"
+                      @input="(e) => handleFacilityInput('lantai', (e.target as HTMLInputElement).value)"
+                      type="number" 
+                      class="w-full pl-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:border-bejo-500 focus:bg-white transition-all outline-none focus:ring-4 focus:ring-bejo-500/10" 
+                      placeholder="Lantai" 
+                    />
                   </div>
                 </div>
               </div>
@@ -107,13 +131,37 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 interface Props {
   openFilter: boolean
   searchQuery: string
+  facilities: {
+    kamarTidur: string
+    kamarMandi: string
+    carport: string
+    lantai: string
+  }
 }
 
 const props = defineProps<Props>()
 const emit = defineEmits<{ 
   (e: 'update:openFilter', value: boolean): void 
   (e: 'update:searchQuery', value: string): void
+  (e: 'update:facilities', value: Props['facilities']): void
 }>()
+
+const handleFacilityInput = (key: keyof Props['facilities'], value: string) => {
+  emit('update:facilities', {
+    ...props.facilities,
+    [key]: value
+  })
+}
+
+const clearAll = () => {
+  emit('update:searchQuery', '')
+  emit('update:facilities', {
+    kamarTidur: '',
+    kamarMandi: '',
+    carport: '',
+    lantai: ''
+  })
+}
 
 const filterRef = ref<HTMLElement | null>(null)
 

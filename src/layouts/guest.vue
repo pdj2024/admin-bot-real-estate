@@ -28,8 +28,8 @@
           <RouterLink to="/simulasi-kpr" active-class="bg-bejo-50 text-bejo-600 [&>svg]:text-bejo-500" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 hover:text-bejo-600 hover:bg-bejo-50 rounded-xl transition-all group">
             <Icon icon="lucide:calculator" class="size-4 text-slate-400 group-hover:text-bejo-500 transition-colors" /> Simulasi KPR
           </RouterLink>
-          <RouterLink v-if="isLoggedIn" to="/dashboard" active-class="bg-bejo-50 text-bejo-600 [&>svg]:text-bejo-500" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-bejo-600 bg-bejo-50/50 hover:bg-bejo-50 rounded-xl transition-all group">
-            <Icon icon="lucide:layout-dashboard" class="size-4 text-bejo-500" /> Dashboard Admin
+          <RouterLink v-if="isLoggedIn" to="/dashboard" active-class="bg-bejo-50 text-bejo-600 [&>svg]:text-bejo-500" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 hover:text-bejo-600 hover:bg-bejo-50 rounded-xl transition-all group">
+            <Icon icon="lucide:layout-dashboard" class="size-4 text-slate-400 group-hover:text-bejo-500 transition-colors" /> Dashboard Admin
           </RouterLink>
           <div class="h-px w-full bg-slate-100 my-2"></div>
           <RouterLink to="/tentang-kami" active-class="bg-bejo-50 text-bejo-600 [&>svg]:text-bejo-500" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 hover:text-bejo-600 hover:bg-bejo-50 rounded-xl transition-all group">
@@ -45,7 +45,7 @@
     <div class="flex flex-col min-h-screen w-full flex-grow">
       <header v-if="!hideHeader" class="bg-white/80 backdrop-blur-xl border-b border-white/50 sticky top-0 z-[80] shadow-sm shadow-slate-200/50 transition-all duration-300">
         <div class="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-bejo-200 to-transparent opacity-50"></div>
-        <div class="w-full !px-2.5 sm:!px-8 lg:!px-12 h-20 flex items-center justify-between mx-auto">
+        <div class="w-full !px-4 sm:!px-12 lg:!px-20 h-20 flex items-center justify-between mx-auto">
           
           <div class="flex items-center gap-3 sm:gap-10">
             <RouterLink to="/" class="shrink-0 group flex items-center gap-2">
@@ -74,7 +74,7 @@
                 Kontak
                 <span class="absolute inset-x-0 -bottom-1 h-1 bg-bejo-500 rounded-t-full transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
               </RouterLink>
-              <RouterLink v-if="isLoggedIn" to="/dashboard" active-class="text-bejo-600 [&>span]:scale-x-100" class="relative text-sm font-bold text-bejo-600 hover:text-bejo-700 transition-colors group py-2">
+              <RouterLink v-if="isLoggedIn" to="/dashboard" active-class="text-bejo-600 [&>span]:scale-x-100" class="relative text-sm font-bold text-slate-600 hover:text-bejo-600 transition-colors group py-2">
                 Dashboard
                 <span class="absolute inset-x-0 -bottom-1 h-1 bg-bejo-500 rounded-t-full transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
               </RouterLink>
@@ -91,15 +91,35 @@
               </a>
             </template>
             <template v-else>
-              <RouterLink to="/dashboard" class="hidden sm:flex items-center gap-3 px-4 py-2 rounded-full bg-slate-900 border border-slate-800 text-white hover:bg-bejo-600 hover:border-bejo-600 hover:shadow-lg hover:shadow-bejo-600/30 transition-all font-bold text-sm group">
-                <div class="size-7 rounded-full bg-bejo-500 flex items-center justify-center text-white ring-2 ring-slate-800 group-hover:ring-bejo-400 transition-all">
-                  <Icon icon="lucide:user" class="size-4" />
+              <!-- Profile Dropdown -->
+              <div class="hs-dropdown relative inline-flex [--placement:bottom-right]">
+                <button id="hs-dropdown-profile" type="button" class="hs-dropdown-toggle flex items-center gap-3 px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-white hover:bg-bejo-600 hover:border-bejo-600 hover:shadow-lg hover:shadow-bejo-600/30 transition-all font-bold text-sm group">
+                  <div class="size-8 rounded-full bg-bejo-500 flex items-center justify-center text-white ring-2 ring-slate-800 group-hover:ring-bejo-400 transition-all">
+                    <Icon icon="lucide:user" class="size-4" />
+                  </div>
+                  <span class="hidden sm:inline">Halo, {{ userName }}</span>
+                  <Icon icon="lucide:chevron-down" class="size-4 opacity-50 group-hover:opacity-100 transition-all" />
+                </button>
+
+                <div class="hs-dropdown-menu transition-[opacity,margin] duration hs-dropdown-open:opacity-100 opacity-0 hidden min-w-60 bg-white shadow-2xl rounded-2xl p-2 border border-slate-100 mt-2 z-50 overflow-hidden" aria-labelledby="hs-dropdown-profile">
+                  <div class="px-4 py-3 mb-2 bg-bejo-50/50 rounded-xl border border-bejo-100/50">
+                    <p class="text-[10px] font-black text-bejo-600 uppercase tracking-widest mb-1">Akun Terhubung</p>
+                    <p class="text-sm font-black text-slate-900 truncate">{{ userName }}</p>
+                    <p class="text-[10px] font-bold text-slate-400">{{ noId }}</p>
+                  </div>
+                  
+                  <div class="space-y-1">
+                    <RouterLink to="/dashboard" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:bg-bejo-50 hover:text-bejo-600 transition-all">
+                      <Icon icon="lucide:layout-dashboard" class="size-4" />
+                      Dasbor Admin
+                    </RouterLink>
+                    <button @click="handleLogout" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-red-500 hover:bg-red-50 transition-all">
+                      <Icon icon="lucide:log-out" class="size-4" />
+                      Keluar Sesi
+                    </button>
+                  </div>
                 </div>
-                <span>Halo, {{ userName }}</span>
-              </RouterLink>
-              <RouterLink to="/dashboard" class="sm:hidden size-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-bejo-600 transition-all">
-                <Icon icon="lucide:user" class="size-5 text-white" />
-              </RouterLink>
+              </div>
             </template>
 
             <button @click="layoutStore.toggleMobileMenu()" class="lg:hidden p-2 text-slate-700 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition-colors">
@@ -111,7 +131,7 @@
 
 
 
-      <main :class="['flex-grow w-full !px-2.5 sm:!px-4 lg:!px-2.5 py-6', mainClass]">
+      <main :class="['flex-grow w-full !px-4 sm:!px-12 lg:!px-20 py-10 md:py-16', mainClass]">
         <slot />
       </main>
 
@@ -120,7 +140,7 @@
         <div class="absolute -top-40 -left-40 size-80 bg-bejo-600/10 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
         <div class="absolute top-0 right-0 w-1/4 h-full bg-gradient-to-l from-white/5 to-transparent pointer-events-none"></div>
 
-        <div class="w-full !px-2.5 sm:!px-8 lg:!px-12">
+        <div class="w-full !px-4 sm:!px-12 lg:!px-20">
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-16 mb-16">
             
             <!-- Company Info -->
@@ -230,6 +250,8 @@ import { useSettings } from '@/stores/settings'
 import { storeToRefs } from 'pinia'
 import { Icon } from '@iconify/vue'
 import logo from '@/assets/images/logo-sm.png'
+import { logout } from '@/services/auth'
+import { confirm } from '@/utils/sweet-alert'
 
 defineProps<{ 
   mainClass?: string,
@@ -244,6 +266,13 @@ const { setSideNavSize } = layoutStore
 
 const isLoggedIn = ref(false)
 const userName = ref('')
+const noId = ref('')
+
+const handleLogout = () => {
+  confirm('Apakah Anda ingin keluar dari sesi ini?', () => {
+    logout(true)
+  })
+}
 
 const resize = () => {
   if (window.innerWidth <= 1024) { // Biasanya mobile/tablet sampai 1024px
@@ -260,9 +289,11 @@ onMounted(() => {
   // Check login session
   const token = localStorage.getItem('token')
   const name = localStorage.getItem('nama_display')
+  const idValue = localStorage.getItem('no_id')
   if (token && token !== 'undefined') {
     isLoggedIn.value = true
     userName.value = name || 'User'
+    noId.value = idValue || '-'
   }
 
   resize()

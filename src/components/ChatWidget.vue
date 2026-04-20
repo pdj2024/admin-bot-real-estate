@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { Icon } from '@iconify/vue'
-import SideBar from '@/views/chat/components/SideBar.vue'
-import ChatContent from '@/views/chat/components/ChatContent.vue'
+import SideBar from '@/views/admin/chat/components/SideBar.vue'
+import ChatContent from '@/views/admin/chat/components/ChatContent.vue'
 import { useChatStore } from '@/stores/chat'
 import api from '@/services/axios'
 
@@ -131,6 +131,13 @@ const handleIdLawan = (id: string) => {
 
 const handleClearRoom = () => {
   selectedRoomId.value = null
+  closeChat()
+}
+
+const handleUpdateChatStatus = (payload: { index: number; status: 'send' | 'failed' | 'pending' }) => {
+  if (chatStore.chats[payload.index]) {
+    chatStore.chats[payload.index].Send_Status = payload.status
+  }
 }
 
 defineExpose({
@@ -186,6 +193,8 @@ defineExpose({
               :isFocused="isFocusedMode"
               @clearRoom="handleClearRoom"
               @toggleFocused="isFocusedMode = true"
+              @addChat="chatStore.chats.push($event)"
+              @updateChatStatus="handleUpdateChatStatus"
             />
             
             <!-- Take Over Overlay -->

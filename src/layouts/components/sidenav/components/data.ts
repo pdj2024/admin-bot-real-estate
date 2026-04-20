@@ -30,14 +30,14 @@ export const menuItems: MenuItemType[] = [
     isTitle: true
   },
   {
-    key: 'katalog-properti',
-    label: 'Katalog Properti',
+    key: 'properti',
+    label: 'Properti',
     icon: 'lucide:blocks',
     url: '/properti/katalog'
   },
   {
-    key: 'data-master',
-    label: 'Data Master',
+    key: 'kelola-data',
+    label: 'Kelola Data',
     icon: 'lucide:workflow',
     children: [
       { key: 'data-admin', label: 'Admin', url: '/data/admin'},

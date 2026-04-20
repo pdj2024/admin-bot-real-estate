@@ -243,8 +243,8 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-3 relative">
-            <button @click="handleWaContact" class="flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm tracking-wide transition-all shadow-md bg-bejo-600 text-white hover:bg-bejo-700 hover:shadow-bejo-600/30">
+          <div class="grid gap-3 relative" :class="isAdmin ? 'grid-cols-1' : 'grid-cols-2'">
+            <button v-if="!isAdmin" @click="handleWaContact" class="flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm tracking-wide transition-all shadow-md bg-bejo-600 text-white hover:bg-bejo-700 hover:shadow-bejo-600/30">
               <Icon icon="lucide:headset" class="size-4" />
               Hubungi Kami
             </button>

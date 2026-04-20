@@ -13,8 +13,27 @@
           </div>
         </div>
 
-        <!-- Main Image -->
-        <img v-if="product.MediaUrls && product.MediaUrls.length >= 1" :src="product.MediaUrls[0].Id_Media" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+        <!-- Main Image with Smooth Transition -->
+        <div v-if="product.MediaUrls && product.MediaUrls.length >= 1" class="absolute inset-0">
+          <Transition
+            enter-active-class="transition-opacity duration-700 ease-out"
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+          >
+            <img 
+              v-show="isImageLoaded"
+              :src="product.MediaUrls[0].Id_Media" 
+              class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              @load="isImageLoaded = true"
+            />
+          </Transition>
+          
+          <!-- Loading State for Image -->
+          <div v-if="!isImageLoaded" class="absolute inset-0 bg-slate-100 animate-pulse flex items-center justify-center">
+             <Icon icon="lucide:loader-2" class="size-8 text-bejo-200 animate-spin" />
+          </div>
+        </div>
+
         <div v-else class="absolute inset-0 bg-slate-200 flex flex-col items-center justify-center">
           <Icon icon="lucide:image" class="size-16 text-slate-400" />
         </div>
@@ -203,7 +222,9 @@
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+
+const isImageLoaded = ref(false)
 
 const props = withDefaults(
   defineProps<{

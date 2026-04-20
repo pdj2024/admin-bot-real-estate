@@ -1,28 +1,24 @@
 <template>
   <GuestLayout>
-    <div class="mb-10 print:hidden space-y-8">
+    <div class="mb-10 print:hidden space-y-10">
       
       <!-- Breadcrumb -->
-      <nav class="flex items-center gap-2 text-[10px] sm:text-xs text-slate-500 mb-4 uppercase tracking-widest font-semibold">
-        <RouterLink to="/" class="hover:text-bejo-600 transition-colors">Beranda</RouterLink>
-        <Icon icon="lucide:chevron-right" class="size-3" />
-        <span class="text-slate-800">Tentang Kami</span>
-      </nav>
 
       <!-- Hero Banner -->
-      <div class="relative overflow-hidden rounded-[2.5rem] bg-slate-900 mt-4 h-72 sm:h-80 lg:h-96 shadow-2xl flex items-center justify-center border border-slate-800">
-        <img src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80" alt="Tentang Rumah Bejo" class="absolute inset-0 w-full h-full object-cover opacity-20 select-none pointer-events-none mix-blend-luminosity" draggable="false" />
-        <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
-        <div class="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-slate-900/50 to-transparent"></div>
+      <div class="relative overflow-hidden rounded-[3rem] bg-white mt-4 h-72 sm:h-80 lg:h-96 shadow-xl shadow-bejo-600/5 flex items-center justify-center border border-bejo-100 mt-10">
+        <!-- Dekorasi Background -->
+        <div class="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-bejo-50 via-bejo-50/50 to-transparent"></div>
+        <div class="absolute -right-20 -top-20 size-96 bg-gradient-to-br from-bejo-100 via-bejo-200 to-bejo-400 rounded-full blur-3xl opacity-40"></div>
+        <div class="absolute right-10 -bottom-20 size-64 bg-gradient-to-tr from-bejo-300 via-bejo-500 to-bejo-700 rounded-full blur-3xl opacity-10"></div>
         
         <div class="relative z-10 text-center px-6 w-full max-w-4xl mx-auto">
-          <span class="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full text-bejo-400 font-bold tracking-widest text-xs uppercase shadow-2xl border border-white/5 mx-auto mb-4">
-            <Icon icon="lucide:building" class="size-4" /> Company Profile
+          <span class="inline-flex items-center gap-2 px-4 py-2 bg-bejo-50 rounded-full text-bejo-600 font-bold tracking-widest text-xs uppercase shadow-sm border border-bejo-100 mx-auto mb-4">
+            <Icon icon="lucide:info" class="size-4" /> Company Profile
           </span>
-          <h1 class="text-4xl sm:text-5xl lg:text-7xl font-black text-white tracking-tight drop-shadow-2xl mb-6">
-            Mengenal <span class="bg-gradient-to-r from-bejo-400 to-bejo-600 bg-clip-text text-transparent">Rumah Bejo</span>
+          <h1 class="text-4xl sm:text-5xl lg:text-7xl font-black text-slate-900 tracking-tight mb-6">
+            Mengenal <span class="text-transparent bg-clip-text bg-gradient-to-r from-bejo-500 via-bejo-700 to-bejo-900">Rumah Bejo</span>
           </h1>
-          <p class="text-slate-300 text-sm sm:text-base lg:text-lg font-medium max-w-2xl mx-auto drop-shadow leading-relaxed">
+          <p class="text-slate-500 text-lg sm:text-xl font-medium leading-relaxed max-w-2xl mx-auto">
             Menyatukan mimpi dan kenyataan melalui penyediaan properti bermutu tinggi, transaksi yang aman, dan layanan profesional sepenuh hati.
           </p>
         </div>
@@ -53,8 +49,8 @@
           </div>
           
           <div class="grid grid-cols-1 gap-6">
-            <div class="bg-slate-50 border border-slate-100 rounded-[2rem] p-8 flex gap-6 hover:shadow-xl hover:bg-white transition-all duration-300 group">
-              <div class="bg-white shadow-sm rounded-2xl size-16 flex items-center justify-center shrink-0 border border-slate-100 group-hover:bg-bejo-500 group-hover:text-white transition-colors">
+            <div class="bg-bejo-50/20 border border-bejo-100/50 rounded-[2rem] p-8 flex gap-6 hover:shadow-xl hover:bg-white transition-all duration-300 group">
+              <div class="bg-white shadow-sm rounded-2xl size-16 flex items-center justify-center shrink-0 border border-bejo-100 group-hover:bg-bejo-500 group-hover:text-white transition-colors">
                 <Icon icon="lucide:target" class="size-8 text-bejo-600 group-hover:text-white" />
               </div>
               <div class="pt-1">
@@ -65,8 +61,8 @@
               </div>
             </div>
 
-            <div class="bg-slate-50 border border-slate-100 rounded-[2rem] p-8 flex gap-6 hover:shadow-xl hover:bg-white transition-all duration-300 group">
-              <div class="bg-white shadow-sm rounded-2xl size-16 flex items-center justify-center shrink-0 border border-slate-100 group-hover:bg-bejo-500 group-hover:text-white transition-colors">
+            <div class="bg-bejo-50/20 border border-bejo-100/50 rounded-[2rem] p-8 flex gap-6 hover:shadow-xl hover:bg-white transition-all duration-300 group">
+              <div class="bg-white shadow-sm rounded-2xl size-16 flex items-center justify-center shrink-0 border border-bejo-100 group-hover:bg-bejo-500 group-hover:text-white transition-colors">
                 <Icon icon="lucide:rocket" class="size-8 text-bejo-600 group-hover:text-white" />
               </div>
               <div class="pt-1">
@@ -102,23 +98,27 @@
       </div>
 
       <!-- Tim Kami Section -->
-      <div class="bg-slate-900 rounded-[3rem] p-8 sm:p-16 lg:p-24 shadow-2xl relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-1/3 h-full bg-bejo-500/10 blur-[120px] pointer-events-none"></div>
+      <div class="bg-bejo-50/50 rounded-[3rem] p-8 sm:p-16 lg:p-24 border border-bejo-100 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-1/3 h-full bg-bejo-100 blur-[120px] pointer-events-none opacity-50"></div>
         
         <div class="flex flex-col lg:flex-row gap-12 lg:gap-20 items-center">
-           <div class="lg:w-1/3 space-y-6">
-              <span class="text-bejo-400 font-black uppercase tracking-widest text-xs">Di Balik Layar</span>
-              <h2 class="text-3xl md:text-5xl font-black text-white tracking-tight leading-tight">Tim Profesional <br class="hidden lg:block" /> Rumah Bejo</h2>
-              <p class="text-slate-400 font-medium leading-relaxed">Kami terdiri dari para ahli properti, analis legalitas, dan pakar finansial yang berdedikasi tinggi bagi kepuasan Anda.</p>
-           </div>
-
-           <div class="lg:w-2/3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div v-for="(member, i) in teamMembers" :key="i" class="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-6 text-center hover:bg-white/10 transition-colors group">
-                 <div class="size-24 rounded-2xl bg-slate-800 mx-auto mb-5 overflow-hidden border-2 border-white/10 group-hover:border-bejo-500 transition-colors">
+          <div class="lg:w-1/2 relative z-10">
+            <span class="text-bejo-600 font-black text-[10px] uppercase tracking-[0.3em] block mb-4">Di Balik Layar</span>
+            <h2 class="text-4xl lg:text-6xl font-black text-slate-900 tracking-tighter leading-none mb-8">
+              Tim Profesional <br class="hidden sm:block" />
+              <span class="text-bejo-500">Rumah Bejo</span>
+            </h2>
+            <p class="text-lg text-slate-500 font-medium leading-relaxed">
+              Kami terdiri dari para ahli properti, analis legalitas, dan pakar finansial yang berdedikasi tinggi bagi kepuasan Anda.
+            </p>
+          </div>
+          <div class="lg:w-2/3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div v-for="(member, i) in teamMembers" :key="i" class="bg-white border border-slate-100 rounded-3xl p-6 text-center hover:shadow-xl transition-all group">
+                 <div class="size-24 rounded-2xl bg-slate-100 mx-auto mb-5 overflow-hidden border border-slate-200 group-hover:border-bejo-500 transition-colors">
                     <img :src="member.photo" :alt="member.name" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
                  </div>
-                 <h5 class="text-lg font-black text-white mb-1">{{ member.name }}</h5>
-                 <p class="text-xs font-bold text-bejo-400 uppercase tracking-widest">{{ member.role }}</p>
+                 <h5 class="text-lg font-black text-slate-900 mb-1">{{ member.name }}</h5>
+                 <p class="text-xs font-bold text-bejo-600 uppercase tracking-widest">{{ member.role }}</p>
               </div>
            </div>
         </div>

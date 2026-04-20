@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, nextTick, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { RouterLink } from 'vue-router'
 import api from '@/services/axios'
 import Guest from '@/layouts/guest.vue'
 import SidebarProduct from './components/SidebarProduct.vue'
@@ -120,12 +119,7 @@ onMounted(async () => {
 
 <template>
   <Guest>
-    <div class="px-4 py-8 md:p-10 max-w-[1440px] mx-auto w-full">
-      <nav class="flex items-center gap-2 text-[10px] sm:text-xs text-slate-500 mb-4 uppercase tracking-widest font-semibold">
-        <RouterLink to="/" class="hover:text-bejo-600 transition-colors">Beranda</RouterLink>
-        <Icon icon="lucide:chevron-right" class="size-3" />
-        <span class="text-slate-800">Detail Properti</span>
-      </nav>
+    <div class="p-10 max-w-[1440px] mx-auto w-full">
       <!-- <PageTitle subtitle="Kelola" title="Detail" v-if="isAdmin" /> -->
       <div class="grid lg:grid-cols-3 grid-cols-1 gap-5">
         <SidebarProduct :product="product" :isAdmin="isAdmin" />

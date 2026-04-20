@@ -1,37 +1,33 @@
 <template>
   <GuestLayout>
-    <div class="mb-10 print:hidden space-y-8">
+    <div class="mb-10 print:hidden space-y-10">
       
-      <nav class="flex items-center gap-2 text-[10px] sm:text-xs text-slate-500 mb-4 uppercase tracking-widest font-semibold">
-        <RouterLink to="/" class="hover:text-bejo-600 transition-colors">Beranda</RouterLink>
-        <Icon icon="lucide:chevron-right" class="size-3" />
-        <span class="text-slate-800">Simulasi KPR</span>
-      </nav>
 
       <!-- Hero Section -->
-      <div class="relative overflow-hidden rounded-[2.5rem] bg-slate-900 mt-4 h-72 sm:h-80 lg:h-96 shadow-2xl flex items-center justify-center border border-slate-800">
+      <div class="relative overflow-hidden rounded-[3rem] bg-white mt-4 h-72 sm:h-80 lg:h-96 shadow-xl shadow-bejo-600/5 flex items-center justify-center border border-bejo-100 uppercase tracking-widest font-semibold mt-10">
         <!-- Dekorasi Background -->
-        <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80" alt="KPR Illustration" class="absolute inset-0 w-full h-full object-cover opacity-20 select-none pointer-events-none mix-blend-luminosity" draggable="false" />
-        <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
-        <div class="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-transparent to-transparent"></div>
+        <div class="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-bejo-50 via-bejo-50/50 to-transparent"></div>
+        <div class="absolute -right-20 -top-20 size-96 bg-gradient-to-br from-bejo-100 via-bejo-200 to-bejo-400 rounded-full blur-3xl opacity-40"></div>
+        <div class="absolute right-10 -bottom-20 size-64 bg-gradient-to-tr from-bejo-300 via-bejo-500 to-bejo-700 rounded-full blur-3xl opacity-10"></div>
         
         <div class="relative z-10 text-center px-6 w-full max-w-4xl mx-auto">
-          <h1 class="text-4xl sm:text-5xl lg:text-7xl font-black text-white tracking-tight drop-shadow-2xl mb-6">
-            Simulasikan <span class="bg-gradient-to-r from-bejo-400 to-bejo-600 bg-clip-text text-transparent">Pinjamanmu!</span>
+          <h1 class="text-4xl sm:text-5xl lg:text-7xl font-black text-slate-900 tracking-tight mb-6">
+            Simulasikan <br />
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-bejo-500 via-bejo-700 to-bejo-900">Pinjamanmu!</span>
           </h1>
-          <p class="text-slate-300 text-sm sm:text-base lg:text-lg font-medium max-w-2xl mx-auto drop-shadow leading-relaxed">
+          <p class="text-slate-500 text-lg sm:text-xl font-medium leading-relaxed max-w-2xl mx-auto">
             Hitung estimasi angsuran rumah impian Anda dengan cepat dan akurat menggunakan fasilitas kalkulator simulasi KPR kami.
           </p>
         </div>
       </div>
 
       <!-- KPR Calculator Area -->
-      <div class="bg-gradient-to-br from-bejo-400 via-bejo-500 to-bejo-600 rounded-[2.5rem] p-6 sm:p-12 shadow-2xl shadow-bejo-600/30 grid grid-cols-1 xl:grid-cols-12 gap-10 lg:gap-14 relative overflow-hidden">
-        
+      <div class="relative overflow-hidden rounded-[3rem] bg-gradient-to-br from-bejo-400 via-bejo-500 to-bejo-600 shadow-2xl shadow-bejo-600/30">
         <!-- Decoration Geometric Elements -->
         <div class="absolute -top-40 -right-40 size-96 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
         <div class="absolute -bottom-40 -left-40 size-96 bg-black/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div class="absolute top-0 right-1/4 w-px h-full bg-gradient-to-b from-transparent via-white/20 to-transparent pointer-events-none hidden xl:block"></div>
+        
+        <div class="max-w-6xl mx-auto px-6 py-10 sm:px-12 sm:py-16 grid grid-cols-1 xl:grid-cols-12 gap-10 lg:gap-16 relative z-10">
         
         <!-- Input Form Section -->
         <div class="xl:col-span-7 space-y-6 relative z-10">
@@ -91,47 +87,47 @@
 
         <!-- Result Section -->
         <div class="xl:col-span-5 flex flex-col justify-center relative z-10 mt-6 xl:mt-0">
-          <div class="bg-slate-900 rounded-[2rem] p-5 sm:p-8 shadow-2xl w-full flex flex-col border border-white/10 relative overflow-hidden mb-5">
-            <div class="absolute top-0 right-0 size-32 bg-bejo-600 rounded-full blur-3xl opacity-20 pointer-events-none"></div>
+          <div class="bg-white rounded-[2rem] p-5 sm:p-8 shadow-2xl shadow-bejo-600/10 w-full flex flex-col border border-bejo-100 relative overflow-hidden mb-5">
+            <div class="absolute top-0 right-0 size-32 bg-bejo-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
             
-            <h3 class="text-xl font-black text-white mb-8 pb-4 border-b border-white/10">Hasil Simulasi KPR</h3>
+            <h3 class="text-xl font-black text-slate-900 mb-8 pb-4 border-b border-bejo-50">Hasil Simulasi KPR</h3>
             
-            <div class="grid grid-cols-1 gap-6 mb-8">
-              <div class="flex flex-col">
-                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Estimasi Angsuran / Bulan</span>
-                <div class="flex items-baseline gap-2">
-                  <span class="text-bejo-400 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight drop-shadow-md">Rp {{ formatCurrencyShort(angsuran) }}</span>
+            <div class="space-y-8 relative z-10">
+              <div>
+                <span class="text-[10px] font-black uppercase tracking-widest text-bejo-600 mb-2 block">Estimasi Angsuran / Bulan</span>
+                <div class="text-4xl sm:text-5xl font-black text-slate-900 flex items-baseline gap-2">
+                  <span class="text-2xl text-bejo-500">Rp</span> {{ formatCurrencyShort(angsuran) }}
                 </div>
               </div>
-              <div class="flex flex-col pt-6 border-t border-white/5">
-                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-2">
-                  <Icon icon="lucide:safe" class="size-3.5" /> Total Pinjaman Bank
-                </span>
-                <span class="text-white text-xl sm:text-2xl font-black">Rp {{ formatCurrencyShort(totalPinjaman) }}</span>
+              
+              <div class="pt-6 border-t border-bejo-50">
+                <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Total Pinjaman Bank</span>
+                <div class="text-2xl font-black text-slate-700">
+                  Rp {{ formatCurrency(totalPinjaman) }}
+                </div>
               </div>
             </div>
-
-            <button @click="handleKprWa" class="w-full px-6 py-4 bg-bejo-500 hover:bg-bejo-600 text-white rounded-2xl font-black text-base transition-all hover:shadow-xl hover:shadow-bejo-500/40 flex justify-center items-center gap-2 group hover:-translate-y-1 mt-auto focus:ring-4 focus:ring-bejo-500/50">
-              <Icon icon="lucide:message-circle" class="size-5" />
+            
+            <button @click="handleKprWa" class="mt-10 w-full bg-bejo-500 hover:bg-bejo-600 text-white py-5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-xl shadow-bejo-500/20 flex items-center justify-center gap-3 active:scale-95 group">
+              <Icon icon="ic:baseline-whatsapp" class="size-6 transition-transform group-hover:scale-110" />
               Konsultasikan Melalui WhatsApp
-              <Icon icon="lucide:arrow-right" class="size-4 group-hover:translate-x-1 transition-transform opacity-60" />
             </button>
           </div>
-          
-          <div class="flex gap-3 bg-white/20 backdrop-blur-md p-4 rounded-2xl border border-white/20">
-            <Icon icon="lucide:info" class="size-5 text-white shrink-0 mt-0.5" />
-            <p class="text-xs text-white font-medium leading-relaxed drop-shadow-sm">
-              *Hasil dari simulasi angsuran KPR ini <strong>tidak mengikat</strong> dan hanyalah perkiraan indikatif masa periode suku bunga tetap (fixed rate). Info rincian detail silakan hubungi agen.
+
+          <div class="bg-bejo-50/50 border border-bejo-100/50 rounded-2xl p-5 relative overflow-hidden">
+            <p class="text-[10px] font-bold text-bejo-700/70 leading-relaxed text-center italic relative z-10">
+              *Hasil dari simulasi angsuran KPR ini <span class="text-bejo-600">tidak mengikat</span> dan hanyalah perkiraan indikatif masa periode suku bunga tetap (fixed rate). Info rincian detail silakan hubungi agen.
             </p>
           </div>
         </div>
 
+        </div>
       </div>
 
       <!-- Persyaratan Section -->
-      <div class="bg-white border border-slate-100 rounded-[2.5rem] shadow-xl shadow-slate-200/40 p-6 sm:p-12 mb-10 overflow-hidden relative">
+      <div class="bg-white border border-bejo-100/50 rounded-[2.5rem] shadow-xl shadow-bejo-600/5 p-6 sm:p-12 mb-10 overflow-hidden relative">
         <!-- Deco -->
-        <div class="absolute -top-24 -right-24 size-48 bg-slate-50 rounded-full blur-2xl"></div>
+        <div class="absolute -top-24 -right-24 size-48 bg-bejo-50 rounded-full blur-2xl"></div>
         
         <div class="text-center mb-12 max-w-2xl mx-auto relative z-10">
           <span class="inline-flex items-center gap-2 px-3 py-1 bg-bejo-50 text-bejo-600 rounded-full text-xs font-black uppercase tracking-widest mb-4 border border-bejo-100">

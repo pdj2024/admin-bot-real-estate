@@ -68,7 +68,22 @@
           </Transition>
         </div>
 
-        <button v-if="isAdmin" @click="$router.push('/admin/properti/tambah')" class="flex items-center justify-center gap-2 px-6 py-2 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-bejo-600 hover:shadow-lg hover:shadow-bejo-600/30 transition-all flex-1 sm:flex-none"><Icon icon="lucide:plus" class="size-4" /> Tambah</button>
+        <!-- Top Pagination -->
+        <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-100 shadow-sm sm:flex-none flex-1 justify-center">
+          <button @click="table.previousPage()" :disabled="!table.getCanPreviousPage()" class="p-1.5 text-slate-500 hover:text-bejo-600 disabled:opacity-30 transition-colors hover:bg-slate-50 rounded-lg">
+            <Icon icon="lucide:chevron-left" class="size-4" />
+          </button>
+          <div class="px-2 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">
+            {{ table.getState().pagination.pageIndex + 1 }} / {{ table.getPageCount() }}
+          </div>
+          <button @click="table.nextPage()" :disabled="!table.getCanNextPage()" class="p-1.5 text-slate-500 hover:text-bejo-600 disabled:opacity-30 transition-colors hover:bg-slate-50 rounded-lg">
+            <Icon icon="lucide:chevron-right" class="size-4" />
+          </button>
+        </div>
+
+        <button v-if="isAdmin" @click="$router.push('/admin/properti/tambah')" class="flex items-center justify-center gap-2 px-6 py-2 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-bejo-600 hover:shadow-lg hover:shadow-bejo-600/30 transition-all flex-1 sm:flex-none">
+          <Icon icon="lucide:plus" class="size-4" /> Tambah
+        </button>
       </div>
     </div>
 
@@ -124,7 +139,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, nextTick, computed } from 'vue'
+import { onMounted, ref, nextTick, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import api from '@/services/axios'
@@ -148,6 +163,12 @@ const isTypeOpen = ref(false)
 const props = defineProps<{
   isAdmin: boolean
   searchQuery: string
+  facilities: {
+    kamarTidur: string
+    kamarMandi: string
+    carport: string
+    lantai: string
+  }
 }>()
 
 const propertyTypes = ['Rumah', 'Tanah', 'Ruko', 'Apartemen', 'Gudang', 'Villa', 'SOHO', 'Pabrik', 'Perkantoran', 'Hotel', 'Rumah Kos', 'Stand', 'Toko', 'Gedung', 'Condotel', 'Lain-lain']
@@ -239,6 +260,11 @@ const handleType = (type: string) => {
   isTypeOpen.value = false
 }
 
+// Reset ke halaman pertama saat filter atau pencarian berubah
+watch([() => props.searchQuery, selectedTransaksi, selectedType, () => props.facilities], () => {
+  table.setPageIndex(0)
+}, { deep: true })
+
 const filteredProducts = computed(() => {
   let result = products.value
 
@@ -263,6 +289,20 @@ const filteredProducts = computed(() => {
   // Filter Tipe Unit
   if (selectedType.value !== 'Semua Tipe') {
     result = result.filter(p => p.Tipe === selectedType.value)
+  }
+
+  // Filter Fasilitas (Minimal Value)
+  if (props.facilities.kamarTidur) {
+    result = result.filter(p => (p.Jumlah_Kamar_Tidur || 0) >= Number(props.facilities.kamarTidur))
+  }
+  if (props.facilities.kamarMandi) {
+    result = result.filter(p => (p.Jumlah_Kamar_Mandi || 0) >= Number(props.facilities.kamarMandi))
+  }
+  if (props.facilities.carport) {
+    result = result.filter(p => (p.Jumlah_Carpot || 0) >= Number(props.facilities.carport))
+  }
+  if (props.facilities.lantai) {
+    result = result.filter(p => (p.Jumlah_Lantai || 0) >= Number(props.facilities.lantai))
   }
 
   return result

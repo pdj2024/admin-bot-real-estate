@@ -97,7 +97,7 @@ const router = createRouter({
         title: 'Dashboard',
         requiresAuth: true
       },
-      component: () => import('@/views/dashboard/index.vue')
+      component: () => import('@/views/admin/dashboard/index.vue')
     },
     {
       path: '/chat',
@@ -106,7 +106,7 @@ const router = createRouter({
         title: 'Chat',
         requiresAuth: true
       },
-      component: () => import('@/views/chat/index.vue')
+      component: () => import('@/views/admin/chat/index.vue')
     },
     {
       path: '/janji-temu',
@@ -115,7 +115,7 @@ const router = createRouter({
         title: 'Janji Temu',
         requiresAuth: true
       },
-      component: () => import('@/views/janji-temu/index.vue')
+      component: () => import('@/views/admin/janji-temu/index.vue')
     },
     {
       path: '/properti/katalog',
@@ -124,7 +124,7 @@ const router = createRouter({
         title: 'Katalog Properti',
         requiresAuth: true
       },
-      component: () => import('@/views/properti/katalog/index.vue')
+      component: () => import('@/views/admin/properti/katalog/index.vue')
     },
     {
       path: '/properti/detail/:slug',
@@ -133,7 +133,7 @@ const router = createRouter({
         title: 'Detail properti',
         requiresAuth: true
       },
-      component: () => import('@/views/properti/detail/index.vue')
+      component: () => import('@/views/admin/properti/detail/index.vue')
     },
     {
       path: '/data/admin',
@@ -142,7 +142,7 @@ const router = createRouter({
         title: 'Data Admin',
         requiresAuth: true
       },
-      component: () => import('@/views/data-master/admin/index.vue')
+      component: () => import('@/views/admin/kelola-data/admin/index.vue')
     },
     {
       path: '/data/sales',
@@ -151,7 +151,7 @@ const router = createRouter({
         title: 'Data Sales',
         requiresAuth: true
       },
-      component: () => import('@/views/data-master/sales/index.vue')
+      component: () => import('@/views/admin/kelola-data/sales/index.vue')
     },
     {
       path: '/data/customer',
@@ -160,7 +160,7 @@ const router = createRouter({
         title: 'Data Customer',
         requiresAuth: true
       },
-      component: () => import('@/views/data-master/customer/index.vue')
+      component: () => import('@/views/admin/kelola-data/customer/index.vue')
     },
     {
       path: '/data/wilayah',
@@ -169,7 +169,7 @@ const router = createRouter({
         title: 'Data Wilayah',
         requiresAuth: true
       },
-      component: () => import('@/views/data-master/wilayah/index.vue')
+      component: () => import('@/views/admin/kelola-data/wilayah/index.vue')
     },
     {
       path: '/pengaturan',
@@ -178,7 +178,7 @@ const router = createRouter({
         title: 'Pengaturan',
         requiresAuth: true
       },
-      component: () => import('@/views/pengaturan/index.vue')
+      component: () => import('@/views/admin/pengaturan/index.vue')
     },
 
     // Error Pages

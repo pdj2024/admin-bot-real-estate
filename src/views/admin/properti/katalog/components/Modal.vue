@@ -1,0 +1,1727 @@
+<script setup lang="ts">
+import { ref, reactive, watch, onMounted, onBeforeUnmount, computed, nextTick, toRaw, markRaw } from 'vue'
+import { Icon } from '@iconify/vue'
+import { success, fail } from '@/utils/sweet-alert'
+import api from '@/services/axios'
+import axios from 'axios'
+
+import { GOOGLE_MAPS_API_KEY, GEMINI_API_KEY } from '@/config/constants'
+
+const newAkses = ref('')
+const panjang = ref('')
+const lebar = ref('')
+const photos = ref<File[]>([])
+const extensionsPhotos = ref<string[]>([])
+const previewPhotos = ref<any[]>([])
+const selectedFiles = ref<File[]>([])
+const deletedMediaIds = ref<string[]>([])
+const mapContainer = ref<HTMLElement | null>(null)
+const isMapLoaded = ref(false)
+
+const isGeocoding = ref(false)
+const isLocationSelected = ref(false)
+const isLocating = ref(false)
+const isDetectingArea = ref(false)
+const aiDetectedResult = ref('')
+const lastAICallKey = ref('')
+const aiError = ref(false)
+const activeTab = ref<'utama' | 'detail'>('utama')
+
+// --- Gemini API State ---
+const detectRegionWithAI = async (kecamatan: string, kota: string) => {
+  if (!GEMINI_API_KEY || !kecamatan || !kota) return
+
+  // Prevent redundant calls for the same location
+  const currentKey = `${kecamatan}-${kota}`.toLowerCase()
+  if (currentKey === lastAICallKey.value) {
+    console.log('Skipping AI call: Already detected for this area.')
+    return
+  }
+
+  isDetectingArea.value = true
+  aiError.value = false
+
+  try {
+    // 1. Fetch available models with caching (or minimal calls)
+    const listModels = await axios.get(`https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_API_KEY}`)
+    const models = listModels.data.models || []
+
+    // 2. Filter stable models
+    const stableModels = models.filter((m: any) => !m.name.toLowerCase().includes('preview') && !m.name.toLowerCase().includes('experimental') && m.supportedGenerationMethods.includes('generateContent'))
+
+    // Prioritize 1.5-flash for speed/quota
+    const bestModel = stableModels.find((m: any) => m.name.includes('1.5-flash')) || stableModels.find((m: any) => m.name.includes('flash')) || stableModels[0] || models[0]
+
+    if (!bestModel) throw new Error('No compatible Gemini models found.')
+
+    const modelName = bestModel.name
+    console.log('Using Model for Region Detection:', modelName)
+
+    const prompt = `Properly categorize the district "${kecamatan}" in "${kota}", Indonesia into one of these regions: Pusat, Utara, Timur, Selatan, Barat, or Kabupaten. Answer with only the region name.`
+
+    const response = await axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent`,
+      {
+        contents: [{ parts: [{ text: prompt }] }]
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-goog-api-key': GEMINI_API_KEY
+        }
+      }
+    )
+
+    const aiResponse = response.data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim()
+    console.log('AI Logic Result:', aiResponse)
+
+    if (aiResponse) {
+      const cleanedResponse = aiResponse.replace(/[^\w\s]/gi, '').toLowerCase()
+      const validRegions = ['pusat', 'utara', 'timur', 'selatan', 'barat', 'kabupaten']
+      const matched = validRegions.find((r) => cleanedResponse.includes(r))
+
+      if (matched) {
+        const cleanKota = kota.replace(/Kota\s+|Kabupaten\s+|Kab\.\s+/i, '').trim()
+        const direction = matched.charAt(0).toUpperCase() + matched.slice(1)
+        aiDetectedResult.value = `${cleanKota} ${direction}`
+        lastAICallKey.value = currentKey
+        console.log('AI Result Cached:', aiDetectedResult.value)
+      }
+    }
+  } catch (error: any) {
+    if (error.response?.status === 429) {
+      aiError.value = true
+      console.warn('Gemini Rate Limit Hit (429). Please wait a moment.')
+    } else {
+      console.error('Gemini AI Error:', error.message)
+    }
+  } finally {
+    isDetectingArea.value = false
+  }
+}
+
+const getCurrentLocation = () => {
+  if (!navigator.geolocation) {
+    fail('Geolocation tidak didukung oleh browser ini.')
+    return
+  }
+
+  isLocating.value = true
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const { latitude, longitude } = position.coords
+      const pos = { lat: latitude, lng: longitude }
+
+      nextTick(() => {
+        isLocating.value = false
+        isLocationSelected.value = true
+
+        if (gMap) gMap.setCenter(pos)
+        if (gMarker) gMarker.position = pos
+
+        updateCoords(latitude, longitude)
+        geocodePosition(pos)
+      })
+    },
+    (error) => {
+      isLocating.value = false
+      let msg = 'Gagal mendapatkan lokasi.'
+      if (error.code === error.PERMISSION_DENIED) {
+        msg = 'Izin lokasi ditolak. Silakan aktifkan izin GPS di browser Anda.'
+      }
+      fail(msg)
+      console.error('Geolocation error:', error)
+    },
+    { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+  )
+}
+
+const currentCoords = reactive({
+  lat: -7.2504, // Default Surabaya
+  lng: 112.7688
+})
+
+let gMap: any = null
+let gMarker: any = null
+let gGeocoder: any = null
+let gAutocompleteSessionToken: any = null
+
+const predictions = ref<any[]>([])
+const searchQuery = ref('')
+const isPredictionsOpen = ref(false)
+const dropdownAutocompleteRef = ref<HTMLElement | null>(null)
+// --------------------------
+
+const scrollContainer = ref<HTMLElement | null>(null)
+
+const isLoading = ref(false)
+const openType = ref(false)
+const searchType = ref('')
+const dropdownTypeRef = ref<HTMLElement | null>(null)
+
+const openCertificate = ref(false)
+// const searchCertificate = ref('')
+const dropdownCertificateRef = ref<HTMLElement | null>(null)
+
+const openArea = ref(false)
+const dropdownAreaRef = ref<HTMLElement | null>(null)
+
+const props = defineProps<{
+  showModal: boolean
+  itemData?: any
+}>()
+
+const emit = defineEmits(['update:showModal', 'success', 'close'])
+
+interface MediaUrl {
+  Url: string | null
+  Expired_At: Date
+  IsCompressed: false
+  ContentType: string
+  ThumbUrl: string | null
+  Size: number
+  Id_Media: string
+  No_Id_Media: string
+}
+
+interface RealEstateForm {
+  No_Id: string
+  Nama_Produk: string
+  Alamat: string
+  Hide_alamat: boolean
+  Tipe: string
+  Tipe_Ukuran: string
+  Jenis_Sertifikat: string
+  Luas_Tanah: number
+  Luas_Bangunan: number
+  Jumlah_Lantai: number
+  Jumlah_Kamar_Tidur: number
+  Jumlah_Kamar_Mandi: number
+  Jumlah_Carpot: number
+  Daya_Listrik: number
+  Status_Display: string
+  Status_Properti: string
+  Status_Transaksi: string[]
+  Flag_Sewa: 'Ya' | 'Tidak'
+  Ada_Minimal_Sewa?: boolean
+  Minimal_Sewa: number | null
+  Satuan_Minimal_Sewa: 'Bulan' | 'Tahun' | ''
+  Harga_Jual1: number
+  Harga_Jual2: number
+  Harga_Sewa1: number
+  Harga_Sewa2: number
+  Keterangan: string
+  Slug: string
+  Latitude?: string
+  Longitude?: string
+  Link_Maps?: string
+  Area: string[]
+  Akses_Jalan: string[]
+  File_Image: string[]
+  MediaUrls: MediaUrl[]
+}
+
+// interface MediaItem {
+//   Url: string | null
+//   Expired_At: string
+//   IsCompressed: boolean
+//   ContentType: string
+//   ThumbUrl: string | null
+//   Size: number
+//   Id_Media: string
+//   No_Id_Media: string
+// }
+
+const specs = [
+  { key: 'Jumlah_Kamar_Tidur', label: 'Jml Kamar', icon: 'lucide:bed' },
+  { key: 'Jumlah_Kamar_Mandi', label: 'Jml KM', icon: 'lucide:bath' },
+  { key: 'Jumlah_Carpot', label: 'Carport', icon: 'lucide:car' },
+  { key: 'Daya_Listrik', label: 'Daya Listrik (W)' }
+] as const
+
+// --- State Management ---
+const defaultForm = (): RealEstateForm => ({
+  No_Id: '',
+  Nama_Produk: '',
+  Alamat: '',
+  Hide_alamat: false,
+  Tipe: 'Rumah',
+  Tipe_Ukuran: '',
+  Jenis_Sertifikat: '',
+  Luas_Tanah: 0,
+  Luas_Bangunan: 0,
+  Jumlah_Lantai: 0,
+  Jumlah_Kamar_Tidur: 0,
+  Jumlah_Kamar_Mandi: 0,
+  Jumlah_Carpot: 0,
+  Daya_Listrik: 0,
+  Status_Display: 'Aktif',
+  Status_Properti: 'Tersedia',
+  Status_Transaksi: ['Jual'],
+  Flag_Sewa: 'Tidak',
+  Ada_Minimal_Sewa: false,
+  Minimal_Sewa: 0,
+  Satuan_Minimal_Sewa: 'Tahun',
+  Harga_Jual1: 0,
+  Harga_Jual2: 0,
+  Harga_Sewa1: 0,
+  Harga_Sewa2: 0,
+  Keterangan: '',
+  Slug: '',
+  Area: ['', '', ''],
+  Akses_Jalan: [],
+  File_Image: [],
+  MediaUrls: []
+})
+
+const form = ref<RealEstateForm>(defaultForm())
+
+watch([panjang, lebar], ([newP, newL]) => {
+  if (newP || newL) {
+    form.value.Tipe_Ukuran = `${newP}x${newL}`
+  } else {
+    form.value.Tipe_Ukuran = ''
+  }
+})
+
+watch(
+  () => props.showModal,
+  (newVal) => {
+    if (newVal) {
+      activeTab.value = 'utama' // Reset to first tab on open
+      // Clear all photo-related state on every modal opening
+      photos.value = []
+      extensionsPhotos.value = []
+      selectedFiles.value = []
+      previewPhotos.value = []
+      deletedMediaIds.value = []
+
+      if (props.itemData) {
+        // Deep copy the item data to avoid mutating props or shared refs
+        form.value = JSON.parse(JSON.stringify(props.itemData))
+
+        // Trigger map centering for edit mode
+        nextTick(() => {
+          if (form.value.Area[0] || form.value.Alamat) {
+            geocodeExistingAddress()
+          }
+        })
+
+        if (props.itemData.Tipe_Ukuran) {
+          const splitUkuran = props.itemData.Tipe_Ukuran.split('x')
+          panjang.value = splitUkuran[0] || ''
+          lebar.value = splitUkuran[1] || ''
+        }
+
+        // Initialize preview from existing MediaUrls
+        if (props.itemData.File_Image && props.itemData.MediaUrls) {
+          previewPhotos.value = [...props.itemData.MediaUrls]
+        }
+
+        if (props.itemData.Minimal_Sewa != null && props.itemData.Minimal_Sewa > 0) {
+          form.value.Ada_Minimal_Sewa = true
+        } else {
+          form.value.Ada_Minimal_Sewa = false
+        }
+      } else {
+        form.value = defaultForm()
+        previewPhotos.value = []
+        photos.value = []
+        panjang.value = ''
+        lebar.value = ''
+        isLocationSelected.value = false
+      }
+
+      // Map visibility based on Area[2] coordinate existence
+      if (form.value.Area[2] && form.value.Area[2] !== '') {
+        isLocationSelected.value = true
+        // Parse coordinates and update map center early
+        const [lat, lng] = form.value.Area[2].split(',').map(Number)
+        if (!isNaN(lat) && !isNaN(lng)) {
+          currentCoords.lat = lat
+          currentCoords.lng = lng
+        }
+      } else {
+        isLocationSelected.value = false
+      }
+
+      // Trigger map centering/geocoding if needed
+      nextTick(() => {
+        if (isLocationSelected.value || form.value.Area[0] || form.value.Alamat) {
+          geocodeExistingAddress()
+        }
+      })
+    }
+  }
+)
+
+// --- Watcher to sync AI result to Area input ---
+watch(aiDetectedResult, (newVal) => {
+  if (newVal) {
+    console.log('Watcher triggered! Updating form.Area[1] to:', newVal)
+    // Use splice or spread for guaranteed array reactivity
+    form.value.Area.splice(1, 1, newVal)
+  }
+})
+
+const propertyTypes = ['Rumah', 'Tanah', 'Ruko', 'Apartemen', 'Gudang', 'Villa', 'SOHO', 'Pabrik', 'Perkantoran', 'Hotel', 'Rumah Kos', 'Stand', 'Toko', 'Gedung', 'Condotel', 'Lain-lain']
+
+const filteredTypes = computed(() => {
+  return propertyTypes.filter((t) => t.toLowerCase().includes(searchType.value.toLowerCase()))
+})
+
+// const certificateTypes = ['SHM', 'SHGB', 'HGU', 'HP', 'HMRS', 'Girik', 'Petok D', 'AJB', 'PPJB', 'Surat Ijo', 'Strata Title', 'Lainnya']
+
+// --- Dynamic Area Options ---
+const currentCity = computed(() => {
+  if (!form.value.Area[0]) return ''
+  const parts = form.value.Area[0].split(',').map((p) => p.trim())
+
+  let rawCity = ''
+  if (parts.length >= 3) {
+    rawCity = parts[parts.length - 2]
+  } else {
+    rawCity = parts[0] || ''
+  }
+
+  // Normalize: Clean "Kota", "Kabupaten", etc. to match AI detection logic
+  return rawCity.replace(/Kota\s+|Kabupaten\s+|Kab\.\s+/i, '').trim()
+})
+
+const directions = ['Pusat', 'Utara', 'Timur', 'Selatan', 'Barat']
+const suggestedAreas = computed(() => {
+  const city = currentCity.value
+  if (!city) return directions
+  return directions.map((dir) => `${city} ${dir}`)
+})
+
+const availableAreas = computed(() => {
+  const city = currentCity.value
+  const base = directions.map((dir) => (city ? `${city} ${dir}` : dir))
+
+  // Ensure current manual Area is always in the list for editing
+  const existingArea = form.value.Area[1]
+  if (existingArea && !base.some((opt) => opt.toLowerCase() === existingArea.toLowerCase())) {
+    const formatted = existingArea
+      .split(' ')
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ')
+    return [...base, formatted]
+  }
+
+  return base
+})
+
+// --- Google Maps Integration Logic ---
+const loadGoogleMaps = () => {
+  // Jika sudah ada, langsung init
+  if (typeof window.google?.maps?.importLibrary === 'function') {
+    initMap()
+    return
+  }
+
+  // Buat loader ala dokumentasi resmi Google Maps
+  const g: any = window
+  let h: any, a: any
+  const p = 'The Google Maps JavaScript API'
+  const c = 'google'
+  const l = 'importLibrary'
+  const q = '__ib__'
+  const m = document
+  const b: any = g[c] || (g[c] = {})
+  const d = b.maps || (b.maps = {})
+  const r = new Set()
+  const e = new URLSearchParams()
+
+  const u = () =>
+    h ||
+    (h = new Promise(async (f, n) => {
+      await (a = m.createElement('script'))
+      e.set('libraries', [...r].join(','))
+      e.set('key', GOOGLE_MAPS_API_KEY)
+      e.set('v', 'beta')
+      e.set('language', 'id')
+      e.set('region', 'ID')
+      e.set('callback', c + '.maps.' + q) // CRITICAL: Signal Google to resolve the promise
+      a.src = `https://maps.${c}apis.com/maps/api/js?` + e
+      d[q] = f
+      a.onerror = () => (h = n(Error(p + ' could not load.')))
+      a.nonce = (m.querySelector('script[nonce]') as any)?.nonce || ''
+      m.head.append(a)
+    }))
+
+  d[l] = (f: any, ...n: any[]) => r.add(f) && u().then(() => d[l](f, ...n))
+
+  // Jalankan inisialisasi
+  initMap()
+}
+
+// --- Headless Autocomplete Logic ---
+let debounceTimeout: any = null
+const handleSearchInput = () => {
+  if (debounceTimeout) clearTimeout(debounceTimeout)
+  if (!searchQuery.value) {
+    predictions.value = []
+    isPredictionsOpen.value = false
+    return
+  }
+
+  debounceTimeout = setTimeout(async () => {
+    try {
+      if (!gAutocompleteSessionToken) {
+        const { AutocompleteSessionToken } = (await google.maps.importLibrary('places')) as google.maps.PlacesLibrary
+        gAutocompleteSessionToken = new AutocompleteSessionToken()
+      }
+
+      const { AutocompleteSuggestion } = (await google.maps.importLibrary('places')) as google.maps.PlacesLibrary
+      const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions({
+        input: searchQuery.value,
+        sessionToken: gAutocompleteSessionToken,
+        includedRegionCodes: ['id']
+      })
+
+      if (suggestions && suggestions.length > 0) {
+        // Map raw suggestions to clean plain objects to avoid reactive getter issues
+        predictions.value = suggestions.map((s: any) => ({
+          placeId: s.placePrediction?.placeId || Math.random().toString(),
+          mainText: s.placePrediction?.text?.text || s.placePrediction?.text || 'Lokasi tidak dikenal',
+          secondaryText: s.placePrediction?.secondaryText?.text || s.placePrediction?.secondaryText || '',
+          raw: markRaw(s)
+        }))
+        isPredictionsOpen.value = true
+      } else {
+        predictions.value = []
+        isPredictionsOpen.value = false
+      }
+    } catch (err) {
+      console.error('Autocomplete error:', err)
+      predictions.value = []
+      isPredictionsOpen.value = false
+    }
+  }, 300)
+}
+
+const selectPrediction = async (mappedPrediction: any) => {
+  console.log('Selecting prediction:', mappedPrediction)
+  try {
+    // Reset Area[1] (Region/Mata Angin) first so user knows a new detection is starting
+    form.value.Area[1] = ''
+
+    const suggestion = toRaw(mappedPrediction.raw)
+    if (!suggestion || !suggestion.placePrediction) {
+      console.warn('Invalid suggestion object (even with toRaw):', suggestion)
+      return
+    }
+
+    // Safely get text
+    searchQuery.value = mappedPrediction.mainText
+    isPredictionsOpen.value = false
+
+    const place = suggestion.placePrediction.toPlace()
+    console.log('Fetching fields for place:', place)
+    await place.fetchFields({
+      fields: ['location', 'addressComponents', 'formattedAddress']
+    })
+    console.log('Fetched fields:', place)
+
+    if (place.location) {
+      const loc = place.location
+      isLocationSelected.value = true
+
+      gMap?.setCenter(loc)
+      gMap?.setZoom(17)
+      if (gMarker) gMarker.position = loc
+
+      // Update form
+      const lat = loc.lat()
+      const lng = loc.lng()
+      form.value.Link_Maps = `https://www.google.com/maps?q=${lat},${lng}`
+      form.value.Latitude = String(lat)
+      form.value.Longitude = String(lng)
+      form.value.Alamat = place.formattedAddress || ''
+
+      if (place.addressComponents) {
+        parseAddressComponents(place.addressComponents)
+      }
+
+      // Reset session token for next search
+      const { AutocompleteSessionToken } = (await google.maps.importLibrary('places')) as google.maps.PlacesLibrary
+      gAutocompleteSessionToken = new AutocompleteSessionToken()
+    }
+  } catch (err) {
+    console.error('Error selecting place:', err)
+  }
+}
+
+const initMap = async () => {
+  if (!mapContainer.value) return
+
+  // If map already exists but container is new/different, we need to reset
+  if (gMap) gMap = null
+
+  try {
+    const [libraryMap, libraryMarker] = (await Promise.all([google.maps.importLibrary('maps'), google.maps.importLibrary('marker'), google.maps.importLibrary('places')])) as [google.maps.MapsLibrary, google.maps.MarkerLibrary, google.maps.PlacesLibrary]
+
+    const { Map } = libraryMap
+    const { AdvancedMarkerElement } = libraryMarker
+
+    gGeocoder = new google.maps.Geocoder()
+
+    // Check for existing coordinates in Area[2] to set as initial center
+    let initialPos = { ...currentCoords }
+    if (form.value.Area[2] && form.value.Area[2].includes(',')) {
+      const [lat, lng] = form.value.Area[2].split(',').map(Number)
+      if (!isNaN(lat) && !isNaN(lng)) {
+        initialPos = { lat, lng }
+      }
+    }
+
+    gMap = new Map(mapContainer.value, {
+      center: initialPos,
+      zoom: 15,
+      mapId: 'DEMO_MAP_ID',
+      mapTypeControl: false,
+      streetViewControl: false
+    })
+
+    // Resolve loading state as soon as Map is ready
+    isMapLoaded.value = true
+
+    gMarker = new AdvancedMarkerElement({
+      map: gMap,
+      position: initialPos,
+      gmpDraggable: true,
+      title: 'Lokasi Properti'
+    })
+
+    if (mapContainer.value) {
+      const { AutocompleteSessionToken } = (await google.maps.importLibrary('places')) as google.maps.PlacesLibrary
+      gAutocompleteSessionToken = new AutocompleteSessionToken()
+    }
+
+    gMarker.addListener('dragend', () => {
+      const pos = gMarker.position
+      if (pos) {
+        updateCoords(pos.lat, pos.lng)
+        geocodePosition(pos)
+      }
+    })
+
+    gMap.addListener('click', (event: any) => {
+      if (event.latLng) {
+        const lat = event.latLng.lat()
+        const lng = event.latLng.lng()
+        gMarker.position = { lat, lng }
+        updateCoords(lat, lng)
+        geocodePosition({ lat, lng })
+        isLocationSelected.value = true
+      }
+    })
+  } catch (error) {
+    console.error('Gagal inisialisasi Google Maps:', error)
+  }
+}
+
+const geocodeExistingAddress = () => {
+  if (!gGeocoder) return
+
+  // Prioritize coordinates from Area[2]
+  if (form.value.Area[2] && form.value.Area[2].includes(',')) {
+    const [lat, lng] = form.value.Area[2].split(',').map(Number)
+    if (!isNaN(lat) && !isNaN(lng)) {
+      const pos = { lat, lng }
+      currentCoords.lat = lat
+      currentCoords.lng = lng
+      if (gMap) gMap.setCenter(pos)
+      if (gMarker) gMarker.position = pos
+      return // Coordinate takes priority, stop here
+    }
+  }
+
+  const targetAddress = form.value.Area[0] || form.value.Alamat
+  if (!targetAddress) return
+
+  gGeocoder.geocode({ address: targetAddress }, (results: any, status: any) => {
+    if (status === 'OK' && results[0]) {
+      const pos = results[0].geometry.location
+      currentCoords.lat = pos.lat()
+      currentCoords.lng = pos.lng()
+
+      if (gMap) gMap.setCenter(pos)
+      if (gMarker) gMarker.position = pos
+      // Also update Area[2] if it was empty
+      updateCoords(pos.lat(), pos.lng())
+    }
+  })
+}
+
+const updateCoords = (lat: number, lng: number) => {
+  nextTick(() => {
+    currentCoords.lat = lat
+    currentCoords.lng = lng
+    form.value.Area[2] = `${lat},${lng}`
+  })
+}
+
+const geocodePosition = (pos: any) => {
+  if (!gGeocoder) return
+
+  const lat = typeof pos.lat === 'function' ? pos.lat() : pos.lat
+  const lng = typeof pos.lng === 'function' ? pos.lng() : pos.lng
+
+  isGeocoding.value = true
+  gGeocoder.geocode({ location: { lat, lng } }, (results: any, status: any) => {
+    nextTick(() => {
+      isGeocoding.value = false
+      if (status === 'OK' && results && results[0]) {
+        isLocationSelected.value = true
+        parseAddressComponents(results[0].address_components)
+      }
+    })
+  })
+}
+
+const cleanKecamatan = (val: string) => {
+  if (!val) return ''
+  return val.replace(/^(Kecamatan|Kec\.|Kec)\s+/i, '').trim()
+}
+
+const SURABAYA_REGIONS: Record<string, string[]> = {
+  'Surabaya Pusat': ['Tegalsari', 'Simokerto', 'Genteng', 'Bubutan'],
+  'Surabaya Timur': ['Gubeng', 'Gunung Anyar', 'Sukolilo', 'Tambaksari', 'Mulyorejo', 'Rungkut', 'Tenggilis Mejoyo'],
+  'Surabaya Barat': ['Benowo', 'Pakal', 'Asemrowo', 'Sukomanunggal', 'Tandes', 'Sambikerep', 'Lakarsantri'],
+  'Surabaya Utara': ['Bulak', 'Kenjeran', 'Semampir', 'Pabean Cantian', 'Krembangan'],
+  'Surabaya Selatan': ['Wonokromo', 'Wonocolo', 'Wiyung', 'Karang Pilang', 'Jambangan', 'Gayungan', 'Dukuh Pakis', 'Sawahan']
+}
+
+// Normalize Special Regions (DKI, DIY) & Kabupaten
+const normalizeRegionLabel = (text: string) => {
+  if (!text) return ''
+  return text
+    .replace(/Daerah Khusus Ibukota/gi, 'DKI')
+    .replace(/Daerah Istimewa/gi, 'DIY')
+    .replace(/\bKabupaten\b/gi, 'Kab.')
+    .trim()
+}
+
+const parseAddressComponents = (components: google.maps.GeocoderAddressComponent[], displayName: string | null = null) => {
+  let provinsi = ''
+  let kota = ''
+  let kecamatan = ''
+  let kelurahan = ''
+  let rute = ''
+  let nomorRumah = ''
+  let building = ''
+  let subVillage = '' // Untuk level_5 (Tenggulunan Jaya dll)
+
+  components.forEach((c, index) => {
+    const types = c.types
+    const name = ((c as any).longText || c.long_name || '').trim()
+
+    // Handle components with empty types as potential building/route fallback
+    if (types.length === 0 && index === 0 && !building) {
+      building = name
+    }
+
+    if (types.includes('administrative_area_area_level_1') || types.includes('administrative_area_level_1')) {
+      provinsi = normalizeRegionLabel(name)
+    } else if (types.includes('administrative_area_level_2')) {
+      kota = normalizeRegionLabel(name)
+    } else if (types.includes('administrative_area_level_3') || (types.includes('locality') && !kecamatan)) {
+      kecamatan = cleanKecamatan(name)
+    } else if (types.includes('administrative_area_level_4') || types.includes('sublocality_level_1')) {
+      kelurahan = name
+    } else if (types.includes('administrative_area_level_5')) {
+      subVillage = name
+    } else if (types.includes('route')) {
+      rute = name
+        .replace(/jalan(\.|\b)/gi, 'Jl.')
+        .replace(/\s+/g, ' ')
+        .trim()
+    } else if (types.includes('street_number')) {
+      nomorRumah = 'No. ' + name.replace(/No\./i, '').trim()
+    } else if (types.includes('premise') || types.includes('point_of_interest') || types.includes('establishment')) {
+      building = name
+    }
+  })
+
+  // Failsafe for Kota if not in level_2
+  if (!kota) {
+    const locality = components.find((c) => c.types.includes('locality'))
+    if (locality) kota = normalizeRegionLabel(locality.long_name)
+  }
+
+  // Surabaya Region Detection (Manual)
+  let detectedRegion = ''
+  if (kota.toLowerCase().includes('surabaya') && kecamatan) {
+    for (const [region, districts] of Object.entries(SURABAYA_REGIONS)) {
+      if (districts.some((d) => kecamatan.toLowerCase().includes(d.toLowerCase()))) {
+        detectedRegion = region
+        break
+      }
+    }
+  }
+
+  // 1. Fill Lokasi Hierarki (Area[0])
+  form.value.Area[0] = [kelurahan, kecamatan, kota, provinsi].filter(Boolean).join(', ')
+
+  // 2. Fill Region (Area[1])
+  if (detectedRegion) {
+    form.value.Area[1] = detectedRegion.toLowerCase()
+  } else if (kecamatan && kota && GEMINI_API_KEY) {
+    detectRegionWithAI(kecamatan, kota)
+  }
+
+  // 3. Construct Dynamic Detail Alamat (form.Alamat)
+  // Format SubVillage (Dusun/Lingkungan)
+  let formattedSubVillage = subVillage.trim()
+  if (formattedSubVillage && !formattedSubVillage.toLowerCase().includes('dusun')) {
+    formattedSubVillage = `Dusun ${formattedSubVillage}`
+  }
+
+  // Combine Street and Number
+  const streetAndNumber = [rute, nomorRumah].filter(Boolean).join(' ')
+
+  // Combine Street/Number with SubVillage
+  const addressDetails = [streetAndNumber, formattedSubVillage].filter(Boolean).join(', ')
+
+  // Include Building/Establishment name as a prefix if available
+  let buildingName = (displayName || building || '').trim()
+  if (buildingName.includes(',')) {
+    buildingName = buildingName.split(',')[0].trim()
+  }
+
+  // Final Assembly: Avoid redundant building name if it's already in the street or subvillage
+  const finalParts = []
+  if (buildingName && !streetAndNumber.includes(buildingName) && !formattedSubVillage.includes(buildingName)) {
+    finalParts.push(buildingName)
+  }
+  if (addressDetails) {
+    finalParts.push(addressDetails)
+  }
+
+  form.value.Alamat = finalParts.join(', ')
+  console.log('Final Parsed Alamat:', form.value.Alamat)
+}
+
+const selectType = (type: string) => {
+  form.value.Tipe = type
+  searchType.value = ''
+  openType.value = false
+}
+
+// const selectCertificate = (type: string) => {
+//   form.value.Jenis_Sertifikat = type
+//   searchCertificate.value = ''
+//   openCertificate.value = false
+// }
+
+const addAkses = () => {
+  if (newAkses.value.trim()) {
+    form.value.Akses_Jalan.push(newAkses.value.trim())
+    newAkses.value = ''
+  }
+}
+
+const scrollToRight = () => {
+  if (scrollContainer.value) {
+    scrollContainer.value.scrollTo({
+      left: scrollContainer.value.scrollWidth,
+      behavior: 'smooth'
+    })
+  }
+}
+
+const handlePhoto = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (!target.files) return
+
+  const files = Array.from(target.files)
+
+  files.forEach((file) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      if (typeof e.target?.result === 'string') {
+        previewPhotos.value.push({
+          Id_Media: e.target.result,
+          No_Id_Media: 'new_upload',
+          Url: null,
+          Expired_At: '',
+          IsCompressed: false,
+          ContentType: file.type,
+          ThumbUrl: null,
+          Size: file.size
+        })
+
+        extensionsPhotos.value.push(file.name.split('.').pop()?.toLowerCase() || '')
+        photos.value.push(file)
+
+        nextTick(() => {
+          scrollToRight()
+        })
+      }
+    }
+    reader.readAsDataURL(file)
+  })
+
+  target.value = ''
+}
+
+const removePhoto = (index: number) => {
+  const photoToRemove = previewPhotos.value[index]
+
+  if (photoToRemove.No_Id_Media === 'new_upload') {
+    let newUploadIndex = -1
+    let currentNewUploadCount = 0
+
+    for (let i = 0; i < index; i++) {
+      if (previewPhotos.value[i].No_Id_Media === 'new_upload') {
+        currentNewUploadCount++
+      }
+    }
+    newUploadIndex = currentNewUploadCount
+
+    if (newUploadIndex !== -1) {
+      photos.value.splice(newUploadIndex, 1)
+      extensionsPhotos.value.splice(newUploadIndex, 1)
+      selectedFiles.value.splice(newUploadIndex, 1)
+    }
+  } else {
+    const idToRemove = photoToRemove.No_Id_Media
+    if (form.value.File_Image) {
+      const idIndex = form.value.File_Image.indexOf(idToRemove)
+      if (idIndex !== -1) {
+        form.value.File_Image.splice(idIndex, 1)
+        deletedMediaIds.value.push(idToRemove)
+      }
+    }
+  }
+
+  previewPhotos.value.splice(index, 1)
+}
+
+watch(
+  () => [...form.value.Status_Transaksi],
+  (newStatus) => {
+    if (!newStatus.includes('Sewa')) {
+      form.value.Ada_Minimal_Sewa = false
+      form.value.Minimal_Sewa = 0
+      form.value.Satuan_Minimal_Sewa = ''
+    }
+  }
+)
+
+watch(
+  [() => form.value.Tipe, () => form.value.Nama_Produk, () => form.value.Luas_Bangunan],
+  ([newTipe, newNama, newLuas]) => {
+    if (!newNama) {
+      form.value.Slug = ''
+      return
+    }
+
+    const baseSlug = newNama
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/[^\w\-]+/g, '')
+
+    form.value.Slug = `${newTipe.toLowerCase()}-${baseSlug}-${newLuas || 0}`
+  },
+  { immediate: true }
+)
+
+const reqUploadUrl = async () => {
+  const url = '/api/mediacloud/req-upload-url-batch'
+  const payload = {
+    uploader_id: localStorage.getItem('no_id'),
+    extensions: extensionsPhotos.value
+  }
+
+  try {
+    const { data } = await api.post(url, payload, {
+      headers: { 'X-Jenis-User': 'admin' }
+    })
+    return data
+  } catch (err) {
+    console.error('Request upload URL gagal:', err)
+    throw err
+  }
+}
+
+const sendMedia = async (uploadUrl: string, media: File) => {
+  if (!media || !(media instanceof File)) return null
+  try {
+    const response = await axios.put(uploadUrl, media, {
+      headers: { 'Content-Type': media.type }
+    })
+    return response.data
+  } catch (err) {
+    console.error('Gagal mengunggah biner ke Google Cloud:', err)
+    throw err
+  }
+}
+
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
+}
+
+const handleInputCurrency = (event: Event, field: 'Harga_Jual1' | 'Harga_Jual2' | 'Harga_Sewa1' | 'Harga_Sewa2') => {
+  const input = event.target as HTMLInputElement
+  const numericString = input.value.replace(/\D/g, '')
+  if (!numericString) {
+    form.value[field] = 0
+    input.value = ''
+    return
+  }
+  const pureNumber = parseInt(numericString, 10)
+  form.value[field] = pureNumber
+  input.value = formatCurrency(pureNumber)
+}
+
+const confirmMediaBatch = async (filesMetadata: any[]) => {
+  try {
+    const url = '/api/mediacloud/confirm-upload-batch'
+    const { data } = await api.post(
+      url,
+      { files: filesMetadata },
+      {
+        headers: { 'X-Jenis-User': 'admin' }
+      }
+    )
+    return data.MediaIds
+  } catch (err) {
+    console.error('Gagal konfirmasi batch:', err)
+    throw err
+  }
+}
+
+const submitForm = async () => {
+  if (isLoading.value) return
+
+  // Basic Validation
+  const requiredFields = [
+    { field: form.value.Nama_Produk, label: 'Nama Properti' },
+    { field: form.value.Tipe, label: 'Tipe Properti' },
+    { field: form.value.Jenis_Sertifikat, label: 'Jenis Sertifikat' },
+    { field: form.value.Status_Transaksi?.length, label: 'Status Transaksi' },
+    { field: form.value.Area[0], label: 'Lokasi (Peta)' },
+    // { field: form.value.Alamat, label: 'Alamat Detail' },
+    { field: form.value.Luas_Bangunan, label: 'Luas Bangunan' }
+  ]
+
+  for (const item of requiredFields) {
+    if (!item.field) {
+      fail(`${item.label} harus diisi!`)
+      return
+    }
+  }
+
+  // Conditional Price Validation
+  if (form.value.Status_Transaksi?.includes('Jual') && !form.value.Harga_Jual1) {
+    fail('Harga Jual harus diisi!')
+    return
+  }
+  if (form.value.Status_Transaksi?.includes('Sewa') && !form.value.Harga_Sewa1) {
+    fail('Harga Sewa harus diisi!')
+    return
+  }
+
+  if (form.value.Keterangan && form.value.Keterangan.length > 250) {
+    fail('Keterangan tidak boleh lebih dari 250 karakter!')
+    return
+  }
+
+  // Normalize Address & Area before saving
+  const normalizeText = (text: string) => {
+    return text
+      .replace(/\bJalan\b/gi, 'Jl.')
+      .replace(/\bNomor\b/gi, 'No.')
+      .replace(/\bKabupaten\b/gi, 'Kab.')
+      .replace(/Daerah Khusus Ibukota/gi, 'DKI')
+      .replace(/Daerah Istimewa/gi, 'DIY')
+      .replace(/\s+/g, ' ')
+      .trim()
+  }
+
+  if (form.value.Alamat) {
+    form.value.Alamat = normalizeText(form.value.Alamat)
+  }
+  if (form.value.Area && form.value.Area[0]) {
+    form.value.Area[0] = normalizeText(form.value.Area[0])
+  }
+
+  const isEdit = !!form.value.No_Id
+  isLoading.value = true
+
+  try {
+    const targetUrl = isEdit ? `/api/realEstate/update?no_id=${form.value.No_Id}` : '/api/realEstate/create'
+    let finalMediaIds: string[] = []
+
+    if (photos.value && photos.value.length > 0) {
+      const uploadTickets = await reqUploadUrl()
+      const validProcessCount = Math.min(uploadTickets.length, photos.value.length)
+      const activePhotos = photos.value.slice(0, validProcessCount)
+      const activeTickets = uploadTickets.slice(0, validProcessCount)
+
+      await Promise.all(activeTickets.map((ticket: any, index: number) => sendMedia(ticket.UploadUrl, activePhotos[index])))
+
+      const resIds = await confirmMediaBatch(
+        activeTickets.map((ticket: any, index: number) => ({
+          id_kategori: null,
+          uploader_id: localStorage.getItem('no_id'),
+          fileName: activePhotos[index].name,
+          objectName: ticket.ObjectName,
+          original_size: activePhotos[index].size,
+          content_type: activePhotos[index].type
+        }))
+      )
+      finalMediaIds = resIds
+    }
+
+    const combinedPhotos = [...new Set([...(form.value.File_Image || []), ...finalMediaIds])]
+    const payload = {
+      ...form.value,
+      File_Image: combinedPhotos,
+      Flag_Sewa: form.value.Status_Transaksi?.includes('Sewa') ? 'Ya' : 'Tidak'
+    }
+
+    const cleanPayload = { ...payload }
+    delete (cleanPayload as any).MediaUrls
+    if (!isEdit && !cleanPayload.No_Id) delete (cleanPayload as any).No_Id
+
+    await api[isEdit ? 'put' : 'post'](targetUrl, cleanPayload, {
+      headers: { 'X-Jenis-User': 'admin' }
+    })
+
+    if (deletedMediaIds.value.length > 0) {
+      try {
+        await api.post('/api/mediacloud/delete-batch', { ids: deletedMediaIds.value })
+      } catch (delErr) {
+        console.error('Failed to cleanup GCS images:', delErr)
+      }
+    }
+
+    success(isEdit ? 'Berhasil memperbarui properti' : 'Berhasil menambah properti')
+    emit('success')
+    handleClose()
+  } catch (err: any) {
+    const serverMsg = err.response?.data?.message || err.response?.data?.Message || err.response?.data?.error || err.response?.data?.ExceptionMessage || (typeof err.response?.data === 'string' ? err.response.data : null)
+    fail(serverMsg || err.message || 'Gagal menyimpan data.')
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const handleClickOutside = (event: MouseEvent) => {
+  if (dropdownTypeRef.value && !dropdownTypeRef.value.contains(event.target as Node)) openType.value = false
+  if (dropdownCertificateRef.value && !dropdownCertificateRef.value.contains(event.target as Node)) openCertificate.value = false
+  if (dropdownAreaRef.value && !dropdownAreaRef.value.contains(event.target as Node)) openArea.value = false
+  if (dropdownAutocompleteRef.value && !dropdownAutocompleteRef.value.contains(event.target as Node)) isPredictionsOpen.value = false
+}
+
+const handleClose = () => {
+  searchQuery.value = ''
+  predictions.value = []
+  isPredictionsOpen.value = false
+  emit('update:showModal', false)
+}
+
+onMounted(async () => {
+  loadGoogleMaps()
+  document.addEventListener('click', handleClickOutside)
+})
+
+onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
+</script>
+
+<template>
+  <Transition enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0" enter-to-class="opacity-100" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0">
+    <div v-show="showModal" class="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div class="bg-card w-full max-w-7xl rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
+        <div class="flex flex-col border-b bg-card">
+          <div class="flex justify-between items-center px-8 py-3">
+            <h2 class="text-lg font-bold text-slate-800 tracking-tight flex items-center gap-2">{{ form.No_Id ? 'Edit' : 'Tambah' }} Properti</h2>
+            <button @click="handleClose" class="p-2 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-600 transition-all active:scale-95">
+              <Icon icon="lucide:x" class="size-6" />
+            </button>
+          </div>
+
+          <!-- Tab Navigation Bar -->
+          <div class="flex px-8 gap-0 border-t border-slate-50 bg-slate-50/30">
+            <button @click="activeTab = 'utama'" class="flex-1 lg:flex-none lg:w-48 pt-4 pb-3.5 text-[10px] font-black uppercase tracking-widest transition-all relative group" :class="activeTab === 'utama' ? 'text-primary' : 'text-slate-400 hover:text-slate-500'">
+              <div class="flex items-center justify-center gap-2">
+                <Icon icon="lucide:home" class="size-3.5" :class="activeTab === 'utama' ? 'text-primary' : 'text-slate-400'" />
+                <span>Identitas Utama</span>
+              </div>
+              <div class="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-t-full transition-all duration-300 transform" :class="activeTab === 'utama' ? 'scale-x-75 opacity-100' : 'scale-x-0 opacity-0'"></div>
+            </button>
+            <button @click="activeTab = 'detail'" class="flex-1 lg:flex-none lg:w-48 pt-4 pb-3.5 text-[10px] font-black uppercase tracking-widest transition-all relative group" :class="activeTab === 'detail' ? 'text-primary' : 'text-slate-400 hover:text-slate-500'">
+              <div class="flex items-center justify-center gap-2">
+                <Icon icon="lucide:file-text" class="size-3.5" :class="activeTab === 'detail' ? 'text-primary' : 'text-slate-400'" />
+                <span>Spesifikasi Detail</span>
+              </div>
+              <div class="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-t-full transition-all duration-300 transform" :class="activeTab === 'detail' ? 'scale-x-75 opacity-100' : 'scale-x-0 opacity-0'"></div>
+            </button>
+          </div>
+        </div>
+
+        <div class="px-8 py-8 overflow-y-auto flex-1 custom-scroll bg-slate-50/10 relative">
+          <!-- TAB 1: IDENTITAS UTAMA -->
+          <div v-show="activeTab === 'utama'" class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start scale-in">
+            <!-- Left Column: Photos & Identity -->
+            <div class="space-y-10">
+              <!-- Top Section: Photos -->
+              <div class="space-y-3">
+                <label class="label block text-xs">GALERI GAMBAR PRODUK</label>
+                <div ref="scrollContainer" class="preview-container flex flex-nowrap gap-4 overflow-x-auto pb-4 custom-scroll">
+                  <template v-if="previewPhotos.length >= 1">
+                    <div v-for="(img, i) in previewPhotos" :key="i" class="preview-box relative size-28 flex-shrink-0">
+                      <img :src="img.Url || img.Id_Media" class="size-full object-cover rounded-2xl border border-slate-200 shadow-sm" />
+                      <button @click="removePhoto(i)" class="absolute top-2 right-2 size-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors border-2 border-white">
+                        <Icon icon="lucide:x" class="size-3" />
+                      </button>
+                    </div>
+                  </template>
+
+                  <label class="size-24 border-2 border-dashed border-slate-200 rounded-xl flex flex-shrink-0 flex-col items-center justify-center cursor-pointer hover:bg-slate-50 hover:border-primary/50 transition-all text-slate-400 group">
+                    <Icon icon="lucide:plus" class="size-6 group-hover:text-primary transition-colors" />
+                    <span class="text-[10px] font-bold mt-1 group-hover:text-primary">TAMBAH</span>
+                    <input type="file" multiple hidden @change="handlePhoto" accept="image/*,video/*" />
+                  </label>
+
+                  <div v-if="!previewPhotos.length" class="flex items-center h-24 px-6 border-2 border-dashed border-slate-100 rounded-2xl text-slate-300 text-[10px] font-bold uppercase tracking-widest italic bg-slate-50/30">Belum ada foto terpilih</div>
+                </div>
+              </div>
+
+              <div class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div class="field relative" ref="dropdownTypeRef">
+                    <label class="label">TIPE PROPERTI <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                      <div @click.stop="openType = !openType" class="field-input h-11 cursor-pointer truncate flex justify-between items-center !pl-4 pr-4">
+                        <span class="font-bold text-slate-700">{{ form.Tipe || 'Pilih Kategori' }}</span>
+                        <Icon icon="lucide:chevron-down" class="size-4 text-slate-400 transition-transform" :class="openType ? 'rotate-180' : ''" />
+                      </div>
+                    </div>
+
+                    <!-- Dropdown Content -->
+                    <div v-if="openType" class="absolute top-full left-0 mt-2 w-full min-w-[240px] z-50 bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden scale-in">
+                      <div class="p-3 border-b bg-slate-50">
+                        <div class="relative">
+                          <Icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
+                          <input v-model="searchType" type="text" placeholder="Cari..." class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-primary" @click.stop />
+                        </div>
+                      </div>
+                      <div class="max-h-60 overflow-y-auto p-2 custom-scroll flex flex-col">
+                        <button v-for="t in filteredTypes" :key="t" @click="selectType(t)" type="button" class="group flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold transition-all hover:bg-slate-50 hover:text-primary">
+                          {{ t }}
+                          <Icon v-if="form.Tipe === t" icon="lucide:check" class="size-4 text-primary" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label class="label">SERTIFIKAT</label>
+                    <div class="relative">
+                      <select v-model="form.Jenis_Sertifikat" class="field-input h-11 !pl-4 font-bold text-slate-700">
+                        <option value="" disabled>Pilih Sertifikat</option>
+                        <option v-for="s in ['SHM', 'SHGB', 'HGU', 'HP', 'HMRS', 'Girik', 'Petok D', 'AJB', 'PPJB', 'Surat Ijo', 'Strata Title', 'Lainnya']" :key="s" :value="s">{{ s }}</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <div class="field">
+                  <label class="label">NAMA PROPERTI <span class="text-red-500">*</span></label>
+                  <div class="relative">
+                    <Icon icon="lucide:home" class="field-icon" />
+                    <input v-model="form.Nama_Produk" placeholder="Contoh: The Sapphire Sky Mansion" class="field-input h-11 !pl-9 font-bold text-slate-700" />
+                  </div>
+                </div>
+                <div class="field">
+                  <div class="flex items-center justify-between mb-1.5">
+                    <label class="label mb-0 uppercase tracking-widest text-slate-800 font-bold">Keterangan</label>
+                    <span class="text-[9px] font-bold text-slate-400">{{ form.Keterangan.length }}/250</span>
+                  </div>
+                  <textarea v-model="form.Keterangan" class="field-input !pl-4 pt-4 h-32 resize-none leading-relaxed text-sm font-medium" placeholder="Ceritakan keunggulan properti..."></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Column: Maps & Location -->
+            <div class="space-y-10 lg:pl-10 lg:border-l lg:border-slate-100">
+              <div class="space-y-6">
+                <div class="flex items-center justify-between">
+                  <label class="label mb-0 uppercase tracking-widest text-slate-800 font-bold">Lokasi & Peta <span class="text-red-500">*</span></label>
+                  <label class="flex items-center gap-2 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-primary transition-colors uppercase tracking-widest">
+                    <input type="checkbox" v-model="form.Hide_alamat" class="size-3.5 rounded border-slate-200 text-primary" />
+                    Sembunyikan Alamat?
+                  </label>
+                </div>
+
+                <div class="space-y-4">
+                  <!-- Search Place (Headless Autocomplete) -->
+                  <div id="place-autocomplete-container" class="relative" ref="dropdownAutocompleteRef">
+                    <Icon icon="lucide:search" class="field-icon z-10" />
+                    <input v-model="searchQuery" @input="handleSearchInput" @focus="isPredictionsOpen = predictions.length > 0" placeholder="Cari lokasi properti..." class="field-input h-11 !pl-9 font-bold text-slate-700" />
+
+                    <!-- Search Results Dropdown -->
+                    <div v-if="isPredictionsOpen && predictions.length" class="absolute top-full left-0 mt-1 w-full z-[100] bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden scale-in">
+                      <div class="max-h-60 overflow-y-auto p-2 custom-scroll flex flex-col">
+                        <button v-for="p in predictions" :key="p.placeId" @mousedown="selectPrediction(p)" type="button" class="w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors rounded-lg group">
+                          <div class="flex items-start gap-3">
+                            <Icon icon="lucide:map-pin" class="size-4 mt-0.5 text-slate-400 group-hover:text-primary transition-colors" />
+                            <div class="flex-1">
+                              <span class="text-xs font-black text-slate-700 block leading-tight">{{ p.mainText }}</span>
+                              <span class="text-[10px] font-bold text-slate-400 block mt-0.5" v-if="p.secondaryText">{{ p.secondaryText }}</span>
+                            </div>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Map View -->
+                  <div class="relative rounded-xl overflow-hidden border border-slate-100 shadow-sm bg-slate-50 h-56">
+                    <div v-show="isLocationSelected" ref="mapContainer" class="size-full"></div>
+                    <div v-if="!isLocationSelected" class="size-full flex flex-col items-center justify-center p-8 text-center text-slate-400">
+                      <div class="size-16 rounded-3xl bg-white shadow-sm flex items-center justify-center mb-4 border border-slate-50">
+                        <Icon icon="lucide:map-pin" class="size-8 text-slate-200" />
+                      </div>
+                      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
+                        Gunakan Pencarian atau Klik <Icon icon="lucide:crosshair" class="size-3 inline-block mx-1" /><br />
+                        untuk mendapatkan lokasi properti
+                      </p>
+                    </div>
+
+                    <button @click.stop="getCurrentLocation" type="button" class="absolute bottom-4 right-4 z-20 size-10 bg-white rounded-lg shadow-lg border border-slate-200 flex items-center justify-center hover:bg-primary hover:text-white text-primary transition-all active:scale-95" :disabled="isLocating">
+                      <Icon :icon="isLocating ? 'lucide:loader-2' : 'lucide:crosshair'" class="size-5" :class="isLocating ? 'animate-spin' : ''" />
+                    </button>
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="field">
+                      <label class="label">LOKASI <span class="text-red-500">*</span></label>
+                      <div class="relative">
+                        <Icon icon="lucide:map-pin" class="field-icon" />
+                        <input v-model="form.Area[0]" placeholder="Kelurahan, Kecamatan, Kota, Provinsi" class="field-input h-11 !pl-9 font-bold text-slate-700" />
+                      </div>
+                    </div>
+                    <div class="field">
+                      <label class="label">AREA</label>
+                      <div class="relative" ref="dropdownAreaRef">
+                        <Icon :icon="isDetectingArea ? 'lucide:loader-2' : 'lucide:navigation'" class="field-icon" :class="{ 'animate-spin': isDetectingArea }" />
+                        <div @click="!isDetectingArea && (openArea = !openArea)" class="field-input h-11 !pl-9 font-bold text-slate-700 flex items-center justify-between cursor-pointer" :class="{ 'bg-slate-50 opacity-70 pointer-events-none': isDetectingArea }">
+                          <span :class="{ 'text-primary animate-pulse': isDetectingArea }">{{ isDetectingArea ? 'Mendeteksi Wilayah...' : form.Area[1] || 'Pilih Area' }}</span>
+                          <Icon v-if="!isDetectingArea" icon="lucide:chevron-down" class="size-4 text-slate-400" />
+                        </div>
+
+                        <div v-if="openArea" class="absolute top-full left-0 mt-1 w-full z-50 bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden scale-in">
+                          <div class="max-h-56 overflow-y-auto p-2 custom-scroll flex flex-col">
+                            <div v-if="suggestedAreas.length">
+                              <div class="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Saran Area</div>
+                              <button
+                                v-for="area in suggestedAreas"
+                                :key="area"
+                                @click="
+                                  form.Area[1] = area;
+                                  openArea = false
+                                "
+                                class="w-full text-left px-3 py-2 text-xs font-bold hover:bg-slate-50 hover:text-primary rounded-lg transition-colors"
+                              >
+                                {{ area }}
+                              </button>
+                            </div>
+                            <div v-if="availableAreas.length" :class="suggestedAreas.length ? 'mt-2 pt-2 border-t' : ''">
+                              <div class="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Semua Area</div>
+                              <button
+                                v-for="area in availableAreas"
+                                :key="area"
+                                @click="
+                                  form.Area[1] = area;
+                                  openArea = false
+                                "
+                                class="w-full text-left px-3 py-2 text-xs font-bold hover:bg-slate-50 hover:text-primary rounded-lg transition-colors"
+                              >
+                                {{ area }}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="field">
+                    <label class="label">DETAIL ALAMAT <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                      <Icon icon="lucide:map-pin" class="field-icon !top-5" />
+                      <textarea v-model="form.Alamat" placeholder="Detail jalan, no rumah..." class="field-input !pl-9 pt-3 h-24 resize-none font-bold text-slate-700" rows="3"></textarea>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 2: SPESIFIKASI DETAIL -->
+          <div v-show="activeTab === 'detail'" class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start scale-in">
+            <!-- Left Column: Transaksi & Harga -->
+            <div class="space-y-10">
+              <div class="space-y-6">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                  <label class="label mb-0 text-slate-800 font-black">OPSI TRANSAKSI</label>
+                  <div class="flex gap-6">
+                    <label class="flex items-center gap-2 cursor-pointer group">
+                      <input type="checkbox" value="Jual" v-model="form.Status_Transaksi" class="form-checkbox text-primary rounded" />
+                      <span class="text-xs font-black text-slate-400 group-hover:text-primary transition-colors uppercase tracking-widest">Jual</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer group">
+                      <input type="checkbox" value="Sewa" v-model="form.Status_Transaksi" class="form-checkbox text-primary rounded" />
+                      <span class="text-xs font-black text-slate-400 group-hover:text-primary transition-colors uppercase tracking-widest">Sewa</span>
+                    </label>
+                    <label v-if="form.Status_Transaksi.includes('Sewa')" class="flex items-center gap-2 cursor-pointer group scale-in">
+                      <input type="checkbox" v-model="form.Ada_Minimal_Sewa" class="form-checkbox text-primary rounded" />
+                      <span class="text-xs font-black text-slate-400 group-hover:text-primary transition-colors uppercase tracking-widest">Min Sewa</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="space-y-4">
+                  <!-- Section: Jual -->
+                  <div v-if="form.Status_Transaksi.includes('Jual')" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="field">
+                      <label class="label">HARGA JUAL NORMAL (RP) <span class="text-red-500">*</span></label>
+                      <div class="relative">
+                        <input type="text" :value="form.Harga_Jual1 ? formatCurrency(form.Harga_Jual1) : ''" @input="handleInputCurrency($event, 'Harga_Jual1')" class="field-input h-11 !pl-4 font-bold" placeholder="Harga awal" />
+                      </div>
+                    </div>
+                    <div class="field">
+                      <label class="label">HARGA JUAL DISKON (RP)</label>
+                      <div class="relative">
+                        <input type="text" :value="form.Harga_Jual2 ? formatCurrency(form.Harga_Jual2) : ''" @input="handleInputCurrency($event, 'Harga_Jual2')" class="field-input h-11 !pl-4 font-bold text-emerald-600 border-emerald-100 bg-emerald-50/5" placeholder="Setelah diskon" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Section: Sewa -->
+                  <div v-if="form.Status_Transaksi.includes('Sewa')" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div class="field">
+                        <label class="label">HARGA SEWA NORMAL (RP) <span class="text-red-500">*</span></label>
+                        <div class="flex items-center gap-2">
+                          <input type="text" :value="form.Harga_Sewa1 ? formatCurrency(form.Harga_Sewa1) : ''" @input="handleInputCurrency($event, 'Harga_Sewa1')" class="field-input h-11 !pl-4 font-bold flex-1" placeholder="Harga awal" />
+                          <span class="text-xs font-bold text-slate-400">/Tahun</span>
+                        </div>
+                      </div>
+                      <div class="field">
+                        <label class="label">HARGA SEWA DISKON (RP)</label>
+                        <div class="flex items-center gap-2">
+                          <input type="text" :value="form.Harga_Sewa2 ? formatCurrency(form.Harga_Sewa2) : ''" @input="handleInputCurrency($event, 'Harga_Sewa2')" class="field-input h-11 !pl-4 font-bold text-blue-600 border-blue-100 bg-blue-50/5 flex-1" placeholder="Setelah diskon" />
+                          <span class="text-xs font-bold text-slate-400">/Tahun</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Min Sewa Fields (Conditional) -->
+                    <div v-if="form.Ada_Minimal_Sewa" class="grid grid-cols-1 md:grid-cols-2 gap-6 scale-in">
+                      <div class="field">
+                        <label class="label">MINIMAL SEWA</label>
+                        <input v-model="form.Minimal_Sewa" type="number" class="field-input h-11 !pl-4 font-bold" placeholder="0" />
+                      </div>
+                      <div class="field">
+                        <label class="label">SATUAN</label>
+                        <select v-model="form.Satuan_Minimal_Sewa" class="field-input h-11 !pl-4 font-bold appearance-none">
+                          <option value="Bulan">Bulan</option>
+                          <option value="Tahun">Tahun</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="field">
+                    <label class="label">URL SLUG</label>
+                    <div class="relative">
+                      <Icon icon="lucide:link" class="field-icon" />
+                      <input v-model="form.Slug" readonly class="field-input h-11 bg-slate-50 border-slate-100 !pl-9 text-slate-400 cursor-not-allowed" />
+                    </div>
+                  </div>
+                  
+                  <div class="field">
+                    <label class="label uppercase">Aksesibilitas (Contoh: 5 min ke tol)</label>
+                    <div class="flex gap-3">
+                      <input v-model="newAkses" @keyup.enter="addAkses" placeholder="Ketik akses..." class="field-input h-11 !pl-4 flex-1 font-medium" />
+                      <button @click="addAkses" class="size-11 bg-slate-800 text-white rounded-xl shadow-lg hover:bg-black transition-all flex items-center justify-center active:scale-95">
+                        <Icon icon="lucide:plus" class="size-5" />
+                      </button>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mt-3">
+                      <span v-for="(a, i) in form.Akses_Jalan" :key="i" class="bg-slate-50 border border-slate-200 text-[10px] font-black text-slate-500 px-3 py-1.5 rounded-lg flex items-center gap-2 group hover:border-red-200 hover:bg-red-50 transition-colors"> {{ a }} <Icon @click="form.Akses_Jalan.splice(i, 1)" icon="lucide:x" class="size-3 text-red-500 cursor-pointer" /> </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Column: Specs & Description -->
+            <div class="space-y-10 lg:pl-10 lg:border-l lg:border-slate-100">
+              <div class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div class="field">
+                    <label class="label">LUAS TANAH (M²) <span class="text-red-500">*</span></label>
+                    <input v-model="form.Luas_Tanah" type="number" class="field-input h-11 !pl-4 font-bold" placeholder="0" />
+                  </div>
+                  <div class="field">
+                    <label class="label">LUAS BANGUNAN (M²) <span class="text-red-500">*</span></label>
+                    <input v-model="form.Luas_Bangunan" type="number" class="field-input h-11 !pl-4 font-bold" placeholder="0" />
+                  </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div class="field">
+                    <label class="label">JUMLAH LANTAI</label>
+                    <input v-model="form.Jumlah_Lantai" type="number" class="field-input h-11 !pl-4 font-bold" placeholder="0" />
+                  </div>
+                  <div class="field">
+                    <label class="label">DIMENSI (P X L)</label>
+                    <div class="flex items-center gap-2">
+                      <input v-model="panjang" placeholder="P" class="field-input h-11 text-center font-bold" />
+                      <span class="text-slate-300 font-bold px-1">×</span>
+                      <input v-model="lebar" placeholder="L" class="field-input h-11 text-center font-bold" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div v-for="s in specs" :key="s.key" class="field">
+                    <label class="label">{{ s.label.toUpperCase() }}</label>
+                    <input v-model="form[s.key as keyof RealEstateForm]" type="number" class="field-input h-11 !pl-4 font-bold" placeholder="0" />
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="px-8 py-6 border-t flex justify-between items-center bg-white">
+          <button @click="activeTab = 'utama'" v-if="activeTab === 'detail'" class="px-6 py-2.5 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-primary transition-all flex items-center gap-2 group"><Icon icon="lucide:arrow-left" class="size-4 group-hover:-translate-x-1 transition-transform" /> Kembali ke Utama</button>
+          <div v-else></div>
+
+          <div class="flex gap-4 items-center">
+            <button @click="handleClose" class="px-7 py-3 text-xs font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-2xl transition-all">Batal</button>
+
+            <button @click="activeTab = 'detail'" v-if="activeTab === 'utama'" class="px-9 py-3 bg-slate-100 text-slate-600 text-xs font-black rounded-2xl transition-all hover:bg-slate-200 active:scale-95 flex items-center gap-2 group">Lanjut Spesifikasi <Icon icon="lucide:chevron-right" class="size-4 group-hover:translate-x-1 transition-transform" /></button>
+
+            <button v-else :disabled="isLoading" @click="submitForm" class="px-10 py-3 bg-primary text-white text-xs font-black rounded-2xl shadow-xl shadow-primary/20 transition-all hover:scale-[1.03] active:scale-95 flex items-center gap-2">
+              <Icon v-if="isLoading" icon="lucide:loader-2" class="size-4 animate-spin" />
+              <Icon v-else icon="lucide:save" class="size-4" />
+              {{ isLoading ? 'Sedang Menyimpan...' : 'Simpan Properti' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </Transition>
+</template>
+
+<style scoped>
+@reference "@/assets/css/style.css";
+
+.label {
+  @apply block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1;
+}
+.field {
+  @apply space-y-1.5;
+}
+.inactive {
+  @apply opacity-50 pointer-events-none grayscale;
+}
+.field-icon {
+  @apply absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-4 pointer-events-none;
+}
+.field-input {
+  @apply w-full border border-slate-200 rounded-xl py-1.5 pl-9 pr-4 text-sm bg-card focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none;
+}
+.preview-delete {
+  @apply absolute top-1 right-1 bg-red-500 text-white rounded-full size-4 flex items-center justify-center text-xs shadow-lg;
+}
+.dropdown-item {
+  @apply w-full text-left px-4 py-2 text-sm hover:bg-slate-100 rounded-lg whitespace-normal;
+}
+.dropdown-item:hover {
+  @apply bg-slate-50 text-primary font-semibold;
+}
+.custom-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+.custom-scroll::-webkit-scrollbar {
+  height: 4px;
+  width: 4px;
+}
+.custom-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 20px;
+}
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+.search-container {
+  @apply sticky top-0 z-10 bg-card p-4 border-b border-slate-100;
+}
+.toggle-box {
+  @apply w-full flex items-center justify-between p-3 border border-slate-200 rounded-xl bg-slate-50/50;
+}
+.toggle {
+  @apply w-12 h-6 bg-slate-200 rounded-full relative transition-all duration-300;
+}
+.toggle-active {
+  @apply bg-primary;
+}
+.toggle-circle {
+  @apply absolute top-1 left-1 size-4 bg-card rounded-full transition-all duration-300 shadow-sm;
+  border: none !important;
+  outline: none !important;
+}
+
+/* Styling untuk New Place Autocomplete Web Component */
+#place-autocomplete-container :deep(gmpx-place-autocomplete),
+#place-autocomplete-container :deep(gmp-place-autocomplete) {
+  --gmpx-autocomplete-menu-background: #ffffff !important;
+  --gmpx-autocomplete-menu-color: #1e293b !important;
+  --gmpx-autocomplete-prediction-hover-background: #f1f5f9 !important;
+  --gmpx-autocomplete-prediction-primary-color: #1e293b !important;
+  --gmpx-autocomplete-prediction-secondary-color: #64748b !important;
+  color-scheme: light !important;
+  background-color: white !important;
+  width: 100%;
+}
+
+#place-autocomplete-container :deep(gmpx-place-autocomplete)::part(list),
+#place-autocomplete-container :deep(gmp-place-autocomplete)::part(list) {
+  background-color: white !important;
+  color: #1e293b !important;
+  border-radius: 1rem;
+  border: 1px solid #f1f5f9;
+  box-shadow:
+    0 20px 25px -5px rgb(0 0 0 / 0.1),
+    0 8px 10px -6px rgb(0 0 0 / 0.1);
+  margin-top: 0.5rem;
+  overflow: hidden;
+}
+
+#place-autocomplete-container :deep(gmpx-place-autocomplete)::part(prediction),
+#place-autocomplete-container :deep(gmp-place-autocomplete)::part(prediction) {
+  background-color: white !important;
+  color: #1e293b !important;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f8fafc;
+  cursor: pointer;
+}
+
+#place-autocomplete-container :deep(gmpx-place-autocomplete)::part(input),
+#place-autocomplete-container :deep(gmp-place-autocomplete)::part(input) {
+  width: 100% !important;
+  background-color: white !important;
+  color: #1e293b !important;
+  color-scheme: light !important;
+  border: 2px solid #f1f5f9 !important;
+  border-radius: 0.75rem !important;
+  padding-top: 0.625rem !important;
+  padding-bottom: 0.625rem !important;
+  padding-left: 2.75rem !important;
+  padding-right: 1rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 700 !important;
+  transition: all 0.2s !important;
+  outline: none !important;
+}
+
+#place-autocomplete-container :deep(gmpx-place-autocomplete)::part(input):focus,
+#place-autocomplete-container :deep(gmp-place-autocomplete)::part(input):focus {
+  background-color: white !important;
+  border-color: #f59e0b !important; /* Bejo Orange/Amber */
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1) !important;
+}
+
+#place-autocomplete-container :deep(input:focus) {
+  background-color: white !important;
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1) !important;
+}
+
+/* Google Maps Autocomplete Dropdown Optimization */
+.pac-container {
+  z-index: 10000 !important;
+  border-radius: 1rem !important;
+  border: 1px solid #f1f5f9 !important;
+  box-shadow:
+    0 20px 25px -5px rgb(0 0 0 / 0.1),
+    0 8px 10px -6px rgb(0 0 0 / 0.1) !important;
+  margin-top: 0.5rem !important;
+  font-family: inherit !important;
+}
+
+.pac-item {
+  padding: 0.75rem 1rem !important;
+  border-top: 1px solid #f1f5f9 !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.pac-item:first-child {
+  border-top: none !important;
+}
+
+.pac-item:hover {
+  background-color: #f8fafc !important;
+}
+
+.pac-icon {
+  margin-right: 0.75rem !important;
+}
+
+.pac-item-query {
+  font-size: 0.875rem !important;
+  color: #1e293b !important;
+  font-weight: 600 !important;
+}
+
+.pac-matched {
+  color: var(--p-primary) !important;
+}
+
+/* Animations */
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translateX(10px);
+}
+
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+.scale-in {
+  animation: scale-in 0.2s ease-out;
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+</style>

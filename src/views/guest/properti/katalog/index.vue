@@ -1,14 +1,7 @@
 <template>
   <GuestLayout>
-
-    <div class="mb-10 print:hidden">
-      <nav class="flex items-center gap-2 text-[10px] sm:text-xs text-slate-500 mb-4 uppercase tracking-widest font-semibold">
-        <RouterLink to="/" class="hover:text-bejo-600 transition-colors">Beranda</RouterLink>
-        <Icon icon="lucide:chevron-right" class="size-3" />
-        <span class="text-slate-800">Katalog Properti</span>
-      </nav>
-
-      <div class="relative overflow-hidden rounded-3xl bg-white border border-slate-200 mt-4 p-8 sm:p-12 shadow-sm">
+    <div class="mb-10 print:hidden space-y-10">
+      <div class="relative overflow-hidden rounded-3xl bg-white border border-slate-200 mt-10 p-8 sm:p-12 shadow-sm">
         <!-- Dekorasi Background Ambient gradient menggunakan bejo-100 hingga bejo-1000 -->
         <div class="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-bejo-50 via-bejo-50/50 to-transparent"></div>
         <div class="absolute -right-20 -top-20 size-96 bg-gradient-to-br from-bejo-100 via-bejo-200 to-bejo-400 rounded-full blur-3xl opacity-60"></div>
@@ -25,53 +18,50 @@
             </p>
           </div>
 
-          <!-- Bagian kanan yang tadinya kosong kini berisi elemen visual -->
           <div class="hidden md:flex items-center justify-end gap-4 lg:gap-6 shrink-0">
             <!-- Box 1: Light Bejo -->
             <div class="flex flex-col items-center justify-center size-24 lg:size-28 rounded-2xl bg-gradient-to-br from-white to-bejo-50 border border-bejo-100 shadow-xl shadow-bejo-200/40 relative group hover:-translate-y-1 transition-transform">
-              <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-bejo-300 to-bejo-500 rounded-t-2xl"></div>
-              <span class="text-3xl font-black text-slate-800">1K<span class="text-bejo-600">+</span></span>
-              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Unit</span>
+              <Icon icon="lucide:home" class="size-6 lg:size-7 text-bejo-600 mb-2" />
+              <span class="text-[10px] font-black text-bejo-800 uppercase tracking-widest text-center px-1 leading-tight">Unit <br /> Pilihan</span>
             </div>
             
-            <!-- Box 2: Dark Bejo -->
-            <div class="flex flex-col items-center justify-center size-28 lg:size-32 rounded-3xl bg-gradient-to-br from-bejo-600 via-bejo-700 to-bejo-900 shadow-2xl shadow-bejo-600/40 text-white transform -translate-y-4 hover:-translate-y-6 transition-transform relative overflow-hidden">
-               <!-- Highlight -->
-              <div class="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/20 to-transparent"></div>
-              <span class="text-4xl font-black drop-shadow-md">24/7</span>
-              <span class="text-[10px] sm:text-xs font-bold text-bejo-200 uppercase tracking-widest mt-2">Layanan</span>
+            <!-- Box 2: White glass -->
+            <div class="flex flex-col items-center justify-center size-24 lg:size-28 rounded-2xl bg-white border border-slate-100 shadow-xl shadow-slate-200/20 relative group hover:-translate-y-1 transition-transform">
+              <Icon icon="lucide:shield-check" class="size-6 lg:size-7 text-emerald-500 mb-2" />
+              <span class="text-[10px] font-black text-slate-700 uppercase tracking-widest text-center px-1 leading-tight">Aman & <br /> Legal</span>
             </div>
-            
-            <!-- Box 3: Medium Bejo -->
-            <div class="flex flex-col items-center justify-center size-24 lg:size-28 rounded-2xl bg-gradient-to-br from-bejo-50 via-bejo-100 to-bejo-200 border border-bejo-200 shadow-xl shadow-bejo-300/30 group hover:-translate-y-1 transition-transform">
-              <Icon icon="lucide:shield-check" class="size-8 text-bejo-600 mb-1" />
-              <span class="text-lg font-black text-bejo-900">100%</span>
-              <span class="text-[10px] font-bold text-bejo-600/70 uppercase tracking-widest mt-0.5">Aman</span>
+
+            <!-- Box 3: Dark Gradient -->
+            <div class="flex flex-col items-center justify-center size-24 lg:size-28 rounded-2xl bg-gradient-to-br from-bejo-500 to-bejo-700 border border-bejo-400 shadow-xl shadow-bejo-600/30 relative group hover:-translate-y-1 transition-transform">
+              <Icon icon="lucide:gem" class="size-6 lg:size-7 text-white mb-2" />
+              <span class="text-[10px] font-black text-white uppercase tracking-widest text-center px-1 leading-tight">Kualitas <br /> Premium</span>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="grid lg:grid-cols-4 grid-cols-1 gap-8 items-start">
+      <div class="grid lg:grid-cols-4 grid-cols-1 gap-8 items-start">
 
-      <aside class="lg:col-span-1">
-        <Filter
-          v-model:openFilter="isFilterOpen"
-          v-model:searchQuery="searchQuery"
-          :isAdmin="isAdmin"
-          class="lg:sticky lg:top-24 border border-slate-200"
-        />
-      </aside>
+        <aside class="lg:col-span-1">
+          <Filter
+            v-model:openFilter="isFilterOpen"
+            v-model:searchQuery="searchQuery"
+            v-model:facilities="facilities"
+            :isAdmin="isAdmin"
+            class="lg:sticky lg:top-24 border border-slate-200"
+          />
+        </aside>
 
-      <section class="lg:col-span-3">
-        <Rumah
-          @openFilter="toggleFilter"
-          :searchQuery="searchQuery"
-          :isAdmin="isAdmin"
-        />
-      </section>
+        <section class="lg:col-span-3">
+          <Rumah
+            @openFilter="toggleFilter"
+            :searchQuery="searchQuery"
+            :facilities="facilities"
+            :isAdmin="isAdmin"
+          />
+        </section>
 
+      </div>
     </div>
   </GuestLayout>
 </template>
@@ -88,9 +78,15 @@ import Rumah from './components/Rumah.vue'
 
 const route = useRoute()
 
-// State untuk mengontrol filter di tampilan mobile
+// State untuk mengontrol filter-filter
 const isFilterOpen = ref(false)
 const searchQuery = ref('')
+const facilities = ref({
+  kamarTidur: '',
+  kamarMandi: '',
+  carport: '',
+  lantai: ''
+})
 
 const toggleFilter = () => {
   isFilterOpen.value = !isFilterOpen.value
