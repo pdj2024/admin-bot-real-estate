@@ -699,7 +699,7 @@ const normalizeRegionLabel = (text: string) => {
   if (!text) return ''
   return text
     .replace(/Daerah Khusus Ibukota/gi, 'DKI')
-    .replace(/Daerah Istimewa/gi, 'DIY')
+    .replace(/Daerah Istimewa/gi, 'DI')
     .replace(/\bKabupaten\b/gi, 'Kab.')
     .trim()
 }
