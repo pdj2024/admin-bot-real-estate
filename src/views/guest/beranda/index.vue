@@ -1,7 +1,7 @@
 <template>
   <GuestLayout main-class="max-w-none">
     <!-- Hero Section Beranda -->
-    <section class="relative min-h-[90vh] flex flex-col justify-center items-center py-24 mt-0 overflow-hidden bg-white border-b-[1px] border-slate-100 mb-10">
+    <section class="relative min-h-[90vh] flex flex-col justify-center items-center py-24 mt-0 overflow-hidden bg-white border-b-[1px] border-slate-100 ">
       <!-- Decorative Background Elements similar to Katalog -->
       <div class="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-bejo-50 via-bejo-50/20 to-transparent pointer-events-none"></div>
       <div class="absolute -right-20 -top-20 size-[600px] bg-gradient-to-br from-bejo-100/40 via-bejo-200/30 to-bejo-400/20 rounded-full blur-[120px] opacity-70 pointer-events-none"></div>
@@ -37,7 +37,7 @@
     </section>
 
     <!-- Stats Floating Bottom -->
-    <div class="relative z-20 !px-4 sm:!px-12 lg:!px-20 -mt-20 md:-mt-24">
+    <div class="relative z-20 !px-4 sm:!px-12 lg:!px-20 -mt-20 md:-mt-24 top-20">
       <div class="w-full mx-auto bg-white/95 backdrop-blur-xl rounded-[3rem] p-10 md:p-14 shadow-2xl border border-white grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-4 divide-y md:divide-y-0 md:divide-x divide-slate-100 px-4 sm:px-8 lg:px-12">
         <div class="text-center px-4">
           <h4 class="text-4xl lg:text-5xl font-black text-slate-900 mb-2">1,2k<span class="text-bejo-500">+</span></h4>
