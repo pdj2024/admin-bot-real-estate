@@ -174,6 +174,15 @@ const handleKeyDown = (e: KeyboardEvent) => {
   }
 }
 
+const formattedArea = computed(() => {
+  if (!props.product?.Area?.[0]) return ''
+  const parts = props.product.Area[0].split(',').map(s => s.trim())
+  if (parts.length >= 2) {
+    return parts.slice(-2).join(', ')
+  }
+  return props.product.Area[0]
+})
+
 onMounted(() => {
   startTimer()
   window.addEventListener('keydown', handleKeyDown)
@@ -265,7 +274,7 @@ onUnmounted(() => {
             </div>
             <div class="flex flex-col">
               <span class="text-sm font-bold tracking-tight" :class="!product ? 'text-transparent bg-slate-200 animate-pulse select-none rounded w-fit' : ''">
-                {{ !product ? 'Memuat area...' : product?.Area?.[0] }}
+                {{ !product ? 'Memuat area...' : formattedArea }}
               </span>
             </div>
           </div>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch, nextTick } from 'vue'
+import { onMounted, ref, watch, nextTick, computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import type { Product } from '../index.vue'
 
@@ -13,6 +13,15 @@ const props = defineProps<{
 const mapContainer = ref<HTMLElement | null>(null)
 const isMapLoaded = ref(false)
 let gMap: any = null
+
+const formattedArea = computed(() => {
+  if (!props.product?.Area?.[0]) return ''
+  const parts = props.product.Area[0].split(',').map(s => s.trim())
+  if (parts.length >= 2) {
+    return parts.slice(-2).join(', ')
+  }
+  return props.product.Area[0]
+})
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
@@ -132,7 +141,7 @@ onMounted(() => {
             <Icon icon="lucide:map-pin" class="size-4" :class="!product ? 'text-transparent' : 'text-bejo-600'" />
             <span class="text-sm font-semibold">
               {{ product?.Alamat || 'Memuat alamat jalan...' }}
-              <span v-if="product?.Area?.[1] != null"> ({{ product?.Area[1] }}) </span>
+              <span v-if="formattedArea">, {{ formattedArea }}</span>
             </span>
           </div>
         </div>
