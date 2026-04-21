@@ -52,11 +52,17 @@ const provinces = ref<any[]>(PROVINCES)
         <section class="lg:col-span-3">
           <Rumah 
             ref="rumahRef"
-            :searchQuery="searchQuery"
-            :facilities="facilities"
-            :region="region"
-            :priceRange="priceRange"
+            v-model:searchQuery="searchQuery"
+            v-model:facilities="facilities"
+            v-model:region="region"
+            v-model:priceRange="priceRange"
             @openFilter="toggleFilter" 
+            @resetFilter="() => {
+              searchQuery = '';
+              facilities = { kamarTidur: '', kamarMandi: '', carport: '', lantai: '' };
+              region = { province: '', city: '', provinceId: '' };
+              priceRange = { min: '', max: '' };
+            }"
           />
         </section>
       </div>

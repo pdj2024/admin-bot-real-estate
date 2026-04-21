@@ -5,10 +5,10 @@ import { useVueTable, FlexRender, getCoreRowModel, getPaginationRowModel } from 
 
 // Mock Data for Appointments Request
 const appointmentRequests = ref([
-  { id: '1', customer: 'Lina Marlina', email: 'lina@gmail.com', phone: '08123456789', property: 'Griya Asri Cluster A-12', date: '2026-04-12', time: '10:00', status: 'pending' },
-  { id: '2', customer: 'Budi Santoso', email: 'budi@yahoo.com', phone: '08778899001', property: 'Apartemen Skyview B-05', date: '2026-04-12', time: '14:30', status: 'confirmed' },
-  { id: '3', customer: 'Siti Aminah', email: 'siti@gmail.com', phone: '08212233441', property: 'Ruko Central Park No. 8', date: '2026-04-13', time: '09:00', status: 'pending' },
-  { id: '4', customer: 'Andi Wijaya', email: 'andi@outlook.com', phone: '08112233445', property: 'Griya Asri Cluster C-02', date: '2026-04-14', time: '16:00', status: 'cancelled' },
+  { id: '1', customer: 'Lina Marlina', email: 'lina@gmail.com', phone: '08123456789', property: 'Griya Asri Cluster A-12', date: '2026-04-12', time: '10:00', status: 'pending', salesName: 'Andi Pratama', adminName: 'Admin Bejo' },
+  { id: '2', customer: 'Budi Santoso', email: 'budi@yahoo.com', phone: '08778899001', property: 'Apartemen Skyview B-05', date: '2026-04-12', time: '14:30', status: 'confirmed', salesName: 'Andi Pratama', adminName: 'Admin Bejo' },
+  { id: '3', customer: 'Siti Aminah', email: 'siti@gmail.com', phone: '08212233441', property: 'Ruko Central Park No. 8', date: '2026-04-13', time: '09:00', status: 'pending', salesName: 'Bima Kurniawan', adminName: 'Admin Bejo' },
+  { id: '4', customer: 'Andi Wijaya', email: 'andi@outlook.com', phone: '08112233445', property: 'Griya Asri Cluster C-02', date: '2026-04-14', time: '16:00', status: 'cancelled', salesName: 'Yeni Anggraeni', adminName: 'Admin Bejo' },
 ])
 
 const columns = [
@@ -26,6 +26,75 @@ const table = useVueTable({
   getPaginationRowModel: getPaginationRowModel(),
   initialState: { pagination: { pageSize: 5 } }
 })
+
+const isExportOpen = ref(false)
+
+const exportToExcel = async () => {
+  const { utils, writeFile } = await import('xlsx')
+  
+  const dataToExport = appointmentRequests.value.map(item => ({
+    'ID': item.id,
+    'Calon Pembeli': item.customer,
+    'Email': item.email,
+    'Telepon': item.phone,
+    'Unit Properti': item.property,
+    'Tanggal': item.date,
+    'Waktu': item.time,
+    'Status': item.status,
+    'Sales': item.salesName,
+    'Admin': item.adminName
+  }))
+
+  const worksheet = utils.json_to_sheet(dataToExport)
+  const workbook = utils.book_new()
+  utils.book_append_sheet(workbook, worksheet, 'Appointments')
+  
+  writeFile(workbook, `Janji-Temu-${new Date().toISOString().split('T')[0]}.xlsx`)
+  isExportOpen.value = false
+}
+
+const exportToPDF = async () => {
+  const { jsPDF } = await import('jspdf')
+  const { default: autoTable } = await import('jspdf-autotable')
+  
+  const doc = new jsPDF()
+  
+  doc.setFontSize(18)
+  doc.text('Laporan Permintaan Janji Temu', 14, 22)
+  doc.setFontSize(11)
+  doc.setTextColor(100)
+  doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 14, 30)
+
+  const tableData = appointmentRequests.value.map(item => [
+    item.id,
+    item.customer,
+    item.property,
+    `${item.date} ${item.time}`,
+    item.status,
+    item.salesName
+  ])
+
+  autoTable(doc, {
+    startY: 35,
+    head: [['ID', 'Customer', 'Property', 'Schedule', 'Status', 'Sales']],
+    body: tableData,
+    headStyles: { fillColor: [202, 109, 44] }, // #ca6d2c in RGB
+    theme: 'grid'
+  })
+
+  doc.save(`Janji-Temu-${new Date().toISOString().split('T')[0]}.pdf`)
+  isExportOpen.value = false
+}
+
+// Close dropdown on click outside
+if (typeof window !== 'undefined') {
+  window.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement
+    if (!target.closest('.export-container')) {
+      isExportOpen.value = false
+    }
+  })
+}
 </script>
 
 <template>
@@ -35,9 +104,47 @@ const table = useVueTable({
           <h4 class="text-lg font-black text-slate-900">Permintaan Janji Temu</h4>
           <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Antrean Website & WhatsApp Bot</p>
        </div>
-       <button class="px-6 py-2.5 bg-bejo-500 hover:bg-bejo-600 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-bejo-500/20">
-          Export Data
-       </button>
+       
+       <div class="relative export-container">
+          <button 
+            @click="isExportOpen = !isExportOpen"
+            class="px-6 py-2.5 bg-[#ca6d2c] hover:bg-[#b05d24] text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-[#ca6d2c]/20 active:scale-95 flex items-center gap-2"
+          >
+            Export Data
+            <Icon icon="lucide:chevron-down" class="size-4 transition-transform" :class="{ 'rotate-180': isExportOpen }" />
+          </button>
+          
+          <Transition
+            enter-active-class="transition duration-100 ease-out"
+            enter-from-class="transform scale-95 opacity-0"
+            enter-to-class="transform scale-100 opacity-100"
+            leave-active-class="transition duration-75 ease-in"
+            leave-from-class="transform scale-100 opacity-100"
+            leave-to-class="transform scale-95 opacity-0"
+          >
+            <div v-show="isExportOpen" class="absolute right-0 top-full mt-2 z-50 min-w-48 bg-white border border-slate-100 rounded-2xl shadow-2xl p-2 animate-in slide-in-from-top-2 duration-200">
+              <button 
+                @click="exportToExcel"
+                class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center gap-3"
+              >
+                <div class="size-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+                  <Icon icon="lucide:file-spreadsheet" class="size-4" />
+                </div>
+                Excel (.xlsx)
+              </button>
+              
+              <button 
+                @click="exportToPDF"
+                class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center gap-3"
+              >
+                <div class="size-8 rounded-lg bg-red-50 flex items-center justify-center text-red-600">
+                  <Icon icon="lucide:file-text" class="size-4" />
+                </div>
+                PDF Document
+              </button>
+            </div>
+          </Transition>
+       </div>
     </div>
 
     <div class="overflow-x-auto">

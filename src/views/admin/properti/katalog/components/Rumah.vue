@@ -150,8 +150,12 @@ const filteredProducts = computed(() => {
   if (props.region.province) {
     const prov = props.region.province.toLowerCase()
     result = result.filter(p => {
+      // Split the area string (e.g., "Keputih, Sukolilo, Kota Surabaya, Jawa Timur")
       const areaStr = String(Array.isArray(p.Area) ? (p.Area[0] || '') : (p.Area || ''))
-      return areaStr.toLowerCase().includes(prov)
+      const areaParts = areaStr.split(',').map(s => s.trim().toLowerCase())
+      
+      // Check if any part matches the province exactly
+      return areaParts.includes(prov)
     })
   }
   if (props.region.city) {
@@ -311,8 +315,16 @@ onMounted(async () => {
 
 const emit = defineEmits<{
   (e: 'openFilter'): void
+  (e: 'resetFilter'): void
   (e: 'update:searchQuery', value: string): void
+  (e: 'update:facilities', value: any): void
+  (e: 'update:region', value: any): void
+  (e: 'update:priceRange', value: any): void
 }>()
+
+const handleReset = () => {
+  emit('resetFilter')
+}
 
 defineExpose({ openAddModal })
 </script>
@@ -392,7 +404,7 @@ defineExpose({ openAddModal })
       </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-6">
+    <div v-if="table.getFilteredRowModel().rows.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-6">
       <div v-for="row in table.getRowModel().rows" :key="row.id" class="card group flex flex-col h-full rounded-2xl overflow-hidden border transition-all duration-500 hover:-translate-y-1 relative bg-card border-default-150 hover:border-primary/30 hover:shadow-lg">
         <div class="relative h-60 overflow-hidden">
           <div v-if="row.original.Status_Display != 'Aktif' || row.original.Status_Properti != 'Tersedia'" class="absolute inset-0 bg-slate-900/40 backdrop-grayscale-[60%] z-[20] pointer-events-none transition-all duration-500"></div>
@@ -548,6 +560,22 @@ defineExpose({ openAddModal })
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Empty State -->
+    <div v-else class="flex flex-col items-center justify-center py-24 bg-white rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/20 text-center px-6">
+      <div class="size-24 bg-slate-50 rounded-full flex items-center justify-center mb-6">
+        <Icon icon="lucide:search-x" class="size-12 text-slate-300" />
+      </div>
+      <h3 class="text-xl font-black text-slate-900 mb-2">Properti Tidak Ditemukan</h3>
+      <p class="text-slate-500 text-sm max-w-sm mb-8 font-medium">Maaf, kami tidak menemukan properti yang sesuai dengan kriteria filter Anda. Silakan coba hapus beberapa filter atau gunakan kata kunci lain.</p>
+      <button 
+        @click="handleReset"
+        class="px-8 py-3 bg-[#ca6d2c] hover:bg-[#b05d24] text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-[#ca6d2c]/20 active:scale-95 flex items-center gap-2"
+      >
+        <Icon icon="lucide:rotate-ccw" class="size-4" />
+        Hapus Semua Filter
+      </button>
     </div>
 
     <div class="flex flex-wrap md:justify-between justify-center items-center gap-4 mt-10 pb-10 border-t border-default-100 pt-6">
