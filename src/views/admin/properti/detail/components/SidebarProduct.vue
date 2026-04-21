@@ -83,7 +83,7 @@ const handleDragEnd = (e: TouchEvent | MouseEvent) => {
 
 const handleWaContact = () => {
   const url = window.location.href
-  const text = `Halo, saya ingin menanyakan lebih lanjut mengenai properti "${props.product?.Nama_Produk}". Berikut tautannya: ${url}`
+  const text = `Halo Admin, saya tertarik untuk menanyakan lebih lanjut mengenai properti *${props.product?.Nama_Produk}*\n\n${url}`
   window.open(`https://wa.me/62895353837000?text=${encodeURIComponent(text)}`, '_blank')
 }
 

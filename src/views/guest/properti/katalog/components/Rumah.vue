@@ -105,7 +105,7 @@
           <p class="text-slate-500 font-medium max-w-sm mx-auto leading-relaxed relative z-10 mb-8">
             Kami tidak dapat menemukan properti yang sesuai dengan kriteria Anda. Cobalah untuk mengubah filter atau kata kunci pencarian Anda.
           </p>
-          <button @click="resetFilters" class="px-10 py-3.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-bejo-600 transition-all hover:shadow-lg hover:shadow-bejo-600/30">
+          <button @click="resetFilters" class="px-10 py-3.5 bg-bejo-500 text-white rounded-xl font-bold text-sm hover:bg-bejo-600 transition-all hover:shadow-lg hover:shadow-bejo-600/30">
             Reset Semua Filter
           </button>
         </div>

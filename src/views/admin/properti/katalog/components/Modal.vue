@@ -1211,9 +1211,9 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 
         <div class="px-8 py-8 overflow-y-auto flex-1 custom-scroll bg-slate-50/10 relative">
           <!-- TAB 1: IDENTITAS UTAMA -->
-          <div v-show="activeTab === 'utama'" class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start scale-in">
+          <div v-show="activeTab === 'utama'" class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-stretch scale-in">
             <!-- Left Column: Photos & Identity -->
-            <div class="space-y-10">
+            <div class="space-y-8 flex flex-col">
               <!-- Top Section: Photos -->
               <div class="space-y-3">
                 <label class="label block text-xs">GALERI GAMBAR PRODUK</label>
@@ -1310,18 +1310,18 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
                     <input v-model="form.Nama_Produk" placeholder="Contoh: The Sapphire Sky Mansion" class="field-input h-11 !pl-9 font-bold text-slate-700" />
                   </div>
                 </div>
-                <div class="field">
-                  <div class="flex items-center justify-between mb-1.5">
-                    <label class="label mb-0 uppercase tracking-widest text-slate-800 font-bold">Keterangan</label>
-                    <span class="text-[9px] font-bold text-slate-400">{{ form.Keterangan.length }}/250</span>
+                  <div class="flex-1 flex flex-col min-h-[160px]">
+                    <div class="flex items-center justify-between mb-1.5">
+                      <label class="label mb-0 uppercase tracking-widest text-slate-800 font-bold">Keterangan</label>
+                      <span class="text-[9px] font-bold text-slate-400">{{ form.Keterangan.length }}/250</span>
+                    </div>
+                    <textarea v-model="form.Keterangan" class="field-input !pl-4 pt-4 h-full min-h-[160px] resize-none leading-relaxed text-sm font-medium" placeholder="Ceritakan keunggulan properti..."></textarea>
                   </div>
-                  <textarea v-model="form.Keterangan" class="field-input !pl-4 pt-4 h-32 resize-none leading-relaxed text-sm font-medium" placeholder="Ceritakan keunggulan properti..."></textarea>
                 </div>
               </div>
-            </div>
 
             <!-- Right Column: Maps & Location -->
-            <div class="space-y-10 lg:pl-10 lg:border-l lg:border-slate-100">
+            <div class="space-y-8 flex flex-col lg:pl-10 lg:border-l lg:border-slate-100">
               <div class="space-y-6">
                 <div class="flex items-center justify-between">
                   <label class="label mb-0 uppercase tracking-widest text-slate-800 font-bold">Lokasi & Peta <span class="text-red-500">*</span></label>
@@ -1424,11 +1424,11 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
                     </div>
                   </div>
 
-                  <div class="field">
+                  <div class="field flex-1 flex flex-col min-h-[160px]">
                     <label class="label">DETAIL ALAMAT <span class="text-red-500">*</span></label>
-                    <div class="relative">
+                    <div class="relative flex-1">
                       <Icon icon="lucide:map-pin" class="field-icon !top-5" />
-                      <textarea v-model="form.Alamat" placeholder="Detail jalan, no rumah..." class="field-input !pl-9 pt-3 h-24 resize-none font-bold text-slate-700" rows="3"></textarea>
+                      <textarea v-model="form.Alamat" placeholder="Detail jalan, no rumah..." class="field-input !pl-9 pt-3 h-full resize-none font-bold text-slate-700" rows="3"></textarea>
                     </div>
                   </div>
                 </div>

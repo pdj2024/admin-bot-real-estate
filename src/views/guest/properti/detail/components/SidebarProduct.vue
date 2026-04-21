@@ -87,8 +87,7 @@ const handleDragEnd = (e: TouchEvent | MouseEvent) => {
 
 const handleWaContact = () => {
   const url = window.location.href
-  const defaultGreeting = `Halo Admin Rumah Bejo, saya tertarik untuk menanyakan lebih lanjut mengenai properti "${props.product?.Nama_Produk}" yang saya lihat di situs.`
-  const text = `${defaultGreeting}\n\nTautan: ${url}`
+  const text = `Halo Admin, saya tertarik untuk menanyakan lebih lanjut mengenai properti *${props.product?.Nama_Produk}*\n\n${url}`
   const targetNumber = settingsStore.business.whatsapp || '62895353837000'
 
   window.open(`https://wa.me/${targetNumber}?text=${encodeURIComponent(text)}`, '_blank')

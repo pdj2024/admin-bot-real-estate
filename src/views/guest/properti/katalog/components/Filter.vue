@@ -157,10 +157,10 @@
                   <div class="relative flex-1">
                     <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-400">Rp</span>
                     <input 
-                      :value="priceRange.min"
+                      :value="formatDisplayName(priceRange.min)"
                       @input="(e) => handlePriceInput('min', (e.target as HTMLInputElement).value)"
-                      type="number" 
-                      class="w-full pl-8 pr-2 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-bejo-600 focus:bg-white transition-all focus:ring-4 focus:ring-bejo-600/10" 
+                      type="text" 
+                      class="w-full pl-8 pr-2 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-bejo-600 focus:bg-white transition-all focus:ring-4 focus:ring-bejo-600/10 placeholder:font-medium text-slate-700" 
                       placeholder="Min" 
                     />
                   </div>
@@ -168,10 +168,10 @@
                   <div class="relative flex-1">
                     <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-400">Rp</span>
                     <input 
-                      :value="priceRange.max"
+                      :value="formatDisplayName(priceRange.max)"
                       @input="(e) => handlePriceInput('max', (e.target as HTMLInputElement).value)"
-                      type="number" 
-                      class="w-full pl-8 pr-2 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-bejo-600 focus:bg-white transition-all focus:ring-4 focus:ring-bejo-600/10" 
+                      type="text" 
+                      class="w-full pl-8 pr-2 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-bejo-600 focus:bg-white transition-all focus:ring-4 focus:ring-bejo-600/10 placeholder:font-medium text-slate-700" 
                       placeholder="Max" 
                     />
                   </div>
@@ -360,10 +360,18 @@ const selectCity = (name: string) => {
   emit('update:region', { ...props.region, city: name })
 }
 
+const formatDisplayName = (val: string) => {
+  if (!val) return ''
+  const num = parseInt(val.replace(/\D/g, ''))
+  if (isNaN(num)) return ''
+  return new Intl.NumberFormat('id-ID').format(num)
+}
+
 const handlePriceInput = (key: 'min' | 'max', value: string) => {
+  const rawValue = value.replace(/\D/g, '')
   emit('update:priceRange', {
     ...props.priceRange,
-    [key]: value
+    [key]: rawValue
   })
 }
 
