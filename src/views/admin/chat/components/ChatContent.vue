@@ -194,18 +194,18 @@ const prevSearchMatch = () => {
 }
 
 const { 
-  products, isLoadingProducts, searchKatalog, debouncedSearchKatalog, 
+  products, isLoadingProducts, searchKatalog, 
   filteredProducts, activeExpandedProductId, fetchProducts, sendProduct,
   facilitiesFilter, regionFilter, priceRangeFilter
 } = useChatProducts(props, (t: string, u?: string, r?: string, p?: string, id?: string, url?: string, user?: string) => sendChat(t, u, r, p, id, url, user))
 
 const { 
   showAppointmentModal, appointmentStage, appointmentForm, 
-  appointmentCalendarOptions, bookedDates, handleSelectUnitForAppointment, saveNewAppointment 
+  appointmentCalendarOptions, handleSelectUnitForAppointment, saveNewAppointment 
 } = useChatAppointments(props, (t: string, u?: string, r?: string, p?: string, id?: string, url?: string, user?: string) => sendChat(t, u, r, p, id, url, user))
 
 const { 
-  adminsList, searchCS, isFetchingAdmins, filteredAdmins, fetchAdmins, handleTransferChat 
+  searchCS, isFetchingAdmins, filteredAdmins, fetchAdmins, handleTransferChat 
 } = useChatTransfer(props, emit, (t: string, u?: string, r?: string, p?: string, id?: string, url?: string, user?: string) => sendChat(t, u, r, p, id, url, user))
 
 watch(openEtalase, (n) => {

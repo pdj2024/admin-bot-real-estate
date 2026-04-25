@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import logo from '@/assets/images/logo-sm.png'
 import { useLayout } from '@/stores/layout'

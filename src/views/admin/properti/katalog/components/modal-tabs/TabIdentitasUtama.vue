@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { inject, ref, computed, Teleport, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { inject, ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { Icon } from '@iconify/vue'
 import BaseFormGroup from '@/components/common/BaseFormGroup.vue'
 import GoogleMapsPicker from '@/components/common/GoogleMapsPicker.vue'
-import type { RealEstateForm } from '@/composables/admin/usePropertyModal'
 
 const state = inject<any>('propertyModalState')
 if (!state) {
@@ -20,7 +19,6 @@ const {
   isPredictionsOpen,
   predictions,
   selectPrediction,
-  isLocating,
   isDetectingArea,
   isGeocoding,
   aiError,

@@ -1,4 +1,4 @@
-import { ref, computed, watch } from 'vue'
+import { ref, watch } from 'vue'
 import api from '@/services/axios'
 import { fail } from '@/utils/sweet-alert'
 import { usePropertyFilters, type FacilitiesFilter, type RegionFilter, type PriceRangeFilter } from '../usePropertyFilters'

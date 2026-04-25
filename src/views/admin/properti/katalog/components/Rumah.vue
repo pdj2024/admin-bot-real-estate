@@ -8,16 +8,6 @@ import { usePropertyFilters } from '@/composables/usePropertyFilters'
 import { useVueTable, getCoreRowModel, getPaginationRowModel, getSortedRowModel, getFilteredRowModel, type SortingState } from '@tanstack/vue-table'
 import { confirm, success, fail } from '@/utils/sweet-alert'
 
-const formatShortCurrency = (value: number) => {
-  if (value === undefined || value === null || value === 0) return 'Rp 0'
-  if (value >= 1000000000) {
-    return (value / 1000000000).toFixed(1).replace(/\.0$/, '') + ' M'
-  }
-  if (value >= 1000000) {
-    return (value / 1000000).toFixed(0) + ' Jt'
-  }
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
-}
 
 const isModalOpen = ref(false)
 const isSortOpen = ref(false)
@@ -25,7 +15,6 @@ const isTransactionOpen = ref(false)
 const activeDropdownId = ref<string | null>(null)
 const filter = ref('')
 const products = ref<Product[]>([])
-const loadedImages = ref<Record<string, boolean>>({})
 const transactionFilter = ref('Semua')
 const selectedItem = ref<Product | null>(null)
 const sorting = ref<SortingState>([])

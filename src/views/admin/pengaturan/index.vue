@@ -22,7 +22,7 @@ export interface AppSettings {
   theme: 'light' | 'dark'
 }
 
-const { setSideNavSize, setTheme } = useLayout()
+const { setSideNavSize } = useLayout()
 const settingsStore = useSettings()
 
 const activeTab = ref('appearance')

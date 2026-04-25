@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch, nextTick, computed } from 'vue'
+import { computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import type { Product } from '../index.vue'
 import GoogleMapsViewer from '@/components/common/GoogleMapsViewer.vue'

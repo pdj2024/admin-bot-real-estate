@@ -4,7 +4,7 @@ import { defineAsyncComponent } from 'vue'
 
 const FullCalendar = defineAsyncComponent(() => import('@fullcalendar/vue3'))
 
-const props = defineProps<{
+defineProps<{
   showAppointmentModal: boolean
   appointmentForm: any
   appointmentCalendarOptions: any

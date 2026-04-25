@@ -4,7 +4,7 @@ import { defineAsyncComponent } from 'vue'
 
 const ProductCard = defineAsyncComponent(() => import('@/components/ProductCard.vue'))
 
-const props = defineProps<{
+defineProps<{
   openEtalase: boolean
   isSendingImage: boolean
   openAppointment: boolean

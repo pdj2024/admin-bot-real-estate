@@ -13,7 +13,6 @@ export function usePropertyLocation(form: any) {
   const isLocationSelected = ref(false)
   const isLocating = ref(false)
   const isDetectingArea = ref(false)
-  const aiDetectedResult = ref('')
   const lastAICallKey = ref('')
   const aiError = ref(false)
   const detectedKota = ref('')
@@ -362,7 +361,7 @@ export function usePropertyLocation(form: any) {
           geocodePosition(pos)
         })
       },
-      (err) => { isLocating.value = false; fail('Gagal mendapat lokasi') }
+      () => { isLocating.value = false; fail('Gagal mendapat lokasi') }
     )
   }
 

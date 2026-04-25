@@ -2,7 +2,7 @@
 import { Icon } from '@iconify/vue'
 import { inject } from 'vue'
 
-const props = defineProps<{
+defineProps<{
   height?: string
 }>()
 
