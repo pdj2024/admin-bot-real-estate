@@ -14,7 +14,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['save', 'reset'])
+const emit = defineEmits(['save', 'reset', 'update'])
 
 const form = ref<AppSettings>({ ...props.settings })
 
@@ -38,9 +38,25 @@ watch(form, (newVal) => {
         <h6 class="text-sm font-semibold text-gray-700 uppercase tracking-wider">Identitas & Tema</h6>
       </div>
       <div class="p-6 grid grid-cols-1 gap-5">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Nama Aplikasi</label>
-          <input v-model="form.appName" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-opacity-50" :style="{ '--tw-ring-color': form.colorPrimary }" placeholder="Masukkan nama aplikasi..." />
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Nama Aplikasi</label>
+            <input v-model="form.appName" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-opacity-50" :style="{ '--tw-ring-color': form.colorPrimary }" placeholder="Masukkan nama aplikasi..." />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Mode Tema</label>
+            <div class="flex items-center gap-3">
+              <button 
+                v-for="mode in ['light', 'dark']" 
+                :key="mode"
+                @click="form.theme = mode as 'light' | 'dark'"
+                class="flex-1 py-2 px-4 rounded-lg border text-sm font-medium transition-all capitalize"
+                :class="form.theme === mode ? 'bg-slate-900 text-white border-slate-900 shadow-sm' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'"
+              >
+                {{ mode }}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

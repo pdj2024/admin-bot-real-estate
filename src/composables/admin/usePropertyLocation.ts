@@ -179,7 +179,7 @@ export function usePropertyLocation(form: any) {
     if (formattedSubVillage && !formattedSubVillage.toLowerCase().includes('dusun')) formattedSubVillage = `Dusun ${formattedSubVillage}`
     const streetAndNumber = [rute, nomorRumah].filter(Boolean).join(' ')
     const addressDetails = [streetAndNumber, formattedSubVillage].filter(Boolean).join(', ')
-    let buildingName = (displayName || building || '').trim().split(',')[0].trim()
+    const buildingName = (displayName || building || '').trim().split(',')[0].trim()
 
     const finalParts = []
     if (buildingName && !streetAndNumber.includes(buildingName) && !formattedSubVillage.includes(buildingName)) {

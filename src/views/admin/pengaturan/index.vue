@@ -19,6 +19,7 @@ export interface AppSettings {
   colorPrimary: string
   colorSecondary: string
   sidenavSize: 'default' | 'hover' | 'hover-active' | 'sm' | 'md' | 'offcanvas' | 'hidden'
+  theme: 'light' | 'dark'
 }
 
 const { setSideNavSize, setTheme } = useLayout()
@@ -36,7 +37,8 @@ const settings = reactive<AppSettings>({
   appName: 'Rumah Bejo',
   colorPrimary: '#ea9455',
   colorSecondary: '#ca6d2c',
-  sidenavSize: 'hover'
+  sidenavSize: 'hover',
+  theme: 'light'
 })
 
 // Settings persistence logic
@@ -100,7 +102,8 @@ const handleResetAppearance = () => {
     appName: 'Rumah Bejo',
     colorPrimary: '#ea9455',
     colorSecondary: '#ca6d2c',
-    sidenavSize: 'hover'
+    sidenavSize: 'hover',
+    theme: 'light'
   })
   handleSaveAppearance()
 }

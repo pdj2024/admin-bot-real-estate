@@ -19,9 +19,9 @@ const emit = defineEmits(['save', 'reset', 'update'])
     <div class="xl:col-span-7">
       <SettingsForm 
         :settings="settings" 
-        @save="(data) => emit('save', data)" 
+        @save="(data: AppSettings) => emit('save', data)" 
         @reset="emit('reset')" 
-        @update="(data) => emit('update', data)"
+        @update="(data: AppSettings) => emit('update', data)"
       />
     </div>
     <div class="xl:col-span-5 hidden xl:block sticky top-24">
