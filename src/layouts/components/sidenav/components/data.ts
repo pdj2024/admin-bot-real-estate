@@ -2,6 +2,12 @@ import type { MenuItemType } from '@/types/layout'
 
 export const menuItems: MenuItemType[] = [
   {
+    key: 'beranda',
+    label: 'Beranda',
+    icon: 'lucide:home',
+    url: '/'
+  },
+  {
     key: 'menu-utama-title',
     label: 'Menu Utama',
     isTitle: true

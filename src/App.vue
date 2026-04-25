@@ -8,11 +8,23 @@ import { useRouter, useRoute } from 'vue-router'
 import { useLayout } from './stores/layout'
 import { useSettings } from './stores/settings'
 import { logout } from './services/auth'
+import { applyToDOM } from '@/utils/theme'
 
-const { init: initLayout } = useLayout()
+const { init: initLayout, setSideNavSize } = useLayout()
 const settingsStore = useSettings()
 const router = useRouter()
 const route = useRoute()
+
+const initTheme = () => {
+  const storedData = localStorage.getItem('app_local_settings')
+  if (storedData) {
+    const config = JSON.parse(storedData)
+    applyToDOM(config)
+    if (config.sidenavSize) {
+      setSideNavSize(config.sidenavSize)
+    }
+  }
+}
 
 const checkMaintenanceRedirect = (isMaintenance: boolean) => {
   // Admin routes (requiresAuth) are always accessible — skip entirely.
@@ -42,11 +54,19 @@ watch(() => settingsStore.app.isMaintenance, (val) => {
 onMounted(() => {
   settingsStore.init()
   initLayout()
+  initTheme()
+
+  // Listen for internal app settings changes
+  window.addEventListener('app-settings-changed', initTheme)
 
   // Listen for storage changes (cross-tab)
   window.addEventListener('storage', (event) => {
     if (event.key === 'app_global_status') {
       settingsStore.init() // Refresh store from localStorage
+    }
+
+    if (event.key === 'app_local_settings') {
+      initTheme()
     }
     
     // Multi-tab logout sync: only redirect if we are on an authenticated route
@@ -54,24 +74,5 @@ onMounted(() => {
       logout(false)
     }
   })
-
-  const storedData = localStorage.getItem('app_local_settings')
-  if (storedData) {
-    const config = JSON.parse(storedData)
-    const root = document.documentElement
-
-    if (config.theme === 'dark') {
-      root.setAttribute('data-theme', 'dark')
-      root.classList.add('dark')
-    }
-
-    root.setAttribute('data-sidenav-size', config.sidenavSize)
-    root.style.setProperty('--color-primary', config.colorPrimary)
-    root.style.setProperty('--color-secondary', config.colorSecondary)
-    root.style.setProperty(
-      '--background-image-primary-gradient',
-      `linear-gradient(135deg, ${config.colorPrimary} 0%, ${config.colorSecondary} 100%)`
-    )
-  }
 })
 </script>

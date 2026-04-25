@@ -144,6 +144,7 @@ import { useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import api from '@/services/axios'
 import ProductCard from '@/components/ProductCard.vue'
+import { usePropertyFilters } from '@/composables/usePropertyFilters'
 import { useVueTable, getCoreRowModel, getPaginationRowModel, getSortedRowModel, getFilteredRowModel, type SortingState } from '@tanstack/vue-table'
 import { confirm, success, fail } from '@/utils/sweet-alert'
 
@@ -274,74 +275,15 @@ watch([() => props.searchQuery, selectedTransaksi, selectedType, () => props.fac
   table.setPageIndex(0)
 }, { deep: true })
 
-const filteredProducts = computed(() => {
-  let result = products.value
-
-  // Filter Nama (Search Query)
-  if (props.searchQuery) {
-    const q = props.searchQuery.toLowerCase()
-    result = result.filter(p => 
-      (p.Nama_Produk?.toLowerCase() || '').includes(q) || 
-      (p.Alamat?.toLowerCase() || '').includes(q)
-    )
-  }
-
-  // Filter Transaksi
-  if (selectedTransaksi.value === 'Jual Saja') {
-    result = result.filter(p => p.Status_Transaksi?.includes('Jual') && !p.Status_Transaksi?.includes('Sewa'))
-  } else if (selectedTransaksi.value === 'Sewa Saja') {
-    result = result.filter(p => !p.Status_Transaksi?.includes('Jual') && p.Status_Transaksi?.includes('Sewa'))
-  } else if (selectedTransaksi.value === 'Jual & Sewa') {
-    result = result.filter(p => p.Status_Transaksi?.includes('Jual') && p.Status_Transaksi?.includes('Sewa'))
-  }
-
-  // Filter Tipe Unit
-  if (selectedType.value !== 'Semua Tipe') {
-    result = result.filter(p => p.Tipe === selectedType.value)
-  }
-
-  // Filter Fasilitas (Minimal Value)
-  if (props.facilities.kamarTidur) {
-    result = result.filter(p => (p.Jumlah_Kamar_Tidur || 0) >= Number(props.facilities.kamarTidur))
-  }
-  if (props.facilities.kamarMandi) {
-    result = result.filter(p => (p.Jumlah_Kamar_Mandi || 0) >= Number(props.facilities.kamarMandi))
-  }
-  if (props.facilities.carport) {
-    result = result.filter(p => (p.Jumlah_Carpot || 0) >= Number(props.facilities.carport))
-  }
-  if (props.facilities.lantai) {
-    result = result.filter(p => (p.Jumlah_Lantai || 0) >= Number(props.facilities.lantai))
-  }
-
-  // Filter Wilayah (Provinsi & Kota)
-  if (props.region.province) {
-    const prov = props.region.province.toLowerCase()
-    result = result.filter(p => String(p.Area || '').toLowerCase().includes(prov))
-  }
-  if (props.region.city) {
-    const city = props.region.city.toLowerCase()
-    result = result.filter(p => String(p.Area || '').toLowerCase().includes(city))
-  }
-
-  // Filter Harga
-  if (props.priceRange.min) {
-    const min = Number(props.priceRange.min)
-    result = result.filter(p => {
-      const price = p.Harga_Jual1 > 0 ? p.Harga_Jual1 : p.Harga_Sewa1
-      return price >= min
-    })
-  }
-  if (props.priceRange.max) {
-    const max = Number(props.priceRange.max)
-    result = result.filter(p => {
-      const price = p.Harga_Jual1 > 0 ? p.Harga_Jual1 : p.Harga_Sewa1
-      return price <= max
-    })
-  }
-
-  return result
-})
+const filteredProducts = usePropertyFilters(
+  products,
+  computed(() => props.searchQuery),
+  selectedTransaksi,
+  selectedType,
+  computed(() => props.facilities),
+  computed(() => props.region),
+  computed(() => props.priceRange)
+)
 
 const table = useVueTable({
   get data() {

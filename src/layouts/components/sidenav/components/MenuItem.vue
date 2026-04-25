@@ -28,6 +28,9 @@ const pathname = computed(() => route.path)
 
 const isActive = computed(() => {
   if (!props.item.url) return false
+  if (props.item.url === '/') {
+    return pathname.value === '/'
+  }
   return pathname.value.startsWith(props.item.url)
 })
 </script>

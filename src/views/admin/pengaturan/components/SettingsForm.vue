@@ -25,6 +25,10 @@ watch(() => props.settings, (newVal) => {
 const handleSave = () => {
   emit('save', form.value)
 }
+
+watch(form, (newVal) => {
+  emit('update', newVal)
+}, { deep: true })
 </script>
 
 <template>
@@ -33,17 +37,10 @@ const handleSave = () => {
       <div class="bg-gray-50 px-6 py-4 border-b border-gray-100">
         <h6 class="text-sm font-semibold text-gray-700 uppercase tracking-wider">Identitas & Tema</h6>
       </div>
-      <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-5">
+      <div class="p-6 grid grid-cols-1 gap-5">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Nama Aplikasi</label>
           <input v-model="form.appName" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-opacity-50" :style="{ '--tw-ring-color': form.colorPrimary }" placeholder="Masukkan nama aplikasi..." />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Mode Warna</label>
-          <select v-model="form.theme" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-opacity-50">
-            <option value="light">Terang (Light)</option>
-            <option value="dark">Gelap (Dark)</option>
-          </select>
         </div>
       </div>
     </div>

@@ -1,25 +1,24 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, nextTick, computed, watch, defineAsyncComponent } from 'vue'
 import { Icon } from '@iconify/vue'
-import { confirm, success, fail } from '@/utils/sweet-alert'
-import type { CalendarOptions } from '@fullcalendar/core'
-import dayGridPlugin from '@fullcalendar/daygrid'
-import timeGridPlugin from '@fullcalendar/timegrid'
-import listPlugin from '@fullcalendar/list'
-import interactionPlugin from '@fullcalendar/interaction'
-import idLocale from '@fullcalendar/core/locales/id'
+import { fail } from '@/utils/sweet-alert'
 import api from '@/services/axios'
 import ChatBubble from './ChatBubble.vue'
 import bgChat from '@/assets/images/background-chat.png'
 import bgChatDark from '@/assets/images/background-chat-dark.png'
 import simplebar from 'simplebar-vue'
-import { type Chat, type PreviewImage, calendarEvents, commonEmojis } from './data'
+import { type Chat, type PreviewImage, commonEmojis } from './data'
 import { type TakeOverPayload } from './SideBar.vue'
+import { PROVINCES } from '@/utils/regions'
 
-// Lazy-load heavy UI components — only fetched when the user opens that panel
-const FullCalendar = defineAsyncComponent(() => import('@fullcalendar/vue3'))
-const Filter = defineAsyncComponent(() => import('./Filter.vue'))
-const ProductCard = defineAsyncComponent(() => import('@/components/ProductCard.vue'))
+import { useChatProducts } from '@/composables/admin/useChatProducts'
+import { useChatTransfer } from '@/composables/admin/useChatTransfer'
+import { useChatAppointments } from '@/composables/admin/useChatAppointments'
+
+const PanelEtalase = defineAsyncComponent(() => import('./panels/PanelEtalase.vue'))
+const PanelTukarCS = defineAsyncComponent(() => import('./panels/PanelTukarCS.vue'))
+const PanelAppointment = defineAsyncComponent(() => import('./panels/PanelAppointment.vue'))
+const Filter = defineAsyncComponent(() => import('../../properti/katalog/components/Filter.vue'))
 
 const etalaseRef = ref<HTMLElement | null>(null)
 const tukarCSRef = ref<HTMLElement | null>(null)
@@ -34,49 +33,13 @@ const openEtalase = ref(false)
 const openAppointment = ref(false)
 const openTukarCS = ref(false)
 const openFilter = ref(false)
-const showAppointmentModal = ref(false)
 
-const appointmentForm = ref({
-  namaLengkap: '',
-  noTelp: '',
-  lokasi: '',
-  catatan: '',
-  tanggal: '',
-  waktu: '',
-  properti: '',
-  unitId: '',
-  mediaId: '',
-  mediaUrl: ''
-})
-
-const appointmentStage = ref(0)
-
-const bookedDates = computed(() => {
-  return calendarEvents.map((ev) => {
-    const d = new Date(ev.start)
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-  })
-})
 const isMobile = ref(false)
 const changeUsername = ref(false)
 const sendChatContent = ref('')
 const isSendingImage = ref(false)
-const searchKatalog = ref('')
-const debouncedSearchKatalog = ref('')
-const activeExpandedProductId = ref<string | null>(null)
-let katalogTimeout: any = null
-
-watch(searchKatalog, (newVal) => {
-  if (katalogTimeout) clearTimeout(katalogTimeout)
-  katalogTimeout = setTimeout(() => {
-    debouncedSearchKatalog.value = newVal
-  }, 500)
-})
 
 const chatInputRef = ref<HTMLTextAreaElement | null>(null)
-const adminsList = ref<any[]>([])
-const searchCS = ref('')
-const isFetchingAdmins = ref(false)
 const isSearchingChat = ref(false)
 const searchChatQuery = ref('')
 const searchChatResults = ref<{ chatIndex: number; matchIndex: number }[]>([])
@@ -139,383 +102,152 @@ const handleClickOutside = (event: MouseEvent) => {
 
   const interactiveRefs = [containerRef.value, etalaseRef.value, tukarCSRef.value, filterRef.value?.$el, searchHeaderRef.value]
 
-  if (interactiveRefs.some((el) => el && el.contains(target))) return
+  const isClickInside = interactiveRefs.some((ref) => {
+    if (!ref) return false
+    return ref.contains(target)
+  })
 
+  const isFilterTrigger = (target as HTMLElement).closest('.btn-trigger-filter')
+  const isDatePicker = (target as HTMLElement).closest('.dp__menu') || (target as HTMLElement).closest('.dp__outer_menu_wrap')
+  const isSweetAlert = (target as HTMLElement).closest('.swal2-container')
+
+  if (!isClickInside && !isFilterTrigger && !isDatePicker && !isSweetAlert) {
+    openMenu.value = false
+    showEmojiPicker.value = false
+
+    if (openFilter.value) {
+      openFilter.value = false
+      return
+    }
+
+    if (openAppointment.value) openAppointment.value = false
+    if (openEtalase.value && !isSendingImage.value) openEtalase.value = false
+    if (openTukarCS.value) openTukarCS.value = false
+  }
+}
+
+const toggleSearchChat = () => {
+  isSearchingChat.value = !isSearchingChat.value
+  if (!isSearchingChat.value) {
+    searchChatQuery.value = ''
+    searchChatResults.value = []
+    currentSearchMatch.value = -1
+  } else {
+    nextTick(() => searchChatInputRef.value?.focus())
+  }
+}
+
+const handleSearchChat = () => {
+  if (!searchChatQuery.value.trim() || searchChatQuery.value.length < 2) {
+    searchChatResults.value = []
+    currentSearchMatch.value = -1
+    return
+  }
+
+  const results: { chatIndex: number; matchIndex: number }[] = []
+  const query = searchChatQuery.value.toLowerCase()
+
+  props.chats.forEach((chat, chatIndex) => {
+    if (chat.Message && chat.Jenis_Pesan === 'text') {
+      const matchIndex = chat.Message.toLowerCase().indexOf(query)
+      if (matchIndex !== -1) results.push({ chatIndex, matchIndex })
+    }
+  })
+
+  searchChatResults.value = results
+  if (results.length > 0) {
+    currentSearchMatch.value = results.length - 1
+    scrollToSearchMatch()
+  } else currentSearchMatch.value = -1
+}
+
+const scrollToSearchMatch = () => {
+  if (searchChatResults.value.length === 0 || currentSearchMatch.value === -1) return
+  nextTick(() => {
+    const chatIndex = searchChatResults.value[currentSearchMatch.value].chatIndex
+    const chatElementId = `chat-message-${chatIndex}`
+    const chatElement = document.getElementById(chatElementId)
+
+    if (chatElement && cachedScrollEl) {
+      const containerHeight = (cachedScrollEl as HTMLElement).clientHeight
+      const elementTop = chatElement.offsetTop
+      const scrollToPosition = elementTop - containerHeight / 2 + chatElement.clientHeight / 2
+      if (typeof (cachedScrollEl as HTMLElement).scrollTo === 'function') {
+        ;(cachedScrollEl as HTMLElement).scrollTo({ top: scrollToPosition, behavior: 'smooth' })
+      }
+    }
+  })
+}
+
+const nextSearchMatch = () => {
+  if (searchChatResults.value.length > 0) {
+    currentSearchMatch.value = (currentSearchMatch.value + 1) % searchChatResults.value.length
+    scrollToSearchMatch()
+  }
+}
+
+const prevSearchMatch = () => {
+  if (searchChatResults.value.length > 0) {
+    currentSearchMatch.value = (currentSearchMatch.value - 1 + searchChatResults.value.length) % searchChatResults.value.length
+    scrollToSearchMatch()
+  }
+}
+
+const { 
+  products, isLoadingProducts, searchKatalog, debouncedSearchKatalog, 
+  filteredProducts, activeExpandedProductId, fetchProducts, sendProduct,
+  facilitiesFilter, regionFilter, priceRangeFilter
+} = useChatProducts(props, (t: string, u?: string, r?: string, p?: string, id?: string, url?: string, user?: string) => sendChat(t, u, r, p, id, url, user))
+
+const { 
+  showAppointmentModal, appointmentStage, appointmentForm, 
+  appointmentCalendarOptions, bookedDates, handleSelectUnitForAppointment, saveNewAppointment 
+} = useChatAppointments(props, (t: string, u?: string, r?: string, p?: string, id?: string, url?: string, user?: string) => sendChat(t, u, r, p, id, url, user))
+
+const { 
+  adminsList, searchCS, isFetchingAdmins, filteredAdmins, fetchAdmins, handleTransferChat 
+} = useChatTransfer(props, emit, (t: string, u?: string, r?: string, p?: string, id?: string, url?: string, user?: string) => sendChat(t, u, r, p, id, url, user))
+
+watch(openEtalase, (n) => {
+  if (n) {
+    if (products.value.length === 0) fetchProducts()
+    searchKatalog.value = ''
+  }
+})
+
+watch(openTukarCS, (n) => {
+  if (n) {
+    fetchAdmins()
+    searchCS.value = ''
+  }
+})
+
+const handleOpenAppointment = () => {
+  appointmentForm.value = { namaLengkap: '', noTelp: '', lokasi: '', catatan: '', tanggal: '', waktu: '', properti: '', unitId: '', mediaId: '', mediaUrl: '' }
+  appointmentStage.value = 1
+  showAppointmentModal.value = true
+  fetchProducts()
   openMenu.value = false
-  openEtalase.value = false
-  openTukarCS.value = false
-  showEmojiPicker.value = false
+}
+
+const handleOpenEtalase = () => {
+  openEtalase.value = true
+  openMenu.value = false
+}
+
+const handleOpenTukarCS = () => {
+  openTukarCS.value = true
+  openMenu.value = false
 }
 
 const closeEtalase = () => {
   openEtalase.value = false
   openAppointment.value = false
-  openFilter.value = false
-}
-
-const handleOpenEtalase = () => {
-  appointmentStage.value = 0
-  openEtalase.value = true
-  openAppointment.value = false
-  openTukarCS.value = false
-  openMenu.value = false
-}
-
-const handleOpenAppointment = () => {
-  appointmentStage.value = 1
-  openAppointment.value = true
-  openEtalase.value = false
-  openMenu.value = false
-
-  appointmentForm.value = {
-    namaLengkap: username.value ?? '',
-    noTelp: props.phoneNumber ?? '',
-    lokasi: '',
-    catatan: '',
-    tanggal: '',
-    waktu: '',
-    properti: '',
-    unitId: '',
-    mediaId: '',
-    mediaUrl: ''
-  }
-}
-
-const handleSelectUnitForAppointment = (product: any) => {
-  appointmentForm.value.properti = product.Nama_Produk
-  appointmentForm.value.lokasi = product.Alamat || '-'
-  appointmentForm.value.unitId = product.No_Id
-  appointmentForm.value.mediaId = product.File_Image[0]
-  appointmentForm.value.mediaUrl = product.MediaUrls[0].Id_Media
-
-  openAppointment.value = false
-  appointmentStage.value = 2
-  showAppointmentModal.value = true
-}
-
-const handleCalendarDateClick = (info: { dateStr: string; date: Date }) => {
-  const clickedDate = info.dateStr.slice(0, 10)
-
-  if (bookedDates.value.includes(clickedDate)) {
-    fail('Tanggal ini sudah ada janji temu. Pilih tanggal lain.')
-    return
-  }
-
-  appointmentForm.value.tanggal = clickedDate
-  if (!appointmentForm.value.waktu) {
-    const timeStr = info.dateStr.length > 10 ? info.dateStr.slice(11, 16) : '09:00'
-    appointmentForm.value.waktu = timeStr
-  }
-}
-
-const appointmentCalendarOptions = computed<CalendarOptions>(() => ({
-  plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin],
-  initialView: 'dayGridMonth',
-  locale: idLocale,
-  height: 'auto',
-  selectable: true,
-  validRange: {
-    start: new Date().toISOString().split('T')[0]
-  },
-  dateClick: handleCalendarDateClick,
-  dayCellClassNames: (arg) => {
-    const d = arg.date
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-    if (bookedDates.value.includes(key)) return ['fc-day-booked']
-    return []
-  },
-  events: calendarEvents.map((ev) => ({
-    title: ev.title,
-    start: ev.start,
-    backgroundColor: '#94a3b8',
-    borderColor: '#94a3b8',
-    textColor: '#ffffff',
-    extendedProps: ev.extendedProps
-  })),
-  headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
-  eventClick: () => {}
-}))
-
-const saveNewAppointment = async () => {
-  const f = appointmentForm.value
-  console.log(appointmentForm.value)
-  if (!f.namaLengkap.trim()) return fail('Nama lengkap wajib diisi')
-  if (!f.tanggal) return fail('Pilih tanggal pada kalender terlebih dahulu')
-  if (!f.waktu) return fail('Waktu wajib diisi')
-
-  const dateObj = new Date(f.tanggal)
-  const formattedDate = new Intl.DateTimeFormat('id-ID', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric'
-  }).format(dateObj)
-
-  const msg = `Halo Kak ${f.namaLengkap}, salam kenal! 👋\n\n` +
-    `Jadwal kunjungannya udah kita amankan nih. Biar nggak lupa, ini ya detailnya:\n\n` +
-    `🏢 *${f.properti}*\n` +
-    `📍 ${f.lokasi}\n` +
-    `📅 ${formattedDate}, jam ${f.waktu} WIB\n` +
-    `📝 Catatan dari kakak: ${f.catatan || '-'}\n\n` +
-    `Tim kita bakal nunggu di lokasi sesuai jam di atas ya. Kalau misal nanti nyasar atau ada perubahan rencana, chat ke nomor ini aja.\n\n` +
-    `See you di lokasi ya, Kak! 🏙️`
-
-  let urlMedia = ''
-  const idMedia = f.mediaUrl || ''
-  if (idMedia.includes('base64,')) urlMedia = idMedia
-  else if (idMedia.startsWith('http')) {
-    try {
-      const response = await fetch(idMedia)
-      const blob = await response.blob()
-      urlMedia = await new Promise((resolve) => {
-        const reader = new FileReader()
-        reader.onloadend = () => resolve(reader.result as string)
-        reader.readAsDataURL(blob)
-      })
-    } catch {
-      urlMedia = idMedia
-    }
-  } else urlMedia = idMedia
-
-  sendChatContent.value = msg
-  showAppointmentModal.value = false
-  const idPaket = `${f.unitId}_${f.mediaId}`
-  await sendChat('system_image_appointment', msg, undefined, undefined, idPaket, urlMedia)
-  const payload = {
-    PhoneNumber: props.phoneNumber + '@s.whatsapp.net',
-    FileUrl: urlMedia,
-    FileName: `product_${f.unitId || 'image'}.jpg`,
-    MimeType: 'image/jpeg',
-    Caption: msg
-  }
-
-  const config = { headers: { 'X-Jenis-User': 'admin' } }
-  await api.post('/api/waha/send-image', payload, config)
-}
-
-const handleOpenTukarCS = () => {
-  openTukarCS.value = !openTukarCS.value
-  if (openTukarCS.value) {
-    openEtalase.value = false
-    openAppointment.value = false
-    openMenu.value = false
-    fetchAdmins()
-  }
-}
-
-const fetchAdmins = async () => {
-  isFetchingAdmins.value = true
-  try {
-    const res = await api.get('/api/admin/getAll?orderby=Tgl_Created&orderdir=desc', { headers: { 'X-Jenis-User': 'admin' } })
-    adminsList.value = res.data.Data || []
-  } catch {
-    fail('Gagal mengambil data admin')
-  } finally {
-    isFetchingAdmins.value = false
-  }
-}
-
-const filteredAdmins = computed(() => {
-  const myId = localStorage.getItem('no_id')
-  let list = adminsList.value || []
-  if (myId) list = list.filter((admin) => String(admin.No_Id) !== String(myId))
-  if (!searchCS.value) return list
-  return list.filter((admin) => (admin.Nama_User || '').toLowerCase().includes(searchCS.value.toLowerCase()))
-})
-
-const handleTransferChat = (targetAdmin: any) => {
-  confirm(`Alihkan percakapan ke ${targetAdmin.Nama_User}?`, async () => {
-    const myId = localStorage.getItem('no_id')
-    let formattedPhone = props.phoneNumber.replace(/\D/g, '')
-    if (formattedPhone.startsWith('0')) formattedPhone = '62' + formattedPhone.substring(1)
-
-    try {
-      await api.post('/api/chat/toggle-bot', { customer_phone: formattedPhone, admin_id: myId, status_bot: true }, { headers: { 'X-Jenis-User': 'admin' } })
-      await sendChat('system_keluar_tukar', undefined, props.roomId!, formattedPhone)
-      await api.post('/api/chat/toggle-bot', { customer_phone: formattedPhone, admin_id: targetAdmin.No_Id, status_bot: false }, { headers: { 'X-Jenis-User': 'admin' } })
-      await sendChat('system_masuk_tukar', undefined, props.roomId!, formattedPhone, undefined, undefined, targetAdmin.Nama_User)
-
-      success(`Berhasil mengalihkan ke ${targetAdmin.Nama_User}`)
-      openTukarCS.value = false
-      emit('clearRoom')
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.Message || ''
-      if (errorMessage.includes('sudah diambil alih')) fail('Gagal: Percakapan ini sudah dialihkan')
-      else fail('Gagal mengalihkan percakapan')
-    }
-  })
-}
-
-const toggleSearchChat = async () => {
-  isSearchingChat.value = !isSearchingChat.value
-  if (isSearchingChat.value) {
-    await nextTick()
-    searchChatInputRef.value?.focus()
-  } else {
-    searchChatQuery.value = ''
-    searchChatResults.value = []
-    currentSearchMatch.value = -1
-  }
-}
-
-const handleSearchChat = () => {
-  if (!searchChatQuery.value.trim()) {
-    searchChatResults.value = []
-    currentSearchMatch.value = -1
-    return
-  }
-  const query = searchChatQuery.value.toLowerCase()
-  const results: { chatIndex: number; matchIndex: number }[] = []
-
-  props.chats.forEach((c, i) => {
-    let msg = (c.Message as string) || ''
-    if (msg.includes('_data:image/')) msg = msg.split('_data:image/')[0]
-    const searchString = msg.toLowerCase()
-    let pos = searchString.indexOf(query)
-    let occurrenceIdx = 0
-
-    while (pos !== -1) {
-      results.push({ chatIndex: i, matchIndex: occurrenceIdx })
-      occurrenceIdx++
-      pos = searchString.indexOf(query, pos + query.length)
-    }
-  })
-
-  searchChatResults.value = results
-  if (searchChatResults.value.length > 0) {
-    if (currentSearchMatch.value === -1 || currentSearchMatch.value >= searchChatResults.value.length) currentSearchMatch.value = 0
-    scrollToMatch(searchChatResults.value[currentSearchMatch.value])
-  } else currentSearchMatch.value = -1
-}
-
-const nextSearchMatch = async () => {
-  if (searchChatResults.value.length === 0) return
-  currentSearchMatch.value = (currentSearchMatch.value + 1) % searchChatResults.value.length
-  await nextTick()
-  scrollToMatch(searchChatResults.value[currentSearchMatch.value])
-}
-
-const prevSearchMatch = async () => {
-  if (searchChatResults.value.length === 0) return
-  currentSearchMatch.value = (currentSearchMatch.value - 1 + searchChatResults.value.length) % searchChatResults.value.length
-  await nextTick()
-  scrollToMatch(searchChatResults.value[currentSearchMatch.value])
-}
-
-const scrollToMatch = (res: { chatIndex: number; matchIndex: number }) => {
-  setTimeout(() => {
-    const matchId = `match-${res.chatIndex}-${res.matchIndex}`
-    const el = document.getElementById(matchId) || document.getElementById(`chat-message-${res.chatIndex}`)
-    if (!el) return
-    const scrollEl = (cachedScrollEl as HTMLElement) ?? document.querySelector<HTMLElement>('#chat-scroll-container .simplebar-content-wrapper')
-    if (scrollEl) {
-      const elRect = el.getBoundingClientRect()
-      const containerRect = scrollEl.getBoundingClientRect()
-      const targetScrollTop = scrollEl.scrollTop + (elRect.top - containerRect.top) - containerRect.height / 2 + elRect.height / 2
-      scrollEl.scrollTo({ top: targetScrollTop, behavior: 'smooth' })
-    } else el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  }, 150)
-}
-
-const products = ref<any[]>([])
-const isLoadingProducts = ref(false)
-const filteredProducts = computed(() => {
-  if (!debouncedSearchKatalog.value) return products.value
-  const query = debouncedSearchKatalog.value.toLowerCase()
-  return products.value.filter((p) => p.Nama_Produk?.toLowerCase().includes(query) || p.Slug?.toLowerCase().includes(query))
-})
-
-const fetchProducts = async () => {
-  if (products.value.length > 0) return
-  isLoadingProducts.value = true
-  try {
-    const { data } = await api.get('/api/realEstate/getAll', { headers: { 'X-Jenis-User': 'Admin' } })
-    products.value = data.Data
-  } catch (err) {
-    console.error('Fetch products error:', err)
-  } finally {
-    isLoadingProducts.value = false
-  }
-}
-
-watch([openEtalase, openAppointment], ([newEtalase, newAppointment]) => {
-  if (newEtalase || newAppointment) {
-    if (products.value.length === 0) isLoadingProducts.value = true
-    fetchProducts()
-  }
-})
-
-const sendProduct = async (product: any) => {
-  if (isSendingImage.value) return
-  isSendingImage.value = true
-
-  const config = { headers: { 'X-Jenis-User': 'admin' } }
-  try {
-    const formatCurrency = (val: number) => (!val ? 'Rp 0' : 'Rp ' + val.toLocaleString('id-ID'))
-    let template = `🏡 *${product.Nama_Produk}*\n`
-    const category = product.Tipe
-    const location = product.Area && product.Area.length ? product.Area.join(', ') : ''
-    template += `🏷️ ${category} | ${location}\n`
-
-    const isSewa = product.Status_Transaksi && product.Status_Transaksi.includes('Sewa')
-    const hargaType = isSewa ? 'Sewa' : 'Jual'
-    const hargaValue = hargaType == 'Sewa' ? (product.Harga_Sewa2 == 0 ? product.Harga_Sewa1 : product.Harga_Sewa1) : product.Harga_Jual2 == 0 ? product.Harga_Jual1 : product.Harga_Jual1
-
-    template += `💰 *Harga ${hargaType}: ${formatCurrency(hargaValue)}*\n\n`
-    template += `📐 LT: ${product.Luas_Tanah || 0} m² | LB: ${product.Luas_Bangunan || 0} m²\n`
-    template += `🛌 KT: ${product.Kamar_Tidur || 0} | 🚿 KM: ${product.Kamar_Mandi || 0}\n`
-    if (product.Akses_Jalan && product.Akses_Jalan.length) template += `🛣️ Akses: ${product.Akses_Jalan.join(' | ')}\n`
-    template += `📄 Legalitas: ${product.Jenis_Sertifikat || 'SHM'}\n\n📝 *Deskripsi:*\n${product.Keterangan || ''}`
-
-    let urlMedia = ''
-    if (product.MediaUrls && product.MediaUrls.length > 0) {
-      const idMedia = product.MediaUrls[0].Id_Media || ''
-      if (idMedia.includes('base64,')) urlMedia = idMedia
-      else if (idMedia.startsWith('http')) {
-        try {
-          const response = await fetch(idMedia)
-          const blob = await response.blob()
-          urlMedia = await new Promise((resolve) => {
-            const reader = new FileReader()
-            reader.onloadend = () => resolve(reader.result as string)
-            reader.readAsDataURL(blob)
-          })
-        } catch {
-          urlMedia = idMedia
-        }
-      } else urlMedia = idMedia
-    }
-
-    if (!urlMedia) return fail('Properti tidak memiliki gambar base64 valid')
-
-    let formattedPhone = props.phoneNumber.replace(/\D/g, '')
-    if (formattedPhone.startsWith('0')) formattedPhone = '62' + formattedPhone.substring(1)
-
-    console.log('mengirim_gambar')
-    const payload = {
-      PhoneNumber: formattedPhone + '@s.whatsapp.net',
-      FileUrl: urlMedia,
-      FileName: `product_${product.No_Id || 'image'}.jpg`,
-      MimeType: 'image/jpeg',
-      Caption: template
-    }
-
-    await api.post('/api/waha/send-image', payload, config)
-
-    const mediaName = product.File_Image?.[0] || 'img'
-    const idPaket = `${product.No_Id}_${mediaName}`
-
-    await sendChat('system_image_product', template, undefined, undefined, idPaket, urlMedia)
-
-    openEtalase.value = false
-  } catch {
-    fail('Gagal mengirim properti ke WhatsApp')
-  } finally {
-    isSendingImage.value = false
-  }
+  searchKatalog.value = ''
 }
 
 const endChat = () => takeOverChat(true)
+
 
 const reinitPreline = async () => {
   await nextTick()
@@ -1050,203 +782,54 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
       </div>
     </div>
     <Teleport to="body">
-      <Transition enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0 scale-95" enter-to-class="opacity-100 scale-100" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100 scale-100" leave-to-class="opacity-0 scale-95">
-        <div v-if="openEtalase || openAppointment" class="fixed inset-0 z-[150] flex items-center justify-center p-3 md:p-8">
-          <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="closeEtalase" />
+      <PanelEtalase 
+        :openEtalase="openEtalase" 
+        :isSendingImage="isSendingImage" 
+        :openAppointment="openAppointment" 
+        v-model:searchKatalog="searchKatalog" 
+        v-model:openFilter="openFilter" 
+        v-model:activeExpandedProductId="activeExpandedProductId" 
+        :isLoadingProducts="isLoadingProducts" 
+        :filteredProducts="filteredProducts" 
+        @close="closeEtalase" 
+        @selectUnit="openAppointment ? handleSelectUnitForAppointment($event) : sendProduct($event, (val) => isSendingImage = val, closeEtalase)" 
+      />
 
-          <div ref="etalaseRef" class="relative w-full max-w-[1044px] max-h-[90vh] bg-white rounded-[2rem] shadow-2xl p-6 md:p-8 border border-slate-50 overflow-hidden flex flex-col z-10 animate-fade-in-up">
-            <div v-if="isSendingImage && openEtalase" class="absolute inset-0 z-[100] bg-white/70 backdrop-blur-sm flex flex-col items-center justify-center">
-              <div class="size-16 relative mb-4">
-                <div class="absolute inset-0 border-4 border-slate-100 rounded-full"></div>
-                <div class="absolute inset-0 border-4 border-bejo-500 rounded-full border-t-transparent animate-spin"></div>
-                <Icon icon="lucide:send" class="size-6 text-bejo-500 absolute top-1/2 left-1/2 -translate-x-[40%] -translate-y-[40%]" />
-              </div>
-              <h4 class="text-lg font-black text-slate-800 tracking-tight">Harap Tunggu...</h4>
-              <p class="text-xs font-bold text-slate-500 text-center max-w-[250px] mt-1.5 leading-relaxed">Sistem sedang merangkai dan mengirim detail properti ke pelanggan Anda.</p>
-            </div>
+      <PanelAppointment 
+        :showAppointmentModal="showAppointmentModal" 
+        :appointmentForm="appointmentForm" 
+        :appointmentCalendarOptions="appointmentCalendarOptions" 
+        @update:formTanggal="(val) => appointmentForm.tanggal = val"
+        @update:formWaktu="(val) => appointmentForm.waktu = val"
+        @update:formNamaLengkap="(val) => appointmentForm.namaLengkap = val"
+        @update:formNoTelp="(val) => appointmentForm.noTelp = val"
+        @update:formCatatan="(val) => appointmentForm.catatan = val"
+        @close="showAppointmentModal = false" 
+        @save="saveNewAppointment((val) => sendChatContent = val)" 
+      />
 
-            <div class="flex items-center justify-between mb-6 px-2 shrink-0">
-              <div class="flex items-center gap-3">
-                <div class="size-10 rounded-2xl bg-gradient-to-br from-bejo-50 to-bejo-100 flex items-center justify-center text-bejo-600">
-                  <Icon :icon="openAppointment ? 'lucide:calendar-search' : 'lucide:blocks'" class="size-5" />
-                </div>
-                <div>
-                  <h4 class="text-slate-900 font-extrabold text-lg tracking-tight">{{ openAppointment ? 'Pilih Unit untuk Janji Temu' : 'Pilih Etalase' }}</h4>
-                  <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Pilih unit untuk melanjutkan</p>
-                </div>
-              </div>
-              <button @click.stop="closeEtalase" class="size-9 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all">
-                <Icon icon="lucide:x" class="size-5" />
-              </button>
-            </div>
+      <PanelTukarCS 
+        :openTukarCS="openTukarCS" 
+        v-model:searchCS="searchCS" 
+        :isFetchingAdmins="isFetchingAdmins" 
+        :filteredAdmins="filteredAdmins" 
+        @close="openTukarCS = false" 
+        @transfer="handleTransferChat($event, () => { openTukarCS = false })" 
+      />
 
-            <div class="px-2 shrink-0">
-              <div class="relative mb-4 group">
-                <Icon icon="lucide:search" class="size-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-bejo-500 transition-colors" />
-                <input type="text" v-model="searchKatalog" placeholder="Cari unit atau katalog..." class="w-full bg-slate-50 border-transparent rounded-2xl py-3 pl-11 pr-4 text-sm font-bold focus:bg-white focus:ring-8 focus:ring-bejo-500/5 focus:border-bejo-500 transition-all duration-300 shadow-inner" />
-              </div>
-              <div class="flex flex-wrap items-center gap-3 mb-6">
-                <button type="button" @click.stop="openFilter = !openFilter" class="btn-trigger-filter flex-1 flex justify-center items-center py-3 bg-bejo-50 hover:bg-bejo-100 text-bejo-600 rounded-2xl text-[13px] font-black uppercase tracking-widest transition-all shadow-sm"><Icon icon="lucide:sliders-horizontal" class="size-4 mr-2" /> Filter Pencarian</button>
-              </div>
-            </div>
-
-            <div class="overflow-y-auto px-2 custom-scrollbar flex-1 min-h-0">
-              <div v-if="isLoadingProducts" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
-                <ProductCard v-for="i in 3" :key="'loading-' + i" :product="{}" is-loading />
-              </div>
-              <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
-                <ProductCard v-for="product in filteredProducts" :key="product.No_Id" :product="product" :disable-routing="true" :collapsible-details="true" :show-select-button="true" :is-expanded="activeExpandedProductId === product.No_Id" @toggle-expand="activeExpandedProductId = ($event === activeExpandedProductId ? null : $event)" @select="openAppointment ? handleSelectUnitForAppointment($event) : sendProduct($event)" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </Transition>
-
-      <Transition enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0 scale-95" enter-to-class="opacity-100 scale-100" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100 scale-100" leave-to-class="opacity-0 scale-95">
-        <div v-if="showAppointmentModal" class="fixed inset-0 z-[200] flex items-center justify-center p-3 md:p-8">
-          <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="showAppointmentModal = false" />
-
-          <div class="relative w-full max-w-6xl max-h-[94vh] bg-white rounded-[2rem] shadow-2xl shadow-slate-900/20 flex flex-col overflow-hidden z-10 animate-fade-in-up">
-            <div class="shrink-0 flex items-center justify-between px-6 md:px-8 py-4 md:py-5 border-b border-slate-100 bg-white">
-              <div class="flex items-center gap-3">
-                <div class="size-10 rounded-2xl bg-gradient-to-br from-bejo-50 to-bejo-100 flex items-center justify-center text-bejo-600 shadow-sm shadow-bejo-500/10">
-                  <Icon icon="lucide:calendar-plus" class="size-5" />
-                </div>
-                <div>
-                  <h3 class="text-slate-900 font-black text-base md:text-lg tracking-tight leading-none">Buat Janji Temu</h3>
-                  <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5 hidden sm:block">Klik tanggal pada kalender · Abu-abu = sudah ada jadwal</p>
-                </div>
-              </div>
-              <button @click="showAppointmentModal = false" class="size-9 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all active:scale-90">
-                <Icon icon="lucide:x" class="size-5" />
-              </button>
-            </div>
-
-            <div class="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_380px] overflow-hidden">
-              <!-- Main Calendar Content Right -->
-              <div class="overflow-y-auto p-4 md:p-8 bg-white custom-scrollbar flex flex-col">
-                <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
-                  <div class="flex flex-wrap items-center gap-2">
-                    <span class="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-500 bg-slate-100 border border-slate-200 px-4 py-2 rounded-full"><span class="size-2 rounded-full bg-slate-400 shrink-0"></span>Terisi</span>
-                    <span class="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-bejo-600 bg-bejo-50 border border-bejo-100 px-4 py-2 rounded-full"><span class="size-2 rounded-full bg-bejo-500 shrink-0"></span>Tersedia</span>
-                  </div>
-                  <Transition enter-active-class="transition duration-300" enter-from-class="opacity-0 -translate-y-2" enter-to-class="opacity-100 translate-y-0">
-                    <div v-if="appointmentForm.tanggal" class="flex items-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-100 px-4 py-2.5 rounded-2xl shadow-sm">
-                      <Icon icon="lucide:check-circle" class="size-4" />
-                      <span class="text-[11px] font-black uppercase tracking-widest">Dipilih: {{ appointmentForm.tanggal }}</span>
-                    </div>
-                  </Transition>
-                </div>
-
-                <div class="flex-1 bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-900/5 overflow-hidden p-2 md:p-6 transition-all hover:shadow-2xl hover:shadow-slate-900/10">
-                  <FullCalendar :options="appointmentCalendarOptions" />
-                </div>
-              </div>
-              <!-- Sidebar Form Left -->
-              <div class="overflow-y-auto p-5 md:p-7 border-b lg:border-b-0 lg:border-r border-slate-100 bg-slate-50/40 custom-scrollbar flex flex-col">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Detail Janji Temu</p>
-                <div class="space-y-4 flex-1">
-                  <div>
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Tanggal Terpilih</label>
-                    <div class="relative">
-                      <Icon icon="lucide:calendar" class="absolute left-3.5 top-1/2 -translate-y-1/2 size-4" :class="appointmentForm.tanggal ? 'text-bejo-500' : 'text-slate-300'" />
-                      <input
-                        type="text"
-                        :value="appointmentForm.tanggal ? new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(appointmentForm.tanggal)) : 'Pilih pada kalender...'"
-                        disabled
-                        class="w-full rounded-2xl py-3 pl-11 pr-11 text-sm font-bold cursor-not-allowed shadow-inner transition-colors"
-                        :class="appointmentForm.tanggal ? 'bg-bejo-50 border border-bejo-200 text-bejo-700' : 'bg-slate-50 border border-slate-100 text-slate-400'"
-                      />
-                      <Transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0 scale-75" enter-to-class="opacity-100 scale-100">
-                        <span v-if="appointmentForm.tanggal" class="absolute right-3.5 top-1/2 -translate-y-1/2 size-6 flex items-center justify-center bg-bejo-500 rounded-full shadow-lg shadow-bejo-500/20"><Icon icon="lucide:check" class="size-3.5 text-white" /></span>
-                      </Transition>
-                    </div>
-                  </div>
-                  <div>
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Waktu <span class="text-red-400">*</span></label>
-                    <div class="relative group">
-                      <Icon icon="lucide:clock" class="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 group-focus-within:text-bejo-500 transition-colors" :class="appointmentForm.waktu ? 'text-bejo-500' : 'text-slate-300'" />
-                      <input type="time" v-model="appointmentForm.waktu" class="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 pl-11 pr-4 text-sm font-bold focus:bg-white focus:ring-8 focus:ring-bejo-500/5 focus:border-bejo-500 transition-all shadow-inner outline-none" />
-                    </div>
-                  </div>
-                  <div class="h-px bg-slate-100 my-2"></div>
-                  <div>
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block"> Nama Lengkap <span class="text-red-400">*</span> </label>
-                    <input v-model="appointmentForm.namaLengkap" type="text" placeholder="Nama lengkap customer..." class="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:ring-8 focus:ring-bejo-500/5 focus:border-bejo-500 transition-all shadow-inner outline-none" />
-                  </div>
-                  <div>
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">No. Telepon</label>
-                    <input v-model="appointmentForm.noTelp" type="text" placeholder="Nomor telepon..." class="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:ring-8 focus:ring-bejo-500/5 focus:border-bejo-500 transition-all shadow-inner outline-none" />
-                  </div>
-                  <div>
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Properti / Unit</label>
-                    <input v-model="appointmentForm.properti" type="text" disabled class="w-full bg-slate-100 border border-slate-200 rounded-2xl py-3 px-4 text-sm font-bold text-slate-500 cursor-not-allowed shadow-inner outline-none" />
-                  </div>
-                  <div>
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Lokasi Survey</label>
-                    <input v-model="appointmentForm.lokasi" type="text" disabled class="w-full bg-slate-100 border border-slate-200 rounded-2xl py-3 px-4 text-sm font-bold text-slate-500 cursor-not-allowed shadow-inner outline-none" />
-                  </div>
-                  <div>
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Catatan Tambahan</label>
-                    <textarea v-model="appointmentForm.catatan" placeholder="Catatan khusus..." rows="3" class="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:ring-8 focus:ring-bejo-500/5 focus:border-bejo-500 transition-all shadow-inner outline-none resize-none" />
-                  </div>
-                </div>
-
-                <div class="mt-8 flex gap-3">
-                  <button @click="showAppointmentModal = false" class="flex-1 py-4 bg-white border border-slate-100 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-sm">Batal</button>
-                  <button @click="saveNewAppointment" class="flex-[2] py-4 bg-gradient-to-r from-bejo-500 to-bejo-600 hover:from-bejo-600 hover:to-bejo-700 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-bejo-500/20 transition-all active:scale-95 flex items-center justify-center gap-2.5">
-                    <Icon icon="lucide:save" class="size-4" />
-                    Simpan
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Transition>
-
-      <Transition enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0 scale-95" enter-to-class="opacity-100 scale-100" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100 scale-100" leave-to-class="opacity-0 scale-95">
-        <div v-if="openTukarCS" class="fixed inset-0 z-[200] flex items-center justify-center p-3 md:p-8">
-          <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="openTukarCS = false" />
-
-          <div ref="tukarCSRef" class="relative w-full max-w-[390px] bg-white/95 backdrop-blur-md rounded-[2rem] shadow-2xl p-6 border border-slate-50 animate-fade-in-up">
-            <div class="flex items-center justify-between mb-6 px-2">
-              <h4 class="text-slate-900 font-extrabold text-lg tracking-tight">Alihkan ke CS Lain</h4>
-              <button @click.stop="openTukarCS = false" class="size-9 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:text-red-500 transition-all">
-                <Icon icon="lucide:x" class="size-5" />
-              </button>
-            </div>
-            <div class="relative mb-5 group">
-              <Icon icon="lucide:search" class="size-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-bejo-500 transition-colors" />
-              <input v-model="searchCS" type="text" placeholder="Cari nama CS..." class="w-full bg-slate-50 border-transparent rounded-2xl py-3 pl-11 pr-4 text-sm font-bold focus:bg-white focus:ring-8 focus:ring-bejo-500/5 focus:border-bejo-500 transition-all shadow-inner" />
-            </div>
-            <div class="max-h-72 overflow-y-auto custom-scrollbar space-y-2 pr-1 min-h-[100px] relative">
-              <div v-if="isFetchingAdmins" class="absolute inset-0 flex items-center justify-center bg-white/50 backdrop-blur-sm z-10">
-                <Icon icon="lucide:loader-2" class="size-8 text-bejo-500 animate-spin" />
-              </div>
-
-              <div v-for="admin in filteredAdmins" :key="admin.No_Id" @click="handleTransferChat(admin)" class="flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-slate-50 cursor-pointer transition-all border border-transparent hover:border-slate-100 group">
-                <div class="flex items-center gap-3">
-                  <div class="size-9 rounded-xl bg-gradient-to-br from-bejo-50 to-bejo-100 flex items-center justify-center text-bejo-600 font-black text-xs">
-                    {{ admin.Nama_User.substring(0, 2).toUpperCase() }}
-                  </div>
-                  <div class="flex flex-col">
-                    <span class="text-sm font-bold text-slate-700">{{ admin.Nama_User }}</span>
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ admin.Role }}</span>
-                  </div>
-                </div>
-                <button class="flex items-center justify-center bg-white border border-slate-200 text-slate-400 size-9 rounded-xl shadow-sm group-hover:bg-bejo-500 group-hover:text-white group-hover:border-bejo-500 transition-all active:scale-90">
-                  <Icon icon="lucide:check" class="size-4" />
-                </button>
-              </div>
-
-              <div v-if="filteredAdmins && filteredAdmins.length === 0 && !isFetchingAdmins" class="flex flex-col items-center justify-center py-8 text-slate-400"></div>
-            </div>
-          </div>
-        </div>
-      </Transition>
-
-      <Filter v-if="openFilter" @close="openFilter = false" ref="filterRef" class="z-[250] bg-white sm:shadow-none fixed left-1/2 bottom-20 -translate-x-1/2 w-[95vw] sm:w-[850px] sm:fixed sm:right-5 sm:bottom-24 sm:left-auto sm:translate-x-0 rounded-[2rem] shadow-2xl p-6 border border-slate-50 max-h-[85vh] overflow-y-auto custom-scrollbar" />
+      <Filter 
+        v-if="openFilter" 
+        v-model:facilities="facilitiesFilter"
+        v-model:region="regionFilter"
+        v-model:priceRange="priceRangeFilter"
+        v-model:searchQuery="searchKatalog"
+        v-model:openFilter="openFilter"
+        :provinces="PROVINCES"
+        :hideSearch="true"
+        @close="openFilter = false" 
+        ref="filterRef" 
+        class="z-[250] bg-white sm:shadow-none fixed left-1/2 bottom-20 -translate-x-1/2 w-[95vw] sm:w-[850px] sm:fixed sm:right-5 sm:bottom-24 sm:left-auto sm:translate-x-0 rounded-[2rem] shadow-2xl p-6 border border-slate-50 max-h-[85vh] overflow-y-auto custom-scrollbar" 
+      />
     </Teleport>
   </div>
 </template>

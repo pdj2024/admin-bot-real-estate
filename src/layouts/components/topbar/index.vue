@@ -7,8 +7,6 @@
         </button>
       </div>
       <div class="flex items-center gap-3">
-        <ThemeToggler />
-
         <UserProfile />
       </div>
     </div>
@@ -17,7 +15,6 @@
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import ThemeToggler from './components/ThemeToggler.vue'
 import UserProfile from './components/UserProfile.vue'
 import { useLayout } from '@/stores/layout'
 

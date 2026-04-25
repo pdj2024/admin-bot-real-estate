@@ -1,5 +1,4 @@
 export interface AppSettings {
-  theme: 'light' | 'dark'
   sidenavSize: string
   colorPrimary: string
   colorSecondary: string
@@ -48,14 +47,6 @@ export const applyToDOM = (config: AppSettings) => {
   // setTheme(config.theme)
 
   root.setAttribute('data-sidenav-size', config.sidenavSize)
-
-  if (config.theme === 'dark') {
-    root.setAttribute('data-theme', 'dark')
-    root.classList.add('dark')
-  } else {
-    root.setAttribute('data-theme', 'light')
-    root.classList.remove('dark')
-  }
 
   root.style.setProperty('--color-primary', config.colorPrimary)
   root.style.setProperty('--color-secondary', config.colorSecondary)

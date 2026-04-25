@@ -50,7 +50,7 @@
           <div class="flex items-center gap-3 sm:gap-10">
             <RouterLink to="/" class="shrink-0 group flex items-center gap-2">
               <img :src="logo" alt="Logo" class="h-9 md:h-11 w-auto transition-transform group-hover:scale-105" />
-              <span class="text-lg sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight block">Rumah <span class="text-bejo-500">Bejo</span></span>
+              <span class="text-lg sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight block">{{ settingsStore.business.appName }}</span>
             </RouterLink>
 
             <nav class="hidden lg:flex items-center gap-8">
@@ -83,7 +83,7 @@
 
           <div class="flex items-center gap-4">
             <template v-if="!isLoggedIn">
-              <a href="/login" class="hidden sm:flex items-center gap-2 px-5 py-2.5 rounded-full bg-slate-900 border border-slate-800 text-white hover:bg-bejo-600 hover:border-bejo-600 hover:shadow-lg hover:shadow-bejo-600/30 transition-all font-bold text-sm">
+              <a href="/login" class="hidden sm:flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-bejo-200 text-bejo-600 hover:bg-bejo-50 hover:shadow-lg hover:shadow-bejo-600/10 transition-all font-bold text-sm">
                 <Icon icon="lucide:user" class="size-4" /> Masuk / Dasbor
               </a>
               <a href="/login" class="sm:hidden size-10 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors">
@@ -93,8 +93,8 @@
             <template v-else>
               <!-- Profile Dropdown -->
               <div class="hs-dropdown relative inline-flex [--placement:bottom-right]">
-                <button id="hs-dropdown-profile" type="button" class="hs-dropdown-toggle flex items-center gap-3 px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-white hover:bg-bejo-600 hover:border-bejo-600 hover:shadow-lg hover:shadow-bejo-600/30 transition-all font-bold text-sm group">
-                  <div class="size-8 rounded-full bg-bejo-500 flex items-center justify-center text-white ring-2 ring-slate-800 group-hover:ring-bejo-400 transition-all">
+                <button id="hs-dropdown-profile" type="button" class="hs-dropdown-toggle flex items-center gap-3 px-3 py-1.5 rounded-full bg-white border border-bejo-200 text-bejo-600 hover:bg-bejo-50 hover:shadow-lg hover:shadow-bejo-600/10 transition-all font-bold text-sm group">
+                  <div class="size-8 rounded-full bg-bejo-500 flex items-center justify-center text-white ring-2 ring-white group-hover:ring-bejo-100 transition-all">
                     <Icon icon="lucide:user" class="size-4" />
                   </div>
                   <span class="hidden sm:inline">Halo, {{ userName }}</span>
@@ -115,7 +115,7 @@
                     </RouterLink>
                     <button @click="handleLogout" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-red-500 hover:bg-red-50 transition-all">
                       <Icon icon="lucide:log-out" class="size-4" />
-                      Keluar Sesi
+                      Keluar
                     </button>
                   </div>
                 </div>

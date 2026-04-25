@@ -6,6 +6,7 @@ import { useSettings } from '@/stores/settings'
 import { success } from '@/utils/sweet-alert'
 import { Icon } from '@iconify/vue'
 import { generateDynamicPalette } from '@/utils/theme'
+import { APP_LOCAL_SETTINGS_KEY } from '@/config/constants'
 
 // Lazy load tabs
 const AppearanceTab = defineAsyncComponent(() => import('./tabs/AppearanceTab.vue'))
@@ -15,7 +16,6 @@ const SystemTab = defineAsyncComponent(() => import('./tabs/SystemTab.vue'))
 
 export interface AppSettings {
   appName: string
-  theme: 'light' | 'dark'
   colorPrimary: string
   colorSecondary: string
   sidenavSize: 'default' | 'hover' | 'hover-active' | 'sm' | 'md' | 'offcanvas' | 'hidden'
@@ -34,28 +34,17 @@ const tabs = [
 
 const settings = reactive<AppSettings>({
   appName: 'Rumah Bejo',
-  theme: 'light',
   colorPrimary: '#ea9455',
   colorSecondary: '#ca6d2c',
   sidenavSize: 'hover'
 })
 
-const STORAGE_KEY = 'app_local_settings'
+// Settings persistence logic
 
 const applyToDOM = (config: AppSettings) => {
   const root = document.documentElement
   setSideNavSize(config.sidenavSize)
   root.setAttribute('data-sidenav-size', config.sidenavSize)
-
-  if (config.theme === 'dark') {
-    root.setAttribute('data-theme', 'dark')
-    root.classList.add('dark')
-    setTheme('dark')
-  } else {
-    root.setAttribute('data-theme', 'light')
-    root.classList.remove('dark')
-    setTheme('light')
-  }
 
   root.style.setProperty('--color-primary', config.colorPrimary)
   root.style.setProperty('--color-secondary', config.colorSecondary)
@@ -72,20 +61,35 @@ const applyToDOM = (config: AppSettings) => {
 }
 
 watch(settings, (newSettings) => {
+  // Instant sync for appName
+  settingsStore.business.appName = newSettings.appName
   applyToDOM(newSettings)
 }, { deep: true })
 
 onMounted(() => {
   settingsStore.init()
-  const storedData = localStorage.getItem(STORAGE_KEY)
+  const storedData = localStorage.getItem(APP_LOCAL_SETTINGS_KEY)
   if (storedData) {
     Object.assign(settings, JSON.parse(storedData))
     applyToDOM(settings)
   }
 })
 
-const handleSaveAppearance = () => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(settings))
+const handleUpdateAppearance = (newData: AppSettings) => {
+  Object.assign(settings, newData)
+  // applyToDOM will be triggered by the watch(settings)
+}
+
+const handleSaveAppearance = (newData?: AppSettings) => {
+  if (newData) {
+    Object.assign(settings, newData)
+  }
+
+  // Sync with global store
+  settingsStore.business.appName = settings.appName
+  settingsStore.saveBusiness()
+
+  localStorage.setItem(APP_LOCAL_SETTINGS_KEY, JSON.stringify(settings))
   applyToDOM(settings)
   window.dispatchEvent(new Event('app-settings-changed'))
   success("Tampilan berhasil diperbarui")
@@ -94,7 +98,6 @@ const handleSaveAppearance = () => {
 const handleResetAppearance = () => {
   Object.assign(settings, {
     appName: 'Rumah Bejo',
-    theme: 'light',
     colorPrimary: '#ea9455',
     colorSecondary: '#ca6d2c',
     sidenavSize: 'hover'
@@ -152,6 +155,7 @@ const handleResetAppearance = () => {
               :settings="settings" 
               @save="handleSaveAppearance" 
               @reset="handleResetAppearance" 
+              @update="handleUpdateAppearance"
             />
             <BusinessTab 
               v-else-if="activeTab === 'business'" 

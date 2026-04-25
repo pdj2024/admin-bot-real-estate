@@ -4,7 +4,7 @@
       <div class="flex items-center gap-2.5 w-full overflow-hidden">
         <img :src="logo" class="h-7 w-auto shrink-0" alt="Logo Icon" />
         <span class="font-bold text-[14px] text-gray-800 truncate transition-colors duration-300">
-          {{ appName }}
+          {{ settingsStore.business.appName }}
         </span>
       </div>
     </RouterLink>
@@ -24,40 +24,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import logo from '@/assets/images/logo-sm.png'
 import { useLayout } from '@/stores/layout'
+import { useSettings } from '@/stores/settings'
 import AppMenu from './components/AppMenu.vue'
 import simplebar from 'simplebar-vue'
-import { RouterLink } from 'vue-router'
+import { APP_LOCAL_SETTINGS_KEY } from '@/config/constants'
 
 const { layout, setSideNavSize } = useLayout()
-const appName = ref('Rumah Bejo')
-const STORAGE_KEY = 'app_local_settings'
-
-
-const loadAppName = () => {
-  const storedData = localStorage.getItem(STORAGE_KEY)
-  if (storedData) {
-    const config = JSON.parse(storedData)
-    if (config.appName) {
-      appName.value = config.appName
-    }
-  }
-}
-
-watch(() => layout.sidenav.size, () => {
-  loadAppName();
-});
+const settingsStore = useSettings()
 
 onMounted(() => {
-  loadAppName()
-  window.addEventListener('app-settings-changed', loadAppName)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('app-settings-changed', loadAppName)
+  settingsStore.init()
 })
 
 const toggleSidebar = () => {
@@ -66,11 +46,11 @@ const toggleSidebar = () => {
   const newSize = layout.sidenav.size === 'hover-active' ? 'hover' : 'hover-active'
   setSideNavSize(newSize)
 
-  const storedData = localStorage.getItem(STORAGE_KEY)
+  const storedData = localStorage.getItem(APP_LOCAL_SETTINGS_KEY)
   if (storedData) {
     const config = JSON.parse(storedData)
     config.sidenavSize = newSize
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(config))
+    localStorage.setItem(APP_LOCAL_SETTINGS_KEY, JSON.stringify(config))
     window.dispatchEvent(new Event('app-settings-changed'))
   }
 }

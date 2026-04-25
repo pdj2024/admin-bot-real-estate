@@ -25,6 +25,8 @@ import MobileMenu from '@/layouts/components/mobile-menu/index.vue'
 import SideNav from '@/layouts/components/sidenav/index.vue'
 import Topbar from '@/layouts/components/topbar/index.vue'
 
+import { APP_LOCAL_SETTINGS_KEY } from '@/config/constants'
+
 defineProps<{ mainClass?: string }>()
 
 const layoutStore = useLayout()
@@ -32,12 +34,10 @@ const { layout } = storeToRefs(layoutStore)
 const { setSideNavSize } = layoutStore
 
 const resize = () => {
-  const STORAGE_KEY = 'app_local_settings'
-
   if (window.innerWidth <= 768) {
     setSideNavSize('offcanvas')
   } else {
-    const storedData = localStorage.getItem(STORAGE_KEY)
+    const storedData = localStorage.getItem(APP_LOCAL_SETTINGS_KEY)
     if (storedData) {
       const config = JSON.parse(storedData)
       if (config.sidenavSize) {

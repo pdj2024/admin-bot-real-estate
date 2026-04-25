@@ -11,7 +11,7 @@ defineProps({
   }
 })
 
-const emit = defineEmits(['save', 'reset'])
+const emit = defineEmits(['save', 'reset', 'update'])
 </script>
 
 <template>
@@ -19,8 +19,9 @@ const emit = defineEmits(['save', 'reset'])
     <div class="xl:col-span-7">
       <SettingsForm 
         :settings="settings" 
-        @save="emit('save')" 
+        @save="(data) => emit('save', data)" 
         @reset="emit('reset')" 
+        @update="(data) => emit('update', data)"
       />
     </div>
     <div class="xl:col-span-5 hidden xl:block sticky top-24">

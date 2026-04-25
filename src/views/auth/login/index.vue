@@ -127,25 +127,6 @@ onMounted(() => {
         Masuk Sekarang
         <Icon icon="lucide:arrow-right" class="size-5" />
       </button>
-
-      <!-- Divider -->
-      <div class="relative flex items-center py-4">
-        <div class="flex-grow border-t border-slate-100"></div>
-        <span class="flex-shrink mx-4 text-xs font-black text-slate-400 uppercase tracking-widest">Atau masuk dengan</span>
-        <div class="flex-grow border-t border-slate-100"></div>
-      </div>
-
-      <!-- Social Login -->
-      <div class="grid grid-cols-2 gap-4">
-        <button type="button" class="flex items-center justify-center gap-3 py-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors font-bold text-slate-700">
-          <Icon icon="logos:google-icon" class="size-5" />
-          Google
-        </button>
-        <button type="button" class="flex items-center justify-center gap-3 py-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors font-bold text-slate-700">
-          <Icon icon="logos:apple" class="size-5" />
-          Apple
-        </button>
-      </div>
     </form>
   </Auth>
 </template>

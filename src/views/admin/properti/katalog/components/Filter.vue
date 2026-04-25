@@ -1,5 +1,5 @@
 <template>
-  <div ref="filterRef" :class="[!openFilter ? 'hidden lg:block' : 'block']" class="z-[60] fixed inset-x-4 bottom-6 lg:static lg:w-full lg:inset-auto">
+  <div ref="filterRef" :class="[!openFilter ? 'hidden lg:block' : 'block']" class="z-[38] fixed inset-x-4 bottom-6 lg:static lg:w-full lg:inset-auto">
     <div class="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden">
       <div class="p-6">
         <div class="flex items-center justify-between mb-6">
@@ -8,7 +8,7 @@
         </div>
 
         <div class="space-y-5">
-          <div class="relative group">
+          <div v-if="!hideSearch" class="relative group">
             <input 
               :value="searchQuery"
               @input="(e) => $emit('update:searchQuery', (e.target as HTMLInputElement).value)"
@@ -44,7 +44,7 @@
                     </button>
 
                     <Teleport to="body">
-                      <div v-if="isProvOpen" class="fixed z-[9999] bg-white border border-slate-200 shadow-2xl rounded-2xl overflow-hidden" :style="provDropdownStyle">
+                      <div v-if="isProvOpen" class="fixed z-[39] bg-white border border-slate-200 shadow-2xl rounded-2xl overflow-hidden" :style="provDropdownStyle">
                         <div class="p-2 border-b bg-slate-50">
                           <div class="relative">
                             <Icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
@@ -103,7 +103,7 @@
                     </button>
 
                     <Teleport to="body">
-                      <div v-if="isCityOpen && region.provinceId" class="fixed z-[9999] bg-white border border-slate-200 shadow-2xl rounded-2xl overflow-hidden" :style="cityDropdownStyle">
+                      <div v-if="isCityOpen && region.provinceId" class="fixed z-[39] bg-white border border-slate-200 shadow-2xl rounded-2xl overflow-hidden" :style="cityDropdownStyle">
                         <div class="p-2 border-b bg-slate-50">
                           <div class="relative">
                             <Icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
@@ -251,21 +251,22 @@ interface Props {
   openFilter: boolean
   searchQuery: string
   facilities: {
-    kamarTidur: string
-    kamarMandi: string
-    carport: string
-    lantai: string
+    kamarTidur: string | number
+    kamarMandi: string | number
+    carport: string | number
+    lantai: string | number
   }
   region: {
     province: string
     city: string
-    provinceId: string
+    provinceId?: string
   }
   priceRange: {
-    min: string
-    max: string
+    min: string | number
+    max: string | number
   }
   provinces: any[]
+  hideSearch?: boolean
 }
 
 const props = defineProps<Props>()
@@ -360,9 +361,10 @@ const selectCity = (name: string) => {
   emit('update:region', { ...props.region, city: name })
 }
 
-const formatDisplayName = (val: string) => {
-  if (!val) return ''
-  const num = parseInt(val.replace(/\D/g, ''))
+const formatDisplayName = (val: string | number) => {
+  if (val === undefined || val === null || val === '') return ''
+  const sVal = String(val)
+  const num = parseInt(sVal.replace(/\D/g, ''))
   if (isNaN(num)) return ''
   return new Intl.NumberFormat('id-ID').format(num)
 }
