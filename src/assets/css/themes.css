@@ -30,29 +30,31 @@
 
   --background-image-primary-gradient: linear-gradient(135deg, #ea9455 0%, #ca6d2c 100%);
 
-  --color-bejo-50: var(--color-bejo-50, #fef5ed);
-  --color-bejo-100: var(--color-bejo-100, #fce8d4);
-  --color-bejo-200: var(--color-bejo-200, #f8d0a5);
-  --color-bejo-300: var(--color-bejo-300, #f2b26e);
-  --color-bejo-400: var(--color-bejo-400, #ea8e3e);
-  --color-bejo-500: var(--color-bejo-500, #df7a24);
-  --color-bejo-600: var(--color-bejo-600, #ca6d2c);
-  --color-bejo-700: var(--color-bejo-700, #a75526);
-  --color-bejo-800: var(--color-bejo-800, #854323);
-  --color-bejo-900: var(--color-bejo-900, #6b371f);
-  --color-bejo-1000: var(--color-bejo-1000, #3b1d0e);
+  --color-bejo-50: #fef5ed;
+  --color-bejo-100: #fce8d4;
+  --color-bejo-200: #f8d0a5;
+  --color-bejo-300: #f2b26e;
+  --color-bejo-400: #ea8e3e;
+  --color-bejo-500: #df7a24;
+  --color-bejo-600: #ca6d2c;
+  --color-bejo-700: #a75526;
+  --color-bejo-800: #854323;
+  --color-bejo-900: #6b371f;
+  --color-bejo-950: #4a2414;
+  --color-bejo-1000: #3b1d0e;
 
-  --text-bejo-50: var(--text-bejo-50, #fef5ed);
-  --text-bejo-100: var(--text-bejo-100, #fce8d4);
-  --text-bejo-200: var(--text-bejo-200, #f8d0a5);
-  --text-bejo-300: var(--text-bejo-300, #f2b26e);
-  --text-bejo-400: var(--text-bejo-400, #ea8e3e);
-  --text-bejo-500: var(--text-bejo-500, #df7a24);
-  --text-bejo-600: var(--text-bejo-600, #ca6d2c);
-  --text-bejo-700: var(--text-bejo-700, #a75526);
-  --text-bejo-800: var(--text-bejo-800, #854323);
-  --text-bejo-900: var(--text-bejo-900, #6b371f);
-  --text-bejo-1000: var(--text-bejo-1000, #3b1d0e);
+  --text-bejo-50: #fef5ed;
+  --text-bejo-100: #fce8d4;
+  --text-bejo-200: #f8d0a5;
+  --text-bejo-300: #f2b26e;
+  --text-bejo-400: #ea8e3e;
+  --text-bejo-500: #df7a24;
+  --text-bejo-600: #ca6d2c;
+  --text-bejo-700: #a75526;
+  --text-bejo-800: #854323;
+  --text-bejo-900: #6b371f;
+  --text-bejo-950: #4a2414;
+  --text-bejo-1000: #3b1d0e;
 
   --text-base--line-height: 1.1;
   --text-xl--line-height: 1.1;
@@ -85,7 +87,6 @@
   border: none !important;
   outline: none !important;
   appearance: none;
-  background-color: transparent !important;
   background-clip: padding-box;
   text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.5);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
