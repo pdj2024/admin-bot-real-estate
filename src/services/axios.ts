@@ -20,7 +20,9 @@ const performRefresh = async (): Promise<string | null> => {
   const refreshToken = localStorage.getItem('refreshToken')
   const roleUser = localStorage.getItem('role_user') || 'admin'
   
-  if (!refreshToken) throw new Error('Refresh token missing')
+  if (!refreshToken || refreshToken === 'undefined') {
+    throw new Error('Refresh token missing')
+  }
 
   try {
     const { data } = await axios.post(`${baseURL}/api/auth/refresh`, 
@@ -39,18 +41,26 @@ const performRefresh = async (): Promise<string | null> => {
 
     return newToken
   } catch (err: any) {
-    // Hanya logout jika server mengembalikan 401/403 (Token benar-benar mati)
+    // Jika server mengembalikan 401/403 atau refresh token ditolak
     if (err.response?.status === 401 || err.response?.status === 403) {
       console.error('Session expired: Refresh token is invalid')
-      localStorage.clear()
-      
-      // Only redirect if current route requires auth
-      if (router.currentRoute.value.meta.requiresAuth) {
-        router.push({ path: '/login', query: { expired: '1' } })
-      }
+      handleLogout()
     }
-    // Jika error jaringan atau 500, biarkan sesi tetap ada tapi lempar error agar request gagal
     throw err
+  }
+}
+
+/**
+ * Centralized logout and redirect
+ */
+const handleLogout = () => {
+  localStorage.removeItem('token')
+  localStorage.removeItem('refreshToken')
+  // We keep some items like 'nama_display' if needed, or clear all
+  // localStorage.clear()
+  
+  if (router.currentRoute.value.meta.requiresAuth || router.currentRoute.value.name === 'Login') {
+    router.push({ name: 'Login', query: { expired: '1', redirect: router.currentRoute.value.fullPath } })
   }
 }
 
@@ -68,23 +78,30 @@ const getOrStartRefresh = (): Promise<string | null> => {
 api.interceptors.request.use(async (config) => {
   let token = localStorage.getItem('token')
 
-  if (token && isTokenExpired(token)) {
+  if (token && token !== 'undefined' && isTokenExpired(token)) {
     try {
       // Cek apakah tab lain sudah me-refresh token baru
       const possiblyNewToken = localStorage.getItem('token')
-      if (possiblyNewToken && !isTokenExpired(possiblyNewToken)) {
+      if (possiblyNewToken && possiblyNewToken !== 'undefined' && !isTokenExpired(possiblyNewToken)) {
          token = possiblyNewToken
       } else {
          token = await getOrStartRefresh()
       }
     } catch (err: any) {
-      console.log(err)
+      // Refresh failed proactively
+      token = null
     }
   }
 
-  if (token) {
+  if (token && token !== 'undefined') {
     config.headers.Authorization = `Bearer ${token}`
   }
+
+  const roleUser = localStorage.getItem('role_user')
+  if (roleUser) {
+    config.headers['X-Jenis-User'] = roleUser
+  }
+
   return config
 }, (error) => Promise.reject(error))
 
@@ -94,6 +111,7 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config
 
+    // Handle 401 Unauthorized
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true
 
@@ -104,9 +122,18 @@ api.interceptors.response.use(
           return api(originalRequest)
         }
       } catch (err) {
+        // Refresh token failed, performRefresh will have handled logout if it was a 401/403
         return Promise.reject(err)
       }
     }
+    
+    // If we already retried and still get 401, or it's a 403
+    if (error.response?.status === 401 || error.response?.status === 403) {
+       if (router.currentRoute.value.meta.requiresAuth) {
+         handleLogout()
+       }
+    }
+
     return Promise.reject(error)
   }
 )

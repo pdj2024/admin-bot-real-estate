@@ -51,6 +51,11 @@ export interface RealEstateForm {
   Akses_Jalan: string[]
   File_Image: string[]
   MediaUrls: MediaUrl[]
+  Kecamatan: string
+  Kelurahan: string
+  Id_Kota: string
+  Id_Area: string
+  Id_Prioritas: string
 }
 
 export function usePropertyModal(emit: any, handleCloseFn: () => void) {
@@ -58,6 +63,66 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
   const panjang = ref('')
   const lebar = ref('')
   const isLoading = ref(false)
+  
+  // Wilayah Data
+  const cities = ref<any[]>([])
+  const areas = ref<any[]>([])
+  const priorities = ref<any[]>([])
+
+  // Wilayah Modal State
+  const isWilayahModalOpen = ref(false)
+  const wilayahModalType = ref('kota')
+
+  const openWilayahModal = (type: string) => {
+    wilayahModalType.value = type
+    isWilayahModalOpen.value = true
+  }
+
+  const fetchCities = async () => {
+    try {
+      const { data } = await api.get('/api/kota/getAll')
+      if (data.StatusCode === 200) cities.value = data.Data
+    } catch (err) {}
+  }
+
+  const fetchAreas = async () => {
+    try {
+      const { data } = await api.get('/api/area/getAll')
+      if (data.StatusCode === 200) areas.value = data.Data
+    } catch (err) {}
+  }
+
+  const fetchPriorities = async () => {
+    try {
+      const { data } = await api.get('/api/prioritas/getAll')
+      if (data.StatusCode === 200) priorities.value = data.Data
+    } catch (err) {}
+  }
+
+  const createCity = async (name: string) => {
+    if (!name) return null
+    try {
+      const payload = {
+        Name: name,
+        Description: null
+      }
+      const { data } = await api.post('/api/kota/create', payload)
+      if (data.StatusCode === 200) {
+        await fetchCities()
+        return data.Data.No_Id || data.Data.No_Id_Kota
+      }
+    } catch (err) {
+      // If fails (maybe already exists but not matched), try to fetch and find again
+      await fetchCities()
+    }
+    return null
+  }
+
+  const initWilayah = () => {
+    fetchCities()
+    fetchAreas()
+    fetchPriorities()
+  }
   
   const defaultForm = (): RealEstateForm => ({
     No_Id: '',
@@ -90,13 +155,21 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
     Area: ['', '', ''],
     Akses_Jalan: [],
     File_Image: [],
-    MediaUrls: []
+    MediaUrls: [],
+    Kecamatan: '',
+    Kelurahan: '',
+    Id_Kota: '',
+    Id_Area: '',
+    Id_Prioritas: ''
   })
 
   const form = ref<RealEstateForm>(defaultForm())
   
   // Domain sub-composables
-  const location = usePropertyLocation(form)
+  const location = usePropertyLocation(form, { 
+    cities,
+    createCity
+  })
   const media = usePropertyMedia(form)
 
   // Watchers
@@ -111,6 +184,15 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
         form.value.Ada_Minimal_Sewa = false
         form.value.Minimal_Sewa = 0
         form.value.Satuan_Minimal_Sewa = ''
+      }
+    }
+  )
+
+  watch(
+    () => form.value.Status_Properti,
+    (newStatus) => {
+      if (newStatus === 'Terjual' || newStatus === 'Tersewa') {
+        form.value.Status_Display = 'Draft'
       }
     }
   )
@@ -156,6 +238,11 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
       }
 
       form.value.Ada_Minimal_Sewa = !!(itemData.Minimal_Sewa && itemData.Minimal_Sewa > 0)
+      
+      // Ensure Area exists if missing from itemData
+      if (!form.value.Area) {
+        form.value.Area = ['', '', '']
+      }
     } else {
       form.value = defaultForm()
       panjang.value = ''
@@ -163,7 +250,7 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
       location.isLocationSelected.value = false
     }
 
-    if (form.value.Area[2]) {
+    if (form.value.Area && form.value.Area[2]) {
       location.isLocationSelected.value = true
       const [lat, lng] = form.value.Area[2].split(',').map(Number)
       if (!isNaN(lat) && !isNaN(lng)) {
@@ -224,8 +311,19 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
     panjang,
     lebar,
     isLoading,
+    cities,
+    areas,
+    priorities,
+    isWilayahModalOpen,
+    wilayahModalType,
     initData,
     submitForm,
+    initWilayah,
+    fetchCities,
+    fetchAreas,
+    fetchPriorities,
+    createCity,
+    openWilayahModal,
     // Expose sub-composable members for template access
     ...location,
     ...media

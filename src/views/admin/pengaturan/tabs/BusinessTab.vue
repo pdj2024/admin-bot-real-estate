@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, nextTick, markRaw, toRaw } from 'vue'
 import { Icon } from '@iconify/vue'
+import { useSettings } from '@/stores/settings'
 import { success, fail } from '@/utils/sweet-alert'
 import api from '@/services/axios'
+import { GOOGLE_MAPS_API_KEY } from '@/config/constants'
 
 interface CompanyProfile {
   No_Id: string
@@ -17,14 +19,37 @@ interface CompanyProfile {
   Kode_Pos: string
   About: string
   Gmap: string
-  Footer: string
 }
 
 const isLoading = ref(true)
 const isSaving = ref(false)
 
+// Operating Days & Hours State
+const hariDari = ref('Senin')
+const hariSampai = ref('Jumat')
+const jamDari = ref('08:00')
+const jamSampai = ref('17:00')
+
+const daysList = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu']
+
+// Google Maps State
+const mapContainer = ref<HTMLElement | null>(null)
+const isMapLoaded = ref(false)
+const isLocating = ref(false)
+const searchQuery = ref('')
+const predictions = ref<any[]>([])
+const isPredictionsOpen = ref(false)
+const currentCoords = reactive({ lat: -7.2504, lng: 112.7688 })
+
+let gMap: any = null
+let gMarker: any = null
+let gGeocoder: any = null
+let gAutocompleteSessionToken: any = null
+
+const settingsStore = useSettings()
+
 const form = reactive<CompanyProfile>({
-  No_Id: 'comp_1',
+  No_Id: 'comp_0001',
   Nama_Toko: '',
   Email: '',
   No_Telp: '',
@@ -35,24 +60,61 @@ const form = reactive<CompanyProfile>({
   Jam_Buka: '',
   Kode_Pos: '',
   About: '',
-  Gmap: '',
-  Footer: ''
+  Gmap: ''
 })
 
 const fetchProfile = async () => {
   try {
     isLoading.value = true
-    const { data } = await api.get('/api/company/getAll', {
-      params: { no_id: 'comp_1' },
-      headers: {
-        'X-Jenis-User': 'Admin',
-        'Api-Key': 'realestate_key_2024'
-      }
-    })
     
-    if (data.StatusCode === 200 && data.Data.length > 0) {
-      Object.assign(form, data.Data[0])
-    }
+    // Use store fetch
+    await settingsStore.fetchBusinessSettings()
+    
+    // Sync store data to local form
+    const profile = toRaw(settingsStore.business)
+    Object.assign(form, {
+      Nama_Toko: profile.appName,
+      Email: profile.email,
+      No_Telp: profile.phone,
+      No_Wa_1: profile.whatsapp,
+      No_Wa_2: (profile as any).No_Wa_2 || '',
+      Alamat_Toko: profile.address,
+      Hari_Buka: (profile as any).Hari_Buka || '',
+      Jam_Buka: (profile as any).Jam_Buka || '',
+      Kode_Pos: (profile as any).Kode_Pos || '',
+      About: profile.description,
+      Gmap: profile.mapUrl
+    })
+      
+      // Parse Hari_Buka (e.g. "Senin-Jumat")
+      if (form.Hari_Buka && form.Hari_Buka.includes('-')) {
+        const split = form.Hari_Buka.split('-')
+        hariDari.value = split[0].trim()
+        hariSampai.value = split[1].trim()
+      }
+      
+      // Parse Jam_Buka (e.g. "08.00-16.00")
+      if (form.Jam_Buka && form.Jam_Buka.includes('-')) {
+        const split = form.Jam_Buka.split('-')
+        jamDari.value = split[0].trim().replace('.', ':')
+        jamSampai.value = split[1].trim().replace('.', ':')
+      }
+
+      // Initialize map with existing Gmap coordinates if available
+      if (form.Gmap && form.Gmap.includes(',')) {
+        const [lat, lng] = form.Gmap.split(',').map(s => Number(s.trim()))
+        if (!isNaN(lat) && !isNaN(lng)) {
+          currentCoords.lat = lat
+          currentCoords.lng = lng
+        }
+      }
+
+      // Load map after form is populated with a slight delay for better performance
+      nextTick(() => {
+        setTimeout(() => {
+          loadGoogleMaps()
+        }, 800)
+      })
   } catch (err) {
     console.error('Fetch company profile error:', err)
   } finally {
@@ -64,33 +126,32 @@ const handleSave = async () => {
   try {
     isSaving.value = true
     
-    // Construct payload as per requested format
+    // Construct joined values
+    const joinedHari = `${hariDari.value}-${hariSampai.value}`
+    const joinedJam = `${jamDari.value}-${jamSampai.value}`
+    
     const payload = {
       Nama_Toko: form.Nama_Toko,
       Email: form.Email,
-      No_Telp: form.No_Telp,
+      No_Telp: form.No_Telp || "",
       No_Wa_1: form.No_Wa_1,
-      No_Wa_2: form.No_Wa_2 || null, // Ensure null if empty
+      No_Wa_2: form.No_Wa_2 || "",
       Alamat_Toko: form.Alamat_Toko,
-      Hari_Buka: form.Hari_Buka,
-      Jam_Buka: form.Jam_Buka,
+      Hari_Buka: joinedHari,
+      Jam_Buka: joinedJam,
       Kode_Pos: form.Kode_Pos,
-      About: form.About || null,
-      Gmap: form.Gmap || null,
-      Footer: form.Footer || null
+      About: form.About || "",
+      Gmap: form.Gmap || ""
     }
     
     const { data } = await api.put('/api/company/update', payload, {
-      params: { no_id: 'comp_1' },
-      headers: {
-        'X-Jenis-User': 'Admin',
-        'Api-Key': 'realestate_key_2024'
-      }
+      params: { no_id: 'comp_0001' },
+      headers: { 'X-Jenis-User': 'Admin' }
     })
     
     if (data.StatusCode === 200) {
       success('Profil perusahaan berhasil diperbarui')
-      fetchProfile() // Refresh data
+      fetchProfile()
     } else {
       fail(data.Message || 'Gagal menyimpan profil')
     }
@@ -102,7 +163,135 @@ const handleSave = async () => {
   }
 }
 
-onMounted(fetchProfile)
+// Google Maps Logic
+const loadGoogleMaps = () => {
+  if (typeof window.google?.maps?.importLibrary === 'function') {
+    initMap(); return
+  }
+  const g: any = window; let h: any; let a: any; const c = 'google'; const l = 'importLibrary'; const q = '__ib__'
+  const m = document; const b: any = g[c] || (g[c] = {}); const d = b.maps || (b.maps = {}); const r = new Set(); const e = new URLSearchParams()
+  const u = () => h || (h = new Promise(async (f, n) => {
+    await (a = m.createElement('script')); e.set('libraries', [...r].join(',')); e.set('key', GOOGLE_MAPS_API_KEY)
+    e.set('v', 'beta'); e.set('language', 'id'); e.set('region', 'ID'); e.set('callback', c + '.maps.' + q)
+    a.src = `https://maps.${c}apis.com/maps/api/js?` + e; d[q] = f; a.onerror = () => (h = n(Error('Maps could not load.')))
+    m.head.append(a)
+  }))
+  d[l] = (f: any, ...n: any[]) => r.add(f) && u().then(() => d[l](f, ...n))
+  initMap()
+}
+
+const initMap = async () => {
+  if (!mapContainer.value) return
+  try {
+    const [libraryMap, libraryMarker] = await Promise.all([
+      google.maps.importLibrary('maps'), 
+      google.maps.importLibrary('marker'), 
+      google.maps.importLibrary('places')
+    ]) as any[]
+    
+    gGeocoder = markRaw(new google.maps.Geocoder())
+    const initialPos = { ...currentCoords }
+    
+    gMap = markRaw(new libraryMap.Map(mapContainer.value, { 
+      center: initialPos, 
+      zoom: 15, 
+      mapId: 'COMPANY_LOCATION_MAP', 
+      mapTypeControl: false, 
+      streetViewControl: false 
+    }))
+    
+    isMapLoaded.value = true
+    gMarker = markRaw(new libraryMarker.AdvancedMarkerElement({ map: gMap, position: initialPos, gmpDraggable: true }))
+    
+    const { AutocompleteSessionToken } = await google.maps.importLibrary('places') as any
+    gAutocompleteSessionToken = new AutocompleteSessionToken()
+
+    gMarker.addListener('dragend', () => { 
+      if (gMarker.position) { 
+        updateCoords(gMarker.position.lat, gMarker.position.lng)
+      }
+    })
+    
+    gMap.addListener('click', (e: any) => { 
+      if (e.latLng) { 
+        const lat = e.latLng.lat(); const lng = e.latLng.lng()
+        gMarker.position = { lat, lng }
+        updateCoords(lat, lng)
+      }
+    })
+  } catch (err) {
+    console.error('Error initializing map:', err)
+  }
+}
+
+const updateCoords = (lat: number, lng: number) => {
+  currentCoords.lat = lat
+  currentCoords.lng = lng
+  form.Gmap = `${lat.toFixed(6)},${lng.toFixed(6)}`
+}
+
+const handleSearchInput = async () => {
+  if (!searchQuery.value) { predictions.value = []; isPredictionsOpen.value = false; return }
+  try {
+    const { AutocompleteSuggestion } = await google.maps.importLibrary('places') as any
+    const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions({ 
+      input: searchQuery.value, 
+      sessionToken: gAutocompleteSessionToken, 
+      includedRegionCodes: ['id'] 
+    })
+    if (suggestions && suggestions.length) {
+      predictions.value = suggestions.map((s: any) => ({
+        placeId: s.placePrediction?.placeId,
+        mainText: s.placePrediction?.text?.text || s.placePrediction?.text,
+        secondaryText: s.placePrediction?.secondaryText?.text,
+        raw: markRaw(s)
+      }))
+      isPredictionsOpen.value = true
+    }
+  } catch {}
+}
+
+const selectPrediction = async (mappedPrediction: any) => {
+  try {
+    const suggestion = toRaw(mappedPrediction.raw)
+    searchQuery.value = mappedPrediction.mainText
+    isPredictionsOpen.value = false
+    const place = suggestion.placePrediction.toPlace()
+    await place.fetchFields({ fields: ['location'] })
+    if (place.location) {
+      gMap?.setCenter(place.location)
+      gMap?.setZoom(17)
+      if (gMarker) gMarker.position = place.location
+      updateCoords(place.location.lat(), place.location.lng())
+    }
+  } catch {}
+}
+
+const getCurrentLocation = () => {
+  if (!navigator.geolocation) return fail('Geolocation tidak didukung')
+  isLocating.value = true
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const pos = { lat: position.coords.latitude, lng: position.coords.longitude }
+      isLocating.value = false
+      if (gMap) gMap.setCenter(pos)
+      if (gMarker) gMarker.position = pos
+      updateCoords(pos.lat, pos.lng)
+    },
+    () => { isLocating.value = false; fail('Gagal mendapat lokasi') }
+  )
+}
+
+onUnmounted(() => {
+  if (gMap) gMap = null
+  if (gMarker) gMarker = null
+  if (gGeocoder) gGeocoder = null
+  if (gAutocompleteSessionToken) gAutocompleteSessionToken = null
+})
+
+onMounted(() => {
+  fetchProfile()
+})
 </script>
 
 <template>
@@ -123,71 +312,82 @@ onMounted(fetchProfile)
           </div>
         </div>
         
-        <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="md:col-span-2">
-            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Nama Perusahaan / Bisnis</label>
-            <input 
-              v-model="form.Nama_Toko" 
-              type="text" 
-              class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3.5 text-sm font-bold focus:ring-4 focus:ring-bejo-600/5 focus:border-bejo-600 outline-none transition-all"
-              placeholder="Masukkan nama bisnis..."
-            />
-          </div>
-          <div>
-            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Email Resmi</label>
-            <input 
-              v-model="form.Email" 
-              type="email" 
-              class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3.5 text-sm font-bold focus:ring-4 focus:ring-bejo-600/5 focus:border-bejo-600 outline-none transition-all"
-              placeholder="email@perusahaan.com"
-            />
-          </div>
-          <div>
-            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Telepon Kantor (No_Telp)</label>
-            <input 
-              v-model="form.No_Telp" 
-              type="text" 
-              class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3.5 text-sm font-bold focus:ring-4 focus:ring-bejo-600/5 focus:border-bejo-600 outline-none transition-all"
-              placeholder="021-XXXXX"
-            />
-          </div>
-          <div class="md:col-span-2">
-            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Deskripsi Singkat Footer</label>
-            <input 
-              v-model="form.Footer" 
-              type="text" 
-              class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3.5 text-sm font-bold focus:ring-4 focus:ring-bejo-600/5 focus:border-bejo-600 outline-none transition-all"
-              placeholder="Teks yang akan muncul di footer situs..."
-            />
-          </div>
-        </div>
-      </div>
-
-      <!-- WhatsApp & Support -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
-          <div class="px-8 py-5 border-b border-slate-50 bg-slate-50/50 flex items-center gap-3">
-             <Icon icon="logos:whatsapp-icon" class="size-5" />
-             <h4 class="text-xs font-black text-slate-800 uppercase tracking-widest">WhatsApp Sales</h4>
-          </div>
-          <div class="p-8 space-y-4">
-            <div>
-              <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">WhatsApp Utama (Tanpa +)</label>
-              <input v-model="form.No_Wa_1" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3.5 text-sm font-bold focus:border-bejo-600 outline-none transition-all" placeholder="628123..." />
+        <div class="p-8 space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="md:col-span-2">
+              <label class="label">
+                <Icon icon="lucide:id-card" class="size-4 text-bejo-600" />
+                Nama Bisnis
+              </label>
+              <input 
+                v-model="form.Nama_Toko" 
+                type="text" 
+                class="field-input"
+                placeholder="Masukkan nama bisnis..."
+              />
             </div>
             <div>
-              <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">WhatsApp Opsional</label>
-              <input v-model="form.No_Wa_2" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3.5 text-sm font-bold focus:border-bejo-600 outline-none transition-all" placeholder="628123..." />
+              <label class="label">
+                <Icon icon="lucide:mail" class="size-4 text-bejo-600" />
+                Email Resmi
+              </label>
+              <input 
+                v-model="form.Email" 
+                type="email" 
+                class="field-input"
+                placeholder="email@perusahaan.com"
+              />
+            </div>
+            <div>
+              <label class="label">
+                <Icon icon="lucide:phone" class="size-4 text-bejo-600" />
+                Telepon Kantor
+              </label>
+              <input 
+                v-model="form.No_Telp" 
+                type="text" 
+                class="field-input"
+                placeholder="021-XXXXX"
+              />
+            </div>
+            <div>
+              <label class="label">
+                <Icon icon="lucide:message-circle" class="size-4 text-bejo-600" />
+                WhatsApp Utama
+              </label>
+              <input 
+                v-model="form.No_Wa_1" 
+                type="text" 
+                class="field-input"
+                placeholder="628XXXXXXXXX"
+              />
+            </div>
+            <div>
+              <label class="label">
+                <Icon icon="lucide:message-circle" class="size-4 text-slate-400" />
+                WhatsApp Opsional
+              </label>
+              <input 
+                v-model="form.No_Wa_2" 
+                type="text" 
+                class="field-input"
+                placeholder="628XXXXXXXXX"
+              />
             </div>
           </div>
-        </div>
 
-        <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden text-center flex flex-col items-center justify-center p-8 bg-gradient-to-br from-white to-slate-50">
-           <div class="size-16 rounded-3xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
-              <Icon icon="lucide:message-square-plus" class="size-8" />
-           </div>
-           <h5 class="text-sm font-black text-slate-900 mb-2">Sinkronisasi Chat</h5>
-           <p class="text-[10px] text-slate-500 font-bold leading-relaxed px-4">Pastikan nomor WhatsApp yang Anda masukkan valid untuk integrasi otomatis ke sistem chatbot.</p>
+          <div class="pt-6 border-t border-slate-50">
+            <label class="label mb-3">
+              <Icon icon="lucide:text-quote" class="size-4 text-bejo-600" />
+              Tentang Bisnis
+            </label>
+            <textarea 
+              v-model="form.About" 
+              rows="4" 
+              class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 text-sm font-medium focus:outline-none focus:ring-4 focus:ring-bejo-600/5 focus:border-bejo-600 transition-all resize-none leading-relaxed"
+              placeholder="Tuliskan detail visi, misi, atau profil singkat bisnis Anda..."
+            ></textarea>
+          </div>
         </div>
       </div>
 
@@ -199,42 +399,134 @@ onMounted(fetchProfile)
             </div>
             <h4 class="text-xs font-black text-slate-800 uppercase tracking-widest">Lokasi & Jam Operasional</h4>
         </div>
-        <div class="p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div class="md:col-span-2">
-            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Alamat Lengkap</label>
-            <input v-model="form.Alamat_Toko" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3.5 text-sm font-bold focus:border-sky-600 outline-none transition-all" placeholder="Jalan raya..." />
+        
+        <div class="p-8 space-y-8">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="md:col-span-2">
+              <label class="label">
+                <Icon icon="lucide:map" class="size-4 text-sky-600" />
+                Alamat Lengkap
+              </label>
+              <input v-model="form.Alamat_Toko" type="text" class="field-input" placeholder="Jalan raya..." />
+            </div>
+            <div>
+              <label class="label">
+                <Icon icon="lucide:map-pinned" class="size-4 text-sky-600" />
+                Kode Pos
+              </label>
+              <input v-model="form.Kode_Pos" type="text" class="field-input" placeholder="12345" />
+            </div>
           </div>
-          <div>
-            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Kode Pos</label>
-            <input v-model="form.Kode_Pos" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3.5 text-sm font-bold focus:border-sky-600 outline-none transition-all" placeholder="12345" />
-          </div>
-          <div>
-            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Hari Operasional</label>
-            <input v-model="form.Hari_Buka" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3.5 text-sm font-bold focus:border-sky-600 outline-none transition-all" placeholder="Senin - Sabtu" />
-          </div>
-          <div>
-            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Jam Operasional</label>
-            <input v-model="form.Jam_Buka" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3.5 text-sm font-bold focus:border-sky-600 outline-none transition-all" placeholder="08:00 - 17:00" />
-          </div>
-          <div class="md:col-span-3">
-            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Peta (Google Maps Embed Link / URL)</label>
-            <input v-model="form.Gmap" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3.5 text-sm font-bold focus:border-sky-600 outline-none transition-all" placeholder="https://maps.google.com/..." />
-          </div>
-        </div>
-      </div>
 
-      <!-- Tentang Kami -->
-      <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
-        <div class="px-8 py-5 border-b border-slate-50 bg-slate-50/50">
-           <h4 class="text-xs font-black text-slate-800 uppercase tracking-widest">Tentang Perusahaan</h4>
-        </div>
-        <div class="p-8">
-          <textarea 
-            v-model="form.About" 
-            rows="5" 
-            class="w-full bg-slate-50 border border-slate-200 rounded-3xl px-6 py-5 text-sm font-medium focus:outline-none focus:ring-4 focus:ring-bejo-600/5 focus:border-bejo-600 transition-all resize-none leading-relaxed"
-            placeholder="Tuliskan detail visi, misi, atau profil singkat perusahaan Anda di sini..."
-          ></textarea>
+          <!-- Days & Hours -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="space-y-4">
+              <label class="label">
+                <Icon icon="lucide:calendar-days" class="size-4 text-sky-600" />
+                Hari Operasional
+              </label>
+              <div class="flex items-center gap-3">
+                <div class="flex-1">
+                  <select v-model="hariDari" class="field-input !py-3">
+                    <option v-for="day in daysList" :key="day" :value="day">{{ day }}</option>
+                  </select>
+                </div>
+                <span class="text-[10px] font-black text-slate-300 uppercase">s/d</span>
+                <div class="flex-1">
+                  <select v-model="hariSampai" class="field-input !py-3">
+                    <option v-for="day in daysList" :key="day" :value="day">{{ day }}</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <label class="label">
+                <Icon icon="lucide:clock" class="size-4 text-sky-600" />
+                Jam Operasional
+              </label>
+              <div class="flex items-center gap-3">
+                <div class="flex-1 relative">
+                  <Icon icon="lucide:play" class="absolute right-4 top-1/2 -translate-y-1/2 size-3 text-slate-300 pointer-events-none" />
+                  <input v-model="jamDari" type="time" class="field-input !py-3 pr-10" />
+                </div>
+                <span class="text-[10px] font-black text-slate-300 uppercase">s/d</span>
+                <div class="flex-1 relative">
+                  <Icon icon="lucide:square" class="absolute right-4 top-1/2 -translate-y-1/2 size-3 text-slate-300 pointer-events-none" />
+                  <input v-model="jamSampai" type="time" class="field-input !py-3 pr-10" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Map Section -->
+          <div class="space-y-4 pt-4 border-t border-slate-50">
+            <div class="flex items-center justify-between">
+              <label class="label !mb-0">
+                <Icon icon="lucide:navigation" class="size-4 text-sky-600" />
+                Koordinat Lokasi (Peta)
+              </label>
+              <div class="text-[10px] font-bold text-slate-400 bg-slate-50 px-3 py-1 rounded-full border border-slate-100 font-mono">
+                {{ form.Gmap || 'Belum dipilih' }}
+              </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="relative">
+              <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                <Icon icon="lucide:search" class="size-4" />
+              </div>
+              <input 
+                v-model="searchQuery" 
+                @input="handleSearchInput" 
+                @focus="isPredictionsOpen = predictions.length > 0"
+                placeholder="Cari lokasi ..." 
+                class="field-input !pl-11 !py-3.5 h-12" 
+              />
+              
+              <!-- Predictions Dropdown -->
+              <div v-if="isPredictionsOpen && predictions.length" class="absolute top-full left-0 mt-2 w-full z-[100] bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden">
+                <div class="max-h-60 overflow-y-auto p-2 flex flex-col">
+                  <button v-for="p in predictions" :key="p.placeId" @mousedown="selectPrediction(p)" type="button" class="w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors rounded-xl group">
+                    <div class="flex items-start gap-3">
+                      <Icon icon="lucide:map-pin" class="size-4 mt-0.5 text-slate-400 group-hover:text-sky-600" />
+                      <div class="flex-1">
+                        <span class="text-xs font-black text-slate-700 block leading-tight">{{ p.mainText }}</span>
+                        <span class="text-[10px] font-bold text-slate-400 block mt-0.5" v-if="p.secondaryText">{{ p.secondaryText }}</span>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Map Container -->
+            <div class="relative rounded-[2rem] overflow-hidden border border-slate-100 shadow-inner group bg-slate-50 min-h-[400px]">
+              <div 
+                ref="mapContainer" 
+                class="w-full h-[400px] transition-opacity duration-700"
+                :class="isMapLoaded ? 'opacity-100' : 'opacity-0'"
+              ></div>
+
+              <!-- Loading Overlay -->
+              <div v-if="!isMapLoaded" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-50/80 backdrop-blur-sm z-10">
+                <Icon icon="lucide:loader-2" class="size-10 animate-spin text-sky-600/40" />
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-4">Memuat Peta...</span>
+              </div>
+
+              <!-- Geolocation Button -->
+              <button 
+                @click="getCurrentLocation"
+                type="button"
+                class="absolute bottom-6 right-6 p-3 bg-white hover:bg-slate-50 text-slate-700 rounded-2xl shadow-xl border border-slate-100 transition-all active:scale-90 flex items-center gap-2 group z-20"
+                :disabled="isLocating"
+              >
+                <Icon :icon="isLocating ? 'lucide:loader-2' : 'lucide:locate-fixed'" 
+                      class="size-5" :class="isLocating ? 'animate-spin text-sky-600' : 'text-slate-400 group-hover:text-sky-600'" />
+                <span class="text-[10px] font-black uppercase tracking-widest">{{ isLocating ? 'Mencari...' : 'Gunakan Lokasi Saat Ini' }}</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -253,3 +545,15 @@ onMounted(fetchProfile)
     </template>
   </div>
 </template>
+
+<style scoped>
+@reference "@/assets/css/style.css";
+
+.label { @apply flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1; }
+.field-input {
+  @apply w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3.5 text-sm font-bold focus:ring-4 focus:ring-bejo-600/5 focus:border-bejo-600 outline-none transition-all;
+}
+.field-input:focus {
+  @apply bg-white;
+}
+</style>

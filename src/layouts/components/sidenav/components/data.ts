@@ -3,7 +3,7 @@ import type { MenuItemType } from '@/types/layout'
 export const menuItems: MenuItemType[] = [
   {
     key: 'beranda',
-    label: 'Beranda',
+    label: 'Beranda Guest',
     icon: 'lucide:home',
     url: '/'
   },

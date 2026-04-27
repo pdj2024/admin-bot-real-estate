@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
+import api from '@/services/axios'
 
 export interface BusinessSettings {
   appName: string
@@ -37,6 +38,18 @@ const DEFAULT_BOT: BotSettings = {
   isActive: true
 }
 
+export interface ThemeSettings {
+  sidebarType: string
+  primaryColor: string
+  secondaryColor: string
+}
+
+const DEFAULT_THEME: ThemeSettings = {
+  sidebarType: 'hover',
+  primaryColor: '#EA8455',
+  secondaryColor: '#CA6D2C'
+}
+
 export interface AppSettings {
   isMaintenance: boolean
 }
@@ -49,9 +62,90 @@ export const useSettings = defineStore('settings', () => {
   const business = reactive<BusinessSettings>({ ...DEFAULT_BUSINESS })
   const bot = reactive<BotSettings>({ ...DEFAULT_BOT })
   const app = reactive<AppSettings>({ ...DEFAULT_APP })
+  const theme = reactive<ThemeSettings>({ ...DEFAULT_THEME })
 
-  // Initialize from localStorage
-  const init = () => {
+  const isLoading = ref(false)
+
+  const fetchBusinessSettings = async () => {
+    try {
+      isLoading.value = true
+      const { data } = await api.get('/api/company/getAll', {
+        params: { no_id: 'comp_0001' },
+        headers: {
+          'X-Jenis-User': 'Admin'
+        }
+      })
+      
+      if (data.StatusCode === 200 && data.Data.length > 0) {
+        const profile = data.Data[0]
+        business.appName = profile.Nama_Toko || business.appName
+        business.description = profile.About || business.description
+        business.address = profile.Alamat_Toko || business.address
+        business.phone = profile.No_Telp || business.phone
+        business.whatsapp = profile.No_Wa_1 || business.whatsapp
+        business.email = profile.Email || business.email
+        business.mapUrl = profile.Gmap || business.mapUrl
+        
+        Object.assign(business, profile)
+        saveBusiness()
+      }
+    } catch (err) {
+      console.error('Fetch global business settings error:', err)
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  const fetchDefaultSettings = async () => {
+    try {
+      const { data } = await api.get('/api/nilaiDefault/getAll', {
+        params: { id_company: 'comp_0001' },
+        headers: { 'X-Jenis-User': 'Admin' }
+      })
+      
+      if (data.StatusCode === 200 && data.Data.length > 0) {
+        const defaults = data.Data[0]
+        app.isMaintenance = defaults.Is_Maintenance
+        bot.isActive = defaults.Bot_Active
+        theme.sidebarType = defaults.Sidebar_Type || theme.sidebarType
+        theme.primaryColor = defaults.Primary_Color || theme.primaryColor
+        theme.secondaryColor = defaults.Secondary_Color || theme.secondaryColor
+        
+        saveApp()
+        saveBot()
+        saveTheme()
+        
+        // Apply colors to CSS variables
+        applyThemeColors()
+      }
+    } catch (err) {
+      console.error('Fetch default settings error:', err)
+    }
+  }
+
+  const updateDefaultSettings = async (updates: any) => {
+    try {
+      const payload = {
+        Id_Company: 'comp_0001',
+        ...updates
+      }
+      await api.put('/api/nilaiDefault/update', payload, {
+        params: { id_company: 'comp_0001' },
+        headers: { 'X-Jenis-User': 'Admin' }
+      })
+    } catch (err) {
+      console.error('Update default settings error:', err)
+    }
+  }
+
+  const applyThemeColors = () => {
+    document.documentElement.style.setProperty('--primary-color', theme.primaryColor)
+    document.documentElement.style.setProperty('--secondary-color', theme.secondaryColor)
+  }
+
+  // Initialize store
+  const init = async (forceFetch = false) => {
+    // 1. Load from localStorage first (for instant UI)
     const storedBusiness = localStorage.getItem('business_settings')
     if (storedBusiness) {
       Object.assign(business, JSON.parse(storedBusiness))
@@ -65,6 +159,27 @@ export const useSettings = defineStore('settings', () => {
     const storedApp = localStorage.getItem('app_global_status')
     if (storedApp) {
       Object.assign(app, JSON.parse(storedApp))
+    }
+
+    const storedTheme = localStorage.getItem('theme_settings')
+    if (storedTheme) {
+      Object.assign(theme, JSON.parse(storedTheme))
+      applyThemeColors()
+    }
+
+    // 2. Fetch strategy
+    const token = localStorage.getItem('token')
+    const hasToken = !!token && token !== 'undefined'
+    
+    // If Guest (no token) OR forceFetch is true: Always fetch
+    // If Admin: Only fetch if we don't have essential data yet
+    const shouldFetch = forceFetch || !hasToken || !business.appName || business.appName === 'Rumah Bejo'
+
+    if (shouldFetch) {
+      await Promise.all([
+        fetchBusinessSettings(),
+        fetchDefaultSettings()
+      ])
     }
   }
 
@@ -80,6 +195,10 @@ export const useSettings = defineStore('settings', () => {
     localStorage.setItem('app_global_status', JSON.stringify(app))
   }
 
+  const saveTheme = () => {
+    localStorage.setItem('theme_settings', JSON.stringify(theme))
+  }
+
   const resetBusiness = () => {
     Object.assign(business, DEFAULT_BUSINESS)
     saveBusiness()
@@ -89,10 +208,17 @@ export const useSettings = defineStore('settings', () => {
     business,
     bot,
     app,
+    theme,
+    isLoading,
     init,
+    fetchBusinessSettings,
+    fetchDefaultSettings,
+    updateDefaultSettings,
     saveBusiness,
     saveBot,
     saveApp,
+    saveTheme,
+    applyThemeColors,
     resetBusiness
   }
 })

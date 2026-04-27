@@ -204,7 +204,7 @@ onUnmounted(() => {
   <div class="col-span-1">
     <div class="sticky top-24">
       <div class="mb-5">
-        <RouterLink to="/katalog" class="inline-flex items-center text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-bejo-600 transition-all group">
+        <RouterLink :to="isAdmin ? '/admin/properti/katalog' : '/katalog'" class="inline-flex items-center text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-bejo-600 transition-all group">
           <Icon icon="lucide:arrow-left" class="size-4 me-2 transition-transform group-hover:-translate-x-1" />
           Kembali ke Katalog
         </RouterLink>

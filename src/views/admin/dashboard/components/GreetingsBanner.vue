@@ -1,14 +1,19 @@
 <script setup lang="ts">
-import { Icon } from '@iconify/vue'
 import { ref, onMounted } from 'vue'
+import { Icon } from '@iconify/vue'
+import { managementInsights } from './data'
 
 const displayName = ref('Admin Properti')
+const randomInsight = ref('')
 
 onMounted(() => {
   const storedName = localStorage.getItem('nama_display')
   if (storedName) {
     displayName.value = storedName
   }
+  
+  const randomIndex = Math.floor(Math.random() * managementInsights.length)
+  randomInsight.value = managementInsights[randomIndex]
 })
 </script>
 
@@ -41,9 +46,25 @@ onMounted(() => {
           </span>
         </h1>
         
-        <p class="text-slate-500 font-medium text-base mb-8 max-w-md leading-relaxed">
-          Kelola katalog, pantau interaksi, dan tingkatkan performa operasional Anda hari ini.
-        </p>
+
+        <!-- Dynamic Insight Section -->
+        <div class="mb-8 p-4 bg-bejo-50/50 border border-bejo-100 rounded-2xl max-w-2xl group/insight">
+          <div class="flex gap-3">
+            <div class="shrink-0 size-8 bg-white rounded-lg shadow-sm border border-bejo-100 flex items-center justify-center">
+              <Icon icon="lucide:sparkles" class="size-4 text-bejo-500" />
+            </div>
+            <div class="space-y-1">
+              <div class="text-[9px] font-black uppercase tracking-widest text-bejo-600 flex items-center gap-2">
+                Insight
+                <span class="size-1 bg-bejo-300 rounded-full"></span>
+                <span class="text-[8px] font-bold text-bejo-400 capitalize tracking-normal">Analisis AI</span>
+              </div>
+              <p class="text-xs font-bold text-slate-700 italic leading-relaxed">
+                "{{ randomInsight || 'Memuat insight...' }}"
+              </p>
+            </div>
+          </div>
+        </div>
 
         <div class="flex flex-wrap gap-4">
           <RouterLink to="/properti/katalog" class="group/btn flex items-center gap-2.5 px-6 py-3.5 bg-bejo-500 hover:bg-bejo-600 text-white rounded-xl font-black text-xs transition-all shadow-xl shadow-bejo-500/20 hover:-translate-y-1">
@@ -59,14 +80,14 @@ onMounted(() => {
 
       <div class="md:col-span-4 hidden md:flex justify-center items-center pr-12 relative group">
         <!-- Floating House Visual -->
-        <div class="relative animate-float scale-75">
+        <div class="relative scale-75">
           <div class="absolute inset-0 bg-bejo-500 blur-[80px] opacity-20 scale-150"></div>
           <div class="relative z-10 p-8 bg-white border border-bejo-100 rounded-[3rem] shadow-2xl transition-all duration-700 group-hover:rotate-3 group-hover:scale-105">
              <Icon icon="lucide:house" class="size-24 text-bejo-100" />
              <Icon icon="lucide:house" class="size-24 text-bejo-500 absolute inset-0 m-auto opacity-20" />
           </div>
           
-          <div class="z-10 absolute -top-3 -right-3 size-12 bg-gradient-to-br from-bejo-500 to-bejo-700 rounded-xl flex items-center justify-center shadow-lg animate-float-delayed">
+          <div class="z-10 absolute -top-3 -right-3 size-12 bg-gradient-to-br from-bejo-500 to-bejo-700 rounded-xl flex items-center justify-center shadow-lg">
              <Icon icon="lucide:key" class="size-6 text-white" />
           </div>
         </div>

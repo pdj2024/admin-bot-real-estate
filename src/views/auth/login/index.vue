@@ -26,8 +26,12 @@ const handleLogin = async () => {
       localStorage.setItem('no_id', data.No_Id)
       localStorage.setItem('nama_display', data.Nama_Display)
       localStorage.setItem('role_user', data.Role_User)
-      localStorage.setItem('token', data.token)
-      localStorage.setItem('refreshToken', data.refreshToken)
+      const resData = data.Data || data
+      const token = resData.token || resData.Token
+      const refreshToken = resData.refreshToken || resData.RefreshToken
+
+      localStorage.setItem('token', token)
+      localStorage.setItem('refreshToken', refreshToken)
       localStorage.setItem('email', form.value.Email)
 
       localStorage.setItem(

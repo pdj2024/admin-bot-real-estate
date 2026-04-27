@@ -249,7 +249,14 @@ router.beforeEach((to, from, next) => {
   if (isMaintenance) {
     const isMaintenancePage = to.name === 'Maintenance'
     const isLoginPage = to.name === 'Login'
-    if (!isMaintenancePage && !isLoginPage) {
+    
+    // IF user is logged in AND trying to access maintenance page -> Send to Beranda (bypass)
+    if (hasTokens && isMaintenancePage) {
+      return next({ name: 'Beranda' })
+    }
+
+    // IF user is NOT logged in AND trying to access a non-maintenance public page -> Redirect to maintenance
+    if (!hasTokens && !isMaintenancePage && !isLoginPage) {
       return next({ name: 'Maintenance' })
     }
   } else {
@@ -260,6 +267,16 @@ router.beforeEach((to, from, next) => {
   }
 
   next()
+})
+
+router.afterEach((to) => {
+  // If navigating to a guest page (requiresAuth: false or undefined)
+  if (!to.meta.requiresAuth) {
+    const settingsStore = useSettings()
+    // Trigger background fetch for guest pages every time they navigate
+    settingsStore.fetchBusinessSettings()
+    settingsStore.fetchDefaultSettings()
+  }
 })
 
 export default router

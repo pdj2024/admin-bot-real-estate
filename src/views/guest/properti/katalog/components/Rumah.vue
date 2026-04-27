@@ -120,7 +120,7 @@
           @toggle-dropdown="toggleDropdown"
           @update-status="updateStatusTransaksi"
           @delete="deleteProduct"
-          @edit="(slug) => $router.push(isAdmin ? `/admin/properti/edit/${slug}` : `/detail/${slug}`)"
+          @edit="(slug) => $router.push(`/properti/detail/${slug}`)"
         />
       </template>
     </div>
@@ -282,7 +282,8 @@ const filteredProducts = usePropertyFilters(
   selectedType,
   computed(() => props.facilities),
   computed(() => props.region),
-  computed(() => props.priceRange)
+  computed(() => props.priceRange),
+  computed(() => props.isAdmin)
 )
 
 const table = useVueTable({
@@ -338,6 +339,12 @@ const updateStatusTransaksi = async (product: any, newStatus: string) => {
   confirm(`Apakah Anda yakin ingin mengubah status menjadi ${newStatus}?`, async () => {
     try {
       product.Status_Properti = newStatus
+      
+      // Auto-set to Draft if Sold or Rented
+      if (newStatus === 'Terjual' || newStatus === 'Tersewa') {
+        product.Status_Display = 'Draft'
+      }
+
       await api.put('/api/realEstate/update?no_id=' + product.No_Id, product, {
         headers: { 'X-Jenis-User': 'admin' }
       })

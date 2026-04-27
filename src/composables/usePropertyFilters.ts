@@ -25,10 +25,16 @@ export function usePropertyFilters(
   typeFilter?: Ref<string>,
   facilitiesFilter?: Ref<FacilitiesFilter>,
   regionFilter?: Ref<RegionFilter>,
-  priceRangeFilter?: Ref<PriceRangeFilter>
+  priceRangeFilter?: Ref<PriceRangeFilter>,
+  isAdmin?: ComputedRef<boolean> | Ref<boolean>
 ): ComputedRef<any[]> {
   return computed(() => {
     let result = products.value
+
+    // 0. Base Status Filter (Guest only shows Aktif & Tersedia)
+    if (!isAdmin?.value) {
+      result = result.filter(p => p.Status_Display === 'Aktif' && p.Status_Properti === 'Tersedia')
+    }
 
     // 1. Text Search
     if (searchQuery.value) {

@@ -28,8 +28,19 @@ const initTheme = () => {
 
 const checkMaintenanceRedirect = (isMaintenance: boolean) => {
   // Admin routes (requiresAuth) are always accessible — skip entirely.
-  // The router guard handles auth for those pages independently.
   if (route.meta.requiresAuth === true) return
+
+  // Authenticated users (Admins) can also view guest pages during maintenance.
+  const token = localStorage.getItem('token')
+  const hasToken = !!token && token !== 'undefined'
+  
+  if (hasToken) {
+    // If logged in admin is somehow on maintenance page, send to Beranda
+    if (route.name === 'Maintenance') {
+      router.push({ name: 'Beranda' })
+    }
+    return
+  }
 
   if (isMaintenance) {
     // Only redirect public guest pages to maintenance.
@@ -51,8 +62,8 @@ watch(() => settingsStore.app.isMaintenance, (val) => {
   checkMaintenanceRedirect(val)
 })
 
-onMounted(() => {
-  settingsStore.init()
+onMounted(async () => {
+  await settingsStore.init()
   initLayout()
   initTheme()
 

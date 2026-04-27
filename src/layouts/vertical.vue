@@ -19,6 +19,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue'
 import { useLayout } from '@/stores/layout'
+import { useSettings } from '@/stores/settings'
 import { storeToRefs } from 'pinia'
 import Footer from '@/layouts/components/footer/index.vue'
 import MobileMenu from '@/layouts/components/mobile-menu/index.vue'
@@ -30,6 +31,7 @@ import { APP_LOCAL_SETTINGS_KEY } from '@/config/constants'
 defineProps<{ mainClass?: string }>()
 
 const layoutStore = useLayout()
+const settingsStore = useSettings()
 const { layout } = storeToRefs(layoutStore)
 const { setSideNavSize } = layoutStore
 
@@ -51,6 +53,7 @@ const resize = () => {
 
 onMounted(() => {
   layoutStore.init()
+  settingsStore.init(true)
   setTimeout(() => {
     resize()
   }, 100)

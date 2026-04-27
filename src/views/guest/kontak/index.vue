@@ -48,7 +48,7 @@
           </div>
           <h3 class="text-xl font-black text-slate-900 mb-3">Layanan Chat</h3>
           <p class="text-sm font-medium text-slate-500 leading-relaxed mb-6">
-            Layanan cepat (Fast Response) Senin—Jumat (08:00 - 18:00 WIB). Tersedia khusus Chat WhatsApp.
+            Layanan cepat (Fast Response) {{ settingsStore.business.Hari_Buka || 'Senin—Jumat' }} ({{ settingsStore.business.Jam_Buka || '08:00 - 18:00 WIB' }}). Tersedia khusus Chat WhatsApp.
           </p>
           <a :href="'https://wa.me/' + (settingsStore.business.whatsapp || '62895353837000')" target="_blank" class="inline-flex items-center gap-2 text-sm font-bold text-bejo-600 hover:text-bejo-700 transition-colors">
             {{ settingsStore.business.phone || '+62 895-3538-37000' }} <Icon icon="lucide:arrow-right" class="size-4" />

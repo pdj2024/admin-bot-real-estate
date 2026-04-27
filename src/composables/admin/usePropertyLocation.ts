@@ -1,22 +1,14 @@
 import { ref, reactive, nextTick, markRaw, toRaw } from 'vue'
-import axios from 'axios'
-import { GOOGLE_MAPS_API_KEY, GEMINI_API_KEY } from '@/config/constants'
+import { GOOGLE_MAPS_API_KEY } from '@/config/constants'
 import { fail } from '@/utils/sweet-alert'
 
-// Global cache to persist across composable re-initializations during the session
-const aiRegionCache = new Map<string, string>()
-
-export function usePropertyLocation(form: any) {
+export function usePropertyLocation(form: any, deps?: { cities: any, createCity: (name: string) => Promise<any> }) {
   const mapContainer = ref<HTMLElement | null>(null)
   const isMapLoaded = ref(false)
   const isGeocoding = ref(false)
   const isLocationSelected = ref(false)
   const isLocating = ref(false)
-  const isDetectingArea = ref(false)
-  const lastAICallKey = ref('')
-  const aiError = ref(false)
   const detectedKota = ref('')
-  const isGeneratingAkses = ref(false)
 
   const currentCoords = reactive({
     lat: -7.2504,
@@ -28,7 +20,6 @@ export function usePropertyLocation(form: any) {
   let gMarker: any = null
   let gGeocoder: any = null
   let gAutocompleteSessionToken: any = null
-  let aiDebounceTimer: any = null
 
   const predictions = ref<any[]>([])
   const searchQuery = ref('')
@@ -44,117 +35,24 @@ export function usePropertyLocation(form: any) {
     return val.replace(/^(Kecamatan|Kec\.|Kec)\s+/i, '').trim()
   }
 
-  const detectRegionWithAI = async (kecamatan: string, kota: string) => {
-    if (!GEMINI_API_KEY || !kecamatan || !kota) return
-    const currentKey = `${kecamatan}-${kota}`.toLowerCase().trim()
-    
-    // 1. Check Global Session Cache first
-    if (aiRegionCache.has(currentKey)) {
-      const cached = aiRegionCache.get(currentKey)
-      if (cached) {
-        const cleanKota = kota.replace(/Kota\s+|Kabupaten\s+|Kab\.\s+/i, '').trim()
-        form.value.Area[1] = `${cleanKota} ${cached}`
-        lastAICallKey.value = currentKey
-        aiError.value = false
-        return
-      }
-    }
-
-    if (currentKey === lastAICallKey.value) return
-    
-    isDetectingArea.value = true
-    aiError.value = false
-
-    if (aiDebounceTimer) clearTimeout(aiDebounceTimer)
-    
-    aiDebounceTimer = setTimeout(async () => {
-      try {
-        const modelName = 'gemini-2.0-flash'
-        const prompt = `Properly categorize the district "${kecamatan}" in "${kota}", Indonesia into one of these regions: Pusat, Utara, Timur, Selatan, Barat, or Kabupaten. Answer with only the region name.`
-        
-        const response = await axios.post(
-          `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`,
-          { contents: [{ parts: [{ text: prompt }] }] },
-          { headers: { 'Content-Type': 'application/json', 'X-goog-api-key': GEMINI_API_KEY } }
-        )
-
-        const aiResponse = response.data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim()
-        if (aiResponse) {
-          const cleanedResponse = aiResponse.replace(/[^\w\s]/gi, '').toLowerCase()
-          const validRegions = ['pusat', 'utara', 'timur', 'selatan', 'barat', 'kabupaten']
-          const matched = validRegions.find((r) => cleanedResponse.includes(r))
-          
-          if (matched) {
-            const regionLabel = matched.charAt(0).toUpperCase() + matched.slice(1)
-            const cleanKota = kota.replace(/Kota\s+|Kabupaten\s+|Kab\.\s+/i, '').trim()
-            
-            // Store in cache
-            aiRegionCache.set(currentKey, regionLabel)
-            
-            form.value.Area[1] = `${cleanKota} ${regionLabel}`
-            lastAICallKey.value = currentKey
-            aiError.value = false
-          }
-        }
-      } catch (err: any) {
-        if (err.response?.status === 429) {
-          console.warn('AI Rate Limit (Gemini) - Silakan pilih manual')
-        } else {
-          console.warn('AI Region Detection Failed:', err.message)
-        }
-        aiError.value = true
-      } finally {
-        isDetectingArea.value = false
-        aiDebounceTimer = null
-      }
-    }, 1500) // Increase to 1.5s for safety
-  }
-
-  const generateAksesWithAI = async (namaProduk: string, alamat: string) => {
-    if (!GEMINI_API_KEY || !namaProduk || !alamat) return
-    isGeneratingAkses.value = true
-    
-    try {
-      const modelName = 'gemini-2.0-flash'
-      const prompt = `Berikan daftar 4-5 poin aksesibilitas populer (mall, pintu tol, kampus, rumah sakit, bandara, atau stasiun) untuk properti bernama "${namaProduk}" yang berlokasi di "${alamat}". Berikan estimasi waktu tempuh dalam menit berkendara. Balas HANYA dengan poin-poinnya saja tanpa penjelasan. Contoh format:
-      5 Menit ke Galaxy Mall
-      7 Menit ke Pintu Tol Kertajaya
-      10 Menit ke Kampus ITS`
-
-      const response = await axios.post(
-        `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`,
-        { contents: [{ parts: [{ text: prompt }] }] },
-        { headers: { 'Content-Type': 'application/json', 'X-goog-api-key': GEMINI_API_KEY } }
-      )
-
-      const aiResponse = response.data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim()
-      if (aiResponse) {
-        const lines = aiResponse.split('\n').map((l: string) => l.replace(/^[-*•]\s+/, '').trim()).filter(Boolean)
-        lines.forEach((line: string) => {
-          if (!form.value.Akses_Jalan.includes(line)) {
-            form.value.Akses_Jalan.push(line)
-          }
-        })
-      }
-    } catch (err: any) {
-      console.warn('AI Accessibility Generation Failed:', err.message)
-      fail('Gagal membuat daftar akses otomatis')
-    } finally {
-      isGeneratingAkses.value = false
-    }
-  }
-
   const cleanKotaName = (val: string) => {
     if (!val) return ''
     return val.replace(/Kota\s+|Kabupaten\s+|Kab\.\s+/i, '').trim()
   }
 
-  const parseAddressComponents = (components: any[], displayName: string | null = null) => {
+  const parseAddressComponents = async (components: any[], displayName: string | null = null) => {
     let provinsi = '', kota = '', kecamatan = '', kelurahan = '', rute = '', nomorRumah = '', building = '', subVillage = ''
+    
     components.forEach((c, index) => {
-      const types = c.types
-      const name = (c.longText || c.long_name || '').trim()
-      if (types.length === 0 && index === 0 && !building) building = name
+      // Handle both object format { types, long_name } and array format [ long_name, short_name, types ]
+      const types = Array.isArray(c) ? (c[2] || []) : (c.types || [])
+      const name = Array.isArray(c) ? (String(c[0] || '').trim()) : (String(c.longText || c.long_name || '').trim())
+      
+      if (!types || types.length === 0) {
+        if (index === 0 && !building) building = name
+        return
+      }
+
       if (types.includes('administrative_area_level_1')) provinsi = normalizeRegionLabel(name)
       else if (types.includes('administrative_area_level_2')) kota = normalizeRegionLabel(name)
       else if (types.includes('administrative_area_level_3') || (types.includes('locality') && !kecamatan)) kecamatan = cleanKecamatan(name)
@@ -166,13 +64,51 @@ export function usePropertyLocation(form: any) {
     })
 
     if (!kota) {
-      const locality = components.find((c) => c.types.includes('locality'))
-      if (locality) kota = normalizeRegionLabel(locality.long_name)
+      const locality = components.find((c) => {
+        const types = Array.isArray(c) ? (c[2] || []) : (c.types || [])
+        return types.includes('locality')
+      })
+      if (locality) {
+        const name = Array.isArray(locality) ? locality[0] : locality.long_name
+        kota = normalizeRegionLabel(name)
+      }
     }
 
-    detectedKota.value = cleanKotaName(kota)
+    const cleanK = cleanKotaName(kota)
+    detectedKota.value = cleanK
     form.value.Area[0] = [kelurahan, kecamatan, kota, provinsi].filter(Boolean).join(', ')
-    if (kecamatan && kota) detectRegionWithAI(kecamatan, kota)
+    form.value.Area[1] = [cleanK, provinsi].filter(Boolean).join(', ') // Suggested City, Province format
+    form.value.Kecamatan = kecamatan
+    form.value.Kelurahan = kelurahan
+
+    // NEW: Sync with City Dropdown if exists
+    if (deps && cleanK && provinsi) {
+      const targetCityFull = `${cleanK}, ${provinsi}`
+      const citiesList = Array.isArray(deps.cities) ? deps.cities : (deps.cities?.value || [])
+      
+      // 1. Try exact match (City, Province)
+      let matched = citiesList.find((c: any) => 
+        (c.Nama || c.Name || '').toLowerCase().trim() === targetCityFull.toLowerCase().trim()
+      )
+      
+      // 2. Fallback to just City name match
+      if (!matched) {
+        matched = citiesList.find((c: any) => 
+          (c.Nama || c.Name || '').toLowerCase().trim() === cleanK.toLowerCase().trim() ||
+          (c.Nama || c.Name || '').toLowerCase().trim().startsWith(cleanK.toLowerCase().trim() + ',')
+        )
+      }
+      
+      if (matched) {
+        form.value.Id_Kota = matched.No_Id || matched.No_Id_Kota
+      } else {
+        // Automatically create city if not found
+        const newId = await deps.createCity(targetCityFull)
+        if (newId) {
+          form.value.Id_Kota = newId
+        }
+      }
+    }
 
     let formattedSubVillage = subVillage.trim()
     if (formattedSubVillage && !formattedSubVillage.toLowerCase().includes('dusun')) formattedSubVillage = `Dusun ${formattedSubVillage}`
@@ -370,9 +306,6 @@ export function usePropertyLocation(form: any) {
     isMapLoaded,
     isLocationSelected,
     isLocating,
-    isDetectingArea,
-    isGeneratingAkses,
-    aiError,
     detectedKota,
     searchQuery,
     predictions,
@@ -382,7 +315,6 @@ export function usePropertyLocation(form: any) {
     handleSearchInput,
     selectPrediction,
     getCurrentLocation,
-    geocodeExistingAddress,
-    generateAksesWithAI
+    geocodeExistingAddress
   }
 }

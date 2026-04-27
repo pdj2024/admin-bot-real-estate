@@ -61,7 +61,7 @@ const handleLogout = () => {
           <div class="size-8 rounded-lg bg-red-50 flex items-center justify-center transition-colors">
             <Icon icon="lucide:log-out" class="size-4" />
           </div>
-          Keluar Sesi
+          Keluar
         </button>
       </div>
     </div>

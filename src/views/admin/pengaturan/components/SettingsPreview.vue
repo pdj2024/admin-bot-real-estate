@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import type { PropType } from 'vue'
 import type { AppSettings } from '../index.vue'
+import { useSettings } from '@/stores/settings'
 
 const props = defineProps({
   settings: {
@@ -9,6 +10,8 @@ const props = defineProps({
     required: true
   }
 })
+
+const settingsStore = useSettings()
 
 const isHovered = ref(false)
 const isToggledOpen = ref(true)
@@ -87,10 +90,8 @@ const gradientStyle = computed(() => {
 
 <template>
   <div class="sticky top-6">
-    <h6 class="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-4">Live Preview Tampilan</h6>
-
-    <div class="border border-gray-200 rounded-xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-colors duration-300 flex flex-col h-[500px]" :class="settings.theme === 'dark' ? 'bg-gray-900 border-gray-700' : 'bg-[#f8f9fa]'">
-      <div class="bg-gray-100 px-4 py-3 flex items-center gap-2 border-b border-gray-200" :class="settings.theme === 'dark' ? 'bg-gray-800 border-gray-700' : ''">
+    <div class="border border-gray-200 rounded-xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-colors duration-300 flex flex-col h-[500px] bg-[#f8f9fa]">
+      <div class="bg-gray-100 px-4 py-3 flex items-center gap-2 border-b border-gray-200">
         <div class="w-3 h-3 rounded-full bg-[#ff5f56]"></div>
         <div class="w-3 h-3 rounded-full bg-[#ffbd2e]"></div>
         <div class="w-3 h-3 rounded-full bg-[#27c93f]"></div>
@@ -106,18 +107,18 @@ const gradientStyle = computed(() => {
         <div
           @mouseenter="isHovered = true"
           @mouseleave="isHovered = false"
-          class="h-full border-r flex flex-col py-4 overflow-hidden transition-all duration-300 ease-in-out shrink-0"
-          :class="[settings.theme === 'dark' ? 'border-gray-700' : 'border-gray-200', sidebarPositionClass]"
+          class="h-full border-r flex flex-col py-4 overflow-hidden transition-all duration-300 ease-in-out shrink-0 border-gray-200"
+          :class="[sidebarPositionClass]"
           :style="{
             width: sidebarWidth,
-            backgroundColor: settings.theme === 'dark' ? '#1b1718' : '#ffffff'
+            backgroundColor: '#ffffff'
           }"
         >
           <div class="px-4 mb-6 flex items-center justify-between whitespace-nowrap overflow-hidden">
             <div class="flex items-center gap-3">
               <div class="w-7 h-7 rounded shrink-0 shadow-sm" :style="{ background: gradientStyle }"></div>
-              <span class="font-bold text-[15px] truncate transition-opacity duration-200" :class="[settings.theme === 'dark' ? 'text-white' : 'text-gray-800', sidebarWidth === 'var(--spacing-sidenav-width-sm)' || sidebarWidth === 'var(--spacing-sidenav-width-md)' ? 'opacity-0' : 'opacity-100']">
-                {{ settings.appName || 'Nama Aplikasi' }}
+              <span class="font-bold text-[15px] truncate transition-opacity duration-200 text-gray-800" :class="[sidebarWidth === 'var(--spacing-sidenav-width-sm)' || sidebarWidth === 'var(--spacing-sidenav-width-md)' ? 'opacity-0' : 'opacity-100']">
+                {{ settingsStore.business.appName || 'Nama Aplikasi' }}
               </span>
             </div>
 
@@ -131,16 +132,16 @@ const gradientStyle = computed(() => {
               <div class="w-4 h-4 rounded-sm shrink-0 bg-current opacity-80"></div>
               <div class="h-2 w-20 rounded bg-current opacity-80 whitespace-nowrap" :class="sidebarWidth === 'var(--spacing-sidenav-width-sm)' ? 'opacity-0' : 'opacity-100'"></div>
             </div>
-            <div class="h-9 rounded-lg flex items-center px-3 gap-3" :class="settings.theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-50'">
-              <div class="w-4 h-4 rounded-sm shrink-0 bg-gray-300" :class="settings.theme === 'dark' ? 'bg-gray-600' : ''"></div>
-              <div class="h-2 w-24 rounded bg-gray-300 transition-opacity" :class="[settings.theme === 'dark' ? 'bg-gray-600' : '', sidebarWidth === 'var(--spacing-sidenav-width-sm)' ? 'opacity-0' : 'opacity-100']"></div>
+            <div class="h-9 rounded-lg flex items-center px-3 gap-3 hover:bg-gray-50">
+              <div class="w-4 h-4 rounded-sm shrink-0 bg-gray-300"></div>
+              <div class="h-2 w-24 rounded bg-gray-300 transition-opacity" :class="[sidebarWidth === 'var(--spacing-sidenav-width-sm)' ? 'opacity-0' : 'opacity-100']"></div>
             </div>
           </div>
         </div>
 
-        <div class="flex-1 flex flex-col min-w-0 bg-slate-50/50 relative z-10" :class="settings.theme === 'dark' ? 'bg-gray-900' : ''">
-          <header class="h-14 border-b flex items-center px-4 justify-between shrink-0 transition-colors" :class="settings.theme === 'dark' ? 'border-gray-700' : 'border-gray-200'" :style="{ backgroundColor: settings.theme === 'dark' ? '#1b1718' : '#ffffff' }">
-            <button v-if="showBurger" @click="toggleBurger" class="p-1.5 rounded-md hover:bg-gray-100 transition-colors" :class="settings.theme === 'dark' ? 'hover:bg-gray-700 text-gray-300' : 'text-gray-600'">
+        <div class="flex-1 flex flex-col min-w-0 bg-[#f8f9fa] relative z-10">
+          <header class="h-14 border-b flex items-center px-4 justify-between shrink-0 transition-colors border-gray-200" style="background-color: #ffffff">
+            <button v-if="showBurger" @click="toggleBurger" class="p-1.5 rounded-md hover:bg-gray-100 transition-colors text-gray-600">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="4" x2="20" y1="12" y2="12" />
                 <line x1="4" x2="20" y1="6" y2="6" />
@@ -149,29 +150,29 @@ const gradientStyle = computed(() => {
             </button>
             <div v-else class="w-8"></div>
             <div class="flex items-center gap-3">
-              <div class="w-20 h-6 rounded bg-gray-100" :class="settings.theme === 'dark' ? 'bg-gray-700' : ''"></div>
-              <div class="w-7 h-7 rounded-full bg-gray-100" :class="settings.theme === 'dark' ? 'bg-gray-600' : ''"></div>
+              <div class="w-20 h-6 rounded bg-gray-100"></div>
+              <div class="w-7 h-7 rounded-full bg-gray-100"></div>
             </div>
           </header>
 
           <div class="p-6 flex flex-col gap-5 overflow-y-auto">
             <div class="grid grid-cols-2 gap-4">
-              <div class="h-24 rounded-xl border p-4 flex flex-col justify-between" :class="settings.theme === 'dark' ? 'border-gray-700' : 'border-gray-100 shadow-sm'" :style="{ backgroundColor: settings.theme === 'dark' ? '#1f2937' : '#ffffff' }">
-                <div class="h-2 w-1/2 bg-gray-100 rounded" :class="settings.theme === 'dark' ? 'bg-gray-600' : ''"></div>
+              <div class="h-24 rounded-xl border p-4 flex flex-col justify-between border-gray-100 shadow-sm bg-white">
+                <div class="h-2 w-1/2 bg-gray-100 rounded"></div>
                 <div class="h-5 w-3/4 rounded shadow-sm" :style="{ background: gradientStyle }"></div>
               </div>
 
-              <div class="h-24 rounded-xl border p-4 flex flex-col justify-between" :class="settings.theme === 'dark' ? 'border-gray-700' : 'border-gray-100 shadow-sm'" :style="{ backgroundColor: settings.theme === 'dark' ? '#1f2937' : '#ffffff' }">
-                <div class="h-2 w-1/2 bg-gray-100 rounded" :class="settings.theme === 'dark' ? 'bg-gray-600' : ''"></div>
-                <div class="h-5 w-1/2 bg-gray-100 rounded" :class="settings.theme === 'dark' ? 'bg-gray-600' : ''"></div>
+              <div class="h-24 rounded-xl border p-4 flex flex-col justify-between border-gray-100 shadow-sm bg-white">
+                <div class="h-2 w-1/2 bg-gray-100 rounded"></div>
+                <div class="h-5 w-1/2 bg-gray-100 rounded"></div>
               </div>
             </div>
 
-            <div class="flex-1 min-h-[120px] rounded-xl border p-5 flex flex-col gap-3" :class="settings.theme === 'dark' ? 'border-gray-700' : 'border-gray-100 shadow-sm'" :style="{ backgroundColor: settings.theme === 'dark' ? '#1f2937' : '#ffffff' }">
-              <div class="h-3 w-1/4 bg-gray-100 rounded mb-3" :class="settings.theme === 'dark' ? 'bg-gray-600' : ''"></div>
-              <div class="h-2 w-full bg-gray-100 rounded" :class="settings.theme === 'dark' ? 'bg-gray-700' : ''"></div>
-              <div class="h-2 w-full bg-gray-100 rounded" :class="settings.theme === 'dark' ? 'bg-gray-700' : ''"></div>
-              <div class="h-2 w-3/4 bg-gray-100 rounded" :class="settings.theme === 'dark' ? 'bg-gray-700' : ''"></div>
+            <div class="flex-1 min-h-[120px] rounded-xl border p-5 flex flex-col gap-3 border-gray-100 shadow-sm bg-white">
+              <div class="h-3 w-1/4 bg-gray-100 rounded mb-3"></div>
+              <div class="h-2 w-full bg-gray-100 rounded"></div>
+              <div class="h-2 w-full bg-gray-100 rounded"></div>
+              <div class="h-2 w-3/4 bg-gray-100 rounded"></div>
 
               <div class="mt-auto pt-4 flex justify-end">
                 <div class="h-8 w-24 rounded shadow-sm" :style="{ background: gradientStyle }"></div>

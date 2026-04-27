@@ -25,15 +25,7 @@
               </div>
             </div>
           </div>
-          <div class="p-6">
-            <h5 class="font-semibold text-sm mb-3">Theme Mode</h5>
-            <div class="flex gap-2">
-              <div v-for="(item, idx) in themeOptions" :key="idx">
-                <input class="hidden" type="radio" name="" data-theme :id="`theme-${item.theme}`" :value="item.theme" :checked="layout.theme === item.theme" @change="() => setTheme(item.theme)" />
-                <label class="form-label btn bg-default-150" :for="`theme-${item.theme}`">{{ toPascalCase(item.theme) }}</label>
-              </div>
-            </div>
-          </div>
+
           <div class="p-6">
             <h5 class="font-semibold text-sm mb-3">Direction</h5>
             <div class="flex gap-2">

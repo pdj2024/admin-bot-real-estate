@@ -8,7 +8,7 @@ if (!state) {
   throw new Error('TabSpesifikasiDetail must be used within a component providing propertyModalState')
 }
 
-const { form, panjang, lebar, newAkses, isGeneratingAkses, generateAksesWithAI } = state
+const { form, panjang, lebar, newAkses } = state
 
 const specs = [
   { key: 'Jumlah_Kamar_Tidur', label: 'Jumlah KT', icon: 'lucide:bed' },
@@ -141,15 +141,6 @@ const addAkses = () => {
             <div class="flex gap-2">
               <div class="relative flex-1">
                 <input v-model="newAkses" @keyup.enter="addAkses" placeholder="Ketik akses (e.g. 5 min ke tol)..." class="field-input !pl-10 w-full" />
-                <button 
-                  @click="generateAksesWithAI(form.Nama_Produk, form.Alamat)" 
-                  type="button" 
-                  class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 hover:bg-slate-100 rounded-lg text-primary transition-all disabled:opacity-50"
-                  :title="isGeneratingAkses ? 'Sedang membuat...' : 'Generate AI'"
-                  :disabled="isGeneratingAkses || (!form.Nama_Produk && !form.Alamat)"
-                >
-                  <Icon :icon="isGeneratingAkses ? 'lucide:loader-2' : 'lucide:sparkles'" class="size-4" :class="isGeneratingAkses ? 'animate-spin' : ''" />
-                </button>
               </div>
               <button @click="addAkses" type="button" class="size-11 bg-slate-800 text-white rounded-xl shadow-lg hover:bg-black transition-all flex items-center justify-center active:scale-95 shrink-0">
                 <Icon icon="lucide:plus" class="size-5" />

@@ -27,7 +27,7 @@ const {
       <div 
         ref="mapContainer" 
         class="w-full transition-opacity duration-700" 
-        :style="{ height: height || '250px' }"
+        :style="{ height: height || '350px' }"
         :class="isMapLoaded ? 'opacity-100' : 'opacity-0'"
       ></div>
 
@@ -62,19 +62,6 @@ const {
           <Icon icon="lucide:mouse-pointer-2" class="size-5 text-primary" />
           <span class="text-[9px] font-black text-slate-800 uppercase tracking-widest">Klik pada peta untuk memilih lokasi</span>
         </div>
-      </div>
-    </div>
-
-    <!-- Map Info Footer -->
-    <div class="flex items-start gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
-      <div class="p-2 bg-white rounded-lg shadow-sm">
-        <Icon icon="lucide:info" class="size-4 text-primary" />
-      </div>
-      <div class="flex-1">
-        <h6 class="text-[10px] font-black text-slate-800 uppercase tracking-widest mb-0.5">Petunjuk Interaksi</h6>
-        <p class="text-[10px] font-bold text-slate-400 leading-relaxed uppercase tracking-tight">
-          Anda dapat menitik lokasi dengan mengeklik peta atau menyeret penanda (marker) yang sudah ada untuk mendapatkan titik koordinat yang presisi.
-        </p>
       </div>
     </div>
   </div>

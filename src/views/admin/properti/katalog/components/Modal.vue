@@ -3,6 +3,7 @@ import { ref, watch, provide, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import TabIdentitasUtama from './modal-tabs/TabIdentitasUtama.vue'
 import TabSpesifikasiDetail from './modal-tabs/TabSpesifikasiDetail.vue'
+import TabAlamatLokasi from './modal-tabs/TabAlamatLokasi.vue'
 import { usePropertyModal } from '@/composables/admin/usePropertyModal'
 
 const props = defineProps<{
@@ -23,8 +24,8 @@ const modalState = usePropertyModal(emit, handleClose)
 // Provide to all children tabs
 provide('propertyModalState', modalState)
 
-const { form, isLoading, initData, loadGoogleMaps } = modalState
-const activeTab = ref<'utama' | 'detail'>('utama')
+const { form, isLoading, initData, loadGoogleMaps, initWilayah } = modalState
+const activeTab = ref<'utama' | 'lokasi' | 'spesifikasi'>('utama')
 
 // Watch for modal trigger
 watch(
@@ -33,12 +34,14 @@ watch(
     if (newVal) {
       activeTab.value = 'utama'
       initData(props.itemData)
+      initWilayah()
     }
   }
 )
 
 onMounted(() => {
   loadGoogleMaps()
+  initWilayah()
 })
 </script>
 
@@ -59,41 +62,58 @@ onMounted(() => {
             <button @click="activeTab = 'utama'" class="flex-1 lg:flex-none lg:w-48 pt-4 pb-3.5 text-[10px] font-black uppercase tracking-widest transition-all relative group" :class="activeTab === 'utama' ? 'text-primary' : 'text-slate-400 hover:text-slate-500'">
               <div class="flex items-center justify-center gap-2">
                 <Icon icon="lucide:home" class="size-3.5" :class="activeTab === 'utama' ? 'text-primary' : 'text-slate-400'" />
-                <span>Identitas Utama</span>
+                <span>Utama</span>
               </div>
               <div class="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-t-full transition-all duration-300 transform" :class="activeTab === 'utama' ? 'scale-x-75 opacity-100' : 'scale-x-0 opacity-0'"></div>
             </button>
-            <button @click="activeTab = 'detail'" class="flex-1 lg:flex-none lg:w-48 pt-4 pb-3.5 text-[10px] font-black uppercase tracking-widest transition-all relative group" :class="activeTab === 'detail' ? 'text-primary' : 'text-slate-400 hover:text-slate-500'">
+            <button @click="activeTab = 'lokasi'" class="flex-1 lg:flex-none lg:w-48 pt-4 pb-3.5 text-[10px] font-black uppercase tracking-widest transition-all relative group" :class="activeTab === 'lokasi' ? 'text-primary' : 'text-slate-400 hover:text-slate-500'">
               <div class="flex items-center justify-center gap-2">
-                <Icon icon="lucide:file-text" class="size-3.5" :class="activeTab === 'detail' ? 'text-primary' : 'text-slate-400'" />
-                <span>Spesifikasi Detail</span>
+                <Icon icon="lucide:map-pin" class="size-3.5" :class="activeTab === 'lokasi' ? 'text-primary' : 'text-slate-400'" />
+                <span>Lokasi</span>
               </div>
-              <div class="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-t-full transition-all duration-300 transform" :class="activeTab === 'detail' ? 'scale-x-75 opacity-100' : 'scale-x-0 opacity-0'"></div>
+              <div class="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-t-full transition-all duration-300 transform" :class="activeTab === 'lokasi' ? 'scale-x-75 opacity-100' : 'scale-x-0 opacity-0'"></div>
+            </button>
+            <button @click="activeTab = 'spesifikasi'" class="flex-1 lg:flex-none lg:w-48 pt-4 pb-3.5 text-[10px] font-black uppercase tracking-widest transition-all relative group" :class="activeTab === 'spesifikasi' ? 'text-primary' : 'text-slate-400 hover:text-slate-500'">
+              <div class="flex items-center justify-center gap-2">
+                <Icon icon="lucide:file-text" class="size-3.5" :class="activeTab === 'spesifikasi' ? 'text-primary' : 'text-slate-400'" />
+                <span>Spesifikasi</span>
+              </div>
+              <div class="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-t-full transition-all duration-300 transform" :class="activeTab === 'spesifikasi' ? 'scale-x-75 opacity-100' : 'scale-x-0 opacity-0'"></div>
             </button>
           </div>
         </div>
 
         <div class="px-8 py-8 overflow-y-auto flex-1 custom-scroll bg-slate-50/10 relative">
-          <!-- TAB 1: IDENTITAS UTAMA -->
+          <!-- TAB 1: UTAMA -->
           <TabIdentitasUtama v-show="activeTab === 'utama'" />
 
-          <!-- TAB 2: SPESIFIKASI DETAIL -->
-          <TabSpesifikasiDetail v-show="activeTab === 'detail'" />
+          <!-- TAB 2: LOKASI -->
+          <TabAlamatLokasi v-show="activeTab === 'lokasi'" />
+
+          <!-- TAB 3: SPESIFIKASI -->
+          <TabSpesifikasiDetail v-show="activeTab === 'spesifikasi'" />
         </div>
 
         <div class="px-8 py-6 border-t flex justify-between items-center bg-white">
-          <button @click="activeTab = 'utama'" v-if="activeTab === 'detail'" class="px-6 py-2.5 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-primary transition-all flex items-center gap-2 group"><Icon icon="lucide:arrow-left" class="size-4 group-hover:-translate-x-1 transition-transform" /> Kembali ke Utama</button>
-          <div v-else></div>
+          <div class="flex items-center gap-3">
+            <button @click="handleClose" class="px-8 py-3 text-xs font-black text-slate-400 hover:text-slate-600 uppercase tracking-widest transition-colors">Batal</button>
+          </div>
 
           <div class="flex gap-4 items-center">
-            <button @click="handleClose" class="px-7 py-3 text-xs font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-2xl transition-all">Batal</button>
+            <button v-if="activeTab === 'utama'" @click="activeTab = 'lokasi'" class="px-9 py-3 bg-slate-100 text-slate-600 text-xs font-black rounded-2xl transition-all hover:bg-slate-200 active:scale-95 flex items-center gap-2 group">
+              Lanjut ke Lokasi 
+              <Icon icon="lucide:chevron-right" class="size-4 group-hover:translate-x-1 transition-transform" />
+            </button>
 
-            <button @click="activeTab = 'detail'" v-if="activeTab === 'utama'" class="px-9 py-3 bg-slate-100 text-slate-600 text-xs font-black rounded-2xl transition-all hover:bg-slate-200 active:scale-95 flex items-center gap-2 group">Lanjut Spesifikasi <Icon icon="lucide:chevron-right" class="size-4 group-hover:translate-x-1 transition-transform" /></button>
+            <button v-else-if="activeTab === 'lokasi'" @click="activeTab = 'spesifikasi'" class="px-9 py-3 bg-slate-100 text-slate-600 text-xs font-black rounded-2xl transition-all hover:bg-slate-200 active:scale-95 flex items-center gap-2 group">
+              Lanjut ke Spesifikasi 
+              <Icon icon="lucide:chevron-right" class="size-4 group-hover:translate-x-1 transition-transform" />
+            </button>
 
             <button v-else :disabled="isLoading" @click="modalState.submitForm" class="px-10 py-3 bg-primary text-white text-xs font-black rounded-2xl shadow-xl shadow-primary/20 transition-all hover:scale-[1.03] active:scale-95 flex items-center gap-2">
               <Icon v-if="isLoading" icon="lucide:loader-2" class="size-4 animate-spin" />
               <Icon v-else icon="lucide:save" class="size-4" />
-              {{ isLoading ? 'Sedang Menyimpan...' : 'Simpan Properti' }}
+              {{ isLoading ? 'Sedang Menyimpan...' : (form.No_Id ? 'Simpan Perubahan' : 'Tambah Properti') }}
             </button>
           </div>
         </div>

@@ -220,7 +220,13 @@
                    </div>
                 </div>
                 
-                <a :href="settingsStore.business.mapUrl" target="_blank" class="absolute bottom-3 inset-x-3 text-center">
+                <a 
+                  :href="settingsStore.business.mapUrl?.includes(',') 
+                    ? `https://www.google.com/maps?q=${settingsStore.business.mapUrl}` 
+                    : settingsStore.business.mapUrl" 
+                  target="_blank" 
+                  class="absolute bottom-3 inset-x-3 text-center"
+                >
                   <span class="text-[10px] font-black text-white uppercase tracking-widest bg-slate-900/80 backdrop-blur px-3 py-1.5 rounded-lg border border-white/10">Buka di Google Maps</span>
                 </a>
               </div>
@@ -244,7 +250,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useLayout } from '@/stores/layout'
 import { useSettings } from '@/stores/settings'
 import { storeToRefs } from 'pinia'
@@ -284,7 +290,7 @@ const resize = () => {
 
 onMounted(() => {
   layoutStore.init()
-  settingsStore.init()
+  settingsStore.init(true)
   
   // Check login session
   const token = localStorage.getItem('token')
@@ -294,6 +300,13 @@ onMounted(() => {
     isLoggedIn.value = true
     userName.value = name || 'User'
     noId.value = idValue || '-'
+    
+    // Initialize Preline for the dropdown
+    nextTick(() => {
+      if (window.HSStaticMethods?.autoInit) {
+        window.HSStaticMethods.autoInit()
+      }
+    })
   }
 
   resize()

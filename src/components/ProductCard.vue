@@ -1,5 +1,5 @@
 <template>
-  <div v-if="isLoading || (product.Status_Display == 'Aktif' && product.Status_Properti == 'Tersedia')" class="group flex flex-col h-full rounded-[2.5rem] border transition-all duration-500 relative bg-white border-slate-100 shadow-xl shadow-slate-200/30" :class="!isLoading ? (showSelectButton ? '' : 'hover:-translate-y-2 hover:shadow-2xl hover:border-bejo-200 hover:shadow-bejo-600/10 cursor-pointer') : ''" @click="showSelectButton ? null : handleClick">
+  <div v-if="isLoading || isAdmin || (product.Status_Display == 'Aktif' && product.Status_Properti == 'Tersedia')" class="group flex flex-col h-full rounded-[2.5rem] border transition-all duration-500 relative bg-white border-slate-100 shadow-xl shadow-slate-200/30" :class="!isLoading ? (showSelectButton ? '' : 'hover:-translate-y-2 hover:shadow-2xl hover:border-bejo-200 hover:shadow-bejo-600/10 cursor-pointer') : ''" @click="showSelectButton ? null : handleClick">
     <!-- Card Image Header -->
     <div class="relative h-60 overflow-hidden rounded-t-[2.5rem]" :class="isLoading ? 'bg-slate-200 animate-pulse' : 'bg-slate-100 p-3 pb-0'">
       <div v-if="!isLoading" class="w-full h-full rounded-[2rem] overflow-hidden relative">
@@ -45,7 +45,7 @@
         <!-- Status Badges Top Left -->
         <div class="absolute top-4 left-4 flex flex-col gap-2 z-10">
           <span class="w-fit bg-bejo-600/90 backdrop-blur-md text-white text-[10px] uppercase tracking-widest font-black px-3 py-1.5 rounded-lg shadow-md border border-bejo-400">
-            {{ product.Status_Display != 'Aktif' ? 'Nonaktif' : product.Status_Properti }}
+            {{ product.Status_Display === 'Aktif' ? product.Status_Properti : product.Status_Display }}
           </span>
           <div class="flex flex-wrap gap-1.5" v-if="product.Status_Transaksi">
             <span v-for="(trans, i) in product.Status_Transaksi" :key="i" class="bg-black/60 backdrop-blur-md text-bejo-100 text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-md border border-slate-600">
@@ -82,7 +82,7 @@
       </div>
 
       <!-- Title -->
-      <h6 class="text-xl text-slate-900 font-black transition-colors mb-2 leading-tight" :class="[isLoading ? 'text-transparent bg-slate-200 animate-pulse rounded-xl w-full' : '', !showSelectButton ? 'group-hover:text-bejo-600' : '']">
+      <h6 class="text-lg md:text-xl text-slate-900 font-black transition-colors mb-2 leading-tight line-clamp-2 [text-wrap:pretty]" :class="[isLoading ? 'text-transparent bg-slate-200 animate-pulse rounded-xl w-full' : '', !showSelectButton ? 'group-hover:text-bejo-600' : '']">
         <RouterLink v-if="!isLoading && !disableRouting" :to="targetUrl" class="before:absolute before:inset-0">{{ product.Nama_Produk }}</RouterLink>
         <div v-else-if="!isLoading && disableRouting" class="before:absolute before:inset-0">{{ product.Nama_Produk }}</div>
         <span v-else>.</span>
@@ -253,7 +253,7 @@ const props = withDefaults(
 const emit = defineEmits(['toggleDropdown', 'updateStatus', 'delete', 'edit', 'select', 'toggleExpand'])
 
 const targetUrl = computed(() => {
-  return props.isAdmin ? `/admin/properti/edit/${props.product.Slug}` : `/detail/${props.product.Slug}`
+  return props.isAdmin ? `/properti/detail/${props.product.Slug}` : `/detail/${props.product.Slug}`
 })
 
 const formatCurrency = (value: number) => {

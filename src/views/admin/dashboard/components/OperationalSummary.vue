@@ -79,7 +79,7 @@ const getGlowColor = (color: string) => {
         v-else
         v-for="(item, idx) in operationalStats" 
         :key="idx"
-        class="group relative overflow-hidden bg-white rounded-[2.2rem] p-7 border border-slate-100 shadow-xl shadow-slate-200/40 hover:-translate-y-2 transition-all duration-500 cursor-pointer"
+        class="group relative overflow-hidden bg-white rounded-[2.2rem] p-7 border border-slate-100 shadow-xl shadow-slate-200/40 transition-all duration-500 cursor-pointer"
         :class="getGlowColor(item.color)"
       >
         <div class="flex items-start justify-between mb-6">

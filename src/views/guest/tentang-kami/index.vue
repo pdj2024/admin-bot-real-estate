@@ -1,3 +1,44 @@
+<script setup lang="ts">
+import { Icon } from '@iconify/vue'
+import GuestLayout from '@/layouts/guest.vue'
+import { useSettings } from '@/stores/settings'
+
+const settingsStore = useSettings()
+
+const workProcesses = [
+  {
+    title: 'Pencarian Unit',
+    desc: 'Cari hunian sesuai preferensi lokasi, budget, dan fasilitas melalui katalog terintegrasi kami.'
+  },
+  {
+    title: 'Konsultasi & Survei',
+    desc: 'Tim kami menemani Anda melakukan inspeksi fisik unit secara mendalam sebelum pengambilan keputusan.'
+  },
+  {
+    title: 'Finalisasi Akad',
+    desc: 'Proses pengurusan admin, KPR, hingga serah terima kunci yang didampingi oleh analis legalitas.'
+  }
+]
+
+const teamMembers = [
+  {
+    name: 'Bpk. Ahmad Bejo',
+    role: 'Founder & CEO',
+    photo: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'
+  },
+  {
+    name: 'Sarah Wijaya',
+    role: 'Real Estate Specialist',
+    photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'
+  },
+  {
+    name: 'Dimas Pratama',
+    role: 'Mortgage Lead',
+    photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'
+  }
+]
+</script>
+
 <template>
   <GuestLayout>
     <div class="mb-10 print:hidden space-y-10">
@@ -16,10 +57,10 @@
             <Icon icon="lucide:info" class="size-4" /> Company Profile
           </span>
           <h1 class="text-4xl sm:text-5xl lg:text-7xl font-black text-slate-900 tracking-tight mb-6">
-            Mengenal <span class="text-transparent bg-clip-text bg-gradient-to-r from-bejo-500 via-bejo-700 to-bejo-900">Rumah Bejo</span>
+            Mengenal <span class="text-transparent bg-clip-text bg-gradient-to-r from-bejo-500 via-bejo-700 to-bejo-900">{{ settingsStore.business.appName }}</span>
           </h1>
-          <p class="text-slate-500 text-lg sm:text-xl font-medium leading-relaxed max-w-2xl mx-auto">
-            Menyatukan mimpi dan kenyataan melalui penyediaan properti bermutu tinggi, transaksi yang aman, dan layanan profesional sepenuh hati.
+          <p class="text-slate-500 text-lg sm:text-xl font-medium leading-relaxed max-w-3xl mx-auto line-clamp-3">
+            {{ settingsStore.business.description }}
           </p>
         </div>
       </div>
@@ -40,7 +81,7 @@
             
             <div class="space-y-6 text-slate-600 font-medium leading-relaxed text-base md:text-lg">
               <p>
-                Rumah Bejo didirikan dengan satu nilai fundamental: <strong>Kepercayaan Mutlak</strong>. Kami memahami bahwa properti bukan sekadar aset investasi, melainkan tempat di mana masa depan keluarga dibangun.
+                {{ settingsStore.business.appName }} didirikan dengan satu nilai fundamental: <strong>Kepercayaan Mutlak</strong>. Kami memahami bahwa properti bukan sekadar aset investasi, melainkan tempat di mana masa depan keluarga dibangun.
               </p>
               <p>
                 Oleh karena itu, setiap unit dalam katalog kami melalui proses kurasi ketat meliputi pengecekan legalitas sertifikat, kualitas fisik bangunan, hingga kewajaran harga pasar agar Anda mendapatkan nilai terbaik.
@@ -106,7 +147,7 @@
             <span class="text-bejo-600 font-black text-[10px] uppercase tracking-[0.3em] block mb-4">Di Balik Layar</span>
             <h2 class="text-4xl lg:text-6xl font-black text-slate-900 tracking-tighter leading-none mb-8">
               Tim Profesional <br class="hidden sm:block" />
-              <span class="text-bejo-500">Rumah Bejo</span>
+              <span class="text-bejo-500">{{ settingsStore.business.appName }}</span>
             </h2>
             <p class="text-lg text-slate-500 font-medium leading-relaxed">
               Kami terdiri dari para ahli properti, analis legalitas, dan pakar finansial yang berdedikasi tinggi bagi kepuasan Anda.
@@ -127,44 +168,6 @@
     </div>
   </GuestLayout>
 </template>
-
-<script setup lang="ts">
-import { Icon } from '@iconify/vue'
-import GuestLayout from '@/layouts/guest.vue'
-
-const workProcesses = [
-  {
-    title: 'Pencarian Unit',
-    desc: 'Cari hunian sesuai preferensi lokasi, budget, dan fasilitas melalui katalog terintegrasi kami.'
-  },
-  {
-    title: 'Konsultasi & Survei',
-    desc: 'Tim kami menemani Anda melakukan inspeksi fisik unit secara mendalam sebelum pengambilan keputusan.'
-  },
-  {
-    title: 'Finalisasi Akad',
-    desc: 'Proses pengurusan admin, KPR, hingga serah terima kunci yang didampingi oleh analis legalitas.'
-  }
-]
-
-const teamMembers = [
-  {
-    name: 'Bpk. Ahmad Bejo',
-    role: 'Founder & CEO',
-    photo: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'
-  },
-  {
-    name: 'Sarah Wijaya',
-    role: 'Real Estate Specialist',
-    photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'
-  },
-  {
-    name: 'Dimas Pratama',
-    role: 'Mortgage Lead',
-    photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'
-  }
-]
-</script>
 
 <style scoped>
 @reference "@/assets/css/style.css";

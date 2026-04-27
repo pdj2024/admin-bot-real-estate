@@ -81,6 +81,16 @@ const fetchData = async (currentSlug: string) => {
     
     product.value = mainProduct
 
+    // 1.5 Visibility Check for Guest
+    const userRole = localStorage.getItem('role_user')
+    if (product.value && userRole !== 'admin') {
+      if (product.value.Status_Display !== 'Aktif' || product.value.Status_Properti !== 'Tersedia') {
+        product.value = null
+        isLoading.value = false
+        return
+      }
+    }
+
     // 2. Populate suggestions (Must be Aktif, Tersedia, and NOT the current product)
     suggestions.value = data.Data
       .filter((p: Product) => 
@@ -119,9 +129,13 @@ onMounted(async () => {
 
 <template>
   <Guest>
-    <div class="p-10 max-w-[1440px] mx-auto w-full">
-      <!-- <PageTitle subtitle="Kelola" title="Detail" v-if="isAdmin" /> -->
-      <div class="grid lg:grid-cols-3 grid-cols-1 gap-5">
+    <div class="p-10 max-w-[1440px] mx-auto w-full min-h-[60vh]">
+      <div v-if="isLoading" class="flex flex-col items-center justify-center py-20">
+        <Icon icon="lucide:loader-2" class="size-12 animate-spin text-bejo-500 mb-4" />
+        <p class="text-slate-400 font-bold uppercase tracking-widest text-xs">Memuat Data...</p>
+      </div>
+      
+      <div v-else-if="product" class="grid lg:grid-cols-3 grid-cols-1 gap-5">
         <SidebarProduct :product="product" :isAdmin="isAdmin" />
         <div class="lg:col-span-2 col-span-1 flex flex-col gap-5">
           <ProductDetails :product="product" :isAdmin="isAdmin" class="!col-span-1" />
@@ -129,7 +143,18 @@ onMounted(async () => {
         </div>
       </div>
 
-      <SuggestedProducts :products="suggestions" :is-loading="isLoading" />
+      <div v-else class="flex flex-col items-center justify-center py-20 text-center">
+        <div class="size-20 bg-slate-100 rounded-full flex items-center justify-center mb-6">
+          <Icon icon="lucide:search-x" class="size-10 text-slate-300" />
+        </div>
+        <h2 class="text-3xl font-black text-slate-900 mb-2">Properti Tidak Tersedia</h2>
+        <p class="text-slate-500 font-medium max-w-sm mb-8">Maaf, properti yang Anda cari sudah terjual, tidak aktif, atau tidak dapat ditemukan.</p>
+        <RouterLink to="/katalog" class="px-8 py-3 bg-bejo-500 text-white rounded-xl font-bold text-sm hover:bg-bejo-600 transition-all shadow-lg shadow-bejo-500/20">
+          Kembali ke Katalog
+        </RouterLink>
+      </div>
+
+      <SuggestedProducts v-if="product" :products="suggestions" :is-loading="isLoading" />
     </div>
   </Guest>
 </template>
