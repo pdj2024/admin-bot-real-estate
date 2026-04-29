@@ -36,7 +36,7 @@ const provinces = ref<any[]>(PROVINCES)
   <Vertical>
     <div class="p-0 md:p-3 md:pt-1 pb-32 space-y-6 md:space-y-8">
       <!-- Main Catalog Content -->
-      <div class="grid lg:grid-cols-4 grid-cols-1 gap-6 md:gap-8 items-start">
+      <div class="grid lg:grid-cols-4 grid-cols-1 gap-6 md:gap-8">
         <aside class="lg:col-span-1">
           <Filter 
             v-model:openFilter="isFilterOpen" 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, reactive, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { Icon } from '@iconify/vue'
-import { confirm, success, fail } from '@/utils/sweet-alert'
+import { success, fail } from '@/utils/sweet-alert'
 import api from '@/services/axios'
 
 const props = defineProps<{
@@ -56,7 +56,7 @@ const parentLabel = computed(() => {
 })
 
 const parentOptions = computed(() => {
-  let list = []
+  let list: any[] = []
   switch (props.type) {
     case 'area': list = [...props.allData.kota]; break
     case 'prioritas': list = [...props.allData.area]; break

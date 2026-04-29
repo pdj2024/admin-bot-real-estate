@@ -1,5 +1,5 @@
 <template>
-  <div ref="filterRef" :class="[!openFilter ? 'hidden lg:block' : 'block']" class="z-[38] fixed inset-x-4 bottom-6 lg:static lg:w-full lg:inset-auto">
+  <div ref="filterRef" :class="[!openFilter ? 'hidden lg:block' : 'block']" class="z-[38] fixed inset-x-4 bottom-6 lg:sticky lg:top-24 lg:w-full lg:inset-auto">
     <div class="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden">
       <div class="p-6">
         <div class="flex items-center justify-between mb-6">

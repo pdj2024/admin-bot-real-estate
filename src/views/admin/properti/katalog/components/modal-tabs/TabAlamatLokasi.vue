@@ -26,8 +26,7 @@ const {
   wilayahModalParentId,
   openWilayahModal: openModal,
   handleWilayahSuccess,
-  fetchCities,
-  fetchPriorities,
+
   virtualPriorities,
   virtualCities,
   virtualAreas: globalVirtualAreas
@@ -86,7 +85,7 @@ const filteredCities = computed(() => {
   
   // Add virtual cities
   const virtuals = virtualCities.value.filter((v: any) => 
-    !result.some(r => (r.Nama || r.Name).toLowerCase() === v.Nama.toLowerCase())
+    !result.some((r: any) => (r.Nama || r.Name).toLowerCase() === v.Nama.toLowerCase())
   )
   result = [...result, ...virtuals]
 
@@ -104,11 +103,11 @@ const filteredAreas = computed(() => {
     result = result.filter((a: any) => a.Id_Kota === form.value.Id_Kota)
     
     // Tambahkan area virtual yang belum ada di database
-    const localVirtuals = virtualAreas.value.filter(v => 
-      !result.some(r => (r.Nama || r.Name).toLowerCase() === v.Nama.toLowerCase())
+    const localVirtuals = virtualAreas.value.filter((v: any) => 
+      !result.some((r: any) => (r.Nama || r.Name).toLowerCase() === v.Nama.toLowerCase())
     )
     const injectedVirtuals = globalVirtualAreas.value.filter((v: any) => 
-      v.Id_Kota === form.value.Id_Kota && !result.some(r => (r.Nama || r.Name).toLowerCase() === v.Nama.toLowerCase()) && !localVirtuals.some(lv => lv.Nama.toLowerCase() === v.Nama.toLowerCase())
+      v.Id_Kota === form.value.Id_Kota && !result.some((r: any) => (r.Nama || r.Name).toLowerCase() === v.Nama.toLowerCase()) && !localVirtuals.some((lv: any) => lv.Nama.toLowerCase() === v.Nama.toLowerCase())
     )
     result = [...result, ...localVirtuals, ...injectedVirtuals]
   }
@@ -127,7 +126,7 @@ const filteredPriorities = computed(() => {
     result = result.filter((p: any) => p.Id_Area === form.value.Id_Area)
     
     // Add local virtual priorities for this area
-    const virtuals = virtualPriorities.value.filter(v => v.Id_Parent === form.value.Id_Area)
+    const virtuals = virtualPriorities.value.filter((v: any) => v.Id_Parent === form.value.Id_Area)
     result = [...result, ...virtuals]
   }
 
@@ -303,8 +302,8 @@ onBeforeUnmount(() => {
           <button @click="toggleArea" type="button" class="field-input h-10 !pl-9 flex items-center justify-between group bg-white border-slate-200" :disabled="!form.Id_Kota" :class="{ 'cursor-not-allowed bg-slate-50 border-slate-100': !form.Id_Kota }">
             <span class="text-xs font-bold truncate pr-2" :class="form.Id_Area ? 'text-slate-700' : 'text-slate-300'">
               <template v-if="form.Id_Area">
-                {{ filteredAreas.find(a => a.No_Id === form.Id_Area || a.No_Id_Area === form.Id_Area)?.Nama || 
-                   filteredAreas.find(a => a.No_Id === form.Id_Area || a.No_Id_Area === form.Id_Area)?.Name || 
+                {{ filteredAreas.find((a: any) => a.No_Id === form.Id_Area || a.No_Id_Area === form.Id_Area)?.Nama || 
+                   filteredAreas.find((a: any) => a.No_Id === form.Id_Area || a.No_Id_Area === form.Id_Area)?.Name || 
                    (form._isVirtualArea ? form.Id_Area : 'Pilih Area') }}
               </template>
               <template v-else>Pilih Area</template>
@@ -365,8 +364,8 @@ onBeforeUnmount(() => {
         <button @click="togglePrio" type="button" class="field-input h-10 !pl-9 flex items-center justify-between group bg-white border-slate-200" :disabled="!form.Id_Area" :class="{ 'cursor-not-allowed bg-slate-50 border-slate-100': !form.Id_Area }">
           <span class="text-xs font-bold truncate pr-2" :class="form.Id_Prioritas ? 'text-slate-700' : 'text-slate-300'">
             <template v-if="form.Id_Prioritas">
-              {{ filteredPriorities.find(p => p.No_Id === form.Id_Prioritas || p.No_Id_Prioritas === form.Id_Prioritas)?.Nama || 
-                 filteredPriorities.find(p => p.No_Id === form.Id_Prioritas || p.No_Id_Prioritas === form.Id_Prioritas)?.Name || 
+              {{ filteredPriorities.find((p: any) => p.No_Id === form.Id_Prioritas || p.No_Id_Prioritas === form.Id_Prioritas)?.Nama || 
+                 filteredPriorities.find((p: any) => p.No_Id === form.Id_Prioritas || p.No_Id_Prioritas === form.Id_Prioritas)?.Name || 
                  'Pilih Kawasan' }}
             </template>
             <template v-else>Pilih Kawasan</template>
@@ -413,7 +412,7 @@ onBeforeUnmount(() => {
       :show="isWilayahModalOpen"
       :type="wilayahModalType"
       :parentId="wilayahModalParentId"
-      :parentName="wilayahModalType === 'area' ? selectedCityName : (areas.find(a => a.No_Id === form.Id_Area || a.No_Id_Area === form.Id_Area)?.Nama || form.Id_Area)"
+      :parentName="wilayahModalType === 'area' ? selectedCityName : (areas.find((a: any) => a.No_Id === form.Id_Area || a.No_Id_Area === form.Id_Area)?.Nama || form.Id_Area)"
       :contextId="form.Id_Kota"
       :allData="{ kota: cities, area: areas }"
       :virtual="true"

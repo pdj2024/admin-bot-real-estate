@@ -6,7 +6,7 @@ import Vertical from '@/layouts/vertical.vue'
 import SidebarProduct from './components/SidebarProduct.vue'
 import ProductDetails from './components/ProductDetails.vue'
 
-import { Icon } from '@iconify/vue'
+
 
 const route = useRoute()
 const slug = route.params.slug

@@ -40,7 +40,7 @@
         </div>
       </div>
 
-      <div class="grid lg:grid-cols-4 grid-cols-1 gap-8 items-start">
+      <div class="grid lg:grid-cols-4 grid-cols-1 gap-8">
 
         <aside class="lg:col-span-1">
           <Filter
