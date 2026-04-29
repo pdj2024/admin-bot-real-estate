@@ -183,16 +183,17 @@
         </div>
 
         <!-- Skeleton Form saat Fetching -->
-        <div v-if="isLoading" class="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-8 relative z-10">
-          <ProductCard v-for="i in 3" :key="i" :product="{}" is-loading />
+        <div v-if="isLoading" class="flex flex-nowrap lg:grid overflow-x-auto lg:overflow-x-visible snap-x snap-mandatory gap-6 lg:gap-8 relative z-10 lg:grid-cols-4 pb-4 lg:pb-0">
+          <ProductCard v-for="i in 4" :key="i" :product="{}" is-loading class="snap-center shrink-0 w-[calc(100%-1.25rem)] md:w-[calc(33.33%-1.5rem)] lg:w-auto" />
         </div>
 
-        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 min-[2000px]:grid-cols-4 gap-8 relative z-10">
+        <div v-else class="flex flex-nowrap lg:grid overflow-x-auto lg:overflow-x-visible snap-x snap-mandatory gap-6 lg:gap-8 relative z-10 lg:grid-cols-4 pb-4 lg:pb-0">
           <ProductCard 
             v-for="row in displayedProducts" 
             :key="row.id || row.No_Id" 
             :product="row" 
             @click="(slug: string) => $router.push(`/detail/${slug}`)"
+            class="snap-center shrink-0 w-[calc(100%-1.25rem)] md:w-[calc(33.33%-1.5rem)] lg:w-auto"
           />
         </div>
       </div>
@@ -252,10 +253,10 @@ const fetchData = async () => {
       const validProducts = actualData
         .filter((p: any) => p.Status_Display === 'Aktif' && p.Status_Properti === 'Tersedia')
       
-      const products = validProducts.slice(0, 3)
+      const products = validProducts.slice(0, 4)
 
-      // Pastikan tampil 3 (tambah mock jika kurang)
-      if (products.length < 3) {
+      // Pastikan tampil 4 (tambah mock jika kurang)
+      if (products.length < 4) {
         const mockItems = [
           {
             No_Id: 'mock_pakuwon_1',
@@ -310,11 +311,29 @@ const fetchData = async () => {
             Jumlah_Kamar_Mandi: 2,
             Akses_Jalan: ['Langsung ke Lapangan Golf', 'Privasi Tinggi'],
             MediaUrls: [{ Id_Media: 'https://images.unsplash.com/photo-1567496898669-ee935f5f647a?auto=format&fit=crop&q=80&w=800' }]
+          },
+          {
+            No_Id: 'mock_ciputra_1',
+            Nama_Produk: 'Ciputra World Sky Loft',
+            Alamat: 'CBD Ciputra World, Surabaya Pusat',
+            Tipe: 'Apartemen',
+            Luas_Bangunan: 85,
+            Area: ['Kelurahan, Kecamatan, Kota Surabaya, Jawa Timur', 'Surabaya Pusat'],
+            Status_Display: 'Aktif',
+            Status_Properti: 'Tersedia',
+            Status_Transaksi: ['Sewa'],
+            Harga_Sewa1: 120000000,
+            Harga_Sewa2: 105000000,
+            Satuan_Minimal_Sewa: 'Tahun',
+            Jumlah_Kamar_Tidur: 1,
+            Jumlah_Kamar_Mandi: 1,
+            Akses_Jalan: ['Koneksi Mall Direct', 'Pusat Kota'],
+            MediaUrls: [{ Id_Media: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=800' }]
           }
         ]
 
         let i = 0
-        while (products.length < 3 && i < mockItems.length) {
+        while (products.length < 4 && i < mockItems.length) {
           const mock = mockItems[i]
           // Jangan tambahkan kalau Nama_Produk sudah ada (biar gak duplikat item asli)
           if (!products.some((p: ProductPreview) => p.Nama_Produk === mock.Nama_Produk)) {

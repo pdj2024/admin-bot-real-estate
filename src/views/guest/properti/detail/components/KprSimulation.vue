@@ -79,7 +79,7 @@ const handleKprWa = () => {
 </script>
 
 <template>
-  <div class="card border-none shadow-sm bg-white rounded-2xl overflow-hidden mb-8">
+  <div v-if="!product || product?.Status_Transaksi?.includes('Jual')" class="card border-none shadow-sm bg-white rounded-2xl overflow-hidden mb-8">
     <div class="card-body p-6 md:p-8">
       <div class="flex items-center gap-3 mb-6">
         <div class="bg-bejo-50 p-2.5 rounded-xl border border-bejo-100">

@@ -94,13 +94,22 @@ const fetchData = async (currentSlug: string) => {
       }
     }
 
-    // 2. Populate suggestions (Must be Aktif, Tersedia, and NOT the current product)
+    const isJual = product.value?.Status_Transaksi?.includes('Jual')
+    const isSewa = product.value?.Status_Transaksi?.includes('Sewa')
+
     suggestions.value = data.Data
-      .filter((p: Product) => 
-        p.Slug !== currentSlug && 
-        p.Status_Display === 'Aktif' && 
-        p.Status_Properti === 'Tersedia'
-      )
+      .filter((p: Product) => {
+        if (p.Slug === currentSlug) return false
+        if (p.Status_Display !== 'Aktif' || p.Status_Properti !== 'Tersedia') return false
+        
+        if (isJual && !isSewa) {
+          return p.Status_Transaksi?.includes('Jual')
+        }
+        if (isSewa && !isJual) {
+          return p.Status_Transaksi?.includes('Sewa')
+        }
+        return true
+      })
       .slice(0, 3)
       
   } catch (err) {

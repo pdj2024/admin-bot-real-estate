@@ -44,6 +44,9 @@ const formatCurrency = (value: number) => {
                 {{ transaksi }}
               </span>
             </template>
+            <span v-if="product?.Tipe" class="px-3 py-1 text-[11px] uppercase tracking-wider font-bold rounded-xl bg-slate-100 text-slate-700 border border-slate-200">
+              {{ product.Tipe }}
+            </span>
           </div>
         </div>
 

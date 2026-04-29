@@ -24,9 +24,24 @@ const fetchAllProducts = async () => {
   try {
     const { data } = await api.get('/api/realEstate/getAll')
     // Filter out the current product from comparison options
-    allProducts.value = (data || []).filter(
-      (p: any) => p.No_Id !== props.currentProduct?.No_Id && p.Status_Display === 'Aktif'
-    )
+    const isJual = props.currentProduct?.Status_Transaksi?.includes('Jual')
+    const isSewa = props.currentProduct?.Status_Transaksi?.includes('Sewa')
+
+    allProducts.value = (data?.Data || data || []).filter((p: any) => {
+      if (p.No_Id === props.currentProduct?.No_Id) return false
+      if (p.Status_Display === 'Draft') return false
+      
+      // Samakan tipenya
+      if (props.currentProduct?.Tipe && p.Tipe !== props.currentProduct.Tipe) return false
+      
+      if (isJual && !isSewa) {
+        return p.Status_Transaksi?.includes('Jual')
+      }
+      if (isSewa && !isJual) {
+        return p.Status_Transaksi?.includes('Sewa')
+      }
+      return true
+    })
   } catch (error) {
     console.error('Failed to fetch comparison products:', error)
   } finally {
@@ -76,6 +91,9 @@ const formatCurrency = (value: number) => {
 }
 
 const getProductImage = (product: any) => {
+  if (product?.MediaUrls && product.MediaUrls.length > 0) {
+    return product.MediaUrls[0].Id_Media
+  }
   if (product?.Media_Url && product.Media_Url.length > 0) {
     return product.Media_Url[0].Url || product.Media_Url[0].ThumbUrl
   }
@@ -87,60 +105,87 @@ const compareAttributes = computed(() => {
   const p1 = props.currentProduct
   const p2 = selectedCompareProduct.value
 
-  const getPriceLabel = (p: any) => {
-    if (!p) return '-'
-    const isSewa = p.Status_Transaksi?.includes('Sewa')
-    const isJual = p.Status_Transaksi?.includes('Jual')
-    
-    if (isJual && p.Harga_Jual1 > 0) {
-      return formatCurrency(p.Harga_Jual1)
-    }
-    if (isSewa && p.Harga_Sewa1 > 0) {
-      return `${formatCurrency(p.Harga_Sewa1)} / ${p.Satuan_Minimal_Sewa || 'Tahun'}`
-    }
-    return '-'
+
+
+  const hasJual = p1.Status_Transaksi?.includes('Jual') || p2?.Status_Transaksi?.includes('Jual')
+  const hasSewa = p1.Status_Transaksi?.includes('Sewa') || p2?.Status_Transaksi?.includes('Sewa')
+
+  const attributes = []
+
+  if (hasJual) {
+    attributes.push({
+      label: 'Harga Jual',
+      val1: (p1.Harga_Jual2 > 0 ? p1.Harga_Jual2 : p1.Harga_Jual1) > 0 ? formatCurrency(p1.Harga_Jual2 > 0 ? p1.Harga_Jual2 : p1.Harga_Jual1) : '-',
+      val2: (p2?.Harga_Jual2 > 0 ? p2.Harga_Jual2 : p2?.Harga_Jual1) > 0 ? formatCurrency(p2.Harga_Jual2 > 0 ? p2.Harga_Jual2 : p2?.Harga_Jual1) : '-',
+      better: (() => {
+        const hj1 = p1.Harga_Jual2 > 0 ? p1.Harga_Jual2 : p1.Harga_Jual1
+        const hj2 = p2?.Harga_Jual2 > 0 ? p2.Harga_Jual2 : (p2?.Harga_Jual1 || 0)
+        if (!p2 || hj1 <= 0 || hj2 <= 0) return 0
+        return hj1 < hj2 ? 1 : (hj2 < hj1 ? 2 : 0)
+      })()
+    })
   }
 
-  return [
-    {
-      label: 'Harga Utama',
-      val1: getPriceLabel(p1),
-      val2: getPriceLabel(p2),
-    },
+  if (hasSewa) {
+    attributes.push({
+      label: 'Harga Sewa',
+      val1: (p1.Harga_Sewa2 > 0 ? p1.Harga_Sewa2 : p1.Harga_Sewa1) > 0 ? `${formatCurrency(p1.Harga_Sewa2 > 0 ? p1.Harga_Sewa2 : p1.Harga_Sewa1)} / ${p1.Satuan_Minimal_Sewa || 'Tahun'}` : '-',
+      val2: (p2?.Harga_Sewa2 > 0 ? p2.Harga_Sewa2 : p2?.Harga_Sewa1) > 0 ? `${formatCurrency(p2.Harga_Sewa2 > 0 ? p2.Harga_Sewa2 : p2?.Harga_Sewa1)} / ${p2.Satuan_Minimal_Sewa || 'Tahun'}` : '-',
+      better: (() => {
+        const hs1 = p1.Harga_Sewa2 > 0 ? p1.Harga_Sewa2 : p1.Harga_Sewa1
+        const hs2 = p2?.Harga_Sewa2 > 0 ? p2.Harga_Sewa2 : (p2?.Harga_Sewa1 || 0)
+        if (!p2 || hs1 <= 0 || hs2 <= 0) return 0
+        return hs1 < hs2 ? 1 : (hs2 < hs1 ? 2 : 0)
+      })()
+    })
+  }
+
+  attributes.push(...[
     {
       label: 'Tipe Properti',
       val1: p1.Tipe || '-',
       val2: p2?.Tipe || '-',
     },
     {
+      label: 'Area / Kawasan',
+      val1: p1.Area || '-',
+      val2: p2?.Area || '-',
+    },
+    {
       label: 'Luas Tanah',
       val1: p1.Luas_Tanah ? `${p1.Luas_Tanah} m²` : '-',
       val2: p2?.Luas_Tanah ? `${p2.Luas_Tanah} m²` : '-',
+      better: p2 ? (p1.Luas_Tanah > p2.Luas_Tanah ? 1 : (p2.Luas_Tanah > p1.Luas_Tanah ? 2 : 0)) : 0
     },
     {
       label: 'Luas Bangunan',
       val1: p1.Luas_Bangunan ? `${p1.Luas_Bangunan} m²` : '-',
       val2: p2?.Luas_Bangunan ? `${p2.Luas_Bangunan} m²` : '-',
+      better: p2 ? (p1.Luas_Bangunan > p2.Luas_Bangunan ? 1 : (p2.Luas_Bangunan > p1.Luas_Bangunan ? 2 : 0)) : 0
     },
     {
       label: 'Jumlah Lantai',
       val1: p1.Jumlah_Lantai || '-',
       val2: p2?.Jumlah_Lantai || '-',
+      better: p2 ? (p1.Jumlah_Lantai > p2.Jumlah_Lantai ? 1 : (p2.Jumlah_Lantai > p1.Jumlah_Lantai ? 2 : 0)) : 0
     },
     {
       label: 'Kamar Tidur',
       val1: p1.Jumlah_Kamar_Tidur || '-',
       val2: p2?.Jumlah_Kamar_Tidur || '-',
+      better: p2 ? (p1.Jumlah_Kamar_Tidur > p2.Jumlah_Kamar_Tidur ? 1 : (p2.Jumlah_Kamar_Tidur > p1.Jumlah_Kamar_Tidur ? 2 : 0)) : 0
     },
     {
       label: 'Kamar Mandi',
       val1: p1.Jumlah_Kamar_Mandi || '-',
       val2: p2?.Jumlah_Kamar_Mandi || '-',
+      better: p2 ? (p1.Jumlah_Kamar_Mandi > p2.Jumlah_Kamar_Mandi ? 1 : (p2.Jumlah_Kamar_Mandi > p1.Jumlah_Kamar_Mandi ? 2 : 0)) : 0
     },
     {
       label: 'Carpot',
       val1: p1.Jumlah_Carpot || '-',
       val2: p2?.Jumlah_Carpot || '-',
+      better: p2 ? (p1.Jumlah_Carpot > p2.Jumlah_Carpot ? 1 : (p2.Jumlah_Carpot > p1.Jumlah_Carpot ? 2 : 0)) : 0
     },
     {
       label: 'Daya Listrik',
@@ -151,8 +196,15 @@ const compareAttributes = computed(() => {
       label: 'Sertifikat',
       val1: p1.Jenis_Sertifikat || '-',
       val2: p2?.Jenis_Sertifikat || '-',
+    },
+    {
+      label: 'Akses Jalan',
+      val1: p1.Akses_Jalan || [],
+      val2: p2?.Akses_Jalan || [],
+      isList: true
     }
-  ]
+  ])
+  return attributes
 })
 </script>
 
@@ -177,7 +229,7 @@ const compareAttributes = computed(() => {
               </div>
               <div>
                 <h3 class="text-xl font-black text-slate-800 tracking-tight uppercase">Bandingkan Properti</h3>
-                <p class="text-slate-400 font-semibold text-xs tracking-wider uppercase">Analisis kelayakan aset berdampingan</p>
+                <p class="text-slate-500 font-semibold text-xs tracking-wide mt-0.5">Temukan hunian terbaik yang pas untuk masa depanmu</p>
               </div>
             </div>
             <button @click="emit('close')" class="p-2.5 bg-slate-100 hover:bg-red-50 hover:text-red-500 rounded-xl text-slate-400 transition-colors shadow-sm">
@@ -281,15 +333,37 @@ const compareAttributes = computed(() => {
                 <thead class="bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100">
                   <tr>
                     <th class="px-6 py-4">Metrik</th>
-                    <th class="px-6 py-4 text-center text-bejo-600 bg-bejo-50/30">Properti A</th>
-                    <th class="px-6 py-4 text-center">Properti B</th>
+                    <th class="px-6 py-4 text-center text-bejo-600 bg-bejo-50/30">Properti Ini</th>
+                    <th class="px-6 py-4 text-center">Properti Lain</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-50 text-slate-700 font-semibold">
                   <tr v-for="attr in compareAttributes" :key="attr.label" class="hover:bg-slate-50 transition-colors">
                     <td class="px-6 py-3.5 text-xs text-slate-400 uppercase font-black tracking-wider bg-slate-50/20">{{ attr.label }}</td>
-                    <td class="px-6 py-3.5 text-center text-sm font-bold text-slate-800 bg-bejo-50/10">{{ attr.val1 }}</td>
-                    <td class="px-6 py-3.5 text-center text-sm font-bold" :class="selectedCompareProduct ? 'text-slate-800' : 'text-slate-300'">{{ attr.val2 }}</td>
+                    <td class="px-6 py-3.5 text-center text-sm font-bold text-slate-800 transition-all" :class="[attr.better === 1 ? 'bg-emerald-50/80 text-emerald-700 shadow-inner' : 'bg-bejo-50/10']">
+                      <template v-if="attr.isList">
+                        <ul v-if="attr.val1 && attr.val1.length > 0" class="text-left space-y-1 inline-block list-disc pl-5">
+                          <li v-for="(item, idx) in attr.val1" :key="idx" class="text-xs font-bold text-slate-700 leading-tight">{{ item }}</li>
+                        </ul>
+                        <span v-else class="text-slate-300">-</span>
+                      </template>
+                      <span v-else class="flex items-center justify-center gap-1.5">
+                        {{ attr.val1 }}
+                        <Icon v-if="attr.better === 1" icon="lucide:sparkles" class="size-3.5 text-emerald-500 animate-pulse shrink-0" />
+                      </span>
+                    </td>
+                    <td class="px-6 py-3.5 text-center text-sm font-bold transition-all" :class="[selectedCompareProduct ? 'text-slate-800' : 'text-slate-300', attr.better === 2 ? 'bg-emerald-50/80 text-emerald-700 shadow-inner' : '']">
+                      <template v-if="attr.isList">
+                        <ul v-if="attr.val2 && attr.val2.length > 0" class="text-left space-y-1 inline-block list-disc pl-5">
+                          <li v-for="(item, idx) in attr.val2" :key="idx" class="text-xs font-bold text-slate-700 leading-tight">{{ item }}</li>
+                        </ul>
+                        <span v-else class="text-slate-300">-</span>
+                      </template>
+                      <span v-else class="flex items-center justify-center gap-1.5">
+                        {{ attr.val2 }}
+                        <Icon v-if="attr.better === 2" icon="lucide:sparkles" class="size-3.5 text-emerald-500 animate-pulse shrink-0" />
+                      </span>
+                    </td>
                   </tr>
                 </tbody>
               </table>

@@ -34,11 +34,9 @@ const isMatchingQuery = (text: string) => {
 
 import { watch } from 'vue'
 watch(searchQuery, (newQuery) => {
-  if (!newQuery) {
-    expandedCities.value.clear()
-    expandedAreas.value.clear()
-    return
-  }
+  expandedCities.value.clear()
+  expandedAreas.value.clear()
+  if (!newQuery) return
   
   const q = newQuery.toLowerCase()
   
@@ -295,7 +293,7 @@ const hierarchicalData = computed(() => {
           <!-- Loading State -->
           <div v-if="loading" class="flex flex-col items-center justify-center py-20 text-center">
              <Icon icon="lucide:loader-2" class="size-8 text-bejo-500 animate-spin mb-4" />
-             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Memuat hierarki wilayah...</p>
+             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Memuat data wilayah...</p>
           </div>
         </div>
       </div>
