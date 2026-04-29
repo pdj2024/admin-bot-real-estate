@@ -11,6 +11,10 @@ const props = defineProps<{
   isAdmin: boolean
 }>()
 
+const emit = defineEmits<{
+  (e: 'openCompare'): void
+}>()
+
 const currentIndex = ref(0)
 const videoMap = ref<Record<string, boolean>>({})
 const isVideoLoading = ref(false)
@@ -261,6 +265,11 @@ onUnmounted(() => {
               Bagikan
             </button>
           </div>
+
+          <button v-if="!isAdmin" @click="emit('openCompare')" type="button" class="mt-3 flex w-full items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm tracking-wide transition-all shadow-sm border border-slate-200 text-bejo-600 hover:bg-bejo-50 hover:border-bejo-200">
+            <Icon icon="lucide:arrow-left-right" class="size-4" />
+            Bandingkan Properti
+          </button>
         </div>
       </div>
 

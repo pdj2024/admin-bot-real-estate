@@ -24,7 +24,9 @@ const formatCurrencyShort = (value: number) => {
 
 const propertyPrice = computed(() => {
   if (!props.product) return 0
-  return props.product.Harga_Jual2 > 0 ? props.product.Harga_Jual2 : props.product.Harga_Jual1
+  if (props.product.Harga_Jual2 > 0) return props.product.Harga_Jual2
+  if (props.product.Harga_Jual1 > 0) return props.product.Harga_Jual1
+  return props.product.Harga_Sewa1 || 0
 })
 
 const dpPercentage = ref(20)
@@ -77,7 +79,7 @@ const handleKprWa = () => {
 </script>
 
 <template>
-  <div v-if="product?.Status_Transaksi.includes('Jual')" class="card border-none shadow-sm bg-white rounded-2xl overflow-hidden mb-8">
+  <div class="card border-none shadow-sm bg-white rounded-2xl overflow-hidden mb-8">
     <div class="card-body p-6 md:p-8">
       <div class="flex items-center gap-3 mb-6">
         <div class="bg-bejo-50 p-2.5 rounded-xl border border-bejo-100">

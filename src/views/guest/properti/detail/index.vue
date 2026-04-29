@@ -7,6 +7,9 @@ import SidebarProduct from './components/SidebarProduct.vue'
 import ProductDetails from './components/ProductDetails.vue'
 import KprSimulation from './components/KprSimulation.vue'
 import SuggestedProducts from './components/SuggestedProducts.vue'
+import CompareModal from '@/components/common/CompareModal.vue'
+
+const showCompareModal = ref(false)
 
 const route = useRoute()
 
@@ -136,11 +139,13 @@ onMounted(async () => {
       </div>
       
       <div v-else-if="product" class="grid lg:grid-cols-3 grid-cols-1 gap-5">
-        <SidebarProduct :product="product" :isAdmin="isAdmin" />
+        <SidebarProduct :product="product" :isAdmin="isAdmin" @openCompare="showCompareModal = true" />
         <div class="lg:col-span-2 col-span-1 flex flex-col gap-5">
           <ProductDetails :product="product" :isAdmin="isAdmin" class="!col-span-1" />
           <KprSimulation :product="product" />
         </div>
+        
+        <CompareModal :show="showCompareModal" :currentProduct="product" @close="showCompareModal = false" />
       </div>
 
       <div v-else class="flex flex-col items-center justify-center py-20 text-center">
