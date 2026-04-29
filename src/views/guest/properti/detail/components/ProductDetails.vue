@@ -156,6 +156,10 @@ const formatCurrency = (value: number) => {
                   <td class="px-6 py-4 font-bold bg-slate-50/50 w-1/3 italic" :class="!product ? 'text-transparent bg-slate-200 rounded animate-pulse w-max select-none shrink-0' : 'text-slate-500'">Sertifikat</td>
                   <td class="px-6 py-4 font-bold"><span :class="!product ? 'text-transparent bg-slate-300 rounded animate-pulse select-none shrink-0' : 'text-slate-800'">{{ product?.Jenis_Sertifikat || 'Memuat..' }}</span></td>
                 </tr>
+                <tr v-if="!product || product?.Status_Transaksi?.includes('Sewa')" class="hover:bg-slate-50/80 transition-colors">
+                  <td class="px-6 py-4 font-bold bg-slate-50/50 w-1/3 italic" :class="!product ? 'text-transparent bg-slate-200 rounded animate-pulse w-max select-none shrink-0' : 'text-slate-500'">Minimal Sewa</td>
+                  <td class="px-6 py-4 font-bold"><span :class="!product ? 'text-transparent bg-slate-300 rounded animate-pulse select-none shrink-0' : 'text-slate-800'">{{ !product ? 'Memuat..' : ((product?.minimal_sewa || product?.Minimal_Sewa) ? ((product.minimal_sewa || product.Minimal_Sewa) + ' ' + product.Satuan_Minimal_Sewa) : '-') }}</span></td>
+                </tr>
               </tbody>
             </table>
           </div>

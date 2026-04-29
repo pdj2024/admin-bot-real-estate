@@ -160,7 +160,7 @@
         <!-- Rental Price -->
         <div v-if="isLoading || product.Harga_Sewa1 > 0" class="flex flex-col">
           <span class="text-[10px] font-black uppercase tracking-widest mb-0.5" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-16' : 'text-slate-400'">
-            Harga Sewa <span v-if="!isLoading && product.Minimal_Sewa"> (min. {{ product.Minimal_Sewa }} {{ product.Satuan_Minimal_Sewa }})</span>
+            Harga Sewa <span v-if="!isLoading && (product.Minimal_Sewa || product.minimal_sewa)"> (min. {{ product.Minimal_Sewa || product.minimal_sewa }} {{ product.Satuan_Minimal_Sewa }})</span>
           </span>
           <div class="flex flex-wrap items-baseline gap-2">
             <span class="text-xl font-black" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-32 h-6 mt-1' : 'text-slate-900'">

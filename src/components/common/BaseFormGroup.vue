@@ -12,12 +12,12 @@ defineProps<{
 </script>
 
 <template>
-  <div class="field space-y-1.5 h-full flex flex-col">
+  <div class="field space-y-1.5">
     <label v-if="label" class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1 shrink-0">
       {{ label }} <span v-if="required" class="text-red-500">*</span>
     </label>
     
-    <div class="relative group flex-1 flex flex-col">
+    <div :class="['relative group', innerClass]">
       <Icon v-if="icon" :icon="icon" 
             :class="[
               'absolute left-3 text-slate-400 size-4 pointer-events-none group-focus-within:text-primary transition-colors z-10',

@@ -148,8 +148,8 @@ const formatCurrency = (value: number) => {
                   { label: 'Daya Listrik', val: product ? (product.Daya_Listrik?.toLocaleString('id-ID') + ' Watt') : 'Memuat..' },
                   { label: 'Tipe Unit', val: product?.Tipe || 'Memuat..' },
                   { label: 'Sertifikat', val: product?.Jenis_Sertifikat || 'Memuat..' },
-                  { label: 'Minimal Sewa', val: product?.minimal_sewa ? (product.minimal_sewa + ' ' + product.Satuan_Minimal_Sewa) : '-' }
-                ]" :key="info.label" class="hover:bg-slate-50 transition-colors">
+                  { label: 'Minimal Sewa', val: (product?.minimal_sewa || product?.Minimal_Sewa) ? ((product.minimal_sewa || product.Minimal_Sewa) + ' ' + product.Satuan_Minimal_Sewa) : '-', show: !product || product?.Status_Transaksi?.includes('Sewa') }
+                ].filter(item => item.show !== false)" :key="info.label" class="hover:bg-slate-50 transition-colors">
                   <td class="px-6 py-4 font-bold bg-slate-50 w-1/3 text-slate-500">{{ info.label }}</td>
                   <td class="px-6 py-4 font-bold text-slate-800 not-italic">{{ info.val }}</td>
                 </tr>

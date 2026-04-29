@@ -7,8 +7,12 @@ import api from '@/services/axios'
 const props = defineProps<{
   show: boolean
   type: string
+  parentId?: string | null
+  parentName?: string | null
+  contextId?: string | null // NEW: e.g. Id_Kota when creating Prioritas under virtual Area
   editData?: any | null
   allData: any
+  virtual?: boolean // NEW: if true, don't hit API, just emit success with virtual data
 }>()
 
 const emit = defineEmits(['close', 'success'])
@@ -33,27 +37,10 @@ const resetForm = () => {
     id: '',
     nama: '',
     deskripsi: '',
-    parentId: ''
+    parentId: props.parentId || ''
   })
   searchDropdown.value = ''
 }
-
-watch(
-  () => props.editData,
-  (newVal) => {
-    if (newVal) {
-      Object.assign(form, {
-        id: newVal.No_Id || newVal.id,
-        nama: newVal.Nama || newVal.nama,
-        deskripsi: newVal.Deskripsi || newVal.deskripsi || '',
-        parentId: newVal.Id_Kota || newVal.Id_Area || ''
-      })
-    } else {
-      resetForm()
-    }
-  },
-  { immediate: true }
-)
 
 const title = computed(() => {
   const label = props.type.charAt(0).toUpperCase() + props.type.slice(1)
@@ -69,11 +56,31 @@ const parentLabel = computed(() => {
 })
 
 const parentOptions = computed(() => {
+  let list = []
   switch (props.type) {
-    case 'area': return props.allData.kota
-    case 'prioritas': return props.allData.area
-    default: return []
+    case 'area': list = [...props.allData.kota]; break
+    case 'prioritas': list = [...props.allData.area]; break
+    default: list = []; break
   }
+
+  // If we have a parentName/Id passed from outside that is NOT in the list, 
+  // add it as a temporary/virtual option so it shows up in the dropdown
+  if (props.show && (props.parentId || props.parentName)) {
+    const exists = list.some((opt: any) => 
+      (props.parentId && (opt.No_Id === props.parentId || opt.No_Id_Kota === props.parentId || opt.No_Id_Area === props.parentId)) ||
+      (props.parentName && String(opt.Nama || opt.Name || '').toLowerCase() === String(props.parentName).toLowerCase())
+    )
+    
+    if (!exists && props.parentName) {
+      list.push({
+        No_Id: props.parentId || `virtual-${props.parentName}`,
+        Nama: props.parentName,
+        isVirtual: true
+      })
+    }
+  }
+
+  return list
 })
 
 const filteredOptions = computed(() => {
@@ -82,6 +89,66 @@ const filteredOptions = computed(() => {
     opt.Nama.toLowerCase().includes(searchDropdown.value.toLowerCase())
   )
 })
+
+watch(
+  () => props.show,
+  (isShown) => {
+    if (isShown) {
+      if (props.editData) {
+        Object.assign(form, {
+          id: props.editData.No_Id || props.editData.id,
+          nama: props.editData.Nama || props.editData.nama,
+          deskripsi: props.editData.Deskripsi || props.editData.deskripsi || '',
+          parentId: props.editData.Id_Kota || props.editData.Id_Area || ''
+        })
+      } else if (props.parentId || props.parentName) {
+        // Try to match by ID first
+        let match = parentOptions.value.find((opt: any) => 
+          (props.parentId && (opt.No_Id === props.parentId || opt.No_Id_Kota === props.parentId || opt.No_Id_Area === props.parentId))
+        )
+        
+        // Fallback: Match by Name if ID failed or not provided
+        if (!match && props.parentName) {
+          match = parentOptions.value.find((opt: any) => 
+            String(opt.Nama || opt.Name || '').toLowerCase().includes(String(props.parentName).toLowerCase())
+          )
+        }
+        
+        if (match) {
+          form.parentId = match.No_Id || match.No_Id_Kota || match.No_Id_Area
+        } else {
+          form.parentId = props.parentId || ''
+        }
+      } else {
+        resetForm()
+      }
+    }
+  },
+  { immediate: true }
+)
+
+// Add a watch on parentOptions to re-sync if data arrives late
+watch(
+  () => parentOptions.value,
+  (newList) => {
+    if (props.show && (props.parentId || props.parentName) && !form.parentId) {
+       let match = newList.find((opt: any) => 
+          (props.parentId && (opt.No_Id === props.parentId || opt.No_Id_Kota === props.parentId || opt.No_Id_Area === props.parentId))
+       )
+       
+       if (!match && props.parentName) {
+         match = newList.find((opt: any) => 
+           String(opt.Nama || opt.Name || '').toLowerCase().includes(String(props.parentName).toLowerCase())
+         )
+       }
+
+       if (match) {
+         form.parentId = match.No_Id || match.No_Id_Kota || match.No_Id_Area
+       }
+    }
+  },
+  { deep: true }
+)
 
 const updateDropdownStyle = () => {
   if (dropdownRef.value) {
@@ -102,7 +169,7 @@ const toggleDropdown = () => {
 }
 
 const selectOption = (opt: any) => {
-  form.parentId = opt.No_Id
+  form.parentId = opt.No_Id || opt.No_Id_Kota || opt.No_Id_Area
   isDropdownOpen.value = false
   searchDropdown.value = ''
 }
@@ -123,36 +190,100 @@ onBeforeUnmount(() => {
 })
 
 const handleSubmit = async () => {
-  loading.value = true
-  
-  confirm(`Apakah data ${props.type} sudah benar?`, async () => {
-    try {
-      const isEdit = !!props.editData
-      const endpoint = `/api/${props.type}/${isEdit ? 'update' : 'create'}${isEdit ? `?no_id=${form.id}` : ''}`
-      
-      const payload: any = {
-        Name: form.nama,
-        Description: form.deskripsi || null
-      }
+  if (!form.nama) return fail('Nama harus diisi!')
+  if ((props.type === 'area' || props.type === 'prioritas') && !form.parentId) {
+    return fail(`Pilih ${parentLabel.value} terlebih dahulu!`)
+  }
 
-      if (props.type === 'area') payload.Id_Kota = form.parentId || null
-      if (props.type === 'prioritas') payload.Id_Area = form.parentId || null
-
-      const { data } = await api[isEdit ? 'put' : 'post'](endpoint, payload)
-      
-      if (data.StatusCode === 200) {
-        success(isEdit ? 'Berhasil memperbarui data' : 'Berhasil menambah data')
-        emit('success')
-        handleClose()
-      } else {
-        fail(data.Message || 'Gagal menyimpan data')
+  // Auto-prepend city name for direction-only area names
+  if (props.type === 'area') {
+    const directionWords = ['timur', 'utara', 'barat', 'selatan']
+    const trimmedInput = form.nama.trim()
+    if (directionWords.includes(trimmedInput.toLowerCase())) {
+      const selectedParent = parentOptions.value.find((opt: any) => 
+        (opt.No_Id === form.parentId || opt.No_Id_Kota === form.parentId)
+      )
+      if (selectedParent) {
+        // Ambil nama kota sebelum koma (contoh: "Surabaya, Jawa Timur" -> "Surabaya")
+        const cityName = (selectedParent.Nama || selectedParent.Name || '').split(',')[0].trim()
+        form.nama = `${cityName} ${trimmedInput.charAt(0).toUpperCase() + trimmedInput.slice(1).toLowerCase()}`
       }
-    } catch (err: any) {
-      fail(err.response?.data?.Message || 'Terjadi kesalahan sistem')
-    } finally {
-      loading.value = false
     }
-  })
+  }
+
+  loading.value = true
+  try {
+    const isEdit = !!props.editData
+    
+    // If virtual mode is on, just emit and close
+    if (props.virtual && !isEdit) {
+      const virtualItem = {
+        Nama: form.nama,
+        Deskripsi: form.deskripsi,
+        isVirtual: true,
+        No_Id: `virtual-${Date.now()}`,
+        Id_Parent: form.parentId
+      }
+      emit('success', virtualItem)
+      handleClose()
+      return
+    }
+
+    // Handle Virtual Parent Creation
+    // If creating Prioritas and parentId is not a real ID (e.g. "virtual-Utara" or just a name), create the Area first
+    let finalParentId = form.parentId
+    const isVirtualParent = !isEdit && props.type === 'prioritas' && (
+      form.parentId.startsWith('virtual-') || 
+      !props.allData.area.some((a: any) => (a.No_Id === form.parentId || a.No_Id_Area === form.parentId))
+    )
+
+    if (isVirtualParent) {
+      // Find the name from options (it might be our temporary virtual option)
+      const selectedParent = parentOptions.value.find((opt: any) => 
+        (opt.No_Id === form.parentId || opt.No_Id_Area === form.parentId || opt.Nama === form.parentId)
+      )
+      const areaName = selectedParent?.Nama || props.parentName || form.parentId
+      
+      if (!areaName || areaName.startsWith('virtual-')) throw new Error('Nama Area tidak valid untuk pembuatan otomatis')
+      if (!props.contextId) throw new Error('ID Kota diperlukan untuk membuat Area baru')
+
+      const { data: areaData } = await api.post('/api/area/create', {
+        Nama: areaName,
+        Deskripsi: '',
+        Id_Kota: props.contextId
+      })
+
+      if (areaData.StatusCode === 200) {
+        finalParentId = areaData.Data.No_Id || areaData.Data.No_Id_Area
+      } else {
+        throw new Error(areaData.Message || 'Gagal membuat Area induk')
+      }
+    }
+
+    const endpoint = `/api/${props.type}/${isEdit ? 'update' : 'create'}${isEdit ? `?no_id=${form.id}` : ''}`
+    
+    const payload: any = {
+      Nama: form.nama,
+      Deskripsi: form.deskripsi || null
+    }
+
+    if (props.type === 'area') payload.Id_Kota = finalParentId || null
+    if (props.type === 'prioritas') payload.Id_Area = finalParentId || null
+
+    const { data } = await api[isEdit ? 'put' : 'post'](endpoint, payload)
+    
+    if (data.StatusCode === 200) {
+      success(isEdit ? 'Berhasil memperbarui data' : 'Berhasil menambah data')
+      emit('success', data.Data)
+      handleClose()
+    } else {
+      fail(data.Message || 'Gagal menyimpan data')
+    }
+  } catch (err: any) {
+    fail(err.response?.data?.Message || err.message || 'Terjadi kesalahan sistem')
+  } finally {
+    loading.value = false
+  }
 }
 
 const handleClose = () => {
@@ -200,7 +331,7 @@ const handleClose = () => {
               class="form-input-premium flex items-center justify-between group bg-white"
             >
               <span class="truncate" :class="form.parentId ? 'text-slate-700' : 'text-slate-300'">
-                {{ parentOptions.find((opt: any) => opt.No_Id === form.parentId)?.Nama || `Pilih ${parentLabel}...` }}
+                {{ parentOptions.find((opt: any) => opt.No_Id === form.parentId || opt.No_Id_Kota === form.parentId || opt.No_Id_Area === form.parentId || opt.Nama === form.parentId)?.Nama || `Pilih ${parentLabel}...` }}
               </span>
               <Icon icon="lucide:chevron-down" class="size-4 text-slate-400 group-hover:text-bejo-600 transition-transform" :class="isDropdownOpen ? 'rotate-180' : ''" />
             </button>
@@ -217,13 +348,13 @@ const handleClose = () => {
                   <template v-if="filteredOptions.length">
                     <button 
                       v-for="opt in filteredOptions" 
-                      :key="opt.No_Id" 
+                      :key="opt.No_Id || opt.No_Id_Kota || opt.No_Id_Area" 
                       @click="selectOption(opt)" 
                       type="button" 
                       class="group flex items-center justify-between px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:bg-bejo-50 hover:text-bejo-600"
                     >
                       {{ opt.Nama }}
-                      <Icon v-if="form.parentId === opt.No_Id" icon="lucide:check" class="size-4 text-bejo-600" />
+                      <Icon v-if="form.parentId === (opt.No_Id || opt.No_Id_Kota || opt.No_Id_Area)" icon="lucide:check" class="size-4 text-bejo-600" />
                     </button>
                   </template>
                   <div v-else class="flex flex-col items-center justify-center py-8 px-4 text-center">

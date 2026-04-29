@@ -87,7 +87,7 @@ api.interceptors.request.use(async (config) => {
       } else {
          token = await getOrStartRefresh()
       }
-    } catch (err: any) {
+    } catch {
       // Refresh failed proactively
       token = null
     }

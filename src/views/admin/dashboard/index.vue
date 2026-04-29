@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
 import Vertical from '@/layouts/vertical.vue'
 import GreetingsBanner from './components/GreetingsBanner.vue'
 import OperationalSummary from './components/OperationalSummary.vue'
@@ -8,9 +7,6 @@ import ProspectAnalytics from './components/ProspectAnalytics.vue'
 import PropertyDistribution from './components/PropertyDistribution.vue'
 import RecentAppointments from './components/RecentAppointments.vue'
 import AgentPerformance from './components/AgentPerformance.vue'
-import { managementInsights } from './components/data'
-
-const isLoading = ref(false)
 </script>
 
 <template>

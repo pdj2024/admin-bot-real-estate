@@ -48,7 +48,8 @@ const fetchData = async () => {
     const { data } = await api.get('/api/admin/getAll', {
       headers: { 'X-Jenis-User': 'admin' }
     })
-    admins.value = data.Data
+    const currentAdminId = localStorage.getItem('no_id')
+    admins.value = data.Data.filter((adm: Admin) => adm.No_Id !== currentAdminId)
   } catch (err) {
     console.error('Gagal memuat data:', err)
   } finally {

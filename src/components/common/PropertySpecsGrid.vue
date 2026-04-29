@@ -18,12 +18,11 @@ const specs = [
 
 <template>
   <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-    <div
-      v-for="(spec, idx) in specs"
-      :key="idx"
-      v-show="!product || (spec.key !== 'Luas_Tanah' || product.Luas_Tanah > 0)"
-      class="flex flex-col items-center py-4 sm:py-5 rounded-2xl border border-slate-100 hover:bg-slate-50 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-slate-200/50 bg-white"
-    >
+    <template v-for="(spec, idx) in specs" :key="idx">
+      <div
+        v-if="!product || (spec.key !== 'Luas_Tanah' || Number(product.Luas_Tanah) > 0)"
+        class="flex flex-col items-center py-4 sm:py-5 rounded-2xl border border-slate-100 hover:bg-slate-50 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-slate-200/50 bg-white"
+      >
       <div class="p-2.5 sm:p-3 bg-slate-50 rounded-xl mb-2 sm:mb-3 shadow-sm border border-slate-50" :class="!product ? 'bg-slate-200 border-none animate-pulse' : ''">
         <Icon v-if="product" :icon="spec.icon" class="size-5 sm:size-6 text-bejo-600" />
         <div v-else class="size-5 sm:size-6 opacity-0"></div>
@@ -42,5 +41,6 @@ const specs = [
         <template v-else>Memuat..</template>
       </span>
     </div>
+    </template>
   </div>
 </template>

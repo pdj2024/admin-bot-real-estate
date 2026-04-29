@@ -1,37 +1,22 @@
 <script setup lang="ts">
-import { inject, ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { inject, ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { Icon } from '@iconify/vue'
 import BaseFormGroup from '@/components/common/BaseFormGroup.vue'
-import GoogleMapsPicker from '@/components/common/GoogleMapsPicker.vue'
 
 const state = inject<any>('propertyModalState')
 if (!state) {
   throw new Error('TabIdentitasUtama must be used within a component providing propertyModalState')
 }
 
-const {
-  form,
-  previewPhotos,
-  handlePhoto,
-  removePhoto,
-  searchQuery,
-  handleSearchInput,
-  isPredictionsOpen,
-  predictions,
-  selectPrediction,
-  isGeocoding,
-  detectedKota
-} = state
+const { form, previewPhotos, handlePhoto, removePhoto } = state
 
 const scrollContainer = ref<HTMLElement | null>(null)
 
 const dropdownTypeRef = ref<HTMLElement | null>(null)
 const dropdownCertRef = ref<HTMLElement | null>(null)
-const dropdownWilayahRef = ref<HTMLElement | null>(null)
 const menuTypeRef = ref<HTMLElement | null>(null)
 const menuCertRef = ref<HTMLElement | null>(null)
-const menuWilayahRef = ref<HTMLElement | null>(null)
-const dropdownStyles = ref({ type: {}, cert: {}, wilayah: {} })
+const dropdownStyles = ref({ type: {}, cert: {} })
 
 const isTypeOpen = ref(false)
 const searchType = ref('')
@@ -42,19 +27,11 @@ const filteredTypes = computed(() => {
 })
 
 const isCertOpen = ref(false)
-const isWilayahOpen = ref(false)
 
-const cardinalDirections = ['Pusat', 'Utara', 'Timur', 'Selatan', 'Barat']
-const wilayahOptions = computed(() => {
-  const city = detectedKota.value || 'Surabaya'
-  return cardinalDirections.map(dir => `${city} ${dir}`)
-})
-
-const updateDropdownStyles = (type: 'type' | 'cert' | 'wilayah') => {
+const updateDropdownStyles = (type: 'type' | 'cert') => {
   let targetRef = null
   if (type === 'type') targetRef = dropdownTypeRef.value
   else if (type === 'cert') targetRef = dropdownCertRef.value
-  else if (type === 'wilayah') targetRef = dropdownWilayahRef.value
 
   if (targetRef) {
     const rect = (targetRef as any).$el.getBoundingClientRect()
@@ -70,7 +47,6 @@ const toggleType = () => {
   isTypeOpen.value = !isTypeOpen.value
   if (isTypeOpen.value) {
     isCertOpen.value = false
-    isWilayahOpen.value = false
     nextTick(() => updateDropdownStyles('type'))
   }
 }
@@ -79,17 +55,7 @@ const toggleCert = () => {
   isCertOpen.value = !isCertOpen.value
   if (isCertOpen.value) {
     isTypeOpen.value = false
-    isWilayahOpen.value = false
     nextTick(() => updateDropdownStyles('cert'))
-  }
-}
-
-const toggleWilayah = () => {
-  isWilayahOpen.value = !isWilayahOpen.value
-  if (isWilayahOpen.value) {
-    isTypeOpen.value = false
-    isCertOpen.value = false
-    nextTick(() => updateDropdownStyles('wilayah'))
   }
 }
 
@@ -113,27 +79,19 @@ const selectCertificate = (type: string) => {
   isCertOpen.value = false
 }
 
-const selectWilayah = (val: string) => {
-  form.value.Area[1] = val
-  isWilayahOpen.value = false
-}
-
 const onPhotoChange = (event: Event) => {
   handlePhoto(event, scrollContainer.value)
 }
 
 const handleClickOutside = (event: MouseEvent) => {
   const target = event.target as Node
-  
+
   // Check if click is outside trigger AND outside teleported menu
   if (dropdownTypeRef.value && !(dropdownTypeRef.value as any).$el.contains(target) && !menuTypeRef.value?.contains(target)) {
     isTypeOpen.value = false
   }
   if (dropdownCertRef.value && !(dropdownCertRef.value as any).$el.contains(target) && !menuCertRef.value?.contains(target)) {
     isCertOpen.value = false
-  }
-  if (dropdownWilayahRef.value && !(dropdownWilayahRef.value as any).$el.contains(target) && !menuWilayahRef.value?.contains(target)) {
-    isWilayahOpen.value = false
   }
 }
 
@@ -146,7 +104,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch h-full">
     <!-- LEFT COLUMN: STATUS & MEDIA -->
     <div class="space-y-6">
       <div v-if="form.No_Id" class="field">
@@ -234,28 +192,26 @@ onBeforeUnmount(() => {
             </Teleport>
           </BaseFormGroup>
         </div>
-
-        <BaseFormGroup label="NAMA PROPERTI" icon="lucide:home" required>
-          <input v-model="form.Nama_Produk" placeholder="Contoh: The Sapphire Sky Mansion" class="field-input h-11 !pl-11 bg-white border-slate-200" />
-        </BaseFormGroup>
       </div>
     </div>
 
     <!-- RIGHT COLUMN: IDENTITY & DESCRIPTION -->
     <div class="space-y-6 flex flex-col">
+      <BaseFormGroup label="NAMA PROPERTI" icon="lucide:home" required>
+        <input v-model="form.Nama_Produk" placeholder="Contoh: The Sapphire Sky Mansion" class="field-input h-11 !pl-11 bg-white border-slate-200" />
+      </BaseFormGroup>
+      
       <BaseFormGroup label="URL SLUG" icon="lucide:link">
         <div class="field-input !pl-11 h-11 flex items-center bg-slate-50 border-slate-100 cursor-not-allowed group/slug relative overflow-hidden">
           <span class="text-xs font-bold text-slate-400 truncate">{{ form.Slug || 'Otomatis dibuat saat simpan...' }}</span>
           <div class="absolute inset-0 bg-slate-200/5 translate-x-full group-hover/slug:translate-x-0 transition-transform duration-700"></div>
         </div>
       </BaseFormGroup>
-      
-      <BaseFormGroup label="DESKRIPSI PROPERTI" icon="lucide:text-quote" align-icon="top" class="flex-1 min-h-[300px]">
-        <div class="relative h-full">
-          <textarea v-model="form.Keterangan" maxlength="200" class="field-input !pl-11 pt-4 resize-none leading-relaxed h-full bg-white border-slate-200 text-sm font-medium" placeholder="Ceritakan keunggulan dan detail unit ini..."></textarea>
-          <div class="absolute bottom-4 right-4 text-[9px] font-black text-slate-400 bg-white shadow-sm border border-slate-100 px-3 py-1 rounded-full uppercase tracking-widest">
-            {{ form.Keterangan?.length || 0 }} <span class="text-slate-300">/</span> 200
-          </div>
+
+      <BaseFormGroup label="DESKRIPSI PROPERTI" icon="lucide:text-quote" align-icon="top" class="flex-1 flex flex-col" inner-class="h-full flex-1 flex flex-col">
+        <div class="relative flex-1 min-h-[150px] flex flex-col h-full">
+          <textarea v-model="form.Keterangan" maxlength="200" class="field-input flex-1 !pl-11 pt-4 resize-none leading-relaxed bg-white border-slate-200 text-sm font-medium" placeholder="Ceritakan keunggulan dan detail unit ini..."></textarea>
+          <div class="absolute bottom-4 right-4 text-[9px] font-black text-slate-400 bg-white shadow-sm border border-slate-100 px-3 py-1 rounded-full uppercase tracking-widest">{{ form.Keterangan?.length || 0 }} <span class="text-slate-300">/</span> 200</div>
         </div>
       </BaseFormGroup>
     </div>
@@ -265,18 +221,50 @@ onBeforeUnmount(() => {
 <style scoped>
 @reference "@/assets/css/style.css";
 
-.label { @apply block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1; }
-.field { @apply space-y-1.5; }
+.label {
+  @apply block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1;
+}
+.field {
+  @apply space-y-1.5;
+}
 .field-input {
   @apply w-full border border-slate-200 rounded-xl py-2.5 px-4 text-sm bg-card focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none font-bold text-slate-700 placeholder:text-slate-300 placeholder:font-medium;
 }
-.custom-scroll { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
-.custom-scroll::-webkit-scrollbar { height: 4px; width: 4px; }
-.custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 20px; }
-.toggle-box { @apply w-full flex items-center justify-between p-3 border border-slate-200 rounded-xl bg-slate-50/50; }
-.toggle { @apply w-12 h-6 bg-slate-200 rounded-full relative transition-all duration-300; }
-.toggle-active { @apply bg-primary; }
-.toggle-circle { @apply absolute top-1 left-1 size-4 bg-card rounded-full transition-all duration-300 shadow-sm; }
-.scale-in { animation: scale-in 0.2s ease-out; }
-@keyframes scale-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+.custom-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+.custom-scroll::-webkit-scrollbar {
+  height: 4px;
+  width: 4px;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 20px;
+}
+.toggle-box {
+  @apply w-full flex items-center justify-between p-3 border border-slate-200 rounded-xl bg-slate-50/50;
+}
+.toggle {
+  @apply w-12 h-6 bg-slate-200 rounded-full relative transition-all duration-300;
+}
+.toggle-active {
+  @apply bg-primary;
+}
+.toggle-circle {
+  @apply absolute top-1 left-1 size-4 bg-card rounded-full transition-all duration-300 shadow-sm;
+}
+.scale-in {
+  animation: scale-in 0.2s ease-out;
+}
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
 </style>

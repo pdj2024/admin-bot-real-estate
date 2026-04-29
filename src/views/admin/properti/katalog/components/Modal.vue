@@ -43,6 +43,11 @@ onMounted(() => {
   loadGoogleMaps()
   initWilayah()
 })
+
+const handleSaveDraft = async () => {
+  form.value.Status_Display = 'Draft'
+  await modalState.submitForm()
+}
 </script>
 
 <template>
@@ -100,21 +105,33 @@ onMounted(() => {
           </div>
 
           <div class="flex gap-4 items-center">
-            <button v-if="activeTab === 'utama'" @click="activeTab = 'lokasi'" class="px-9 py-3 bg-slate-100 text-slate-600 text-xs font-black rounded-2xl transition-all hover:bg-slate-200 active:scale-95 flex items-center gap-2 group">
-              Lanjut ke Lokasi 
-              <Icon icon="lucide:chevron-right" class="size-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-
-            <button v-else-if="activeTab === 'lokasi'" @click="activeTab = 'spesifikasi'" class="px-9 py-3 bg-slate-100 text-slate-600 text-xs font-black rounded-2xl transition-all hover:bg-slate-200 active:scale-95 flex items-center gap-2 group">
-              Lanjut ke Spesifikasi 
-              <Icon icon="lucide:chevron-right" class="size-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-
-            <button v-else :disabled="isLoading" @click="modalState.submitForm" class="px-10 py-3 bg-primary text-white text-xs font-black rounded-2xl shadow-xl shadow-primary/20 transition-all hover:scale-[1.03] active:scale-95 flex items-center gap-2">
+            <button 
+              v-if="form.Status_Display == 'Aktif'"
+              :disabled="isLoading"
+              @click="handleSaveDraft" 
+              class="px-9 py-3 bg-slate-100 text-slate-600 text-xs font-black rounded-2xl transition-all hover:bg-slate-200 active:scale-95 flex items-center gap-2 group disabled:opacity-50"
+            >
               <Icon v-if="isLoading" icon="lucide:loader-2" class="size-4 animate-spin" />
-              <Icon v-else icon="lucide:save" class="size-4" />
-              {{ isLoading ? 'Sedang Menyimpan...' : (form.No_Id ? 'Simpan Perubahan' : 'Tambah Properti') }}
+              <Icon v-else icon="lucide:archive" class="size-4 group-hover:translate-x-1 transition-transform" />
+              Jadikan Draft 
             </button>
+            <div>
+              <button v-if="activeTab === 'utama'" @click="activeTab = 'lokasi'" class="px-9 py-3 bg-slate-100 text-slate-600 text-xs font-black rounded-2xl transition-all hover:bg-slate-200 active:scale-95 flex items-center gap-2 group">
+                Lanjut ke Lokasi
+                <Icon icon="lucide:chevron-right" class="size-4 group-hover:translate-x-1 transition-transform" />
+              </button>
+
+              <button v-else-if="activeTab === 'lokasi'" @click="activeTab = 'spesifikasi'" class="px-9 py-3 bg-slate-100 text-slate-600 text-xs font-black rounded-2xl transition-all hover:bg-slate-200 active:scale-95 flex items-center gap-2 group">
+                Lanjut ke Spesifikasi
+                <Icon icon="lucide:chevron-right" class="size-4 group-hover:translate-x-1 transition-transform" />
+              </button>
+
+              <button v-else :disabled="isLoading" @click="modalState.submitForm" class="px-10 py-3 bg-primary text-white text-xs font-black rounded-2xl shadow-xl shadow-primary/20 transition-all hover:scale-[1.03] active:scale-95 flex items-center gap-2">
+                <Icon v-if="isLoading" icon="lucide:loader-2" class="size-4 animate-spin" />
+                <Icon v-else icon="lucide:save" class="size-4" />
+                {{ isLoading ? 'Sedang Menyimpan...' : form.No_Id ? 'Simpan Perubahan' : 'Tambah Properti' }}
+              </button>
+            </div>
           </div>
         </div>
       </div>

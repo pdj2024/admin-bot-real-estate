@@ -176,7 +176,7 @@ const handleKeyDown = (e: KeyboardEvent) => {
 
 const formattedArea = computed(() => {
   if (!props.product?.Area?.[0]) return ''
-  const parts = props.product.Area[0].split(',').map(s => s.trim())
+  const parts = props.product.Area[0].split(',').map((s) => s.trim())
   if (parts.length >= 2) {
     return parts.slice(-2).join(', ')
   }
@@ -197,6 +197,12 @@ onUnmounted(() => {
 <template>
   <div class="col-span-1">
     <div class="sticky top-24">
+      <div class="mb-5">
+        <RouterLink to="/properti/katalog" class="inline-flex items-center text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-bejo-600 transition-all group">
+          <Icon icon="lucide:arrow-left" class="size-4 me-2 transition-transform group-hover:-translate-x-1" />
+          Kembali ke Katalog
+        </RouterLink>
+      </div>
 
       <div class="card mb-4 border-none shadow-sm bg-white overflow-hidden rounded-xl">
         <div class="card-body p-4 relative">
@@ -214,15 +220,7 @@ onUnmounted(() => {
 
             <!-- Media Content -->
             <div @click="openLightbox" class="h-full w-full transition-all duration-700 ease-out group-hover:scale-105 will-change-transform transform-gpu relative">
-              <Transition 
-                mode="out-in"
-                enter-active-class="transition duration-500 ease-out"
-                enter-from-class="opacity-0 scale-95"
-                enter-to-class="opacity-100 scale-100"
-                leave-active-class="transition duration-300 ease-in"
-                leave-from-class="opacity-100 scale-100"
-                leave-to-class="opacity-0 scale-95"
-              >
+              <Transition mode="out-in" enter-active-class="transition duration-500 ease-out" enter-from-class="opacity-0 scale-95" enter-to-class="opacity-100 scale-100" leave-active-class="transition duration-300 ease-in" leave-from-class="opacity-100 scale-100" leave-to-class="opacity-0 scale-95">
                 <div :key="currentMediaUrl" class="h-full w-full">
                   <div v-if="isVideoLoading" class="absolute inset-0 flex items-center justify-center bg-slate-50/50 backdrop-blur-sm z-20">
                     <Icon icon="lucide:loader-2" class="size-8 text-bejo-500 animate-spin" />

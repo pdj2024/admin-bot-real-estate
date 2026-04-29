@@ -6,6 +6,8 @@ import Vertical from '@/layouts/vertical.vue'
 import SidebarProduct from './components/SidebarProduct.vue'
 import ProductDetails from './components/ProductDetails.vue'
 
+import { Icon } from '@iconify/vue'
+
 const route = useRoute()
 const slug = route.params.slug
 
@@ -80,9 +82,11 @@ onMounted(async () => {
   <Vertical>
     <div class="p-0 md:p-3 md:pt-1 pb-32 max-w-[1440px] mx-auto w-full">
 
-      <div class="grid lg:grid-cols-3 grid-cols-1 gap-8 items-start">
+      <div class="grid lg:grid-cols-3 grid-cols-1 gap-5">
         <SidebarProduct :product="product" />
-        <ProductDetails :product="product" />
+        <div class="lg:col-span-2 col-span-1 flex flex-col gap-5">
+          <ProductDetails :product="product" class="!col-span-1" />
+        </div>
       </div>
     </div>
   </Vertical>

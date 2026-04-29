@@ -1,4 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import axios from 'axios'
+import { useSettings } from '@/stores/settings'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -87,7 +89,6 @@ const router = createRouter({
       },
       component: () => import('@/views/guest/test2/index.vue')
     },
-
 
     // Role Admin
     {
@@ -217,15 +218,16 @@ const router = createRouter({
         requiresAuth: false
       },
       component: () => import('@/views/errors/NotFoundView.vue')
-    },
+    }
   ]
 })
 
-router.beforeEach((to, from, next) => {
+let isTokenRefreshed = false
+
+router.beforeEach(async (to, from, next) => {
   const token = localStorage.getItem('token')
   const refreshToken = localStorage.getItem('refreshToken')
-  const hasTokens =
-    !!token && token !== 'undefined' && !!refreshToken && refreshToken !== 'undefined'
+  const hasTokens = !!token && token !== 'undefined' && !!refreshToken && refreshToken !== 'undefined'
 
   // PRIORITY 1: Auth check — runs first, unconditionally.
   // Unauthenticated users always go to /login, never to /maintenance.
@@ -233,6 +235,34 @@ router.beforeEach((to, from, next) => {
     if (!hasTokens) {
       return next({ name: 'Login', query: { redirect: to.fullPath } })
     }
+
+    // Refresh token proactively on first load
+    if (!isTokenRefreshed) {
+      isTokenRefreshed = true
+      try {
+        const baseURL = 'https://wabotapi.padajaya.biz.id'
+        const roleUser = localStorage.getItem('role_user') || 'admin'
+
+        const { data } = await axios.post(`${baseURL}/api/auth/refresh`, { refreshToken }, { headers: { 'X-Jenis-User': roleUser } })
+
+        const resData = data.Data || data
+        const newToken = resData.token || resData.Token
+        const newRefresh = resData.refreshToken || resData.RefreshToken
+
+        if (newToken) {
+          localStorage.setItem('token', newToken)
+          if (newRefresh) localStorage.setItem('refreshToken', newRefresh)
+        } else {
+          throw new Error('Invalid Token')
+        }
+      } catch (err) {
+        console.error('Refresh token failed on initial admin access:', err)
+        localStorage.removeItem('token')
+        localStorage.removeItem('refreshToken')
+        return next({ name: 'Login', query: { redirect: to.fullPath } })
+      }
+    }
+
     return next()
   }
 
@@ -249,7 +279,7 @@ router.beforeEach((to, from, next) => {
   if (isMaintenance) {
     const isMaintenancePage = to.name === 'Maintenance'
     const isLoginPage = to.name === 'Login'
-    
+
     // IF user is logged in AND trying to access maintenance page -> Send to Beranda (bypass)
     if (hasTokens && isMaintenancePage) {
       return next({ name: 'Beranda' })

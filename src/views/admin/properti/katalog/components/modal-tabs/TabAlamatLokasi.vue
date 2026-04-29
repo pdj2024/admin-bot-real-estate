@@ -23,10 +23,14 @@ const {
   priorities,
   isWilayahModalOpen,
   wilayahModalType,
+  wilayahModalParentId,
   openWilayahModal: openModal,
+  handleWilayahSuccess,
   fetchCities,
-  fetchAreas,
-  fetchPriorities
+  fetchPriorities,
+  virtualPriorities,
+  virtualCities,
+  virtualAreas: globalVirtualAreas
 } = state
 
 // Dropdown State
@@ -42,20 +46,50 @@ const isKotaOpen = ref(false)
 const isAreaOpen = ref(false)
 const isPrioOpen = ref(false)
 
-const openWilayahModal = (type: string) => {
+const openWilayahModal = (type: 'kota' | 'area' | 'prioritas') => {
   isKotaOpen.value = false
   isAreaOpen.value = false
   isPrioOpen.value = false
-  openModal(type)
+  
+  let parentId = null
+  if (type === 'area') parentId = form.value.Id_Kota
+  if (type === 'prioritas') parentId = form.value.Id_Area  
+  openModal(type, parentId)
 }
 
 const searchKota = ref('')
 const searchArea = ref('')
 const searchPrio = ref('')
 
+const selectedCityName = computed(() => {
+  if (!form.value.Id_Kota) return ''
+  const city = cities.value.find((c: any) => c.No_Id === form.value.Id_Kota || c.No_Id_Kota === form.value.Id_Kota)
+  if (city) return (city.Nama || city.Name || '').split(',')[0].trim()
+  const vCity = virtualCities.value.find((c: any) => c.No_Id === form.value.Id_Kota)
+  return vCity ? (vCity.Nama || vCity.Name || '').split(',')[0].trim() : ''
+})
+
+const cardinalDirections = ['Pusat', 'Utara', 'Timur', 'Selatan', 'Barat']
+const virtualAreas = computed(() => {
+  const city = selectedCityName.value
+  if (!city) return []
+  return cardinalDirections.map(dir => ({
+    Nama: `${city} ${dir}`,
+    isVirtual: true,
+    No_Id: `virtual-${dir}`
+  }))
+})
+
 const filteredCities = computed(() => {
   const list = Array.isArray(cities.value) ? cities.value : []
-  const result = list.filter((c: any) => (c.Nama || c.Name) && (String(c.Nama || c.Name).trim() !== ''))
+  let result = list.filter((c: any) => (c.Nama || c.Name) && (String(c.Nama || c.Name).trim() !== ''))
+  
+  // Add virtual cities
+  const virtuals = virtualCities.value.filter((v: any) => 
+    !result.some(r => (r.Nama || r.Name).toLowerCase() === v.Nama.toLowerCase())
+  )
+  result = [...result, ...virtuals]
+
   if (!searchKota.value) return result
   return result.filter((c: any) => 
     String(c.Nama || c.Name).toLowerCase().includes(searchKota.value.toLowerCase())
@@ -65,9 +99,20 @@ const filteredCities = computed(() => {
 const filteredAreas = computed(() => {
   const list = Array.isArray(areas.value) ? areas.value : []
   let result = list.filter((a: any) => (a.Nama || a.Name) && (String(a.Nama || a.Name).trim() !== ''))
+  
   if (form.value.Id_Kota) {
     result = result.filter((a: any) => a.Id_Kota === form.value.Id_Kota)
+    
+    // Tambahkan area virtual yang belum ada di database
+    const localVirtuals = virtualAreas.value.filter(v => 
+      !result.some(r => (r.Nama || r.Name).toLowerCase() === v.Nama.toLowerCase())
+    )
+    const injectedVirtuals = globalVirtualAreas.value.filter((v: any) => 
+      v.Id_Kota === form.value.Id_Kota && !result.some(r => (r.Nama || r.Name).toLowerCase() === v.Nama.toLowerCase()) && !localVirtuals.some(lv => lv.Nama.toLowerCase() === v.Nama.toLowerCase())
+    )
+    result = [...result, ...localVirtuals, ...injectedVirtuals]
   }
+
   if (!searchArea.value) return result
   return result.filter((a: any) => 
     String(a.Nama || a.Name).toLowerCase().includes(searchArea.value.toLowerCase())
@@ -77,9 +122,15 @@ const filteredAreas = computed(() => {
 const filteredPriorities = computed(() => {
   const list = Array.isArray(priorities.value) ? priorities.value : []
   let result = list.filter((p: any) => (p.Nama || p.Name) && (String(p.Nama || p.Name).trim() !== ''))
+  
   if (form.value.Id_Area) {
     result = result.filter((p: any) => p.Id_Area === form.value.Id_Area)
+    
+    // Add local virtual priorities for this area
+    const virtuals = virtualPriorities.value.filter(v => v.Id_Parent === form.value.Id_Area)
+    result = [...result, ...virtuals]
   }
+
   if (!searchPrio.value) return result
   return result.filter((p: any) => 
     String(p.Nama || p.Name).toLowerCase().includes(searchPrio.value.toLowerCase())
@@ -127,17 +178,26 @@ const togglePrio = () => {
 }
 
 const selectKota = (c: any) => {
-  form.value.Id_Kota = c.No_Id
+  form.value.Id_Kota = c.No_Id || c.No_Id_Kota
+  form.value.Id_Area = ''
+  form.value._isVirtualArea = false
   isKotaOpen.value = false
 }
 
 const selectArea = (a: any) => {
-  form.value.Id_Area = a.No_Id
+  if (a.isVirtual) {
+    form.value.Id_Area = a.Nama
+    form.value._isVirtualArea = true
+  } else {
+    form.value.Id_Area = a.No_Id || a.No_Id_Area
+    form.value._isVirtualArea = false
+  }
+  form.value.Id_Prioritas = ''
   isAreaOpen.value = false
 }
 
 const selectPrio = (p: any) => {
-  form.value.Id_Prioritas = p.No_Id
+  form.value.Id_Prioritas = p.No_Id || p.No_Id_Prioritas
   isPrioOpen.value = false
 }
 
@@ -163,10 +223,10 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start scale-in">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch scale-in h-full">
     <!-- LEFT COLUMN: MAP & SEARCH -->
-    <div class="space-y-6">
-      <div class="flex items-center justify-between mb-1">
+    <div class="space-y-6 flex flex-col h-full">
+      <div class="flex items-center justify-between mb-1 shrink-0">
         <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Peta Properti <span class="text-red-500">*</span></label>
         <label class="flex items-center gap-2 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-primary transition-colors tracking-widest">
           <input type="checkbox" v-model="form.Hide_alamat" class="size-3.5 rounded border-slate-200 text-primary" />
@@ -174,8 +234,8 @@ onBeforeUnmount(() => {
         </label>
       </div>
 
-      <div class="space-y-4">
-        <BaseFormGroup icon="lucide:search">
+      <div class="space-y-4 flex-1 flex flex-col min-h-[400px]">
+        <BaseFormGroup icon="lucide:search" class="shrink-0">
           <input v-model="searchQuery" @input="handleSearchInput" @focus="isPredictionsOpen = predictions.length > 0" placeholder="Cari titik lokasi..." class="field-input h-10 !pl-10" />
           <div v-if="isPredictionsOpen && predictions.length" class="absolute top-full left-0 mt-2 w-full z-[100] bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden scale-in">
             <div class="max-h-60 overflow-y-auto p-2 custom-scroll flex flex-col">
@@ -192,9 +252,7 @@ onBeforeUnmount(() => {
           </div>
         </BaseFormGroup>
 
-        <div class="h-[400px] rounded-2xl overflow-hidden border border-slate-100 shadow-inner">
-          <GoogleMapsPicker />
-        </div>
+        <GoogleMapsPicker class="flex-1" />
       </div>
     </div>
 
@@ -205,7 +263,7 @@ onBeforeUnmount(() => {
           <button @click="toggleKota" type="button" class="field-input h-10 !pl-9 flex items-center justify-between group">
             <span class="text-xs font-bold truncate pr-2" :class="form.Id_Kota ? 'text-slate-700' : 'text-slate-300'">
               <template v-if="form.Id_Kota">
-                {{ cities.find(c => c.No_Id === form.Id_Kota)?.Nama || cities.find(c => c.No_Id === form.Id_Kota)?.Name || 'Pilih Kota' }}
+                {{ selectedCityName || 'Pilih Kota' }}
               </template>
               <template v-else>Pilih Kota</template>
             </span>
@@ -223,7 +281,7 @@ onBeforeUnmount(() => {
                 <template v-if="filteredCities.length">
                   <button v-for="c in filteredCities" :key="c.No_Id" @click="selectKota(c)" type="button" class="group flex items-center justify-between px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:bg-bejo-50 hover:text-bejo-600">
                     {{ c.Nama || c.Name }}
-                    <Icon v-if="form.Id_Kota && form.Id_Kota === c.No_Id" icon="lucide:check" class="size-4 text-bejo-600" />
+                    <Icon v-if="form.Id_Kota && (form.Id_Kota === c.No_Id || form.Id_Kota === c.No_Id_Kota)" icon="lucide:check" class="size-4 text-bejo-600" />
                   </button>
                 </template>
                 <div v-else class="flex flex-col items-center justify-center py-8 px-4 text-center">
@@ -245,7 +303,9 @@ onBeforeUnmount(() => {
           <button @click="toggleArea" type="button" class="field-input h-10 !pl-9 flex items-center justify-between group bg-white border-slate-200" :disabled="!form.Id_Kota" :class="{ 'cursor-not-allowed bg-slate-50 border-slate-100': !form.Id_Kota }">
             <span class="text-xs font-bold truncate pr-2" :class="form.Id_Area ? 'text-slate-700' : 'text-slate-300'">
               <template v-if="form.Id_Area">
-                {{ areas.find(a => a.No_Id === form.Id_Area)?.Nama || areas.find(a => a.No_Id === form.Id_Area)?.Name || 'Pilih Area' }}
+                {{ filteredAreas.find(a => a.No_Id === form.Id_Area || a.No_Id_Area === form.Id_Area)?.Nama || 
+                   filteredAreas.find(a => a.No_Id === form.Id_Area || a.No_Id_Area === form.Id_Area)?.Name || 
+                   (form._isVirtualArea ? form.Id_Area : 'Pilih Area') }}
               </template>
               <template v-else>Pilih Area</template>
             </span>
@@ -263,9 +323,9 @@ onBeforeUnmount(() => {
               </div>
               <div class="max-h-48 overflow-y-auto p-2 custom-scroll flex flex-col">
                 <template v-if="filteredAreas.length">
-                  <button v-for="a in filteredAreas" :key="a.No_Id" @click="selectArea(a)" type="button" class="group flex items-center justify-between px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:bg-bejo-50 hover:text-bejo-600">
+                  <button v-for="a in filteredAreas" :key="a.No_Id || a.No_Id_Area" @click="selectArea(a)" type="button" class="group flex items-center justify-between px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:bg-bejo-50 hover:text-bejo-600">
                     {{ a.Nama || a.Name }}
-                    <Icon v-if="form.Id_Area && form.Id_Area === a.No_Id" icon="lucide:check" class="size-4 text-bejo-600" />
+                    <Icon v-if="form.Id_Area && (form.Id_Area === a.No_Id || form.Id_Area === a.No_Id_Area || (a.isVirtual && form.Id_Area === a.Nama))" icon="lucide:check" class="size-4 text-bejo-600" />
                   </button>
                 </template>
                 <div v-else class="flex flex-col items-center justify-center py-8 px-4 text-center">
@@ -305,7 +365,9 @@ onBeforeUnmount(() => {
         <button @click="togglePrio" type="button" class="field-input h-10 !pl-9 flex items-center justify-between group bg-white border-slate-200" :disabled="!form.Id_Area" :class="{ 'cursor-not-allowed bg-slate-50 border-slate-100': !form.Id_Area }">
           <span class="text-xs font-bold truncate pr-2" :class="form.Id_Prioritas ? 'text-slate-700' : 'text-slate-300'">
             <template v-if="form.Id_Prioritas">
-              {{ priorities.find(p => p.No_Id === form.Id_Prioritas)?.Nama || priorities.find(p => p.No_Id === form.Id_Prioritas)?.Name || 'Pilih Kawasan' }}
+              {{ filteredPriorities.find(p => p.No_Id === form.Id_Prioritas || p.No_Id_Prioritas === form.Id_Prioritas)?.Nama || 
+                 filteredPriorities.find(p => p.No_Id === form.Id_Prioritas || p.No_Id_Prioritas === form.Id_Prioritas)?.Name || 
+                 'Pilih Kawasan' }}
             </template>
             <template v-else>Pilih Kawasan</template>
           </span>
@@ -321,10 +383,10 @@ onBeforeUnmount(() => {
             </div>
             <div class="max-h-48 overflow-y-auto p-2 custom-scroll flex flex-col">
               <template v-if="filteredPriorities.length">
-                <button v-for="p in filteredPriorities" :key="p.No_Id" @click="selectPrio(p)" type="button" class="group flex items-center justify-between px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:bg-bejo-50 hover:text-bejo-600">
-                  {{ p.Nama || p.Name }}
-                  <Icon v-if="form.Id_Prioritas && form.Id_Prioritas === p.No_Id" icon="lucide:check" class="size-4 text-bejo-600" />
-                </button>
+                  <button v-for="p in filteredPriorities" :key="p.No_Id || p.No_Id_Prioritas" @click="selectPrio(p)" type="button" class="group flex items-center justify-between px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:bg-bejo-50 hover:text-bejo-600">
+                    {{ p.Nama || p.Name }}
+                    <Icon v-if="form.Id_Prioritas && (form.Id_Prioritas === p.No_Id || form.Id_Prioritas === p.No_Id_Prioritas || (p.isVirtual && form.Id_Prioritas === p.Nama))" icon="lucide:check" class="size-4 text-bejo-600" />
+                  </button>
               </template>
               <div v-else class="flex flex-col items-center justify-center py-8 px-4 text-center">
                 <Icon icon="lucide:star-off" class="size-8 text-slate-200 mb-2" />
@@ -350,13 +412,13 @@ onBeforeUnmount(() => {
     <WilayahModal 
       :show="isWilayahModalOpen"
       :type="wilayahModalType"
+      :parentId="wilayahModalParentId"
+      :parentName="wilayahModalType === 'area' ? selectedCityName : (areas.find(a => a.No_Id === form.Id_Area || a.No_Id_Area === form.Id_Area)?.Nama || form.Id_Area)"
+      :contextId="form.Id_Kota"
       :allData="{ kota: cities, area: areas }"
+      :virtual="true"
       @close="isWilayahModalOpen = false"
-      @success="() => {
-        if (wilayahModalType === 'kota') fetchCities()
-        else if (wilayahModalType === 'area') fetchAreas()
-        else if (wilayahModalType === 'prioritas') fetchPriorities()
-      }"
+      @success="handleWilayahSuccess"
     />
   </div>
 </template>

@@ -21,6 +21,7 @@ const sorting = ref<SortingState>([])
 const selectedSort = ref('Terbaru')
 const typeFilter = ref('Semua')
 const isTypeOpen = ref(false)
+const isLoading = ref(true)
 
 const props = defineProps<{
   searchQuery: string
@@ -115,6 +116,18 @@ const filteredProducts = usePropertyFilters(
   computed(() => true) // isAdmin is true here
 )
 
+const isAnyFilterActive = computed(() => {
+  const isSearchActive = !!props.searchQuery?.trim()
+  const isTransactionActive = transactionFilter.value !== 'Semua'
+  const isTypeActive = typeFilter.value !== 'Semua'
+  
+  const isFacilitiesActive = !!props.facilities && Object.values(props.facilities).some(v => !!v)
+  const isRegionActive = !!props.region && (!!props.region.province || !!props.region.city || !!props.region.provinceId)
+  const isPriceActive = !!props.priceRange && (!!props.priceRange.min || !!props.priceRange.max)
+  
+  return isSearchActive || isTransactionActive || isTypeActive || isFacilitiesActive || isRegionActive || isPriceActive
+})
+
 const table = useVueTable({
   get data() {
     return filteredProducts.value
@@ -153,6 +166,7 @@ watch([() => props.searchQuery, transactionFilter, typeFilter, () => props.facil
 }, { deep: true })
 
 const fetchData = async () => {
+  isLoading.value = true
   try {
     const { data } = await api.get('/api/realEstate/getAll', {
       headers: { 'X-Jenis-User': 'admin' }
@@ -166,6 +180,8 @@ const fetchData = async () => {
     } else {
       fail('Gagal mengambil data properti.')
     }
+  } finally {
+    isLoading.value = false
   }
 }
 
@@ -263,6 +279,19 @@ const emit = defineEmits<{
   (e: 'update:priceRange', value: any): void
 }>()
 
+const handlePageChange = async (action: 'prev' | 'next' | number) => {
+  isLoading.value = true
+  await new Promise(resolve => setTimeout(resolve, 300))
+  if (action === 'prev') {
+    table.previousPage()
+  } else if (action === 'next') {
+    table.nextPage()
+  } else if (typeof action === 'number') {
+    table.setPageIndex(action)
+  }
+  isLoading.value = false
+}
+
 const handleReset = () => {
   emit('resetFilter')
 }
@@ -327,13 +356,13 @@ defineExpose({ openAddModal })
         </div>
 
         <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-sm sm:flex-none flex-1 justify-center">
-          <button @click="table.previousPage()" :disabled="!table.getCanPreviousPage()" class="p-1 px-2 text-[10px] font-black text-slate-500 hover:text-bejo-600 disabled:opacity-30 transition-colors hover:bg-slate-50 rounded-lg uppercase tracking-wider">
+          <button @click="handlePageChange('prev')" :disabled="!table.getCanPreviousPage()" class="p-1 px-2 text-[10px] font-black text-slate-500 hover:text-bejo-600 disabled:opacity-30 transition-colors hover:bg-slate-50 rounded-lg uppercase tracking-wider">
             Prev
           </button>
           <div class="px-2 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap border-x border-slate-100">
             {{ table.getState().pagination.pageIndex + 1 }} / {{ table.getPageCount() }}
           </div>
-          <button @click="table.nextPage()" :disabled="!table.getCanNextPage()" class="p-1 px-2 text-[10px] font-black text-slate-500 hover:text-bejo-600 disabled:opacity-30 transition-colors hover:bg-slate-50 rounded-lg uppercase tracking-wider">
+          <button @click="handlePageChange('next')" :disabled="!table.getCanNextPage()" class="p-1 px-2 text-[10px] font-black text-slate-500 hover:text-bejo-600 disabled:opacity-30 transition-colors hover:bg-slate-50 rounded-lg uppercase tracking-wider">
             Next
           </button>
         </div>
@@ -345,7 +374,11 @@ defineExpose({ openAddModal })
       </div>
     </div>
 
-    <div v-if="table.getFilteredRowModel().rows.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-6">
+    <div v-if="isLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-6">
+      <ProductCard v-for="i in 15" :key="i" :product="{}" is-loading />
+    </div>
+
+    <div v-else-if="table.getFilteredRowModel().rows.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-6">
       <ProductCard 
         v-for="row in table.getRowModel().rows" 
         :key="row.id" 
@@ -367,6 +400,7 @@ defineExpose({ openAddModal })
       <h3 class="text-xl font-black text-slate-900 mb-2">Properti Tidak Ditemukan</h3>
       <p class="text-slate-500 text-sm max-w-sm mb-8 font-medium">Maaf, kami tidak menemukan properti yang sesuai dengan kriteria filter Anda. Silakan coba hapus beberapa filter atau gunakan kata kunci lain.</p>
       <button 
+        v-if="isAnyFilterActive"
         @click="handleReset"
         class="px-8 py-3 bg-[#ca6d2c] hover:bg-[#b05d24] text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-[#ca6d2c]/20 active:scale-95 flex items-center gap-2"
       >
@@ -381,11 +415,11 @@ defineExpose({ openAddModal })
       </p>
 
       <nav class="flex items-center gap-1">
-        <button @click="table.previousPage()" :disabled="!table.getCanPreviousPage()" class="btn-pagination">Prev</button>
-        <button v-for="n in table.getPageCount()" :key="n" @click="table.setPageIndex(n - 1)" class="btn-pagination-num" :class="table.getState().pagination.pageIndex === n - 1 ? 'active' : ''">
+        <button @click="handlePageChange('prev')" :disabled="!table.getCanPreviousPage()" class="btn-pagination">Prev</button>
+        <button v-for="n in table.getPageCount()" :key="n" @click="handlePageChange(n - 1)" class="btn-pagination-num" :class="table.getState().pagination.pageIndex === n - 1 ? 'active' : ''">
           {{ n }}
         </button>
-        <button @click="table.nextPage()" :disabled="!table.getCanNextPage()" class="btn-pagination">Next</button>
+        <button @click="handlePageChange('next')" :disabled="!table.getCanNextPage()" class="btn-pagination">Next</button>
       </nav>
     </div>
 

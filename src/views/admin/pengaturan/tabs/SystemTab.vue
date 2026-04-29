@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useSettings } from '@/stores/settings'
 import { success, fail } from '@/utils/sweet-alert'
@@ -12,9 +12,13 @@ const isProcessing = ref(false)
 const wahaStatus = ref<any>(null)
 const qrImage = ref<string | null>(null)
 const isFetchingStatus = ref(false)
-const isLoggingIn = ref(false)
 const isLoggingOut = ref(false)
 let statusInterval: any = null
+
+const isGatewayActive = computed(() => {
+  const s = wahaStatus.value?.status?.toUpperCase()
+  return s === 'WORKING' || s === 'SCAN_QR_CODE' || s === 'STARTING'
+})
 
 const fetchWahaStatus = async () => {
   try {
@@ -24,8 +28,13 @@ const fetchWahaStatus = async () => {
     })
     if (data.Success) {
       wahaStatus.value = data.Data
-      // If working and we had a QR, clear it
-      if (data.Data.status === 'WORKING') {
+      const status = data.Data.status?.toUpperCase()
+      
+      if (status === 'WORKING') {
+        qrImage.value = null
+      } else if (status === 'SCAN_QR_CODE') {
+        fetchQrCode()
+      } else {
         qrImage.value = null
       }
     }
@@ -33,6 +42,19 @@ const fetchWahaStatus = async () => {
     console.error('Fetch WA status error:', err)
   } finally {
     isFetchingStatus.value = false
+  }
+}
+
+const fetchQrCode = async () => {
+  try {
+    const { data } = await api.get('/api/waha/qr', {
+      headers: { 'X-Jenis-User': 'Admin' }
+    })
+    if (data.Success && data.Data) {
+      qrImage.value = `data:${data.Data.mimetype};base64,${data.Data.data}`
+    }
+  } catch (err) {
+    console.error('Fetch WA QR error:', err)
   }
 }
 
@@ -45,7 +67,7 @@ const handleToggleMaintenance = async () => {
     settingsStore.saveApp()
     const status = settingsStore.app.isMaintenance ? 'DIPERBAIKI' : 'AKTIF'
     success(`Status sistem sekarang: ${status}`)
-  } catch (err) {
+  } catch {
     settingsStore.app.isMaintenance = !settingsStore.app.isMaintenance
     fail('Gagal memperbarui status perbaikan')
   } finally {
@@ -75,12 +97,18 @@ const handleToggleBot = async () => {
 }
 
 const handleToggleGateway = async () => {
-  const isCurrentlyRunning = wahaStatus.value?.status === 'WORKING' || wahaStatus.value?.status === 'SCAN_QR_CODE'
-  const targetState = !isCurrentlyRunning
+  const targetState = !isGatewayActive.value
   
   try {
     isProcessing.value = true
-    const endpoint = targetState ? '/api/waha/start' : '/api/waha/stop'
+    let endpoint = ''
+    if (targetState) {
+      const status = wahaStatus.value?.status?.toUpperCase()
+      endpoint = status === 'FAILED' ? '/api/waha/restart' : '/api/waha/start'
+    } else {
+      endpoint = '/api/waha/stop'
+    }
+    
     const { data } = await api.post(endpoint, {}, {
       headers: { 'X-Jenis-User': 'Admin' }
     })
@@ -100,36 +128,10 @@ const handleToggleGateway = async () => {
   }
 }
 
-const handleWahaLogin = async () => {
-  try {
-    isLoggingIn.value = true
-    const response = await api.get('/api/waha/qr-image', {
-      headers: { 'X-Jenis-User': 'Admin' },
-      responseType: 'blob'
-    })
-    
-    if (qrImage.value) {
-      URL.revokeObjectURL(qrImage.value)
-    }
-    
-    const blob = new Blob([response.data], { type: 'image/png' })
-    qrImage.value = URL.createObjectURL(blob)
-    
-    if (!statusInterval) {
-      statusInterval = setInterval(fetchWahaStatus, 5000)
-    }
-  } catch (err) {
-    console.error('WA login error:', err)
-    fail('Gagal mengambil QR Code')
-  } finally {
-    isLoggingIn.value = false
-  }
-}
-
 const handleWahaLogout = async () => {
   try {
     isLoggingOut.value = true
-    const { data } = await api.get('/api/waha/logout', {
+    const { data } = await api.post('/api/waha/logout', {
       headers: { 'X-Jenis-User': 'Admin' }
     })
     if (data.Success) {
@@ -162,6 +164,120 @@ onUnmounted(() => {
     </div>
 
     <div class="px-8 pb-8 space-y-8">
+      <!-- WA Gateway Card -->
+      <div 
+        class="p-6 rounded-[2rem] border-2 transition-all duration-500"
+        :class="isGatewayActive ? 'bg-bejo-50 border-bejo-200' : 'bg-slate-50 border-slate-100'"
+      >
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div class="flex gap-5">
+            <div 
+              class="size-14 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transition-transform duration-500"
+              :class="isGatewayActive ? 'bg-bejo-600 text-white shadow-bejo-200' : 'bg-white text-slate-400 border border-slate-100'"
+            >
+              <Icon icon="lucide:radio" class="size-7" :class="{ 'animate-pulse': wahaStatus?.status === 'WORKING' }" />
+            </div>
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <h5 class="text-lg font-black text-slate-900">WhatsApp Gateway</h5>
+                <span 
+                  class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest"
+                  :class="wahaStatus?.status === 'WORKING' ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'"
+                >
+                  {{ wahaStatus?.status === 'WORKING' ? 'Online' : 'Offline' }}
+                </span>
+              </div>
+              <p class="text-sm text-slate-500 font-medium leading-relaxed max-w-md">
+                Layanan penghubung sistem dengan server WhatsApp (WAHA Service).
+              </p>
+            </div>
+          </div>
+          
+          <label class="relative inline-flex items-center cursor-pointer group" :class="{ 'opacity-50 pointer-events-none': isProcessing }">
+            <input 
+              type="checkbox" 
+              :checked="isGatewayActive"
+              @change="handleToggleGateway"
+              class="sr-only peer" 
+            />
+            <div class="w-20 h-10 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:start-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-8 after:w-9 after:transition-all peer-checked:bg-bejo-600 shadow-inner group-hover:scale-105 transition-transform"></div>
+            <div v-if="isProcessing" class="absolute inset-0 flex items-center justify-center">
+               <Icon icon="lucide:loader-2" class="size-5 animate-spin text-white z-10" />
+            </div>
+          </label>
+        </div>
+
+        <!-- Connection Detail (QR/Session) -->
+        <Transition enter-active-class="transition duration-500 ease-out" enter-from-class="opacity-0 translate-y-4" enter-to-class="opacity-100 translate-y-0">
+          <div v-if="isGatewayActive || qrImage" class="mt-8 pt-8 border-t border-slate-100/50">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <!-- Left: QR/Status -->
+              <div class="space-y-6">
+                <div v-if="wahaStatus?.status === 'WORKING'" class="flex items-center gap-4 p-4 bg-white rounded-2xl border border-slate-100">
+                  <div class="size-12 rounded-xl bg-emerald-50 flex items-center justify-center">
+                    <Icon icon="lucide:user-check" class="size-6 text-emerald-600" />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <h6 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Sesi Aktif</h6>
+                    <p class="text-sm font-black text-slate-800 truncate">{{ wahaStatus.me?.pushName || 'WhatsApp Bot' }}</p>
+                    <p class="text-[11px] font-bold text-slate-500 mt-0.5">{{ wahaStatus.me?.id?.split('@')[0] }}</p>
+                  </div>
+                  <button 
+                    @click="handleWahaLogout" 
+                    :disabled="isLoggingOut"
+                    class="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-red-100 transition-all flex items-center gap-2"
+                  >
+                    <Icon v-if="isLoggingOut" icon="lucide:loader-2" class="animate-spin size-3" />
+                    Logout
+                  </button>
+                </div>
+
+                <div v-else class="flex flex-col items-center justify-center py-4 bg-white rounded-3xl border border-slate-100 shadow-sm">
+                  <div v-if="qrImage" class="space-y-4 flex flex-col items-center">
+                    <div class="relative p-4 bg-white border border-slate-100 rounded-3xl shadow-xl">
+                      <img :src="qrImage" alt="WA QR Code" class="size-48" />
+                      <div v-if="isFetchingStatus" class="absolute inset-0 bg-white/80 flex items-center justify-center backdrop-blur-[1px]">
+                        <Icon icon="lucide:loader-2" class="size-8 animate-spin text-bejo-600" />
+                      </div>
+                    </div>
+                    <div class="text-center px-4">
+                      <p class="text-sm font-black text-slate-800">Scan QR Code</p>
+                      <p class="text-[10px] text-slate-500 font-bold mt-1 max-w-[200px]">Buka WhatsApp > Perangkat Tertaut > Tautkan Perangkat</p>
+                    </div>
+                  </div>
+                  <div v-else class="py-8 flex flex-col items-center">
+                    <div class="size-16 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-300 mb-4 border border-slate-100">
+                      <Icon icon="lucide:loader-2" class="size-8 animate-spin" />
+                    </div>
+                    <p class="text-sm font-black text-slate-800">Menyiapkan QR Code...</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right: Info -->
+              <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm relative overflow-hidden group">
+                <div class="absolute -right-4 -top-4 size-24 bg-bejo-50 rounded-full blur-2xl group-hover:bg-bejo-100 transition-colors"></div>
+                <div class="relative">
+                  <h6 class="text-xs font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <Icon icon="lucide:zap" class="size-4 text-amber-500" />
+                    Keunggulan Gateway
+                  </h6>
+                  <ul class="space-y-3">
+                    <li v-for="(item, i) in ['Respon Katalog Otomatis', 'Notifikasi Chat ke Admin', 'Auto-sinkronisasi Kontak']" :key="i" class="flex items-center gap-2">
+                      <Icon icon="lucide:check-circle-2" class="size-3.5 text-emerald-500" />
+                      <span class="text-[11px] font-bold text-slate-600">{{ item }}</span>
+                    </li>
+                  </ul>
+                  <p class="mt-4 text-[10px] text-slate-400 font-medium leading-relaxed italic">
+                    * Pastikan nomor WA Anda memiliki koneksi internet yang stabil untuk menjaga status "Online".
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Transition>
+      </div>
+
       <!-- Bot Automation Card -->
       <div 
         class="p-6 rounded-[2rem] border-2 transition-all duration-500"
@@ -193,127 +309,6 @@ onUnmounted(() => {
             <div class="w-20 h-10 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:start-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-8 after:w-9 after:transition-all peer-checked:bg-emerald-600 shadow-inner group-hover:scale-105 transition-transform"></div>
           </label>
         </div>
-      </div>
-
-      <!-- WA Gateway Card -->
-      <div 
-        class="p-6 rounded-[2rem] border-2 transition-all duration-500"
-        :class="(wahaStatus?.status === 'WORKING' || wahaStatus?.status === 'SCAN_QR_CODE') ? 'bg-bejo-50 border-bejo-200' : 'bg-slate-50 border-slate-100'"
-      >
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div class="flex gap-5">
-            <div 
-              class="size-14 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transition-transform duration-500"
-              :class="(wahaStatus?.status === 'WORKING' || wahaStatus?.status === 'SCAN_QR_CODE') ? 'bg-bejo-600 text-white shadow-bejo-200' : 'bg-white text-slate-400 border border-slate-100'"
-            >
-              <Icon icon="lucide:radio" class="size-7" :class="{ 'animate-pulse': wahaStatus?.status === 'WORKING' }" />
-            </div>
-            <div>
-              <div class="flex items-center gap-2 mb-1">
-                <h5 class="text-lg font-black text-slate-900">WhatsApp Gateway</h5>
-                <span 
-                  class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest"
-                  :class="wahaStatus?.status === 'WORKING' ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'"
-                >
-                  {{ wahaStatus?.status === 'WORKING' ? 'Online' : 'Offline' }}
-                </span>
-              </div>
-              <p class="text-sm text-slate-500 font-medium leading-relaxed max-w-md">
-                Layanan penghubung sistem dengan server WhatsApp (WAHA Service).
-              </p>
-            </div>
-          </div>
-          
-          <label class="relative inline-flex items-center cursor-pointer group" :class="{ 'opacity-50 pointer-events-none': isProcessing }">
-            <input 
-              type="checkbox" 
-              :checked="wahaStatus?.status === 'WORKING' || wahaStatus?.status === 'SCAN_QR_CODE'"
-              @change="handleToggleGateway"
-              class="sr-only peer" 
-            />
-            <div class="w-20 h-10 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:start-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-8 after:w-9 after:transition-all peer-checked:bg-bejo-600 shadow-inner group-hover:scale-105 transition-transform"></div>
-            <div v-if="isProcessing" class="absolute inset-0 flex items-center justify-center">
-               <Icon icon="lucide:loader-2" class="size-5 animate-spin text-white z-10" />
-            </div>
-          </label>
-        </div>
-
-        <!-- Connection Detail (QR/Session) -->
-        <Transition enter-active-class="transition duration-500 ease-out" enter-from-class="opacity-0 translate-y-4" enter-to-class="opacity-100 translate-y-0">
-          <div v-if="wahaStatus?.status === 'WORKING' || wahaStatus?.status === 'SCAN_QR_CODE' || qrImage" class="mt-8 pt-8 border-t border-slate-100/50">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <!-- Left: QR/Status -->
-              <div class="space-y-6">
-                <div v-if="wahaStatus?.status === 'WORKING'" class="flex items-center gap-4 p-4 bg-white rounded-2xl border border-slate-100">
-                  <div class="size-12 rounded-xl bg-emerald-50 flex items-center justify-center">
-                    <Icon icon="lucide:user-check" class="size-6 text-emerald-600" />
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <h6 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Sesi Aktif</h6>
-                    <p class="text-sm font-black text-slate-800 truncate">{{ wahaStatus.me?.pushName || 'WhatsApp Bot' }}</p>
-                    <p class="text-[11px] font-bold text-slate-500 mt-0.5">{{ wahaStatus.me?.id?.split('@')[0] }}</p>
-                  </div>
-                  <button 
-                    @click="handleWahaLogout" 
-                    :disabled="isLoggingOut"
-                    class="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-red-100 transition-all flex items-center gap-2"
-                  >
-                    <Icon v-if="isLoggingOut" icon="lucide:loader-2" class="animate-spin size-3" />
-                    Logout
-                  </button>
-                </div>
-
-                <div v-else-if="wahaStatus?.status === 'SCAN_QR_CODE' || !wahaStatus" class="flex flex-col items-center justify-center py-4 bg-white rounded-3xl border border-slate-100 shadow-sm">
-                  <div v-if="qrImage" class="space-y-4 flex flex-col items-center">
-                    <div class="relative p-4 bg-white border border-slate-100 rounded-3xl shadow-xl">
-                      <img :src="qrImage" alt="WA QR Code" class="size-48" />
-                      <div v-if="isFetchingStatus" class="absolute inset-0 bg-white/80 flex items-center justify-center backdrop-blur-[1px]">
-                        <Icon icon="lucide:loader-2" class="size-8 animate-spin text-bejo-600" />
-                      </div>
-                    </div>
-                    <div class="text-center px-4">
-                      <p class="text-sm font-black text-slate-800">Scan QR Code</p>
-                      <p class="text-[10px] text-slate-500 font-bold mt-1 max-w-[200px]">Buka WhatsApp > Perangkat Tertaut > Tautkan Perangkat</p>
-                    </div>
-                  </div>
-                  <div v-else class="py-8 flex flex-col items-center">
-                    <div class="size-16 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-300 mb-4 border border-slate-100">
-                      <Icon icon="lucide:qr-code" class="size-8" />
-                    </div>
-                    <button 
-                      @click="handleWahaLogin" 
-                      :disabled="isLoggingIn"
-                      class="px-8 py-3 bg-bejo-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-bejo-600/20 hover:bg-bejo-700 transition-all flex items-center gap-2"
-                    >
-                      <Icon v-if="isLoggingIn" icon="lucide:loader-2" class="animate-spin size-3" />
-                      Login WhatsApp
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Right: Info -->
-              <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm relative overflow-hidden group">
-                <div class="absolute -right-4 -top-4 size-24 bg-bejo-50 rounded-full blur-2xl group-hover:bg-bejo-100 transition-colors"></div>
-                <div class="relative">
-                  <h6 class="text-xs font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2">
-                    <Icon icon="lucide:zap" class="size-4 text-amber-500" />
-                    Keunggulan Gateway
-                  </h6>
-                  <ul class="space-y-3">
-                    <li v-for="(item, i) in ['Respon Katalog Otomatis', 'Notifikasi Chat ke Admin', 'Auto-sinkronisasi Kontak']" :key="i" class="flex items-center gap-2">
-                      <Icon icon="lucide:check-circle-2" class="size-3.5 text-emerald-500" />
-                      <span class="text-[11px] font-bold text-slate-600">{{ item }}</span>
-                    </li>
-                  </ul>
-                  <p class="mt-4 text-[10px] text-slate-400 font-medium leading-relaxed italic">
-                    * Pastikan nomor WA Anda memiliki koneksi internet yang stabil untuk menjaga status "Online".
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Transition>
       </div>
 
       <!-- Maintenance Mode Card -->

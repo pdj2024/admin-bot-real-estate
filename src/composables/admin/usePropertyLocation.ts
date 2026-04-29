@@ -105,7 +105,17 @@ export function usePropertyLocation(form: any, deps?: { cities: any, createCity:
         // Automatically create city if not found
         const newId = await deps.createCity(targetCityFull)
         if (newId) {
+          // After creation, update Id_Kota
           form.value.Id_Kota = newId
+          
+          // Double check match in the now-updated list to be safe
+          const updatedList = Array.isArray(deps.cities) ? deps.cities : (deps.cities?.value || [])
+          const doubleCheck = updatedList.find((c: any) => 
+            (c.No_Id === newId || c.No_Id_Kota === newId)
+          )
+          if (doubleCheck) {
+             form.value.Id_Kota = doubleCheck.No_Id || doubleCheck.No_Id_Kota
+          }
         }
       }
     }

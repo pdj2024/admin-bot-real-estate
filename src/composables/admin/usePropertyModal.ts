@@ -56,6 +56,7 @@ export interface RealEstateForm {
   Id_Kota: string
   Id_Area: string
   Id_Prioritas: string
+  _isVirtualArea?: boolean
 }
 
 export function usePropertyModal(emit: any, handleCloseFn: () => void) {
@@ -68,13 +69,18 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
   const cities = ref<any[]>([])
   const areas = ref<any[]>([])
   const priorities = ref<any[]>([])
+  const virtualCities = ref<any[]>([])
+  const virtualAreas = ref<any[]>([])
+  const virtualPriorities = ref<any[]>([])
+  const wilayahModalParentId = ref('')
 
   // Wilayah Modal State
   const isWilayahModalOpen = ref(false)
   const wilayahModalType = ref('kota')
 
-  const openWilayahModal = (type: string) => {
+  const openWilayahModal = (type: string, parentId?: string) => {
     wilayahModalType.value = type
+    wilayahModalParentId.value = parentId || ''
     isWilayahModalOpen.value = true
   }
 
@@ -82,40 +88,97 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
     try {
       const { data } = await api.get('/api/kota/getAll')
       if (data.StatusCode === 200) cities.value = data.Data
-    } catch (err) {}
+    } catch {}
   }
 
   const fetchAreas = async () => {
     try {
       const { data } = await api.get('/api/area/getAll')
       if (data.StatusCode === 200) areas.value = data.Data
-    } catch (err) {}
+    } catch {}
   }
 
   const fetchPriorities = async () => {
     try {
       const { data } = await api.get('/api/prioritas/getAll')
       if (data.StatusCode === 200) priorities.value = data.Data
-    } catch (err) {}
+    } catch {}
   }
 
   const createCity = async (name: string) => {
     if (!name) return null
     try {
       const payload = {
-        Name: name,
-        Description: null
+        Nama: name,
+        Deskripsi: null
       }
       const { data } = await api.post('/api/kota/create', payload)
       if (data.StatusCode === 200) {
         await fetchCities()
         return data.Data.No_Id || data.Data.No_Id_Kota
       }
-    } catch (err) {
+    } catch {
       // If fails (maybe already exists but not matched), try to fetch and find again
       await fetchCities()
     }
     return null
+  }
+
+  const createArea = async (name: string, idKota?: string) => {
+    if (!name) return null
+    try {
+      const payload = {
+        Nama: name,
+        Deskripsi: null,
+        Id_Kota: idKota || ''
+      }
+      const { data } = await api.post('/api/area/create', payload)
+      if (data.StatusCode === 200) {
+        await fetchAreas()
+        return data.Data.No_Id || data.Data.No_Id_Area
+      }
+    } catch (err) {
+      console.error('Failed to create area:', err)
+      await fetchAreas()
+    }
+    return null
+  }
+
+  const handleWilayahSuccess = async (newData: any) => {
+    if (wilayahModalType.value === 'kota') {
+      if (newData?.isVirtual) {
+        virtualCities.value.push(newData)
+        form.value.Id_Kota = newData.No_Id
+      } else {
+        await fetchCities()
+        if (newData) form.value.Id_Kota = newData.No_Id || newData.No_Id_Kota
+      }
+    } else if (wilayahModalType.value === 'area') {
+      if (newData?.isVirtual) {
+        virtualAreas.value.push({
+          ...newData,
+          Id_Kota: wilayahModalParentId.value
+        })
+        form.value.Id_Area = newData.No_Id
+        form.value._isVirtualArea = true
+      } else {
+        await fetchAreas()
+        if (newData) form.value.Id_Area = newData.No_Id || newData.No_Id_Area
+      }
+    } else if (wilayahModalType.value === 'prioritas') {
+      if (newData?.isVirtual) {
+        // Add to virtual list
+        virtualPriorities.value.push({
+          ...newData,
+          Id_Area: wilayahModalParentId.value // Keep track of parent
+        })
+        form.value.Id_Prioritas = newData.No_Id
+      } else {
+        await fetchPriorities()
+        if (newData) form.value.Id_Prioritas = newData.No_Id || newData.No_Id_Prioritas
+      }
+    }
+    isWilayahModalOpen.value = false
   }
 
   const initWilayah = () => {
@@ -281,13 +344,73 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
       // Handle Media Uploads
       const newMediaIds = await media.uploadAllMedia()
       
+      // 1. Check if Kota is virtual
+      let finalKotaId = form.value.Id_Kota
+      if (finalKotaId) {
+        const isRealKota = cities.value.some((c: any) => c.No_Id === finalKotaId || c.No_Id_Kota === finalKotaId)
+        if (!isRealKota) {
+          const virtualKota = virtualCities.value.find(c => c.No_Id === finalKotaId)
+          const kotaName = virtualKota ? virtualKota.Nama : finalKotaId
+          const createdKotaId = await createCity(kotaName)
+          if (!createdKotaId) throw new Error('Gagal membuat kota otomatis')
+          finalKotaId = createdKotaId
+          form.value.Id_Kota = finalKotaId
+        }
+      }
+
+      // 2. Check if Area is virtual
+      let finalAreaId = form.value.Id_Area
+      if (finalAreaId) {
+        const isRealArea = areas.value.some((a: any) => a.No_Id === finalAreaId || a.No_Id_Area === finalAreaId)
+        if (!isRealArea) {
+          const virtualArea = virtualAreas.value.find(a => a.No_Id === finalAreaId)
+          let areaName = virtualArea ? virtualArea.Nama : finalAreaId
+          if (String(areaName).startsWith('virtual-')) {
+            areaName = String(areaName).replace('virtual-', '')
+          }
+          const createdAreaId = await createArea(areaName, finalKotaId)
+          if (!createdAreaId) throw new Error('Gagal membuat area otomatis')
+          finalAreaId = createdAreaId
+          form.value.Id_Area = finalAreaId
+        }
+      }
+
+      // 3. Check if Priority is virtual
+      let finalPrioId = form.value.Id_Prioritas
+      if (finalPrioId) {
+        const isRealPrio = priorities.value.some((p: any) => p.No_Id === finalPrioId || p.No_Id_Prioritas === finalPrioId)
+        if (!isRealPrio) {
+          const virtualPrio = virtualPriorities.value.find(p => p.No_Id === finalPrioId)
+          let prioName = virtualPrio ? virtualPrio.Nama : finalPrioId
+          if (String(prioName).startsWith('virtual-')) {
+            prioName = String(prioName).replace('virtual-', '')
+          }
+          
+          const { data: prioData } = await api.post('/api/prioritas/create', {
+            Nama: prioName,
+            Deskripsi: virtualPrio?.Deskripsi || '',
+            Id_Area: finalAreaId
+          })
+          
+          if (prioData.StatusCode === 200) {
+            finalPrioId = prioData.Data.No_Id || prioData.Data.No_Id_Prioritas
+            form.value.Id_Prioritas = finalPrioId
+          } else {
+            throw new Error(prioData.Message || 'Gagal membuat prioritas otomatis')
+          }
+        }
+      }
+      
       const payload = { 
         ...form.value, 
+        Id_Area: finalAreaId,
+        Id_Prioritas: finalPrioId,
         File_Image: [...new Set([...(form.value.File_Image || []), ...newMediaIds])], 
         Flag_Sewa: form.value.Status_Transaksi?.includes('Sewa') ? 'Ya' : 'Tidak' 
       }
       
       delete (payload as any).MediaUrls
+      delete (payload as any)._isVirtualArea
       if (!isEdit) delete (payload as any).No_Id
 
       await api[isEdit ? 'put' : 'post'](targetUrl, payload, { headers: { 'X-Jenis-User': 'admin' } })
@@ -314,6 +437,10 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
     cities,
     areas,
     priorities,
+    virtualCities,
+    virtualAreas,
+    virtualPriorities,
+    wilayahModalParentId,
     isWilayahModalOpen,
     wilayahModalType,
     initData,
@@ -324,6 +451,7 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
     fetchPriorities,
     createCity,
     openWilayahModal,
+    handleWilayahSuccess,
     // Expose sub-composable members for template access
     ...location,
     ...media

@@ -70,13 +70,13 @@
 
         <!-- Top Pagination -->
         <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-100 shadow-sm sm:flex-none flex-1 justify-center">
-          <button @click="table.previousPage()" :disabled="!table.getCanPreviousPage()" class="p-1.5 text-slate-500 hover:text-bejo-600 disabled:opacity-30 transition-colors hover:bg-slate-50 rounded-lg">
+          <button @click="handlePageChange('prev')" :disabled="!table.getCanPreviousPage()" class="p-1.5 text-slate-500 hover:text-bejo-600 disabled:opacity-30 transition-colors hover:bg-slate-50 rounded-lg">
             <Icon icon="lucide:chevron-left" class="size-4" />
           </button>
           <div class="px-2 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">
             {{ table.getState().pagination.pageIndex + 1 }} / {{ table.getPageCount() }}
           </div>
-          <button @click="table.nextPage()" :disabled="!table.getCanNextPage()" class="p-1.5 text-slate-500 hover:text-bejo-600 disabled:opacity-30 transition-colors hover:bg-slate-50 rounded-lg">
+          <button @click="handlePageChange('next')" :disabled="!table.getCanNextPage()" class="p-1.5 text-slate-500 hover:text-bejo-600 disabled:opacity-30 transition-colors hover:bg-slate-50 rounded-lg">
             <Icon icon="lucide:chevron-right" class="size-4" />
           </button>
         </div>
@@ -128,11 +128,11 @@
     <div class="flex flex-col sm:flex-row justify-between items-center mt-10 gap-4 pt-6">
       <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Halaman {{ table.getState().pagination.pageIndex + 1 }} dari {{ table.getPageCount() }}</p>
       <nav class="flex items-center gap-1.5 bg-white p-1.5 rounded-2xl border border-slate-100 shadow-sm">
-        <button @click="table.previousPage()" :disabled="!table.getCanPreviousPage()" class="p-2 text-slate-500 hover:text-bejo-600 disabled:opacity-30 transition-colors hover:bg-slate-50 rounded-xl"><Icon icon="lucide:chevron-left" class="size-4" /></button>
-        <button v-for="n in table.getPageCount()" :key="n" @click="table.setPageIndex(n - 1)" :class="['size-8 rounded-xl text-xs font-bold transition-all shadow-sm', table.getState().pagination.pageIndex === n - 1 ? 'bg-bejo-600 text-white shadow-bejo-600/40' : 'text-slate-500 bg-white hover:bg-slate-50 hover:text-slate-800 border border-transparent']">
+        <button @click="handlePageChange('prev')" :disabled="!table.getCanPreviousPage()" class="p-2 text-slate-500 hover:text-bejo-600 disabled:opacity-30 transition-colors hover:bg-slate-50 rounded-xl"><Icon icon="lucide:chevron-left" class="size-4" /></button>
+        <button v-for="n in table.getPageCount()" :key="n" @click="handlePageChange(n - 1)" :class="['size-8 rounded-xl text-xs font-bold transition-all shadow-sm', table.getState().pagination.pageIndex === n - 1 ? 'bg-bejo-600 text-white shadow-bejo-600/40' : 'text-slate-500 bg-white hover:bg-slate-50 hover:text-slate-800 border border-transparent']">
           {{ n }}
         </button>
-        <button @click="table.nextPage()" :disabled="!table.getCanNextPage()" class="p-2 text-slate-500 hover:text-bejo-600 disabled:opacity-30 transition-colors hover:bg-slate-50 rounded-xl"><Icon icon="lucide:chevron-right" class="size-4" /></button>
+        <button @click="handlePageChange('next')" :disabled="!table.getCanNextPage()" class="p-2 text-slate-500 hover:text-bejo-600 disabled:opacity-30 transition-colors hover:bg-slate-50 rounded-xl"><Icon icon="lucide:chevron-right" class="size-4" /></button>
       </nav>
     </div>
   </div>
@@ -239,6 +239,19 @@ export interface Product {
   Akses_Jalan: string[]
   File_Image: string[]
   MediaUrls: MediaUrl[]
+}
+
+const handlePageChange = async (action: 'prev' | 'next' | number) => {
+  isLoading.value = true
+  await new Promise(resolve => setTimeout(resolve, 300))
+  if (action === 'prev') {
+    table.previousPage()
+  } else if (action === 'next') {
+    table.nextPage()
+  } else if (typeof action === 'number') {
+    table.setPageIndex(action)
+  }
+  isLoading.value = false
 }
 
 const setSort = (type: string) => {
