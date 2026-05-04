@@ -1,13 +1,16 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { ref, onMounted, watch, onBeforeUnmount } from 'vue';
 import { Icon } from '@iconify/vue';
+import { GOOGLE_MAPS_API_KEY } from '@/config/constants';
+import { useSettings } from '@/stores/settings';
 
-import { PROVINCE_COORDINATES } from './data';
+const settingsStore = useSettings();
 
 interface Property {
   No_Id: string;
   Nama_Produk: string;
-  Area: string[];
+  Alamat: string;
+  Nama_Kota?: string;
   [key: string]: any;
 }
 
@@ -15,196 +18,273 @@ const props = defineProps<{
   properties: Property[];
 }>();
 
-const displayProvinces = computed(() => {
-  const groups: Record<string, { count: number; x: number; y: number; names: string[]; originalName: string; isActive: boolean }> = {};
-  
-  // 1. Initialize all provinces from PROVINCE_COORDINATES as inactive
-  Object.keys(PROVINCE_COORDINATES).forEach(key => {
-    groups[key] = {
-      count: 0,
-      x: PROVINCE_COORDINATES[key].x,
-      y: PROVINCE_COORDINATES[key].y,
-      names: [],
-      originalName: key,
-      isActive: false
+const mapRef = ref<HTMLElement | null>(null);
+let map: google.maps.Map | null = null;
+let markers: google.maps.Marker[] = [];
+let markerClusterer: any = null;
+
+const hoveredProperty = ref<any>(null);
+const tooltipPosition = ref({ x: 0, y: 0 });
+
+// Helper to extract coordinates from address string
+const extractCoords = (address: string) => {
+  if (!address) return null;
+  const latMatch = address.match(/Lat:\s*(-?\d+\.\d+)/i);
+  const lngMatch = address.match(/Long:\s*(-?\d+\.\d+)/i);
+  if (latMatch && lngMatch) {
+    return {
+      lat: parseFloat(latMatch[1]),
+      lng: parseFloat(lngMatch[1])
     };
-  });
+  }
+  return null;
+};
 
-  // 2. Map properties to provinces
-  props.properties.forEach(item => {
-    const areaString = (item.Area && item.Area[0]) ? item.Area[0] : null;
-    let provinceName = null;
+const initMap = async () => {
+  if (!window.google || !mapRef.value) return;
 
-    if (areaString) {
-      const parts = areaString.split(',').map(p => p.trim());
-      if (parts.length > 0) {
-        provinceName = parts[parts.length - 1];
-      }
-    }
-    
-    if (provinceName) {
-      const normalizedName = provinceName.toLowerCase();
-      const provinceKeys = Object.keys(PROVINCE_COORDINATES).sort((a, b) => b.length - a.length);
+  try {
+    const { Map } = (await google.maps.importLibrary('maps')) as google.maps.MapsLibrary;
+    await google.maps.importLibrary('marker');
 
-      const foundKey = provinceKeys.find(key => {
-        const lowerKey = key.toLowerCase();
-        return normalizedName === lowerKey || normalizedName.includes(lowerKey);
+    const mapOptions: google.maps.MapOptions = {
+      center: { lat: -2.5489, lng: 118.0149 },
+      zoom: 5,
+      disableDefaultUI: true,
+      zoomControl: true,
+      mapId: 'INDONESIA_MAP_GUEST', // Required for AdvancedMarkerElement
+    };
+
+    map = new Map(mapRef.value, mapOptions);
+
+    if (map) {
+      // Load Indonesia Highlight
+      map.data.loadGeoJson('https://raw.githubusercontent.com/superpikar/indonesia-geojson/master/indonesia-province-simple.json');
+      map.data.setStyle({
+        fillColor: '#f97316',
+        fillOpacity: 0.08,
+        strokeColor: '#f97316',
+        strokeWeight: 0.5,
+        clickable: false
       });
+    }
 
-      if (foundKey) {
-        if (!groups[foundKey]) {
-           // Fallback if somehow key was missing from initial loop
-           groups[foundKey] = { count: 0, x: PROVINCE_COORDINATES[foundKey].x, y: PROVINCE_COORDINATES[foundKey].y, names: [], originalName: foundKey, isActive: true };
-        }
-        groups[foundKey].count++;
-        groups[foundKey].isActive = true;
-        if (groups[foundKey].names.length < 5) {
-          groups[foundKey].names.push(item.Nama_Produk);
+    updateMarkers();
+  } catch (error) {
+    console.error('Error loading Google Maps:', error);
+  }
+};
+
+const updateMarkers = async () => {
+  if (!map || !window.google) return;
+
+  const { AdvancedMarkerElement, PinElement } = (await google.maps.importLibrary('marker')) as google.maps.MarkerLibrary;
+
+  // Clear existing markers and clusterer
+  markers.forEach((m: any) => m.map = null);
+  markers = [];
+  if (markerClusterer) {
+    markerClusterer.clearMarkers();
+  }
+
+  const validProperties = props.properties
+    .map(p => ({ ...p, coords: extractCoords(p.Alamat) }))
+    .filter(p => p.coords !== null);
+
+  validProperties.forEach(property => {
+    // Create custom pin content
+    const pin = new PinElement({
+      background: '#f97316',
+      borderColor: '#FFFFFF',
+      glyphColor: '#FFFFFF',
+      scale: 1.2,
+    });
+
+    const marker = new AdvancedMarkerElement({
+      map,
+      position: property.coords!,
+      title: property.Nama_Produk,
+      content: pin,
+    });
+
+    marker.addListener('gmp-click', () => {
+      hoveredProperty.value = property;
+      // For Advanced Markers, we need a different approach for tooltip position
+      // or just rely on the click event coordinate if needed.
+      // But we'll keep the current logic if it still works for hovered
+    });
+
+    // Hover effect for tooltip
+    marker.element.addEventListener('mouseenter', () => {
+      hoveredProperty.value = property;
+      // Approximate position for tooltip
+      const rect = marker.element.getBoundingClientRect();
+      const mapRect = mapRef.value?.getBoundingClientRect();
+      if (mapRect) {
+        tooltipPosition.value = {
+          x: rect.left - mapRect.left + rect.width / 2,
+          y: rect.top - mapRect.top
+        };
+      }
+    });
+
+    marker.element.addEventListener('mouseleave', () => {
+      hoveredProperty.value = null;
+    });
+
+    markers.push(marker as any);
+  });
+
+  // Initialize MarkerClusterer if markers exist
+  if (markers.length > 0 && (window as any).markerClusterer) {
+    markerClusterer = new (window as any).markerClusterer.MarkerClusterer({
+      map,
+      markers,
+      renderer: {
+        render: ({ count, position }: any) => {
+          const pin = new PinElement({
+            background: '#f97316',
+            borderColor: '#FFFFFF',
+            glyphColor: '#FFFFFF',
+            scale: 1.5 + Math.min(count / 20, 1),
+          });
+          
+          // Add text label for count
+          const label = document.createElement('div');
+          label.className = 'flex items-center justify-center text-[10px] font-black text-white absolute inset-0';
+          label.innerText = String(count);
+          pin.element.appendChild(label);
+
+          return new AdvancedMarkerElement({
+            position,
+            content: pin,
+            zIndex: 1000 + count,
+          });
         }
       }
-    }
-  });
-  
-  return Object.values(groups).filter(p => p.isActive);
+    });
+  }
+};
+
+
+const loadScripts = () => {
+  if (window.google && (window as any).markerClusterer) {
+    initMap();
+    return;
+  }
+
+  // Load Google Maps with the new recommended pattern (bootstrap)
+  const g = window as any;
+  let h: any, a: any;
+  const p = "The Google Maps JavaScript API"; const c = "google"; const l = "importLibrary"; const q = "__ib__"; const m = document; const b = g[c] || (g[c] = {}); const d = b.maps || (b.maps = {}); const r = new Set(); const e = new URLSearchParams(); const u = () => h || (h = new Promise(async (f, n) => { await (a = m.createElement("script")); e.set("libraries", [...r].join(",") + ""); for (const k in b) e.set(k.replace(/[A-Z]/g, t => "_" + t[0].toLowerCase()), b[k]); e.set("callback", c + ".maps." + q); a.src = `https://maps.${c}apis.com/maps/api/js?` + e; d[q] = f; a.onerror = () => h = n(Error(p + " could not load.")); a.nonce = (m as any).querySelector("script[nonce]")?.nonce || ""; m.head.append(a) })); d[l] = (f: any, ...n: any[]) => r.add(f) && u().then(() => d[l](f, ...n));
+
+  // Add the key and other options to the params
+  e.set("key", GOOGLE_MAPS_API_KEY);
+  e.set("v", "beta");
+  e.set("loading", "async");
+
+  initMap();
+
+  // Load MarkerClusterer
+  const cScript = document.createElement('script');
+  cScript.src = `https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js`;
+  cScript.async = true;
+  document.head.appendChild(cScript);
+};
+
+onMounted(() => loadScripts());
+watch(() => props.properties, () => updateMarkers(), { deep: true });
+onBeforeUnmount(() => {
+  markers.forEach(m => (m as any).map = null);
+  if (markerClusterer && typeof markerClusterer.clearMarkers === 'function') markerClusterer.clearMarkers();
+  (window as any).initMap = null;
 });
 
-const hoveredProvince = ref<any>(null);
-
-const handleMouseEnter = (province: any) => {
-  hoveredProvince.value = province;
-};
-
-const handleMouseLeave = () => {
-  hoveredProvince.value = null;
-};
+const formatCurrency = (val: number) => {
+  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
+}
 </script>
 
 <template>
-  <div class="relative w-full overflow-hidden bg-white pt-30 pb-12  sm:pt-45 sm:pb-24 border-y border-slate-100">
+  <div class="relative w-full overflow-hidden bg-white pt-8 pb-12 sm:pt-12 sm:pb-24 border-y border-slate-100">
     <div class="max-w-7xl mx-auto px-4 relative z-10">
       <div class="text-center mb-16 space-y-4">
-        <span class="inline-flex items-center gap-2 px-3 py-1 bg-bejo-500/10 border border-bejo-500/20 rounded-full text-bejo-600 text-xs font-black uppercase tracking-widest">
-          <Icon icon="lucide:map" class="size-3" /> Peta Properti
-        </span>
+
         <h2 class="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">
-          Properti <span class="text-bejo-500">Rumah Bejo</span> di Indonesia
+          Properti <span class="text-bejo-500">{{ settingsStore.business.appName }}</span> di Indonesia
         </h2>
         <p class="text-slate-500 font-medium max-w-2xl mx-auto">
-          Lihat persebaran unit hunian kami di seluruh provinsi. Kami hadir untuk membantu Anda menemukan rumah impian di lokasi terbaik.
+          Lihat persebaran unit hunian kami secara real-time. Zoom untuk melihat lokasi lebih detail dan akurat.
         </p>
       </div>
 
-      <!-- Map Container (Relative wrapper with background and padding) -->
-      <div class="relative w-full bg-white rounded-[3rem] border border-slate-100 shadow-xl overflow-visible mb-12 group/map select-none">
-        
-        <!-- Map Content Wrapper -->
-        <div class="relative w-full">
-          <!-- The Image Map - Block display to lock container height -->
-          <img 
-            src="/images/Peta%20Indonesia.png" 
-            alt="Peta Indonesia" 
-            class="w-full h-auto block opacity-90 transition-all duration-700 group-hover/map:scale-[1.01] pointer-events-none"
-          />
+      <div class="relative w-full aspect-[21/9] bg-slate-50 rounded-[3rem] border border-slate-100 shadow-2xl overflow-hidden mb-12">
+        <div ref="mapRef" class="w-full h-full"></div>
 
-          <!-- Interactive Layer (Absolute Inset to Match Image Pixels Exactly) -->
-          <div class="absolute inset-0 z-10 pointer-events-none">
-            <div 
-              v-for="province in displayProvinces" 
-              :key="province.originalName"
-              class="absolute pointer-events-auto group/pin transition-all duration-300"
-              :class="[
-                hoveredProvince?.originalName === province.originalName ? 'z-50 scale-110' : 'z-20',
-                province.isActive ? 'opacity-100' : 'opacity-40 hover:opacity-100'
-              ]"
-              :style="{ 
-                left: `${province.x}%`, 
-                top: `${province.y}%`,
-                transform: 'translate(-50%, -50%)'
-              }"
-              @mouseenter="handleMouseEnter(province)"
-              @mouseleave="handleMouseLeave"
-            >
-              <!-- Invisible Larger Hitbox (Hit area optimization) -->
-              <div class="absolute inset-1/2 -translate-x-1/2 -translate-y-1/2 size-10 bg-transparent cursor-pointer z-0"></div>
-              
-              <!-- Pulse Animation (Only for Active) -->
-              <div v-if="province.isActive" class="absolute inset-0 size-8 -m-2 bg-bejo-500/20 rounded-full animate-ping pointer-events-none"></div>
-              
-              <!-- Pin Marker -->
-              <div class="relative cursor-pointer z-10 flex items-center justify-center">
-                <div 
-                  class="size-3.5 rounded-full border-2 border-white shadow-lg transition-all duration-300 group-hover/pin:scale-125"
-                  :class="province.isActive ? 'bg-bejo-500 group-hover/pin:bg-slate-900' : 'bg-slate-300 group-hover/pin:bg-slate-500'"
-                >
-                </div>
-                
-                <!-- Label (Visible on hover) -->
-                <span class="absolute top-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-black uppercase tracking-widest text-white bg-slate-900/90 backdrop-blur-sm px-2.5 py-1 rounded-lg shadow-xl opacity-0 group-hover/pin:opacity-100 transition-all duration-300 translate-y-2 group-hover/pin:translate-y-0">
-                  {{ province.originalName }}
-                </span>
-              </div>
-            </div>
-
-            <!-- Single Decoupled Tooltip (Sync position with hovered pin) -->
-            <Transition
-              enter-active-class="transition duration-200 ease-out"
-              enter-from-class="opacity-0 translate-y-4 scale-95"
-              enter-to-class="opacity-100 translate-y-0 scale-100"
-              leave-active-class="transition duration-150 ease-in"
-              leave-from-class="opacity-100 translate-y-0 scale-100"
-              leave-to-class="opacity-0 translate-y-4 scale-95"
-            >
-              <div 
-                v-if="hoveredProvince"
-                class="absolute z-[100] pointer-events-none"
-                :style="{ 
-                  left: `${hoveredProvince.x}%`, 
-                  top: `${hoveredProvince.y}%`,
-                  transform: 'translate(-50%, calc(-100% - 20px))' 
-                }"
-              >
-              <div class="w-64 bg-white border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-[1.5rem] p-4 text-left">
+        <!-- Custom Tooltip Overlay -->
+        <Transition
+          enter-active-class="transition duration-200 ease-out"
+          enter-from-class="opacity-0 translate-y-4 scale-95"
+          enter-to-class="opacity-100 translate-y-0 scale-100"
+          leave-active-class="transition duration-150 ease-in"
+          leave-from-class="opacity-100 translate-y-0 scale-100"
+          leave-to-class="opacity-0 translate-y-4 scale-95"
+        >
+          <div 
+            v-if="hoveredProperty"
+            class="absolute z-[100] pointer-events-none"
+            :style="{ 
+              left: `${tooltipPosition.x}px`, 
+              top: `${tooltipPosition.y}px`,
+              transform: 'translate(-50%, calc(-100% - 30px))'
+            }"
+          >
+            <div class="w-64 bg-white border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-[1.5rem] p-4 text-left relative">
               <div class="flex items-center gap-3 mb-3">
-                <div class="size-10 rounded-2xl flex items-center justify-center" :class="hoveredProvince.isActive ? 'bg-bejo-50 text-bejo-600' : 'bg-slate-50 text-slate-400'">
-                  <Icon icon="lucide:map-pin" class="size-6" />
+                <div class="size-10 rounded-2xl flex items-center justify-center bg-bejo-50 text-bejo-600">
+                  <Icon icon="lucide:building-2" class="size-6" />
                 </div>
-                <div>
-                  <h4 class="text-xs font-black text-slate-900 leading-tight">{{ hoveredProvince.originalName }}</h4>
-                  <p class="text-[10px] font-bold" :class="hoveredProvince.isActive ? 'text-bejo-600' : 'text-slate-400'">
-                    {{ hoveredProvince.isActive ? `${hoveredProvince.count} Unit Tersedia` : 'Area Pengembangan' }}
+                <div class="flex-1 min-w-0">
+                  <h4 class="text-xs font-black text-slate-900 leading-tight truncate">{{ hoveredProperty.Nama_Produk }}</h4>
+                  <p class="text-[9px] font-bold text-slate-400 mt-0.5 truncate">
+                    {{ hoveredProperty.Nama_Kota || 'Lokasi Tersedia' }}
                   </p>
                 </div>
               </div>
-              <div v-if="hoveredProvince.isActive" class="space-y-1.5 border-t border-slate-50 pt-3">
-                <p v-for="name in hoveredProvince.names" :key="name" class="text-[10px] text-slate-500 font-medium truncate flex items-center gap-2">
-                  <span class="size-1 rounded-full bg-bejo-500/50"></span> {{ name }}
-                </p>
-                <p v-if="hoveredProvince.count > 5" class="text-[9px] text-slate-400 italic font-medium pl-3">
-                  + {{ hoveredProvince.count - 5 }} unit lainnya
-                </p>
+              <div class="space-y-1.5 border-t border-slate-50 pt-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Harga Mulai</span>
+                  <span class="text-[10px] font-black text-bejo-600">{{ formatCurrency(hoveredProperty.Harga_Jual1 || hoveredProperty.Harga_Sewa1) }}</span>
+                </div>
+                <div class="flex items-center gap-2 mt-2">
+                  <div class="flex items-center gap-1 text-[9px] font-bold text-slate-500">
+                    <Icon icon="lucide:bed" class="size-3 text-bejo-500" /> {{ hoveredProperty.Jumlah_Kamar_Tidur }}
+                  </div>
+                  <div class="flex items-center gap-1 text-[9px] font-bold text-slate-500">
+                    <Icon icon="lucide:bath" class="size-3 text-bejo-500" /> {{ hoveredProperty.Jumlah_Kamar_Mandi }}
+                  </div>
+                  <div class="flex items-center gap-1 text-[9px] font-bold text-slate-500">
+                    <Icon icon="lucide:maximize" class="size-3 text-bejo-500" /> {{ hoveredProperty.Luas_Tanah }}m²
+                  </div>
+                </div>
               </div>
-              <div v-else class="border-t border-slate-50 pt-3 text-[10px] text-slate-400 italic font-medium">
-                Belum ada properti aktif di provinsi ini.
-              </div>
-              <!-- Arrow bottom -->
-              <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white/95 border-b border-r border-slate-100 rotate-45"></div>
+              <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-b border-r border-slate-100 rotate-45"></div>
             </div>
           </div>
         </Transition>
       </div>
-    </div>
-  </div>
 
-      <!-- Info Footer -->
       <div class="mt-8 flex flex-col md:flex-row items-center justify-between gap-6 px-8">
-        <div class="flex items-center gap-4 text-slate-400 text-xs font-medium">
-          <div class="flex items-center gap-2">
-            <span class="size-3 rounded-full bg-bejo-500 border-2 border-white shadow-sm"></span> Area Unit Properti
+        <div class="flex items-center gap-6">
+          <div class="flex items-center gap-2 text-slate-400 text-[10px] font-black uppercase tracking-widest">
+            <Icon icon="lucide:map-pin" class="size-4 text-bejo-600" /> Lokasi Properti
+          </div>
+          <div class="flex items-center gap-2 text-slate-400 text-[10px] font-black uppercase tracking-widest">
+            <div class="size-3 rounded-full bg-bejo-500 border-2 border-white shadow-sm"></div> Rekap Unit (Cluster)
           </div>
         </div>
-        
         <div class="hidden lg:flex items-center gap-2 text-slate-400 text-[10px] font-black uppercase tracking-widest bg-slate-50 px-4 py-2 rounded-full border border-slate-100">
-          <Icon icon="lucide:info" class="size-3" /> Pin dikelompokkan berdasarkan provinsi untuk kemudahan visual
+          <Icon icon="lucide:maximize-2" class="size-3" /> Zoom in untuk melihat lokasi detail tiap unit
         </div>
       </div>
     </div>
@@ -212,14 +292,10 @@ const handleMouseLeave = () => {
 </template>
 
 <style scoped>
-.animate-ping {
-  animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
-}
-
-@keyframes ping {
-  75%, 100% {
-    transform: scale(2.5);
-    opacity: 0;
-  }
+/* Tooltip styling improvements */
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

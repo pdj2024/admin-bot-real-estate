@@ -110,7 +110,7 @@
             
             <button @click="handleKprWa" class="mt-10 w-full bg-bejo-500 hover:bg-bejo-600 text-white py-5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-xl shadow-bejo-500/20 flex items-center justify-center gap-3 active:scale-95 group">
               <Icon icon="ic:baseline-whatsapp" class="size-6 transition-transform group-hover:scale-110" />
-              Konsultasikan Melalui WhatsApp
+              Tanya kami
             </button>
           </div>
 
@@ -130,9 +130,7 @@
         <div class="absolute -top-24 -right-24 size-48 bg-bejo-50 rounded-full blur-2xl"></div>
         
         <div class="text-center mb-12 max-w-2xl mx-auto relative z-10">
-          <span class="inline-flex items-center gap-2 px-3 py-1 bg-bejo-50 text-bejo-600 rounded-full text-xs font-black uppercase tracking-widest mb-4 border border-bejo-100">
-            <Icon icon="lucide:folder-check" class="size-3.5" /> Persiapan Berkas
-          </span>
+
           <h2 class="text-3xl sm:text-4xl font-black text-slate-900 mb-4 tracking-tight">Dokumen Pengajuan KPR</h2>
           <p class="text-base text-slate-500 font-medium leading-relaxed">
             Siapkan kelengkapan administrasi Anda sebelum mengajukan KPR agar tim kami dapat memprosesnya dengan sangat cepat demi mewujudkan kepemilikan Anda.
@@ -265,7 +263,7 @@ const angsuran = computed(() => {
 })
 
 const handleKprWa = () => {
-  const defaultGreeting = 'Halo Admin Rumah Bejo, saya baru saja melakukan simulasi KPR di situs dan ingin berkonsultasi lebih lanjut.'
+  const defaultGreeting = `Halo Admin ${settingsStore.business.appName}, saya baru saja melakukan simulasi KPR di situs dan ingin berkonsultasi lebih lanjut.`
   const message = `${defaultGreeting}\n\nBerikut simulasi anggaran saya:\n- Harga Properti: Rp ${formatCurrency(propertyPrice.value)}\n- DP / Uang Muka (${dpPercentage.value}%): Rp ${formatCurrency(dpValue.value)}\n- Pinjaman Bank: Rp ${formatCurrency(totalPinjaman.value)}\n- Suku Bunga: ${interestRate.value}%\n- Tenor Waktu: ${years.value} thn\n\n*Estimasi Angsuran:* Rp ${formatCurrency(angsuran.value)}/bln\n\nApakah pihak agen bisa membantu merekomendasikan properti yang sesuai dengan anggaran saya?`
   const targetNumber = settingsStore.business.whatsapp || '62895353837000'
   

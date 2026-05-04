@@ -70,7 +70,7 @@ const angsuran = computed(() => {
 
 const handleKprWa = () => {
   const url = window.location.href
-  const defaultGreeting = `Halo Admin Rumah Bejo, saya sedang melihat properti "${props.product?.Nama_Produk}" dan ingin berkonsultasi mengenai simulasi KPR yang baru saja saya lakukan di situs.`
+  const defaultGreeting = `Halo Admin ${settingsStore.business.appName}, saya sedang melihat properti "${props.product?.Nama_Produk}" dan ingin berkonsultasi mengenai simulasi KPR yang baru saja saya lakukan di situs.`
   const message = `${defaultGreeting}\n\nEstimasi saya:\n- Harga: ${formatCurrencyShort(propertyPrice.value)}\n- DP (${dpPercentage.value}%): Rp ${formatCurrency(dpValue.value)}\n- Tenor: ${years.value} thn\n- Angsuran: Rp ${formatCurrency(angsuran.value)}/bln\n\nBerikut tautan propertinya: ${url}`
   const targetNumber = settingsStore.business.whatsapp || '62895353837000'
   

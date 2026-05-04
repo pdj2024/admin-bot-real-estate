@@ -14,7 +14,7 @@
       >
         <div class="p-6 pb-4 border-b border-slate-100 flex justify-between items-center">
             <img :src="logo" alt="Logo" class="h-8 w-auto" />
-            <button @click="layoutStore.toggleMobileMenu()" class="p-1.5 text-slate-400 hover:text-slate-800 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors">
+            <button @click="layoutStore.toggleMobileMenu()" class="p-1.5 text-bejo-600 hover:text-bejo-700 bg-bejo-50 hover:bg-bejo-100 rounded-lg transition-colors border border-bejo-100">
               <Icon icon="lucide:x" class="size-4" />
             </button>
         </div>
@@ -37,6 +37,9 @@
           </RouterLink>
           <RouterLink to="/kontak" active-class="bg-bejo-50 text-bejo-600 [&>svg]:text-bejo-500" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 hover:text-bejo-600 hover:bg-bejo-50 rounded-xl transition-all group">
             <Icon icon="lucide:phone" class="size-4 text-slate-400 group-hover:text-bejo-500 transition-colors" /> Kontak
+          </RouterLink>
+          <RouterLink to="/faq" active-class="bg-bejo-50 text-bejo-600 [&>svg]:text-bejo-500" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 hover:text-bejo-600 hover:bg-bejo-50 rounded-xl transition-all group">
+            <Icon icon="lucide:help-circle" class="size-4 text-slate-400 group-hover:text-bejo-500 transition-colors" /> FAQ
           </RouterLink>
         </nav>
       </div>
@@ -74,6 +77,10 @@
                 Kontak
                 <span class="absolute inset-x-0 -bottom-1 h-1 bg-bejo-500 rounded-t-full transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
               </RouterLink>
+              <RouterLink to="/faq" active-class="text-bejo-600 [&>span]:scale-x-100" class="relative text-sm font-bold text-slate-600 hover:text-bejo-600 transition-colors group py-2">
+                FAQ
+                <span class="absolute inset-x-0 -bottom-1 h-1 bg-bejo-500 rounded-t-full transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
+              </RouterLink>
               <RouterLink v-if="isLoggedIn" to="/dashboard" active-class="text-bejo-600 [&>span]:scale-x-100" class="relative text-sm font-bold text-slate-600 hover:text-bejo-600 transition-colors group py-2">
                 Dashboard
                 <span class="absolute inset-x-0 -bottom-1 h-1 bg-bejo-500 rounded-t-full transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
@@ -86,8 +93,8 @@
               <a href="/login" class="hidden sm:flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-bejo-200 text-bejo-600 hover:bg-bejo-50 hover:shadow-lg hover:shadow-bejo-600/10 transition-all font-bold text-sm">
                 <Icon icon="lucide:user" class="size-4" /> Masuk / Dasbor
               </a>
-              <a href="/login" class="sm:hidden size-10 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors">
-                <Icon icon="lucide:user" class="size-5 text-slate-700" />
+              <a href="/login" class="sm:hidden size-10 rounded-full bg-bejo-50 flex items-center justify-center hover:bg-bejo-100 transition-colors border border-bejo-100">
+                <Icon icon="lucide:user" class="size-5 text-bejo-600" />
               </a>
             </template>
             <template v-else>
@@ -122,7 +129,7 @@
               </div>
             </template>
 
-            <button @click="layoutStore.toggleMobileMenu()" class="lg:hidden p-2 text-slate-700 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition-colors">
+            <button @click="layoutStore.toggleMobileMenu()" class="lg:hidden p-2 text-bejo-600 bg-white border border-bejo-100 rounded-xl shadow-sm hover:bg-bejo-50 transition-colors">
               <Icon icon="lucide:menu" class="size-5" />
             </button>
           </div>
@@ -175,6 +182,7 @@
                 <RouterLink to="/simulasi-kpr" class="text-sm font-bold hover:text-bejo-400 transition-colors">Simulasi KPR</RouterLink>
                 <RouterLink to="/tentang-kami" class="text-sm font-bold hover:text-bejo-400 transition-colors">Tentang Kami</RouterLink>
                 <RouterLink to="/kontak" class="text-sm font-bold hover:text-bejo-400 transition-colors">Hubungi Kami</RouterLink>
+                <RouterLink to="/faq" class="text-sm font-bold hover:text-bejo-400 transition-colors">FAQ (Bantuan)</RouterLink>
               </nav>
             </div>
 
@@ -206,29 +214,36 @@
             <!-- Maps Card -->
             <div class="lg:col-span-3 space-y-6">
               <h4 class="text-white font-black text-sm uppercase tracking-widest">Lokasi Kami</h4>
-              <div class="rounded-2xl border border-slate-800 overflow-hidden h-44 bg-slate-900 relative group cursor-pointer shadow-2xl">
-                <!-- Dummy Map Background -->
-                <div class="absolute inset-0 bg-slate-800 flex items-center justify-center">
-                  <Icon icon="lucide:map" class="size-12 text-slate-700 opacity-20" />
-                </div>
-                <img src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=60" class="absolute inset-0 w-full h-full object-cover opacity-30 grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700" />
-                <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent"></div>
-                
-                <div class="absolute inset-0 flex items-center justify-center">
-                   <div class="size-12 rounded-full bg-bejo-500 flex items-center justify-center text-white shadow-xl animate-bounce shadow-bejo-500/50">
-                     <Icon icon="lucide:map-pin" class="size-6" />
-                   </div>
-                </div>
-                
-                <a 
-                  :href="settingsStore.business.mapUrl?.includes(',') 
-                    ? `https://www.google.com/maps?q=${settingsStore.business.mapUrl}` 
-                    : settingsStore.business.mapUrl" 
-                  target="_blank" 
-                  class="absolute bottom-3 inset-x-3 text-center"
-                >
-                  <span class="text-[10px] font-black text-white uppercase tracking-widest bg-slate-900/80 backdrop-blur px-3 py-1.5 rounded-lg border border-white/10">Buka di Google Maps</span>
-                </a>
+              <div class="rounded-2xl border border-slate-800 overflow-hidden h-44 bg-slate-900 relative group shadow-2xl">
+                <template v-if="settingsStore.business.mapUrl">
+                  <iframe 
+                    width="100%" 
+                    height="100%" 
+                    frameborder="0" 
+                    scrolling="no" 
+                    marginheight="0" 
+                    marginwidth="0" 
+                    :src="settingsStore.business.mapUrl.includes('http') 
+                      ? settingsStore.business.mapUrl 
+                      : `https://maps.google.com/maps?q=${settingsStore.business.mapUrl.replace('Lat:','').replace('Long:','').replace('Lat :','').replace('Long :','')}&t=&z=13&ie=UTF8&iwloc=&output=embed`"
+                    class="opacity-60 group-hover:opacity-100 transition-opacity duration-700"
+                  ></iframe>
+                  <div class="absolute inset-0 pointer-events-none bg-gradient-to-t from-slate-950/40 via-transparent to-transparent"></div>
+                  <a 
+                    :href="settingsStore.business.mapUrl.includes('http') 
+                      ? settingsStore.business.mapUrl 
+                      : `https://www.google.com/maps?q=${settingsStore.business.mapUrl.replace('Lat:','').replace('Long:','').replace('Lat :','').replace('Long :','')}`" 
+                    target="_blank" 
+                    class="absolute bottom-3 inset-x-3 text-center"
+                  >
+                    <!-- <span class="text-[10px] font-black text-white uppercase tracking-widest bg-slate-900/80 backdrop-blur px-3 py-1.5 rounded-lg border border-white/10 hover:bg-bejo-600 transition-colors pointer-events-auto">Buka di Google Maps</span> -->
+                  </a>
+                </template>
+                <template v-else>
+                  <div class="absolute inset-0 bg-slate-800 flex items-center justify-center">
+                    <Icon icon="lucide:map" class="size-12 text-slate-700 opacity-20" />
+                  </div>
+                </template>
               </div>
             </div>
 

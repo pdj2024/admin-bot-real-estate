@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, watch, provide, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
-import TabIdentitasUtama from './modal-tabs/TabIdentitasUtama.vue'
-import TabSpesifikasiDetail from './modal-tabs/TabSpesifikasiDetail.vue'
-import TabAlamatLokasi from './modal-tabs/TabAlamatLokasi.vue'
+import TabUtama from './modal-tabs/TabUtama.vue'
+import TabSpesifikasi from './modal-tabs/TabSpesifikasi.vue'
+import TabLokasi from './modal-tabs/TabLokasi.vue'
 import { usePropertyModal } from '@/composables/admin/usePropertyModal'
 
 const props = defineProps<{
@@ -44,9 +44,24 @@ onMounted(() => {
   initWilayah()
 })
 
+// Sync search query when moving to location tab
+watch(activeTab, (newTab) => {
+  // Hanya picu saran jika tab adalah lokasi, ada nama produk, 
+  // DAN data wilayah utama (Kota/Area/Kecamatan) belum terisi
+  const isWilayahEmpty = !form.value.Id_Kota && !form.value.Id_Area && !form.value.Kecamatan
+  
+  if (newTab === 'lokasi' && form.value.Nama_Produk && isWilayahEmpty) {
+    modalState.searchQuery.value = form.value.Nama_Produk
+    modalState.handleSearchInput()
+  }
+})
+
 const handleSaveDraft = async () => {
-  form.value.Status_Display = 'Draft'
-  await modalState.submitForm()
+  await modalState.submitForm('draft')
+}
+
+const handlePublish = async () => {
+  await modalState.submitForm('active')
 }
 </script>
 
@@ -65,23 +80,23 @@ const handleSaveDraft = async () => {
           <!-- Tab Navigation Bar -->
           <div class="flex px-8 gap-0 border-t border-slate-50 bg-slate-50/30">
             <button @click="activeTab = 'utama'" class="flex-1 lg:flex-none lg:w-48 pt-4 pb-3.5 text-[10px] font-black uppercase tracking-widest transition-all relative group" :class="activeTab === 'utama' ? 'text-primary' : 'text-slate-400 hover:text-slate-500'">
-              <div class="flex items-center justify-center gap-2">
-                <Icon icon="lucide:home" class="size-3.5" :class="activeTab === 'utama' ? 'text-primary' : 'text-slate-400'" />
-                <span>Utama</span>
+              <div class="flex items-center justify-center gap-2.5">
+                <Icon icon="lucide:home" class="size-4 -mt-0.5" :class="activeTab === 'utama' ? 'text-primary' : 'text-slate-400'" />
+                <span class="leading-none">Utama</span>
               </div>
               <div class="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-t-full transition-all duration-300 transform" :class="activeTab === 'utama' ? 'scale-x-75 opacity-100' : 'scale-x-0 opacity-0'"></div>
             </button>
             <button @click="activeTab = 'lokasi'" class="flex-1 lg:flex-none lg:w-48 pt-4 pb-3.5 text-[10px] font-black uppercase tracking-widest transition-all relative group" :class="activeTab === 'lokasi' ? 'text-primary' : 'text-slate-400 hover:text-slate-500'">
-              <div class="flex items-center justify-center gap-2">
-                <Icon icon="lucide:map-pin" class="size-3.5" :class="activeTab === 'lokasi' ? 'text-primary' : 'text-slate-400'" />
-                <span>Lokasi</span>
+              <div class="flex items-center justify-center gap-2.5">
+                <Icon icon="lucide:map-pin" class="size-4 -mt-0.5" :class="activeTab === 'lokasi' ? 'text-primary' : 'text-slate-400'" />
+                <span class="leading-none">Lokasi</span>
               </div>
               <div class="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-t-full transition-all duration-300 transform" :class="activeTab === 'lokasi' ? 'scale-x-75 opacity-100' : 'scale-x-0 opacity-0'"></div>
             </button>
             <button @click="activeTab = 'spesifikasi'" class="flex-1 lg:flex-none lg:w-48 pt-4 pb-3.5 text-[10px] font-black uppercase tracking-widest transition-all relative group" :class="activeTab === 'spesifikasi' ? 'text-primary' : 'text-slate-400 hover:text-slate-500'">
-              <div class="flex items-center justify-center gap-2">
-                <Icon icon="lucide:file-text" class="size-3.5" :class="activeTab === 'spesifikasi' ? 'text-primary' : 'text-slate-400'" />
-                <span>Spesifikasi</span>
+              <div class="flex items-center justify-center gap-2.5">
+                <Icon icon="lucide:file-text" class="size-4 -mt-0.5" :class="activeTab === 'spesifikasi' ? 'text-primary' : 'text-slate-400'" />
+                <span class="leading-none">Spesifikasi</span>
               </div>
               <div class="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-t-full transition-all duration-300 transform" :class="activeTab === 'spesifikasi' ? 'scale-x-75 opacity-100' : 'scale-x-0 opacity-0'"></div>
             </button>
@@ -90,13 +105,13 @@ const handleSaveDraft = async () => {
 
         <div class="px-8 py-8 overflow-y-auto flex-1 custom-scroll bg-slate-50/10 relative">
           <!-- TAB 1: UTAMA -->
-          <TabIdentitasUtama v-show="activeTab === 'utama'" />
+          <TabUtama v-show="activeTab === 'utama'" />
 
           <!-- TAB 2: LOKASI -->
-          <TabAlamatLokasi v-show="activeTab === 'lokasi'" />
+          <TabLokasi v-show="activeTab === 'lokasi'" />
 
           <!-- TAB 3: SPESIFIKASI -->
-          <TabSpesifikasiDetail v-show="activeTab === 'spesifikasi'" />
+          <TabSpesifikasi v-show="activeTab === 'spesifikasi'" />
         </div>
 
         <div class="px-8 py-6 border-t flex justify-between items-center bg-white">
@@ -105,16 +120,15 @@ const handleSaveDraft = async () => {
           </div>
 
           <div class="flex gap-4 items-center">
-            <button 
-              v-if="form.Status_Display == 'Aktif'"
-              :disabled="isLoading"
-              @click="handleSaveDraft" 
-              class="px-9 py-3 bg-slate-100 text-slate-600 text-xs font-black rounded-2xl transition-all hover:bg-slate-200 active:scale-95 flex items-center gap-2 group disabled:opacity-50"
-            >
+            <!-- Status Toggle Button (Draft <-> Aktif) -->
+            <button :disabled="isLoading" @click="form.Status_Display === 'Draft' ? handlePublish() : handleSaveDraft()" class="px-9 py-3 bg-slate-100 text-slate-600 text-xs font-black rounded-2xl transition-all hover:bg-slate-200 active:scale-95 flex items-center gap-2 group disabled:opacity-50">
               <Icon v-if="isLoading" icon="lucide:loader-2" class="size-4 animate-spin" />
-              <Icon v-else icon="lucide:archive" class="size-4 group-hover:translate-x-1 transition-transform" />
-              Jadikan Draft 
+              <template v-else>
+                <Icon :icon="form.Status_Display === 'Draft' ? 'lucide:eye' : 'lucide:archive'" class="size-4 group-hover:translate-x-1 transition-transform" />
+                {{ form.Status_Display === 'Draft' ? 'Tampilkan Properti' : 'Jadikan Draft' }}
+              </template>
             </button>
+
             <div>
               <button v-if="activeTab === 'utama'" @click="activeTab = 'lokasi'" class="px-9 py-3 bg-slate-100 text-slate-600 text-xs font-black rounded-2xl transition-all hover:bg-slate-200 active:scale-95 flex items-center gap-2 group">
                 Lanjut ke Lokasi
@@ -126,7 +140,7 @@ const handleSaveDraft = async () => {
                 <Icon icon="lucide:chevron-right" class="size-4 group-hover:translate-x-1 transition-transform" />
               </button>
 
-              <button v-else :disabled="isLoading" @click="modalState.submitForm" class="px-10 py-3 bg-primary text-white text-xs font-black rounded-2xl shadow-xl shadow-primary/20 transition-all hover:scale-[1.03] active:scale-95 flex items-center gap-2">
+              <button v-else :disabled="isLoading" @click="() => modalState.submitForm()" class="px-10 py-3 bg-primary text-white text-xs font-black rounded-2xl shadow-xl shadow-primary/20 transition-all hover:scale-[1.03] active:scale-95 flex items-center gap-2 disabled:opacity-70 disabled:scale-100">
                 <Icon v-if="isLoading" icon="lucide:loader-2" class="size-4 animate-spin" />
                 <Icon v-else icon="lucide:save" class="size-4" />
                 {{ isLoading ? 'Sedang Menyimpan...' : form.No_Id ? 'Simpan Perubahan' : 'Tambah Properti' }}

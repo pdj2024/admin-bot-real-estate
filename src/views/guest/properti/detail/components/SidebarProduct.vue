@@ -3,8 +3,10 @@ import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useSettings } from '@/stores/settings'
 import type { Product } from '../index.vue'
+import { useRouter } from 'vue-router'
 
 const settingsStore = useSettings()
+const router = useRouter()
 
 const props = defineProps<{
   product: Product | null
@@ -108,7 +110,7 @@ const resetTimer = () => {
 const shareProduct = async () => {
   const shareData = {
     title: props.product?.Nama_Produk || 'Lihat properti ini',
-    text: `Cek ${props.product?.Nama_Produk} di area ${props.product?.Area}.`,
+    text: `Cek ${props.product?.Nama_Produk} di Kota/Kab. ${props.product?.Nama_Kota}.`,
     url: window.location.href
   }
   try {
@@ -185,13 +187,67 @@ const handleKeyDown = (e: KeyboardEvent) => {
 }
 
 const formattedArea = computed(() => {
-  if (!props.product?.Area?.[0]) return ''
-  const parts = props.product.Area[0].split(',').map((s) => s.trim())
-  if (parts.length >= 2) {
-    return parts.slice(-2).join(', ')
+  if (!props.product) return ''
+  const kota = props.product.Nama_Kota || ''
+
+  // Get raw area string
+  let areaRaw = ''
+  if (Array.isArray(props.product.Area)) {
+    areaRaw = props.product.Area[0] || ''
+  } else {
+    areaRaw = (props.product.Area as any) || ''
   }
-  return props.product.Area[0]
+
+  // Try to find province from areaRaw
+  let provinsi = ''
+  if (areaRaw) {
+    const parts = areaRaw.split(',').map((s) => s.trim())
+    if (parts.length >= 2) {
+      provinsi = parts[parts.length - 1]
+    }
+  }
+
+  if (kota && provinsi && kota.toLowerCase() !== provinsi.toLowerCase()) {
+    return `${kota}, ${provinsi}`
+  }
+  return kota || provinsi || areaRaw || 'Lokasi tidak tersedia'
 })
+
+const goToArea = () => {
+  if (!props.product) return
+
+  let city = props.product.Nama_Kota || ''
+  let province = ''
+
+  // Split Nama_Kota if it contains province (e.g. "Surabaya, Jawa Timur")
+  if (city.includes(',')) {
+    const parts = city.split(',').map((s) => s.trim())
+    city = parts[0]
+    province = parts[1]
+  }
+
+  // Fallback province from Area if not in Nama_Kota
+  if (!province) {
+    let areaRaw = ''
+    if (Array.isArray(props.product.Area)) {
+      areaRaw = props.product.Area[0] || ''
+    } else {
+      areaRaw = (props.product.Area as any) || ''
+    }
+    if (areaRaw.includes(',')) {
+      const parts = areaRaw.split(',').map((s) => s.trim())
+      province = parts[parts.length - 1]
+    }
+  }
+
+  router.push({
+    path: '/katalog',
+    query: {
+      province: province,
+      city: city
+    }
+  })
+}
 
 onMounted(() => {
   startTimer()
@@ -256,9 +312,9 @@ onUnmounted(() => {
           </div>
 
           <div class="grid gap-3 relative" :class="isAdmin ? 'grid-cols-1' : 'grid-cols-2'">
-            <button v-if="!isAdmin" @click="handleWaContact" class="flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm tracking-wide transition-all shadow-md bg-bejo-600 text-white hover:bg-bejo-700 hover:shadow-bejo-600/30">
-              <Icon icon="lucide:headset" class="size-4" />
-              Hubungi Kami
+            <button v-if="!isAdmin" @click="handleWaContact" class="flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-black text-[10px] uppercase tracking-widest leading-tight transition-all shadow-md bg-bejo-600 text-white hover:bg-bejo-700 hover:shadow-bejo-600/30">
+              <Icon icon="logos:whatsapp-icon" class="size-5" />
+              Tanya kami
             </button>
             <button type="button" @click.prevent="shareProduct" class="flex w-full items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm tracking-wide transition-all shadow-sm border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300">
               <Icon icon="lucide:share-2" class="size-4" />
@@ -285,7 +341,7 @@ onUnmounted(() => {
               </span>
             </div>
           </div>
-          <button class="text-[11px] font-black uppercase tracking-widest border-b px-1 pb-0.5" :class="!product ? 'text-transparent bg-slate-200 border-none animate-pulse select-none rounded' : 'text-bejo-600 hover:text-bejo-800 border-bejo-600/30'">Lihat Area</button>
+          <button @click="goToArea" class="text-[11px] font-black uppercase tracking-widest border-b px-1 pb-0.5" :class="!product ? 'text-transparent bg-slate-200 border-none animate-pulse select-none rounded' : 'text-bejo-600 hover:text-bejo-800 border-bejo-600/30'">Lihat Area</button>
         </div>
       </div>
     </div>

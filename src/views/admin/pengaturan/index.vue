@@ -12,6 +12,8 @@ import AppearanceTab from './tabs/AppearanceTab.vue'
 import BusinessTab from './tabs/BusinessTab.vue'
 import SecurityTab from './tabs/SecurityTab.vue'
 import SystemTab from './tabs/SystemTab.vue'
+import FaqTab from './tabs/FaqTab.vue'
+import BotTab from './tabs/BotTab.vue'
 
 export interface AppSettings {
   colorPrimary: string
@@ -22,7 +24,11 @@ export interface AppSettings {
 const { setSideNavSize } = useLayout()
 const settingsStore = useSettings()
 
-const activeTab = ref('appearance')
+const activeTab = ref(localStorage.getItem('settings_active_tab') || 'appearance')
+
+watch(activeTab, (newTab) => {
+  localStorage.setItem('settings_active_tab', newTab)
+})
 
 const activeComponent = computed(() => {
   switch (activeTab.value) {
@@ -30,6 +36,8 @@ const activeComponent = computed(() => {
     case 'business': return BusinessTab
     case 'security': return SecurityTab
     case 'system': return SystemTab
+    case 'faq': return FaqTab
+    case 'bot': return BotTab
     default: return AppearanceTab
   }
 })
@@ -37,6 +45,8 @@ const activeComponent = computed(() => {
 const tabs = [
   { id: 'appearance', name: 'Tampilan', icon: 'lucide:monitor-smartphone', description: 'Atur tema, warna brand, dan tata letak sidebar.' },
   { id: 'business', name: 'Profil Perusahaan', icon: 'lucide:building-2', description: 'Kelola identitas, kontak resmi, dan info operasional.' },
+  { id: 'bot', name: 'AI Bot Setting', icon: 'lucide:bot', description: 'Atur instruksi, gaya bahasa, dan logika cerdas bot.' },
+  { id: 'faq', name: 'Manajemen FAQ', icon: 'lucide:help-circle', description: 'Kelola pertanyaan dan jawaban bantuan pelanggan.' },
   { id: 'system', name: 'Sistem', icon: 'lucide:settings-2', description: 'Kontrol global, mode perbaikan, dan status situs.' },
   { id: 'security', name: 'Keamanan', icon: 'lucide:shield-check', description: 'Perbarui kata sandi akses administrator.' }
 ]

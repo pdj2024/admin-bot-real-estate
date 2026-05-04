@@ -5,7 +5,7 @@ import BaseFormGroup from '@/components/common/BaseFormGroup.vue'
 
 const state = inject<any>('propertyModalState')
 if (!state) {
-  throw new Error('TabSpesifikasiDetail must be used within a component providing propertyModalState')
+  throw new Error('TabSpesifikasi must be used within a component providing propertyModalState')
 }
 
 const { form, panjang, lebar, newAkses } = state
@@ -25,7 +25,9 @@ const handleInputCurrency = (event: Event, field: 'Harga_Jual1' | 'Harga_Jual2' 
   const input = event.target as HTMLInputElement
   const numericString = input.value.replace(/\D/g, '')
   if (!numericString) {
-    form.value[field] = 0; input.value = ''; return
+    form.value[field] = 0
+    input.value = ''
+    return
   }
   const pureNumber = parseInt(numericString, 10)
   form.value[field] = pureNumber
@@ -41,42 +43,8 @@ const addAkses = () => {
 </script>
 
 <template>
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start scale-in">
-    <!-- Left Column: Specs & Dimensi -->
-    <div class="space-y-10">
-      <div class="space-y-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <BaseFormGroup label="LUAS TANAH (M²)" icon="lucide:land-plot" required>
-            <input v-model="form.Luas_Tanah" type="number" class="field-input !pl-10" placeholder="0" />
-          </BaseFormGroup>
-          <BaseFormGroup label="LUAS BANGUNAN (M²)" icon="lucide:building-2" required>
-            <input v-model="form.Luas_Bangunan" type="number" class="field-input !pl-10" placeholder="0" />
-          </BaseFormGroup>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <BaseFormGroup label="JUMLAH LANTAI" icon="lucide:layers">
-            <input v-model="form.Jumlah_Lantai" type="number" class="field-input !pl-10" placeholder="0" />
-          </BaseFormGroup>
-          <BaseFormGroup label="DIMENSI (P X L)" icon="lucide:ruler">
-            <div class="flex items-center gap-2">
-              <input v-model="panjang" placeholder="P" class="field-input text-center !px-2 flex-1" />
-              <span class="text-slate-300 font-bold">×</span>
-              <input v-model="lebar" placeholder="L" class="field-input text-center !px-2 flex-1" />
-            </div>
-          </BaseFormGroup>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-          <BaseFormGroup v-for="s in specs" :key="s.key" :label="s.label.toUpperCase()" :icon="s.icon">
-            <input v-model="form[s.key]" type="number" class="field-input !pl-10" placeholder="0" />
-          </BaseFormGroup>
-        </div>
-      </div>
-    </div>
-
-    <!-- Right Column: Transaksi & Harga -->
-    <div class="space-y-10 lg:pl-10 lg:border-l lg:border-slate-100">
+  <div class="space-y-8 scale-in pb-10">
+    <div class="space-y-8">
       <div class="space-y-6">
         <div class="flex items-center justify-between pb-2 border-b border-slate-100">
           <label class="text-[10px] font-black text-slate-800 uppercase tracking-widest">Opsi Transaksi</label>
@@ -100,10 +68,10 @@ const addAkses = () => {
           <!-- Jual Section -->
           <div v-if="form.Status_Transaksi.includes('Jual')" class="grid grid-cols-1 md:grid-cols-2 gap-6 scale-in">
             <BaseFormGroup label="HARGA JUAL AWAL (RP)" icon="lucide:tag" required>
-              <input type="text" :value="form.Harga_Jual1 ? formatCurrency(form.Harga_Jual1) : ''" @input="handleInputCurrency($event, 'Harga_Jual1')" class="field-input !pl-10" placeholder="Harga awal" />
+              <input type="text" :value="form.Harga_Jual1 ? formatCurrency(form.Harga_Jual1) : ''" @input="handleInputCurrency($event, 'Harga_Jual1')" class="field-input !pl-11" placeholder="Harga awal" />
             </BaseFormGroup>
             <BaseFormGroup label="HARGA JUAL DISKON (RP)" icon="lucide:percent">
-              <input type="text" :value="form.Harga_Jual2 ? formatCurrency(form.Harga_Jual2) : ''" @input="handleInputCurrency($event, 'Harga_Jual2')" class="field-input !pl-10 text-emerald-600 bg-emerald-50/5 border-emerald-100" placeholder="Harga promo" />
+              <input type="text" :value="form.Harga_Jual2 ? formatCurrency(form.Harga_Jual2) : ''" @input="handleInputCurrency($event, 'Harga_Jual2')" class="field-input !pl-11 text-emerald-600 bg-emerald-50/5 border-emerald-100" placeholder="Harga promo" />
             </BaseFormGroup>
           </div>
 
@@ -112,24 +80,24 @@ const addAkses = () => {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <BaseFormGroup label="HARGA SEWA AWAL (RP)" icon="lucide:calendar-check" required>
                 <div class="flex items-center gap-2">
-                  <input type="text" :value="form.Harga_Sewa1 ? formatCurrency(form.Harga_Sewa1) : ''" @input="handleInputCurrency($event, 'Harga_Sewa1')" class="field-input !pl-10 flex-1" placeholder="Per tahun" />
-                  <span class="text-[9px] font-black text-slate-400 uppercase">/ Thn</span>
+                  <input type="text" :value="form.Harga_Sewa1 ? formatCurrency(form.Harga_Sewa1) : ''" @input="handleInputCurrency($event, 'Harga_Sewa1')" class="field-input !pl-11 flex-1" placeholder="Harga sewa" />
+                  <span class="text-[9px] font-black text-slate-400 uppercase">/ {{ form.Satuan_Minimal_Sewa === 'Bulan' ? 'BLN' : 'THN' }}</span>
                 </div>
               </BaseFormGroup>
               <BaseFormGroup label="HARGA SEWA PROMO (RP)" icon="lucide:badge-percent">
                 <div class="flex items-center gap-2">
-                  <input type="text" :value="form.Harga_Sewa2 ? formatCurrency(form.Harga_Sewa2) : ''" @input="handleInputCurrency($event, 'Harga_Sewa2')" class="field-input !pl-10 text-blue-600 bg-blue-50/5 border-blue-100 flex-1" placeholder="Diskon" />
-                  <span class="text-[9px] font-black text-slate-400 uppercase">/ Thn</span>
+                  <input type="text" :value="form.Harga_Sewa2 ? formatCurrency(form.Harga_Sewa2) : ''" @input="handleInputCurrency($event, 'Harga_Sewa2')" class="field-input !pl-11 text-blue-600 bg-blue-50/5 border-blue-100 flex-1" placeholder="Diskon" />
+                  <span class="text-[9px] font-black text-slate-400 uppercase">/ {{ form.Satuan_Minimal_Sewa === 'Bulan' ? 'BLN' : 'THN' }}</span>
                 </div>
               </BaseFormGroup>
             </div>
 
             <div v-if="form.Ada_Minimal_Sewa" class="grid grid-cols-1 md:grid-cols-2 gap-6 scale-in">
               <BaseFormGroup label="MINIMAL SEWA" icon="lucide:clock">
-                <input v-model="form.Minimal_Sewa" type="number" class="field-input !pl-10" />
+                <input v-model="form.Minimal_Sewa" type="number" class="field-input !pl-11" />
               </BaseFormGroup>
               <BaseFormGroup label="SATUAN" icon="lucide:timer">
-                <select v-model="form.Satuan_Minimal_Sewa" class="field-input !pl-10 appearance-none bg-white">
+                <select v-model="form.Satuan_Minimal_Sewa" class="field-input !pl-11 appearance-none bg-white">
                   <option value="Bulan">Bulan</option>
                   <option value="Tahun">Tahun</option>
                 </select>
@@ -140,20 +108,49 @@ const addAkses = () => {
           <BaseFormGroup label="AKSESIBILITAS" icon="lucide:road">
             <div class="flex gap-2">
               <div class="relative flex-1">
-                <input v-model="newAkses" @keyup.enter="addAkses" placeholder="Ketik akses (e.g. 5 min ke tol)..." class="field-input !pl-10 w-full" />
+                <input v-model="newAkses" @keyup.enter="addAkses" placeholder="Ketik akses (e.g. 5 min ke tol)..." class="field-input !pl-11 w-full" />
               </div>
               <button @click="addAkses" type="button" class="size-11 bg-slate-800 text-white rounded-xl shadow-lg hover:bg-black transition-all flex items-center justify-center active:scale-95 shrink-0">
                 <Icon icon="lucide:plus" class="size-5" />
               </button>
             </div>
           </BaseFormGroup>
-          
+
           <div class="flex flex-wrap gap-2 -mt-1 mb-4">
             <span v-for="(a, i) in form.Akses_Jalan" :key="i" class="bg-slate-50 border border-slate-200 text-[10px] font-black text-slate-500 px-3 py-1.5 rounded-lg flex items-center gap-2 group hover:border-red-200 hover:bg-red-50 transition-colors">
               {{ a }}
               <Icon @click="form.Akses_Jalan.splice(i, 1)" icon="lucide:x" class="size-3 text-red-500 cursor-pointer" />
             </span>
           </div>
+        </div>
+      </div>
+      <div class="space-y-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <BaseFormGroup label="LUAS TANAH (M²)" icon="lucide:land-plot" required>
+            <input v-model="form.Luas_Tanah" type="number" class="field-input !pl-11" placeholder="0" />
+          </BaseFormGroup>
+          <BaseFormGroup label="LUAS BANGUNAN (M²)" icon="lucide:building-2" required>
+            <input v-model="form.Luas_Bangunan" type="number" class="field-input !pl-11" placeholder="0" />
+          </BaseFormGroup>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <BaseFormGroup label="JUMLAH LANTAI" icon="lucide:layers">
+            <input v-model="form.Jumlah_Lantai" type="number" class="field-input !pl-11" placeholder="0" />
+          </BaseFormGroup>
+          <BaseFormGroup label="DIMENSI (P X L)" icon="lucide:ruler">
+            <div class="flex items-center gap-2">
+              <input v-model="panjang" placeholder="P" class="field-input text-center !px-2 flex-1" />
+              <span class="text-slate-300 font-bold">×</span>
+              <input v-model="lebar" placeholder="L" class="field-input text-center !px-2 flex-1" />
+            </div>
+          </BaseFormGroup>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+          <BaseFormGroup v-for="s in specs" :key="s.key" :label="s.label.toUpperCase()" :icon="s.icon">
+            <input v-model="form[s.key]" type="number" class="field-input !pl-11" placeholder="0" />
+          </BaseFormGroup>
         </div>
       </div>
     </div>
@@ -166,11 +163,31 @@ const addAkses = () => {
 .field-input {
   @apply w-full border border-slate-200 rounded-xl py-2.5 px-4 text-sm bg-card focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none font-bold text-slate-700 placeholder:text-slate-300 placeholder:font-medium;
 }
-.custom-scroll { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
-.custom-scroll::-webkit-scrollbar { height: 4px; width: 4px; }
-.custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 20px; }
-.scale-in { animation: scale-in 0.2s ease-out; }
-@keyframes scale-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+.custom-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+.custom-scroll::-webkit-scrollbar {
+  height: 4px;
+  width: 4px;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 20px;
+}
+.scale-in {
+  animation: scale-in 0.2s ease-out;
+}
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
 
 /* Styling untuk New Place Autocomplete Web Component */
 #place-autocomplete-container :deep(gmpx-place-autocomplete),

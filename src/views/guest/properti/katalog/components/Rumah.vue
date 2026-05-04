@@ -6,10 +6,10 @@
       </div>
 
       <div class="grid grid-cols-2 sm:flex sm:items-center gap-3 w-full sm:w-auto relative mb-6 sm:mb-0">
-        <button @click="$emit('openFilter')" class="lg:hidden flex-1 flex items-center justify-center gap-2 px-4 py-2 border border-slate-200 rounded-xl bg-slate-50 text-sm font-bold text-slate-700"><Icon icon="lucide:filter" class="size-4" /> Filter</button>
+        <button @click="$emit('openFilter')" class="lg:hidden flex-1 flex items-center justify-center gap-2 px-4 py-2 border border-bejo-100 rounded-xl bg-bejo-50 text-sm font-bold text-bejo-700 hover:bg-bejo-100 transition-colors"><Icon icon="lucide:filter" class="size-4" /> Filter</button>
 
         <div id="transaksi-container" class="relative flex-1 sm:flex-none">
-          <button @click="isTransaksiOpen = !isTransaksiOpen" class="w-full flex items-center justify-between gap-3 px-4 py-2 border border-slate-200 rounded-xl bg-white text-sm font-bold hover:bg-slate-50 hover:border-slate-300 transition-all text-slate-700">
+          <button @click="isTransaksiOpen = !isTransaksiOpen" class="w-full flex items-center justify-between gap-3 px-4 py-2 border border-bejo-100 rounded-xl bg-white text-sm font-bold hover:bg-bejo-50 hover:border-bejo-200 transition-all text-slate-700">
             <div class="flex items-center gap-2">
               <Icon icon="lucide:tag" class="size-4 text-bejo-600" />
               <span>{{ selectedTransaksi }}</span>
@@ -29,7 +29,7 @@
         </div>
 
         <div id="type-container" class="relative flex-1 sm:flex-none">
-          <button @click="isTypeOpen = !isTypeOpen" class="w-full flex items-center justify-between gap-3 px-4 py-2 border border-slate-200 rounded-xl bg-white text-sm font-bold hover:bg-slate-50 hover:border-slate-300 transition-all text-slate-700">
+          <button @click="isTypeOpen = !isTypeOpen" class="w-full flex items-center justify-between gap-3 px-4 py-2 border border-bejo-100 rounded-xl bg-white text-sm font-bold hover:bg-bejo-50 hover:border-bejo-200 transition-all text-slate-700">
             <div class="flex items-center gap-2">
               <Icon icon="lucide:home" class="size-4 text-bejo-600" />
               <span>{{ selectedType }}</span>
@@ -49,7 +49,7 @@
         </div>
 
         <div id="sorting-container" class="relative flex-1 sm:flex-none">
-          <button @click="isSortOpen = !isSortOpen" class="w-full flex items-center justify-between gap-3 px-4 py-2 border border-slate-200 rounded-xl bg-white text-sm font-bold hover:bg-slate-50 hover:border-slate-300 transition-all text-slate-700">
+          <button @click="isSortOpen = !isSortOpen" class="w-full flex items-center justify-between gap-3 px-4 py-2 border border-bejo-100 rounded-xl bg-white text-sm font-bold hover:bg-bejo-50 hover:border-bejo-200 transition-all text-slate-700">
             <div class="flex items-center gap-2">
                 <Icon icon="lucide:arrow-up-down" class="size-4 text-bejo-600" />
               <span>{{ selectedSort }}</span>
@@ -70,18 +70,18 @@
 
         <!-- Top Pagination -->
         <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-100 shadow-sm sm:flex-none flex-1 justify-center">
-          <button @click="handlePageChange('prev')" :disabled="!table.getCanPreviousPage()" class="p-1.5 text-slate-500 hover:text-bejo-600 disabled:opacity-30 transition-colors hover:bg-slate-50 rounded-lg">
+          <button @click="handlePageChange('prev')" :disabled="!table.getCanPreviousPage()" class="p-1.5 text-slate-500 hover:text-bejo-600 disabled:opacity-30 transition-colors hover:bg-bejo-50 rounded-lg">
             <Icon icon="lucide:chevron-left" class="size-4" />
           </button>
           <div class="px-2 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">
             {{ table.getState().pagination.pageIndex + 1 }} / {{ table.getPageCount() }}
           </div>
-          <button @click="handlePageChange('next')" :disabled="!table.getCanNextPage()" class="p-1.5 text-slate-500 hover:text-bejo-600 disabled:opacity-30 transition-colors hover:bg-slate-50 rounded-lg">
+          <button @click="handlePageChange('next')" :disabled="!table.getCanNextPage()" class="p-1.5 text-slate-500 hover:text-bejo-600 disabled:opacity-30 transition-colors hover:bg-bejo-50 rounded-lg">
             <Icon icon="lucide:chevron-right" class="size-4" />
           </button>
         </div>
 
-        <button v-if="isAdmin" @click="$router.push('/admin/properti/tambah')" class="flex items-center justify-center gap-2 px-6 py-2 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-bejo-600 hover:shadow-lg hover:shadow-bejo-600/30 transition-all flex-1 sm:flex-none">
+        <button v-if="isAdmin" @click="$router.push('/admin/properti/tambah')" class="flex items-center justify-center gap-2 px-6 py-2 bg-bejo-600 text-white rounded-xl text-sm font-bold hover:bg-bejo-700 hover:shadow-lg hover:shadow-bejo-600/30 transition-all flex-1 sm:flex-none shadow-md shadow-bejo-600/10">
           <Icon icon="lucide:plus" class="size-4" /> Tambah
         </button>
       </div>
@@ -128,11 +128,11 @@
     <div class="flex flex-col sm:flex-row justify-between items-center mt-10 gap-4 pt-6">
       <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Halaman {{ table.getState().pagination.pageIndex + 1 }} dari {{ table.getPageCount() }}</p>
       <nav class="flex items-center gap-1.5 bg-white p-1.5 rounded-2xl border border-slate-100 shadow-sm">
-        <button @click="handlePageChange('prev')" :disabled="!table.getCanPreviousPage()" class="p-2 text-slate-500 hover:text-bejo-600 disabled:opacity-30 transition-colors hover:bg-slate-50 rounded-xl"><Icon icon="lucide:chevron-left" class="size-4" /></button>
-        <button v-for="n in table.getPageCount()" :key="n" @click="handlePageChange(n - 1)" :class="['size-8 rounded-xl text-xs font-bold transition-all shadow-sm', table.getState().pagination.pageIndex === n - 1 ? 'bg-bejo-600 text-white shadow-bejo-600/40' : 'text-slate-500 bg-white hover:bg-slate-50 hover:text-slate-800 border border-transparent']">
+        <button @click="handlePageChange('prev')" :disabled="!table.getCanPreviousPage()" class="p-2 text-slate-500 hover:text-bejo-600 disabled:opacity-30 transition-colors hover:bg-bejo-50 rounded-xl"><Icon icon="lucide:chevron-left" class="size-4" /></button>
+        <button v-for="n in table.getPageCount()" :key="n" @click="handlePageChange(n - 1)" :class="['size-8 rounded-xl text-xs font-bold transition-all shadow-sm', table.getState().pagination.pageIndex === n - 1 ? 'bg-bejo-600 text-white shadow-bejo-600/40' : 'text-slate-500 bg-white hover:bg-bejo-50 hover:text-bejo-800 border border-transparent']">
           {{ n }}
         </button>
-        <button @click="handlePageChange('next')" :disabled="!table.getCanNextPage()" class="p-2 text-slate-500 hover:text-bejo-600 disabled:opacity-30 transition-colors hover:bg-slate-50 rounded-xl"><Icon icon="lucide:chevron-right" class="size-4" /></button>
+        <button @click="handlePageChange('next')" :disabled="!table.getCanNextPage()" class="p-2 text-slate-500 hover:text-bejo-600 disabled:opacity-30 transition-colors hover:bg-bejo-50 rounded-xl"><Icon icon="lucide:chevron-right" class="size-4" /></button>
       </nav>
     </div>
   </div>
@@ -235,6 +235,7 @@ export interface Product {
   Minimal_Sewa: number | null
   Satuan_Minimal_Sewa: string
   Area: string
+  Nama_Kota: string
   Hide_alamat: boolean
   Akses_Jalan: string[]
   File_Image: string[]
@@ -423,9 +424,9 @@ onMounted(async () => {
 <style scoped>
 @reference "@/assets/css/style.css";
 .dropdown-item {
-  @apply w-full text-left p-2 hover:bg-slate-50 hover:text-bejo-700 text-sm font-semibold text-slate-700 transition-colors rounded-none;
+  @apply w-full text-left p-2 hover:bg-bejo-50 hover:text-bejo-700 text-sm font-semibold text-slate-700 transition-colors rounded-none;
 }
 .admin-dropdown-item {
-  @apply w-full flex items-center gap-2.5 px-3 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900 transition-colors text-left rounded-none;
+  @apply w-full flex items-center gap-2.5 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-bejo-50 hover:text-bejo-700 transition-colors text-left rounded-none;
 }
 </style>

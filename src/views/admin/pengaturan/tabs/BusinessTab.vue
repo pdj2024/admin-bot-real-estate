@@ -66,10 +66,10 @@ const form = reactive<CompanyProfile>({
 const fetchProfile = async () => {
   try {
     isLoading.value = true
-    
+
     // Use store fetch
     await settingsStore.fetchBusinessSettings()
-    
+
     // Sync store data to local form
     const profile = toRaw(settingsStore.business)
     Object.assign(form, {
@@ -85,38 +85,38 @@ const fetchProfile = async () => {
       About: profile.description,
       Gmap: profile.mapUrl
     })
-      
-      // Parse Hari_Buka (e.g. "Senin-Jumat")
-      if (form.Hari_Buka && form.Hari_Buka.includes('-')) {
-        const split = form.Hari_Buka.split('-')
-        hariDari.value = split[0].trim()
-        hariSampai.value = split[1].trim()
-      }
-      
-      // Parse Jam_Buka (e.g. "08.00-16.00")
-      if (form.Jam_Buka && form.Jam_Buka.includes('-')) {
-        const split = form.Jam_Buka.split('-')
-        jamDari.value = split[0].trim().replace('.', ':')
-        jamSampai.value = split[1].trim().replace('.', ':')
-      }
 
-      // Initialize map with existing Gmap coordinates if available
-      if (form.Gmap && form.Gmap.includes(',')) {
-        const [lat, lng] = form.Gmap.split(',').map(s => Number(s.trim()))
-        if (!isNaN(lat) && !isNaN(lng)) {
-          currentCoords.lat = lat
-          currentCoords.lng = lng
-        }
-      }
+    // Parse Hari_Buka (e.g. "Senin-Jumat")
+    if (form.Hari_Buka && form.Hari_Buka.includes('-')) {
+      const split = form.Hari_Buka.split('-')
+      hariDari.value = split[0].trim()
+      hariSampai.value = split[1].trim()
+    }
 
-      // Load map after form is populated with a slight delay for better performance
-      nextTick(() => {
-        setTimeout(() => {
-          loadGoogleMaps()
-        }, 800)
-      })
-  } catch (err) {
-    console.error('Fetch company profile error:', err)
+    // Parse Jam_Buka (e.g. "08.00-16.00")
+    if (form.Jam_Buka && form.Jam_Buka.includes('-')) {
+      const split = form.Jam_Buka.split('-')
+      jamDari.value = split[0].trim().replace('.', ':')
+      jamSampai.value = split[1].trim().replace('.', ':')
+    }
+
+    // Initialize map with existing Gmap coordinates if available
+    if (form.Gmap && form.Gmap.includes(',')) {
+      const [lat, lng] = form.Gmap.split(',').map((s) => Number(s.trim()))
+      if (!isNaN(lat) && !isNaN(lng)) {
+        currentCoords.lat = lat
+        currentCoords.lng = lng
+      }
+    }
+
+    // Load map after form is populated with a slight delay for better performance
+    nextTick(() => {
+      setTimeout(() => {
+        loadGoogleMaps()
+      }, 800)
+    })
+  } catch {
+    console.error('Fetch company profile error')
   } finally {
     isLoading.value = false
   }
@@ -125,38 +125,38 @@ const fetchProfile = async () => {
 const handleSave = async () => {
   try {
     isSaving.value = true
-    
+
     // Construct joined values
     const joinedHari = `${hariDari.value}-${hariSampai.value}`
     const joinedJam = `${jamDari.value}-${jamSampai.value}`
-    
+
     const payload = {
       Nama_Toko: form.Nama_Toko,
       Email: form.Email,
-      No_Telp: form.No_Telp || "",
+      No_Telp: form.No_Telp || '',
       No_Wa_1: form.No_Wa_1,
-      No_Wa_2: form.No_Wa_2 || "",
+      No_Wa_2: form.No_Wa_2 || '',
       Alamat_Toko: form.Alamat_Toko,
       Hari_Buka: joinedHari,
       Jam_Buka: joinedJam,
       Kode_Pos: form.Kode_Pos,
-      About: form.About || "",
-      Gmap: form.Gmap || ""
+      About: form.About || '',
+      Gmap: form.Gmap || ''
     }
-    
+
     const { data } = await api.put('/api/company/update', payload, {
       params: { no_id: 'comp_0001' },
       headers: { 'X-Jenis-User': 'Admin' }
     })
-    
+
     if (data.StatusCode === 200) {
       success('Profil perusahaan berhasil diperbarui')
       fetchProfile()
     } else {
       fail(data.Message || 'Gagal menyimpan profil')
     }
-  } catch (err) {
-    console.error('Save company profile error:', err)
+  } catch {
+    console.error('Save company profile error')
     fail('Terjadi kesalahan saat menghubungi server')
   } finally {
     isSaving.value = false
@@ -166,16 +166,36 @@ const handleSave = async () => {
 // Google Maps Logic
 const loadGoogleMaps = () => {
   if (typeof window.google?.maps?.importLibrary === 'function') {
-    initMap(); return
+    initMap()
+    return
   }
-  const g: any = window; let h: any; let a: any; const c = 'google'; const l = 'importLibrary'; const q = '__ib__'
-  const m = document; const b: any = g[c] || (g[c] = {}); const d = b.maps || (b.maps = {}); const r = new Set(); const e = new URLSearchParams()
-  const u = () => h || (h = new Promise(async (f, n) => {
-    await (a = m.createElement('script')); e.set('libraries', [...r].join(',')); e.set('key', GOOGLE_MAPS_API_KEY)
-    e.set('v', 'beta'); e.set('language', 'id'); e.set('region', 'ID'); e.set('callback', c + '.maps.' + q)
-    a.src = `https://maps.${c}apis.com/maps/api/js?` + e; d[q] = f; a.onerror = () => (h = n(Error('Maps could not load.')))
-    m.head.append(a)
-  }))
+  const g: any = window
+  let h: any
+  let a: any
+  const c = 'google'
+  const l = 'importLibrary'
+  const q = '__ib__'
+  const m = document
+  const b: any = g[c] || (g[c] = {})
+  const d = b.maps || (b.maps = {})
+  const r = new Set()
+  const e = new URLSearchParams()
+  const u = () =>
+    h ||
+    (h = new Promise(async (f, n) => {
+      await (a = m.createElement('script'))
+      e.set('libraries', [...r].join(','))
+      e.set('key', GOOGLE_MAPS_API_KEY)
+      e.set('v', 'beta')
+      e.set('language', 'id')
+      e.set('region', 'ID')
+      e.set('callback', c + '.maps.' + q)
+      e.set('loading', 'async')
+      a.src = `https://maps.${c}apis.com/maps/api/js?` + e
+      d[q] = f
+      a.onerror = () => (h = n(Error('Maps could not load.')))
+      m.head.append(a)
+    }))
   d[l] = (f: any, ...n: any[]) => r.add(f) && u().then(() => d[l](f, ...n))
   initMap()
 }
@@ -183,38 +203,37 @@ const loadGoogleMaps = () => {
 const initMap = async () => {
   if (!mapContainer.value) return
   try {
-    const [libraryMap, libraryMarker] = await Promise.all([
-      google.maps.importLibrary('maps'), 
-      google.maps.importLibrary('marker'), 
-      google.maps.importLibrary('places')
-    ]) as any[]
-    
+    const [libraryMap, libraryMarker] = (await Promise.all([google.maps.importLibrary('maps'), google.maps.importLibrary('marker'), google.maps.importLibrary('places')])) as any[]
+
     gGeocoder = markRaw(new google.maps.Geocoder())
     const initialPos = { ...currentCoords }
-    
-    gMap = markRaw(new libraryMap.Map(mapContainer.value, { 
-      center: initialPos, 
-      zoom: 15, 
-      mapId: 'COMPANY_LOCATION_MAP', 
-      mapTypeControl: false, 
-      streetViewControl: false 
-    }))
-    
+
+    gMap = markRaw(
+      new libraryMap.Map(mapContainer.value, {
+        center: initialPos,
+        zoom: 15,
+        mapId: 'COMPANY_LOCATION_MAP',
+        mapTypeControl: false,
+        streetViewControl: false
+      })
+    )
+
     isMapLoaded.value = true
     gMarker = markRaw(new libraryMarker.AdvancedMarkerElement({ map: gMap, position: initialPos, gmpDraggable: true }))
-    
-    const { AutocompleteSessionToken } = await google.maps.importLibrary('places') as any
+
+    const { AutocompleteSessionToken } = (await google.maps.importLibrary('places')) as any
     gAutocompleteSessionToken = new AutocompleteSessionToken()
 
-    gMarker.addListener('dragend', () => { 
-      if (gMarker.position) { 
+    gMarker.addListener('dragend', () => {
+      if (gMarker.position) {
         updateCoords(gMarker.position.lat, gMarker.position.lng)
       }
     })
-    
-    gMap.addListener('click', (e: any) => { 
-      if (e.latLng) { 
-        const lat = e.latLng.lat(); const lng = e.latLng.lng()
+
+    gMap.addListener('gmp-click', (e: any) => {
+      if (e.latLng) {
+        const lat = e.latLng.lat()
+        const lng = e.latLng.lng()
         gMarker.position = { lat, lng }
         updateCoords(lat, lng)
       }
@@ -231,13 +250,17 @@ const updateCoords = (lat: number, lng: number) => {
 }
 
 const handleSearchInput = async () => {
-  if (!searchQuery.value) { predictions.value = []; isPredictionsOpen.value = false; return }
+  if (!searchQuery.value) {
+    predictions.value = []
+    isPredictionsOpen.value = false
+    return
+  }
   try {
-    const { AutocompleteSuggestion } = await google.maps.importLibrary('places') as any
-    const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions({ 
-      input: searchQuery.value, 
-      sessionToken: gAutocompleteSessionToken, 
-      includedRegionCodes: ['id'] 
+    const { AutocompleteSuggestion } = (await google.maps.importLibrary('places')) as any
+    const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions({
+      input: searchQuery.value,
+      sessionToken: gAutocompleteSessionToken,
+      includedRegionCodes: ['id']
     })
     if (suggestions && suggestions.length) {
       predictions.value = suggestions.map((s: any) => ({
@@ -278,7 +301,10 @@ const getCurrentLocation = () => {
       if (gMarker) gMarker.position = pos
       updateCoords(pos.lat, pos.lng)
     },
-    () => { isLocating.value = false; fail('Gagal mendapat lokasi') }
+    () => {
+      isLocating.value = false
+      fail('Gagal mendapat lokasi')
+    }
   )
 }
 
@@ -311,7 +337,7 @@ onMounted(() => {
             <h4 class="text-xs font-black text-slate-800 uppercase tracking-widest">Identitas Dasar</h4>
           </div>
         </div>
-        
+
         <div class="p-8 space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="md:col-span-2">
@@ -319,60 +345,35 @@ onMounted(() => {
                 <Icon icon="lucide:id-card" class="size-4 text-bejo-600" />
                 Nama Bisnis
               </label>
-              <input 
-                v-model="form.Nama_Toko" 
-                type="text" 
-                class="field-input"
-                placeholder="Masukkan nama bisnis..."
-              />
+              <input v-model="form.Nama_Toko" type="text" class="field-input" placeholder="Masukkan nama bisnis..." />
             </div>
             <div>
               <label class="label">
                 <Icon icon="lucide:mail" class="size-4 text-bejo-600" />
                 Email Resmi
               </label>
-              <input 
-                v-model="form.Email" 
-                type="email" 
-                class="field-input"
-                placeholder="email@perusahaan.com"
-              />
+              <input v-model="form.Email" type="email" class="field-input" placeholder="email@perusahaan.com" />
             </div>
             <div>
               <label class="label">
                 <Icon icon="lucide:phone" class="size-4 text-bejo-600" />
                 Telepon Kantor
               </label>
-              <input 
-                v-model="form.No_Telp" 
-                type="text" 
-                class="field-input"
-                placeholder="021-XXXXX"
-              />
+              <input v-model="form.No_Telp" type="text" class="field-input" placeholder="021-XXXXX" />
             </div>
             <div>
               <label class="label">
                 <Icon icon="lucide:message-circle" class="size-4 text-bejo-600" />
                 WhatsApp Utama
               </label>
-              <input 
-                v-model="form.No_Wa_1" 
-                type="text" 
-                class="field-input"
-                placeholder="628XXXXXXXXX"
-              />
+              <input v-model="form.No_Wa_1" type="text" class="field-input" placeholder="628XXXXXXXXX" />
             </div>
             <div>
               <label class="label">
                 <Icon icon="lucide:message-circle" class="size-4 text-slate-400" />
                 WhatsApp Opsional
               </label>
-              <input 
-                v-model="form.No_Wa_2" 
-                type="text" 
-                class="field-input"
-                placeholder="628XXXXXXXXX"
-              />
+              <input v-model="form.No_Wa_2" type="text" class="field-input" placeholder="628XXXXXXXXX" />
             </div>
           </div>
 
@@ -381,12 +382,7 @@ onMounted(() => {
               <Icon icon="lucide:text-quote" class="size-4 text-bejo-600" />
               Tentang Bisnis
             </label>
-            <textarea 
-              v-model="form.About" 
-              rows="4" 
-              class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 text-sm font-medium focus:outline-none focus:ring-4 focus:ring-bejo-600/5 focus:border-bejo-600 transition-all resize-none leading-relaxed"
-              placeholder="Tuliskan detail visi, misi, atau profil singkat bisnis Anda..."
-            ></textarea>
+            <textarea v-model="form.About" rows="4" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 text-sm font-medium focus:outline-none focus:ring-4 focus:ring-bejo-600/5 focus:border-bejo-600 transition-all resize-none leading-relaxed" placeholder="Tuliskan detail visi, misi, atau profil singkat bisnis Anda..."></textarea>
           </div>
         </div>
       </div>
@@ -394,12 +390,12 @@ onMounted(() => {
       <!-- Lokasi & Operasional -->
       <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
         <div class="px-8 py-5 border-b border-slate-50 bg-slate-50/50 flex items-center gap-3">
-            <div class="size-8 rounded-lg bg-sky-600 flex items-center justify-center text-white shadow-lg shadow-sky-600/20">
-              <Icon icon="lucide:map-pin" class="size-4" />
-            </div>
-            <h4 class="text-xs font-black text-slate-800 uppercase tracking-widest">Lokasi & Jam Operasional</h4>
+          <div class="size-8 rounded-lg bg-sky-600 flex items-center justify-center text-white shadow-lg shadow-sky-600/20">
+            <Icon icon="lucide:map-pin" class="size-4" />
+          </div>
+          <h4 class="text-xs font-black text-slate-800 uppercase tracking-widest">Lokasi & Jam Operasional</h4>
         </div>
-        
+
         <div class="p-8 space-y-8">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="md:col-span-2">
@@ -476,14 +472,8 @@ onMounted(() => {
               <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
                 <Icon icon="lucide:search" class="size-4" />
               </div>
-              <input 
-                v-model="searchQuery" 
-                @input="handleSearchInput" 
-                @focus="isPredictionsOpen = predictions.length > 0"
-                placeholder="Cari lokasi ..." 
-                class="field-input !pl-11 !py-3.5 h-12" 
-              />
-              
+              <input v-model="searchQuery" @input="handleSearchInput" @focus="isPredictionsOpen = predictions.length > 0" placeholder="Cari lokasi ..." class="field-input !pl-11 !py-3.5 h-12" />
+
               <!-- Predictions Dropdown -->
               <div v-if="isPredictionsOpen && predictions.length" class="absolute top-full left-0 mt-2 w-full z-[100] bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden">
                 <div class="max-h-60 overflow-y-auto p-2 flex flex-col">
@@ -502,11 +492,7 @@ onMounted(() => {
 
             <!-- Map Container -->
             <div class="relative rounded-[2rem] overflow-hidden border border-slate-100 shadow-inner group bg-slate-50 min-h-[400px]">
-              <div 
-                ref="mapContainer" 
-                class="w-full h-[400px] transition-opacity duration-700"
-                :class="isMapLoaded ? 'opacity-100' : 'opacity-0'"
-              ></div>
+              <div ref="mapContainer" class="w-full h-[400px] transition-opacity duration-700" :class="isMapLoaded ? 'opacity-100' : 'opacity-0'"></div>
 
               <!-- Loading Overlay -->
               <div v-if="!isMapLoaded" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-50/80 backdrop-blur-sm z-10">
@@ -515,14 +501,8 @@ onMounted(() => {
               </div>
 
               <!-- Geolocation Button -->
-              <button 
-                @click="getCurrentLocation"
-                type="button"
-                class="absolute bottom-6 right-6 p-3 bg-white hover:bg-slate-50 text-slate-700 rounded-2xl shadow-xl border border-slate-100 transition-all active:scale-90 flex items-center gap-2 group z-20"
-                :disabled="isLocating"
-              >
-                <Icon :icon="isLocating ? 'lucide:loader-2' : 'lucide:locate-fixed'" 
-                      class="size-5" :class="isLocating ? 'animate-spin text-sky-600' : 'text-slate-400 group-hover:text-sky-600'" />
+              <button @click="getCurrentLocation" type="button" class="absolute bottom-6 right-6 p-3 bg-white hover:bg-slate-50 text-slate-700 rounded-2xl shadow-xl border border-slate-100 transition-all active:scale-90 flex items-center gap-2 group z-20" :disabled="isLocating">
+                <Icon :icon="isLocating ? 'lucide:loader-2' : 'lucide:locate-fixed'" class="size-5" :class="isLocating ? 'animate-spin text-sky-600' : 'text-slate-400 group-hover:text-sky-600'" />
                 <span class="text-[10px] font-black uppercase tracking-widest">{{ isLocating ? 'Mencari...' : 'Gunakan Lokasi Saat Ini' }}</span>
               </button>
             </div>
@@ -533,11 +513,7 @@ onMounted(() => {
       <!-- Actions -->
       <div class="flex items-center justify-end gap-3 pt-6">
         <button @click="fetchProfile" class="px-6 py-3 text-sm font-black text-slate-500 hover:text-slate-800 transition-colors uppercase tracking-widest">Batalkan</button>
-        <button 
-          @click="handleSave" 
-          :disabled="isSaving"
-          class="flex items-center gap-3 px-10 py-4 bg-bejo-600 text-white rounded-[1.5rem] font-black text-sm shadow-xl shadow-bejo-600/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
+        <button @click="handleSave" :disabled="isSaving" class="flex items-center gap-3 px-10 py-4 bg-bejo-600 text-white rounded-[1.5rem] font-black text-sm shadow-xl shadow-bejo-600/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
           <Icon v-if="isSaving" icon="lucide:loader-2" class="size-5 animate-spin" />
           {{ isSaving ? 'Menyimpan...' : 'Simpan Profil Perusahaan' }}
         </button>
@@ -549,7 +525,9 @@ onMounted(() => {
 <style scoped>
 @reference "@/assets/css/style.css";
 
-.label { @apply flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1; }
+.label {
+  @apply flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1;
+}
 .field-input {
   @apply w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3.5 text-sm font-bold focus:ring-4 focus:ring-bejo-600/5 focus:border-bejo-600 outline-none transition-all;
 }

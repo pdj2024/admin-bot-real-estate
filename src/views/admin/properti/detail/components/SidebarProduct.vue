@@ -2,6 +2,9 @@
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import type { Product } from '../index.vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 const props = defineProps<{
   product: Product | null
@@ -81,12 +84,6 @@ const handleDragEnd = (e: TouchEvent | MouseEvent) => {
   }
 }
 
-const handleWaContact = () => {
-  const url = window.location.href
-  const text = `Halo Admin, saya tertarik untuk menanyakan lebih lanjut mengenai properti *${props.product?.Nama_Produk}*\n\n${url}`
-  window.open(`https://wa.me/62895353837000?text=${encodeURIComponent(text)}`, '_blank')
-}
-
 const startTimer = () => {
   timer = setInterval(() => nextSlide(true), 5000)
 }
@@ -96,10 +93,16 @@ const resetTimer = () => {
 }
 
 const shareProduct = async () => {
+  const currentUrl = window.location.href
+  // Ensure the URL contains the proper admin path if shared from admin
+  const finalUrl = currentUrl.includes('/properti/detail/') 
+    ? currentUrl 
+    : `${window.location.origin}/properti/detail/${props.product?.Slug}`
+
   const shareData = {
     title: props.product?.Nama_Produk || 'Lihat properti ini',
-    text: `Cek ${props.product?.Nama_Produk} di area ${props.product?.Area}.`,
-    url: window.location.href
+    text: `Cek ${props.product?.Nama_Produk} di Kota/Kab. ${props.product?.Nama_Kota}.`,
+    url: finalUrl
   }
   try {
     if (navigator.share) {
@@ -143,7 +146,6 @@ watch(
     if (videoMap.value[currentMediaUrl.value]) {
       isVideoLoading.value = true
     } else {
-      // Let image load event fire, default to loading
       isVideoLoading.value = true
     }
   },
@@ -154,17 +156,16 @@ const isLightboxOpen = ref(false)
 
 const openLightbox = () => {
   isLightboxOpen.value = true
-  document.body.style.overflow = 'hidden' // Prevent scroll
-  resetTimer() // Stop carousel auto-play
+  document.body.style.overflow = 'hidden'
+  resetTimer()
 }
 
 const closeLightbox = () => {
   isLightboxOpen.value = false
-  document.body.style.overflow = '' // Restore scroll
+  document.body.style.overflow = ''
   startTimer()
 }
 
-// Global Keyboard Listener for Esc key
 const handleKeyDown = (e: KeyboardEvent) => {
   if (e.key === 'Escape' && isLightboxOpen.value) {
     closeLightbox()
@@ -175,13 +176,67 @@ const handleKeyDown = (e: KeyboardEvent) => {
 }
 
 const formattedArea = computed(() => {
-  if (!props.product?.Area?.[0]) return ''
-  const parts = props.product.Area[0].split(',').map((s) => s.trim())
-  if (parts.length >= 2) {
-    return parts.slice(-2).join(', ')
+  if (!props.product) return ''
+  const kota = props.product.Nama_Kota || ''
+
+  // Get raw area string
+  let areaRaw = ''
+  if (Array.isArray(props.product.Area)) {
+    areaRaw = props.product.Area[0] || ''
+  } else {
+    areaRaw = (props.product.Area as any) || ''
   }
-  return props.product.Area[0]
+
+  // Try to find province from areaRaw
+  let provinsi = ''
+  if (areaRaw) {
+    const parts = areaRaw.split(',').map((s) => s.trim())
+    if (parts.length >= 2) {
+      provinsi = parts[parts.length - 1]
+    }
+  }
+
+  if (kota && provinsi && kota.toLowerCase() !== provinsi.toLowerCase()) {
+    return `${kota}, ${provinsi}`
+  }
+  return kota || provinsi || areaRaw || 'Lokasi tidak tersedia'
 })
+
+const goToArea = () => {
+  if (!props.product) return
+
+  let city = props.product.Nama_Kota || ''
+  let province = ''
+
+  // Split Nama_Kota if it contains province (e.g. "Surabaya, Jawa Timur")
+  if (city.includes(',')) {
+    const parts = city.split(',').map((s) => s.trim())
+    city = parts[0]
+    province = parts[1]
+  }
+
+  // Fallback province from Area if not in Nama_Kota
+  if (!province) {
+    let areaRaw = ''
+    if (Array.isArray(props.product.Area)) {
+      areaRaw = props.product.Area[0] || ''
+    } else {
+      areaRaw = (props.product.Area as any) || ''
+    }
+    if (areaRaw.includes(',')) {
+      const parts = areaRaw.split(',').map((s) => s.trim())
+      province = parts[parts.length - 1]
+    }
+  }
+
+  router.push({
+    path: '/properti/katalog',
+    query: {
+      province: province,
+      city: city
+    }
+  })
+}
 
 onMounted(() => {
   startTimer()
@@ -220,21 +275,15 @@ onUnmounted(() => {
 
             <!-- Media Content -->
             <div @click="openLightbox" class="h-full w-full transition-all duration-700 ease-out group-hover:scale-105 will-change-transform transform-gpu relative">
-              <Transition mode="out-in" enter-active-class="transition duration-500 ease-out" enter-from-class="opacity-0 scale-95" enter-to-class="opacity-100 scale-100" leave-active-class="transition duration-300 ease-in" leave-from-class="opacity-100 scale-100" leave-to-class="opacity-0 scale-95">
-                <div :key="currentMediaUrl" class="h-full w-full">
-                  <div v-if="isVideoLoading" class="absolute inset-0 flex items-center justify-center bg-slate-50/50 backdrop-blur-sm z-20">
-                    <Icon icon="lucide:loader-2" class="size-8 text-bejo-500 animate-spin" />
-                  </div>
+              <div v-if="isVideoLoading" class="absolute inset-0 flex items-center justify-center bg-slate-100 z-20">
+                <Icon icon="lucide:loader-2" class="size-8 text-bejo-500 animate-spin" />
+              </div>
 
-                  <video v-if="videoMap[currentMediaUrl]" :src="currentMediaUrl" class="w-full h-full object-cover" autoplay muted playsinline preload="auto" @ended="handleVideoEnded" @waiting="isVideoLoading = true" @playing="isVideoLoading = false" @loadeddata="isVideoLoading = false" @canplay="isVideoLoading = false" :loop="false"></video>
+              <video v-if="videoMap[currentMediaUrl]" :key="currentMediaUrl" :src="currentMediaUrl" class="w-full h-full object-cover" autoplay muted playsinline preload="auto" @ended="handleVideoEnded" @waiting="isVideoLoading = true" @playing="isVideoLoading = false" @loadeddata="isVideoLoading = false" @canplay="isVideoLoading = false" :loop="false"></video>
 
-                  <img v-else-if="videoMap[currentMediaUrl] === false" :src="currentMediaUrl" class="w-full h-full object-cover select-none" loading="eager" @load="isVideoLoading = false" draggable="false" />
+              <img v-else-if="videoMap[currentMediaUrl] === false" :key="currentMediaUrl + 'img'" :src="currentMediaUrl" class="w-full h-full object-cover select-none" loading="eager" @load="isVideoLoading = false" draggable="false" />
 
-                  <div v-else class="w-full h-full bg-slate-50 flex items-center justify-center">
-                    <Icon icon="lucide:loader-2" class="size-8 text-bejo-500 animate-spin" />
-                  </div>
-                </div>
-              </Transition>
+              <div v-else class="w-full h-full bg-gray-200 animate-pulse"></div>
             </div>
 
             <!-- Navigation Buttons -->
@@ -251,11 +300,7 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-3 relative">
-            <button @click="handleWaContact" class="flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm tracking-wide transition-all shadow-md bg-bejo-600 text-white hover:bg-bejo-700 hover:shadow-bejo-600/30">
-              <Icon icon="lucide:headset" class="size-4" />
-              Tanya Kami
-            </button>
+          <div class="grid grid-cols-1 gap-3 relative">
             <button type="button" @click.prevent="shareProduct" class="flex w-full items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm tracking-wide transition-all shadow-sm border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300">
               <Icon icon="lucide:share-2" class="size-4" />
               Bagikan
@@ -276,7 +321,7 @@ onUnmounted(() => {
               </span>
             </div>
           </div>
-          <button class="text-[11px] font-black uppercase tracking-widest border-b px-1 pb-0.5" :class="!product ? 'text-transparent bg-slate-200 border-none animate-pulse select-none rounded' : 'text-bejo-600 hover:text-bejo-800 border-bejo-600/30'">Lihat Area</button>
+          <button @click="goToArea" class="text-[11px] font-black uppercase tracking-widest border-b px-1 pb-0.5" :class="!product ? 'text-transparent bg-slate-200 border-none animate-pulse select-none rounded' : 'text-bejo-600 hover:text-bejo-800 border-bejo-600/30'">Lihat Area</button>
         </div>
       </div>
     </div>
@@ -286,12 +331,10 @@ onUnmounted(() => {
   <Teleport to="body">
     <Transition enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0" enter-to-class="opacity-100" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0">
       <div v-if="isLightboxOpen" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 backdrop-blur-xl">
-        <!-- Close Button -->
         <button @click="closeLightbox" class="absolute top-6 right-6 z-[10000] size-14 flex items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md border border-white/20 hover:bg-bejo-600 transition-all">
           <Icon icon="lucide:x" class="size-7" />
         </button>
 
-        <!-- Navigation -->
         <button @click="prevSlide" class="absolute left-6 top-1/2 -translate-y-1/2 z-[10000] size-16 flex items-center justify-center rounded-full bg-white/5 text-white backdrop-blur-md border border-white/10 hover:bg-bejo-600 transition-all group">
           <Icon icon="lucide:chevron-left" class="size-10 group-hover:-translate-x-1 transition-transform" />
         </button>
@@ -299,7 +342,6 @@ onUnmounted(() => {
           <Icon icon="lucide:chevron-right" class="size-10 group-hover:translate-x-1 transition-transform" />
         </button>
 
-        <!-- Media Display -->
         <Transition mode="out-in" enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0 scale-95" enter-to-class="opacity-100 scale-100" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100 scale-100" leave-to-class="opacity-0 scale-95">
           <div :key="currentMediaUrl" class="w-full h-full flex items-center justify-center p-12 lg:p-24">
             <video v-if="videoMap[currentMediaUrl]" :src="currentMediaUrl" class="max-h-full max-w-full rounded-2xl shadow-2xl" controls autoplay></video>
@@ -307,7 +349,6 @@ onUnmounted(() => {
           </div>
         </Transition>
 
-        <!-- Status & Indicators -->
         <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 z-[10000]">
           <div class="px-5 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/10 text-white font-black uppercase tracking-[0.3em] text-[10px]">{{ currentIndex + 1 }} / {{ product?.MediaUrls?.length }}</div>
           <div class="flex gap-2.5">

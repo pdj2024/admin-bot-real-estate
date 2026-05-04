@@ -4,7 +4,7 @@
       <div class="p-6">
         <div class="flex items-center justify-between mb-6">
           <h6 class="text-lg font-bold text-slate-800 tracking-tight uppercase">Filter</h6>
-          <button @click="clearAll" class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest hover:text-red-500 transition-colors underline underline-offset-4 decoration-transparent hover:decoration-red-500">Hapus Semua</button>
+          <button @click="clearAll" class="text-[10px] font-semibold text-bejo-400 uppercase tracking-widest hover:text-red-500 transition-colors underline underline-offset-4 decoration-transparent hover:decoration-red-500">Hapus Semua</button>
         </div>
 
         <div class="space-y-5">
@@ -89,9 +89,9 @@
                   <div class="relative w-full" id="city-dropdown">
                     <button 
                       @click="toggleCity"
-                      :disabled="!region.provinceId"
+                      :disabled="!region.province && !region.provinceId"
                       class="w-full flex items-center justify-between pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                      :class="region.provinceId ? 'focus:border-bejo-600 focus:bg-white focus:ring-4 focus:ring-bejo-600/10' : ''"
+                      :class="region.province || region.provinceId ? 'focus:border-bejo-600 focus:bg-white focus:ring-4 focus:ring-bejo-600/10' : ''"
                     >
                       <div class="flex items-center gap-2 truncate">
                         <Icon icon="lucide:map-pin" class="size-4 text-slate-400" />
@@ -245,7 +245,7 @@
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue'
 
 interface Props {
   openFilter: boolean
@@ -340,19 +340,27 @@ const toggleCity = () => {
   }
 }
 
+const fetchRegencies = async (id: string) => {
+  if (!id) {
+    regencies.value = []
+    return
+  }
+  try {
+    const res = await fetch(`/region/regencies/${id}.json`)
+    regencies.value = await res.json()
+  } catch (err) {
+    console.error('Error fetching regencies:', err)
+    regencies.value = []
+  }
+}
+
+watch(() => props.region.provinceId, (newId) => {
+  if (newId) fetchRegencies(newId)
+}, { immediate: true })
+
 const selectProvince = async (id: string, name: string) => {
   isProvOpen.value = false
   emit('update:region', { provinceId: id, province: name, city: '' })
-  if (id) {
-    try {
-      const res = await fetch(`/region/regencies/${id}.json`)
-      regencies.value = await res.json()
-    } catch (err) {
-      console.error('Error fetching regencies:', err)
-    }
-  } else {
-    regencies.value = []
-  }
 }
 
 const selectCity = (name: string) => {
@@ -383,7 +391,6 @@ const clearAll = () => {
     carport: '',
     lantai: ''
   })
-  emit('update:region', { province: '', city: '', provinceId: '' })
   emit('update:region', { province: '', city: '', provinceId: '' })
   emit('update:priceRange', { min: '', max: '' })
 }

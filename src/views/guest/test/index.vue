@@ -37,7 +37,7 @@
                     <button 
                       @click="searchLocation" 
                       :disabled="isLoading"
-                      class="px-6 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-bejo-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-slate-900/10 active:scale-95"
+                      class="px-6 py-2 bg-bejo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-bejo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-bejo-600/10 active:scale-95"
                     >
                       <Icon v-if="isLoading" icon="lucide:loader-2" class="size-4 animate-spin" />
                       <span v-else>Cari</span>
@@ -58,7 +58,7 @@
                       @click="selectLocation(result)"
                       class="p-5 hover:bg-bejo-50 cursor-pointer transition-all flex gap-4 group"
                     >
-                      <div class="size-10 rounded-xl bg-slate-50 flex-shrink-0 flex items-center justify-center text-slate-400 group-hover:bg-bejo-500 group-hover:text-white transition-all">
+                      <div class="size-10 rounded-xl bg-bejo-50 flex-shrink-0 flex items-center justify-center text-bejo-400 group-hover:bg-bejo-500 group-hover:text-white transition-all">
                         <Icon icon="lucide:map-pin" class="size-5" />
                       </div>
                       <div class="flex flex-col gap-0.5">

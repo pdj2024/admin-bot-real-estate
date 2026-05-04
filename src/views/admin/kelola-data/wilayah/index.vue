@@ -115,16 +115,6 @@ const handleDelete = (type: string, id: string) => {
       const { data } = await api.delete(endpoint)
       if (data.StatusCode === 200) {
         successAlert('Data berhasil dihapus')
-        
-        // Update local state directly for immediate UI update
-        if (type === 'kota') {
-          dataWilayah.value.kota = dataWilayah.value.kota.filter((c: any) => (c.No_Id || c.No_Id_Kota) !== id)
-        } else if (type === 'area') {
-          dataWilayah.value.area = dataWilayah.value.area.filter((a: any) => (a.No_Id || a.No_Id_Area) !== id)
-        } else if (type === 'prioritas') {
-          dataWilayah.value.prioritas = dataWilayah.value.prioritas.filter((p: any) => (p.No_Id || p.No_Id_Prioritas) !== id)
-        }
-        
         fetchAll()
       } else {
         failAlert(data.Message || 'Gagal menghapus data')
@@ -133,6 +123,50 @@ const handleDelete = (type: string, id: string) => {
       failAlert(err.response?.data?.Message || 'Terjadi kesalahan sistem')
     }
   })
+}
+
+const toggleStatus = async (type: 'kota' | 'area' | 'prioritas', item: any, forceStatus?: string) => {
+  const newStatus = forceStatus || (item.Status === 'aktif' ? 'nonaktif' : 'aktif')
+  const itemId = item.No_Id || item.No_Id_Kota || item.No_Id_Area || item.No_Id_Prioritas
+  
+  try {
+    const payload: any = {
+      Nama: item.Nama,
+      Deskripsi: item.Deskripsi || null,
+      status: newStatus // Using lowercase 'status' as per user request
+    }
+    
+    if (type === 'area') payload.Id_Kota = item.Id_Kota
+    if (type === 'prioritas') payload.Id_Area = item.Id_Area || null
+    
+    const { data } = await api.put(`/api/${type}/update?no_id=${itemId}`, payload, {
+      headers: { 'X-Jenis-User': 'Admin' }
+    })
+    
+    if (data.StatusCode === 200) {
+      // Update source of truth to trigger computed property reactivity
+      const sourceList = dataWilayah.value[type]
+      const originalItem = sourceList.find((x: any) => (x.No_Id || x.No_Id_Kota || x.No_Id_Area || x.No_Id_Prioritas) === itemId)
+      if (originalItem) {
+        originalItem.Status = newStatus
+      }
+
+      // Cascading Status: If parent status changes, children follow (both for active and non-active)
+      if (type === 'kota') {
+        const children = dataWilayah.value.area.filter((a: any) => a.Id_Kota === itemId)
+        for (const child of children) {
+          if (child.Status !== newStatus) await toggleStatus('area', child, newStatus)
+        }
+      } else if (type === 'area') {
+        const children = dataWilayah.value.prioritas.filter((p: any) => p.Id_Area === itemId)
+        for (const child of children) {
+          if (child.Status !== newStatus) await toggleStatus('prioritas', child, newStatus)
+        }
+      }
+    }
+  } catch (err) {
+    console.error(`Gagal mengubah status ${type}:`, err)
+  }
 }
 
 // Nested structure for rendering
@@ -153,17 +187,24 @@ const hierarchicalData = computed(() => {
 
   return cities.map(city => {
     const cityId = city.No_Id || city.No_Id_Kota
+    const isCityActive = city.Status !== 'nonaktif'
     const cityAreas = dataWilayah.value.area.filter((a: any) => a.Id_Kota === cityId)
     
     return {
       ...city,
       _id: cityId,
+      _isActive: isCityActive,
       _areas: cityAreas.map((area: any) => {
         const areaId = area.No_Id || area.No_Id_Area
+        const isAreaActive = isCityActive && area.Status !== 'nonaktif'
         return {
           ...area,
           _id: areaId,
-          _priorities: dataWilayah.value.prioritas.filter((p: any) => p.Id_Area === areaId)
+          _isActive: isAreaActive,
+          _priorities: dataWilayah.value.prioritas.filter((p: any) => p.Id_Area === areaId).map((prio: any) => ({
+            ...prio,
+            _isActive: isAreaActive && prio.Status !== 'nonaktif'
+          }))
         }
       })
     }
@@ -208,15 +249,29 @@ const hierarchicalData = computed(() => {
             <div v-for="city in hierarchicalData" :key="city._id" class="flex flex-col">
               <!-- City Row -->
               <div class="grid grid-cols-12 px-8 py-4 items-center hover:bg-slate-50/50 transition-colors group">
-                <div class="col-span-6 flex items-center gap-4 cursor-pointer select-none" @click="toggleCity(city._id)">
+                <div class="col-span-6 flex items-center gap-4 cursor-pointer select-none" @click="toggleCity(city._id)" :class="{ 'opacity-40 grayscale': !city._isActive }">
                   <button class="size-6 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-bejo-50 hover:text-bejo-600 transition-all pointer-events-none">
                     <Icon :icon="expandedCities.has(city._id) ? 'lucide:chevron-down' : 'lucide:chevron-right'" class="size-3.5" />
                   </button>
                   <div class="size-8 rounded-xl bg-bejo-50 flex items-center justify-center text-bejo-500 font-black text-xs">K</div>
                   <span class="text-sm font-black text-slate-900 hover:text-bejo-600 transition-colors" :class="{ 'bg-yellow-100 px-1.5 py-0.5 rounded-md text-yellow-900': isMatchingQuery(city.Nama) }">{{ city.Nama }}</span>
                 </div>
-                <div class="col-span-3 text-[11px] font-medium text-slate-400 truncate pr-4">{{ city.Deskripsi || '-' }}</div>
-                <div class="col-span-3 flex justify-end gap-2 pr-4">
+                <div class="col-span-3 text-[11px] font-medium text-slate-400 truncate pr-4" :class="{ 'opacity-40 grayscale': !city._isActive }">{{ city.Deskripsi || '-' }}</div>
+                <div class="col-span-3 flex justify-end items-center gap-2 pr-4">
+                  <!-- Toggle Kota Status -->
+                  <button 
+                    @click.stop="toggleStatus('kota', city)"
+                    class="relative inline-flex h-4 w-8 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none shadow-sm mr-2"
+                    :class="city.Status === 'aktif' ? 'bg-green-500' : 'bg-slate-300'"
+                  >
+                    <span class="sr-only">Toggle City Status</span>
+                    <span
+                      aria-hidden="true"
+                      class="pointer-events-none inline-block size-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                      :class="city.Status === 'aktif' ? 'translate-x-4' : 'translate-x-0'"
+                    />
+                  </button>
+
                   <button @click="handleAdd('area', city._id)" title="Tambah Area" class="size-8 rounded-lg bg-emerald-100/80 text-emerald-700 flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-all">
                     <Icon icon="lucide:plus" class="size-3.5" />
                   </button>
@@ -234,15 +289,32 @@ const hierarchicalData = computed(() => {
                 <div v-for="area in city._areas" :key="area._id" class="flex flex-col">
                   <!-- Area Row -->
                   <div class="grid grid-cols-12 pl-20 pr-8 py-3 items-center hover:bg-white transition-colors group">
-                    <div class="col-span-6 flex items-center gap-3 cursor-pointer select-none" @click="toggleArea(area._id)">
+                    <div class="col-span-6 flex items-center gap-3 cursor-pointer select-none" @click="toggleArea(area._id)" :class="{ 'opacity-40 grayscale': !area._isActive }">
                       <button class="size-5 rounded-md bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-bejo-600 transition-all pointer-events-none">
                         <Icon :icon="expandedAreas.has(area._id) ? 'lucide:chevron-down' : 'lucide:chevron-right'" class="size-3" />
                       </button>
                       <div class="size-7 rounded-lg bg-amber-50 flex items-center justify-center text-amber-500 font-black text-[10px]">A</div>
                       <span class="text-xs font-bold text-slate-700 hover:text-bejo-600 transition-colors" :class="{ 'bg-yellow-100 px-1.5 py-0.5 rounded-md text-yellow-900': isMatchingQuery(area.Nama) }">{{ area.Nama }}</span>
                     </div>
-                    <div class="col-span-3 text-[10px] font-medium text-slate-400 truncate pr-4">{{ area.Deskripsi || '-' }}</div>
-                    <div class="col-span-3 flex justify-end gap-1.5 pr-4">
+                    
+                    <div class="col-span-3 flex items-center gap-3" :class="{ 'opacity-40 grayscale': !area._isActive }">
+                      <div class="text-[10px] font-medium text-slate-400 truncate max-w-[120px]">{{ area.Deskripsi || '-' }}</div>
+                    </div>
+                    <div class="col-span-3 flex justify-end items-center gap-1.5 pr-4">
+                      <!-- Toggle Area Status -->
+                      <button 
+                        @click.stop="toggleStatus('area', area)"
+                        class="relative inline-flex h-3.5 w-7 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none shadow-sm mr-1.5"
+                        :class="area.Status === 'aktif' ? 'bg-green-500' : 'bg-slate-300'"
+                      >
+                        <span class="sr-only">Toggle Area Status</span>
+                        <span
+                          aria-hidden="true"
+                          class="pointer-events-none inline-block size-2.5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                          :class="area.Status === 'aktif' ? 'translate-x-3.5' : 'translate-x-0'"
+                        />
+                      </button>
+
                       <button @click="handleAdd('prioritas', area._id)" title="Tambah Kawasan" class="size-7 rounded-lg bg-blue-100/80 text-blue-700 flex items-center justify-center hover:bg-blue-500 hover:text-white transition-all">
                         <Icon icon="lucide:plus" class="size-3" />
                       </button>
@@ -258,12 +330,26 @@ const hierarchicalData = computed(() => {
                   <!-- Priority List (Level 3) -->
                   <div v-if="expandedAreas.has(area._id)" class="bg-white divide-y divide-slate-50">
                     <div v-for="prio in area._priorities" :key="prio.No_Id || prio.No_Id_Prioritas" class="grid grid-cols-12 pl-32 pr-8 py-2.5 items-center hover:bg-slate-50/30 transition-colors group">
-                      <div class="col-span-6 flex items-center gap-3">
+                      <div class="col-span-6 flex items-center gap-3" :class="{ 'opacity-40 grayscale': !prio._isActive }">
                         <div class="size-6 rounded-md bg-rose-50 flex items-center justify-center text-rose-500 font-black text-[9px]">P</div>
                         <span class="text-[11px] font-semibold text-slate-600" :class="{ 'bg-yellow-100 px-1.5 py-0.5 rounded-md text-yellow-900': isMatchingQuery(prio.Nama) }">{{ prio.Nama }}</span>
                       </div>
-                      <div class="col-span-3 text-[9px] font-medium text-slate-400 truncate pr-4">{{ prio.Deskripsi || '-' }}</div>
-                      <div class="col-span-3 flex justify-end gap-1.5 pr-4">
+                      <div class="col-span-3 text-[9px] font-medium text-slate-400 truncate pr-4" :class="{ 'opacity-40 grayscale': !prio._isActive }">{{ prio.Deskripsi || '-' }}</div>
+                      <div class="col-span-3 flex justify-end items-center gap-1.5 pr-4">
+                        <!-- Toggle Prioritas Status -->
+                        <button 
+                          @click.stop="toggleStatus('prioritas', prio)"
+                          class="relative inline-flex h-3 w-6 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none shadow-sm mr-1"
+                          :class="prio.Status === 'aktif' ? 'bg-green-500' : 'bg-slate-300'"
+                        >
+                          <span class="sr-only">Toggle Priority Status</span>
+                          <span
+                            aria-hidden="true"
+                            class="pointer-events-none inline-block size-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                            :class="prio.Status === 'aktif' ? 'translate-x-3' : 'translate-x-0'"
+                          />
+                        </button>
+
                         <button @click="handleEdit('prioritas', prio)" class="size-6 rounded-md bg-slate-100 text-slate-500 hover:text-bejo-600 transition-all flex items-center justify-center">
                           <Icon icon="lucide:pencil" class="size-3" />
                         </button>

@@ -10,8 +10,10 @@ import '@/assets/css/style.css'
 import 'preline/dist'
 
 import { createHead } from '@vueuse/head'
+import { Icon } from '@iconify/vue'
 
 const app = createApp(App)
+app.component('Icon', Icon)
 
 const pinia = createPinia()
 pinia.use(piniaPersistedState)

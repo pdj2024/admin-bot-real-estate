@@ -11,7 +11,7 @@
           <div class="max-w-2xl">
             <h1 class="text-4xl sm:text-5xl lg:text-6xl text-slate-900 tracking-tight leading-[1.1] font-light mb-6">
               Eksplorasi Katalog <br class="hidden sm:block" />
-              <span class="font-black text-transparent bg-clip-text bg-gradient-to-r from-bejo-500 via-bejo-700 to-bejo-900">Rumah Bejo</span>
+              <span class="font-black text-transparent bg-clip-text bg-gradient-to-r from-bejo-500 via-bejo-700 to-bejo-900">{{ settingsStore.business.appName }}</span>
             </h1>
             <p class="text-slate-500 text-lg sm:text-xl font-medium leading-relaxed max-w-xl">
               Temukan ribuan unit properti terbaik dengan desain yang elegan, terverifikasi, dan profesional di seluruh Indonesia.
@@ -72,9 +72,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
+import { useSettings } from '@/stores/settings'
+
+const settingsStore = useSettings()
 
 // Import Layout & Components
 import GuestLayout from '@/layouts/guest.vue'
@@ -84,6 +87,7 @@ import Rumah from './components/Rumah.vue'
 import { PROVINCES } from '@/utils/regions'
 
 const route = useRoute()
+const router = useRouter()
 
 // State untuk mengontrol filter-filter
 const isFilterOpen = ref(false)
@@ -118,6 +122,37 @@ const isAdmin = computed(() => {
   const role = localStorage.getItem('role_user')
   // Path disesuaikan dengan router Anda, contoh: /properti/katalog
   return role === 'admin' && route.path.includes('/properti/katalog')
+})
+
+onMounted(() => {
+  // Handle query params for region
+  const queryProv = route.query.province as string
+  const queryCity = route.query.city as string
+  
+  let hasFilter = false
+  
+  if (queryProv) {
+    const foundProv = PROVINCES.find(p => p.name.toLowerCase() === queryProv.toLowerCase())
+    if (foundProv) {
+      region.value.province = foundProv.name
+      region.value.provinceId = foundProv.id
+      hasFilter = true
+    } else {
+      // If not in PROVINCES list, still set the text for loose filtering
+      region.value.province = queryProv
+      hasFilter = true
+    }
+  }
+
+  if (queryCity) {
+    region.value.city = queryCity
+    hasFilter = true
+  }
+
+  if (hasFilter) {
+    // Clear query params to keep URL clean after initial load
+    router.replace({ query: {} })
+  }
 })
 
 

@@ -81,10 +81,11 @@ const props = defineProps<{
   takeOverBatch: TakeOverPayload[]
   isLoadingChat?: boolean
   isDark?: boolean
+  isTakenOver?: boolean
 }>()
 
 const emit = defineEmits<{
-  (e: 'chatTakeOver'): void
+  (e: 'chatTakeOver', status: boolean): void
   (e: 'clearRoom'): void
   (e: 'usernameChange', value: string): void
   (e: 'takeOverStatus', value: string[]): void
@@ -350,14 +351,23 @@ const sendChat = async (type: string, url?: string, targetRoomId?: string, targe
   }
 }
 
-const takeOverChat = async (status: boolean, phoneNumber?: string, roomId?: string) => {
+const takeOverChat = async (status: boolean, phoneNumber?: string, roomId?: string, customerId?: string) => {
   const targetPhone = phoneNumber || props.phoneNumber
   const targetRoom = roomId || props.roomId || undefined
+  const targetCustomerId = customerId || props.idLawan
   try {
-    await api.post('/api/chat/toggle-bot', { customer_phone: targetPhone, admin_id: localStorage.getItem('no_id'), status_bot: status }, { headers: { 'X-Jenis-User': 'admin' } })
+    await api.post('/api/chat/toggle-bot', { 
+      customer_phone: targetPhone, 
+      admin_id: localStorage.getItem('no_id'), 
+      customer_id: targetCustomerId,
+      room_id: targetRoom,
+      status_bot: status 
+    }, { headers: { 'X-Jenis-User': 'admin' } })
+    
+    // Perubahan sesuai permintaan user: menggunakan _Masuk untuk ambil alih, _Keluar untuk serahkan ke bot
     if (status == false) await sendChat('system_masuk', undefined, targetRoom, targetPhone)
     else await sendChat('system_keluar', undefined, targetRoom, targetPhone)
-    emit('chatTakeOver')
+    emit('chatTakeOver', status)
   } catch (err: any) {
     if (err.response?.data?.Message?.includes('Percakapan ini sudah diambil alih')) fail('Percakapan ini sudah diambil alih Admin lain')
     else fail(status == false ? 'Ambil alih percakapan gagal' : 'Akhiri percakapan gagal')
@@ -523,7 +533,7 @@ watch(
       const takeOverSuccess: string[] = []
       for (const [, item] of newVal.entries()) {
         try {
-          await takeOverChat(item.status, item.phoneNumber, item.room)
+          await takeOverChat(item.status, item.phoneNumber, item.room, item.customerId)
           takeOverSuccess.push(item.room)
         } catch {}
       }
@@ -614,7 +624,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 
           <div v-if="!isSearchingChat" class="flex items-center gap-2 sm:gap-3">
             <button @click.stop="toggleSearchChat" class="size-9 sm:size-10 rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-bejo-600 hover:border-bejo-100 hover:bg-bejo-50 hover:shadow-lg hover:shadow-bejo-500/10 transition-all duration-300 flex items-center justify-center"><Icon icon="lucide:search" class="size-4 sm:size-5"></Icon></button>
-            <button v-if="props.activeTab == 'chat_saya'" @click="endChat" title="Akhiri Percakapan" class="h-9 sm:h-10 px-3 sm:px-4 rounded-xl bg-red-500 border border-red-100 text-white hover:bg-red-600 hover:text-white hover:shadow-lg hover:shadow-red-500/20 transition-all duration-300 flex items-center justify-center gap-2 group"><Icon icon="lucide:log-out" class="size-4"></Icon><span class="hidden sm:inline text-[10px] font-black uppercase tracking-widest">Akhiri</span></button>
+            <button v-if="props.activeTab == 'chat_saya' && props.isTakenOver" @click="endChat" title="Akhiri Percakapan" class="h-9 sm:h-10 px-3 sm:px-4 rounded-xl bg-red-500 border border-red-100 text-white hover:bg-red-600 hover:text-white hover:shadow-lg hover:shadow-red-500/20 transition-all duration-300 flex items-center justify-center gap-2 group"><Icon icon="lucide:log-out" class="size-4"></Icon><span class="hidden sm:inline text-[10px] font-black uppercase tracking-widest">Akhiri</span></button>
           </div>
         </div>
       </div>
@@ -670,10 +680,10 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
           <div class="absolute inset-0 bg-gradient-to-b from-white/30 via-transparent to-white/10 pointer-events-none"></div>
 
           <div v-if="props.isLoadingChat" class="relative z-10 flex flex-col gap-6 px-4 py-6 sm:px-8 sm:py-10">
-            <div v-for="n in 5" :key="n" class="flex w-full" :class="n % 2 === 0 ? 'justify-end' : 'justify-start'">
+            <div v-for="n in 8" :key="n" class="flex w-full" :class="n % 2 === 0 ? 'justify-end' : 'justify-start'">
               <div class="flex flex-col gap-2" :class="n % 2 === 0 ? 'items-end' : 'items-start'" style="max-width: 65%">
-                <div class="h-10 rounded-2xl bg-slate-200 animate-pulse" :style="{ width: 40 + ((n * 17) % 45) + '%', minWidth: '120px' }"></div>
-                <div class="h-3 w-12 rounded-full bg-slate-100 animate-pulse"></div>
+                <div class="h-12 rounded-2xl bg-slate-200/60 animate-pulse border border-slate-100 shadow-sm" :style="{ width: 40 + ((n * 13) % 45) + '%', minWidth: '140px' }"></div>
+                <div class="h-3 w-16 rounded-full bg-slate-100 animate-pulse"></div>
               </div>
             </div>
           </div>
@@ -693,7 +703,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
       </div>
 
       <div v-if="!isLoadingChat" class="p-1 md:p-3.5 bg-white border-t border-slate-50" :class="{ hidden: isPreviewMode }">
-        <div v-if="activeTab != 'bot'" class="flex gap-1 md:gap-4 items-center bg-slate-50 p-1.5 md:p-2.5 pl-2 md:pl-4 rounded-xl md:rounded-[1.5rem] border border-transparent focus-within:border-bejo-500/20 focus-within:bg-white focus-within:ring-8 focus-within:ring-bejo-500/5 focus-within:shadow-xl focus-within:shadow-bejo-500/5 transition-all duration-300">
+        <div v-if="activeTab != 'bot' && props.isTakenOver" class="flex gap-1 md:gap-4 items-center bg-slate-50 p-1.5 md:p-2.5 pl-2 md:pl-4 rounded-xl md:rounded-[1.5rem] border border-transparent focus-within:border-bejo-500/20 focus-within:bg-white focus-within:ring-8 focus-within:ring-bejo-500/5 focus-within:shadow-xl focus-within:shadow-bejo-500/5 transition-all duration-300">
           <div class="relative" ref="dropdownRef">
             <button @click.stop="openMenu = !openMenu" class="size-9 md:size-11 rounded-xl md:rounded-2xl bg-white border border-slate-100 text-slate-400 hover:text-bejo-600 hover:border-bejo-100 hover:shadow-lg hover:shadow-bejo-500/10 transition-all duration-300 flex items-center justify-center">
               <Icon icon="lucide:plus" class="size-5 md:size-6 transition-transform duration-300" :class="{ 'rotate-45': openMenu }"></Icon>
@@ -754,10 +764,9 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
         </div>
 
         <div v-else class="w-full">
-          <button @click="takeOverChat(false)" class="w-full py-3 sm:py-3.5 bg-gradient-to-r from-bejo-500 to-bejo-600 hover:from-bejo-600 hover:to-bejo-700 text-white font-black text-[10px] sm:text-xs uppercase tracking-widest rounded-2xl sm:rounded-[1.5rem] flex justify-center items-center gap-2 sm:gap-3 shadow-xl shadow-bejo-500/20 active:scale-[0.98] transition-all px-4">
-            <Icon icon="lucide:message-square-plus" class="size-4 sm:size-5" />
-            <span class="hidden xs:inline">Ambil Alih Percakapan</span>
-            <span class="inline xs:hidden">Ambil Alih</span>
+          <button @click="takeOverChat(false)" class="w-full py-4 bg-bejo-500 hover:bg-bejo-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl flex justify-center items-center gap-3 shadow-xl shadow-bejo-500/20 active:scale-[0.98] transition-all px-8 border-2 border-white/20">
+            <Icon icon="lucide:message-square-plus" class="size-5" />
+            <span>Ambil Alih Percakapan</span>
           </button>
         </div>
       </div>

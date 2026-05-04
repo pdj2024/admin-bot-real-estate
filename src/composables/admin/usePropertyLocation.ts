@@ -40,6 +40,16 @@ export function usePropertyLocation(form: any, deps?: { cities: any, createCity:
     return val.replace(/Kota\s+|Kabupaten\s+|Kab\.\s+/i, '').trim()
   }
 
+  const extractCoordsFromAddress = (address: string) => {
+    if (!address) return null
+    const latMatch = address.match(/Lat:\s*(-?\d+\.\d+)/i)
+    const lngMatch = address.match(/Long:\s*(-?\d+\.\d+)/i)
+    if (latMatch && lngMatch) {
+      return { lat: parseFloat(latMatch[1]), lng: parseFloat(lngMatch[1]) }
+    }
+    return null
+  }
+
   const parseAddressComponents = async (components: any[], displayName: string | null = null) => {
     let provinsi = '', kota = '', kecamatan = '', kelurahan = '', rute = '', nomorRumah = '', building = '', subVillage = ''
     
@@ -166,7 +176,7 @@ export function usePropertyLocation(form: any, deps?: { cities: any, createCity:
     const m = document; const b: any = g[c] || (g[c] = {}); const d = b.maps || (b.maps = {}); const r = new Set(); const e = new URLSearchParams()
     const u = () => h || (h = new Promise(async (f, n) => {
       await (a = m.createElement('script')); e.set('libraries', [...r].join(',')); e.set('key', GOOGLE_MAPS_API_KEY)
-      e.set('v', 'beta'); e.set('language', 'id'); e.set('region', 'ID'); e.set('callback', c + '.maps.' + q)
+      e.set('v', 'beta'); e.set('language', 'id'); e.set('region', 'ID'); e.set('callback', c + '.maps.' + q); e.set('loading', 'async')
       a.src = `https://maps.${c}apis.com/maps/api/js?` + e; d[q] = f; a.onerror = () => (h = n(Error('Maps could not load.')))
       m.head.append(a)
     }))
@@ -185,22 +195,31 @@ export function usePropertyLocation(form: any, deps?: { cities: any, createCity:
       ]) as any[]
       gGeocoder = new google.maps.Geocoder()
       let initialPos = { ...currentCoords }
+      const coordsFromAlamat = extractCoordsFromAddress(form.value.Alamat)
+      
       if (form.value.Area[2] && form.value.Area[2].includes(',')) {
         const [lat, lng] = form.value.Area[2].split(',').map(Number)
         if (!isNaN(lat) && !isNaN(lng)) initialPos = { lat, lng }
+      } else if (coordsFromAlamat) {
+        initialPos = coordsFromAlamat
       }
-      gMap = new libraryMap.Map(mapContainer.value, { 
+      gMap = markRaw(new libraryMap.Map(mapContainer.value, { 
         center: initialPos, 
         zoom: 15, 
         mapId: 'PROPERTY_PICKER_MAP', 
         mapTypeControl: false, 
-        streetViewControl: false 
-      })
+        streetViewControl: false,
+        gestureHandling: 'greedy'
+      }))
       isMapLoaded.value = true
-      gMarker = new libraryMarker.AdvancedMarkerElement({ map: gMap, position: initialPos, gmpDraggable: true })
+      gMarker = markRaw(new libraryMarker.AdvancedMarkerElement({ 
+        map: gMap, 
+        position: initialPos, 
+        gmpDraggable: true 
+      }))
       
       const { AutocompleteSessionToken } = await google.maps.importLibrary('places') as any
-      gAutocompleteSessionToken = new AutocompleteSessionToken()
+      gAutocompleteSessionToken = markRaw(new AutocompleteSessionToken())
 
       gMarker.addListener('dragend', () => { 
         if (gMarker.position) { 
@@ -209,7 +228,7 @@ export function usePropertyLocation(form: any, deps?: { cities: any, createCity:
         }
       })
       
-      gMap.addListener('click', (e: any) => { 
+      gMap.addListener('gmp-click', (e: any) => { 
         if (e.latLng) { 
           const lat = e.latLng.lat(); const lng = e.latLng.lng(); 
           gMarker.position = {lat, lng}; 
@@ -225,6 +244,8 @@ export function usePropertyLocation(form: any, deps?: { cities: any, createCity:
 
   const geocodeExistingAddress = () => {
     if (!gGeocoder) return
+    const coordsFromAlamat = extractCoordsFromAddress(form.value.Alamat)
+
     if (form.value.Area[2] && form.value.Area[2].includes(',')) {
       const [lat, lng] = form.value.Area[2].split(',').map(Number)
       if (!isNaN(lat) && !isNaN(lng)) {
@@ -233,6 +254,13 @@ export function usePropertyLocation(form: any, deps?: { cities: any, createCity:
         if (gMarker) gMarker.position = { lat, lng }
         return
       }
+    } else if (coordsFromAlamat) {
+      const { lat, lng } = coordsFromAlamat
+      currentCoords.lat = lat; currentCoords.lng = lng
+      if (gMap) gMap.setCenter({ lat, lng })
+      if (gMarker) gMarker.position = { lat, lng }
+      isLocationSelected.value = true
+      return
     }
     const targetAddress = form.value.Area[0] || form.value.Alamat
     if (!targetAddress) return
@@ -249,6 +277,10 @@ export function usePropertyLocation(form: any, deps?: { cities: any, createCity:
 
   const handleSearchInput = async () => {
     if (!searchQuery.value) { predictions.value = []; isPredictionsOpen.value = false; return }
+    if (typeof google === 'undefined' || !google.maps) {
+      // Library not ready yet, will be triggered again by watcher or input
+      return
+    }
     try {
       if (!gAutocompleteSessionToken) {
         const { AutocompleteSessionToken } = await google.maps.importLibrary('places') as any

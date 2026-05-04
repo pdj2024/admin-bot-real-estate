@@ -20,6 +20,7 @@ const activeTab = ref('chat_saya')
 const takeOverBatch = ref<any[]>([])
 const isFocusedMode = ref(false)
 const isSessionTakenOver = ref(false)
+const isLoadingChat = ref(false)
 const chats = computed(() => chatStore.chats)
 
 const closeChat = () => {
@@ -29,13 +30,14 @@ const closeChat = () => {
 }
 
 const fetchChatContent = async (id: string) => {
+  isLoadingChat.value = true
   try {
-    const response = await api.get(`/api/chat/getAll?room_id=${id}`, {
+    const response = await api.get(`/api/chat/getAll?orderby=sent_at&orderdir=asc&room_id=${id}`, {
       headers: { 'X-Jenis-User': 'Admin' }
     })
     chatStore.chats = response.data.Data
-  } catch (error) {
-    console.error('Gagal memuat chat:', error)
+  } finally {
+    isLoadingChat.value = false
   }
 }
 
@@ -72,31 +74,6 @@ const openForCustomer = async (customerId: string) => {
     }
   } catch (err) {
     console.error('Gagal membuka chat customer:', err)
-  }
-}
-
-const handleTakeOver = async () => {
-  try {
-    await api.post('/api/chat/toggle-bot', {
-      customer_phone: selectedPhone.value,
-      admin_id: localStorage.getItem('no_id'),
-      status_bot: false
-    }, { headers: { 'X-Jenis-User': 'Admin' } })
-    
-    // Play sound
-    const audio = new Audio('/sounds/Ding.mp3')
-    audio.play().catch(() => {})
-    
-    // Robust SignalR Join Sequence
-    if (!chatStore.isConnected) await chatStore.initSignalR()
-    await chatStore.joinUserChannel()
-    if (selectedRoomId.value) {
-      await chatStore.joinRoom(selectedRoomId.value)
-    }
-    
-    isSessionTakenOver.value = true
-  } catch (err) {
-    console.error('Gagal ambil alih:', err)
   }
 }
 
@@ -191,29 +168,14 @@ defineExpose({
               :lastMessageId="lastMessageId"
               :takeOverBatch="takeOverBatch"
               :isFocused="isFocusedMode"
+              :isTakenOver="isSessionTakenOver"
+              :isLoadingChat="isLoadingChat"
               @clearRoom="handleClearRoom"
               @toggleFocused="isFocusedMode = true"
               @addChat="chatStore.chats.push($event)"
               @updateChatStatus="handleUpdateChatStatus"
             />
             
-            <!-- Take Over Overlay -->
-            <Transition name="fade">
-              <div v-if="selectedRoomId && !isSessionTakenOver" class="absolute inset-0 z-50 bg-slate-900/40 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-500">
-                <div class="size-20 bg-white rounded-[2.5rem] flex items-center justify-center mb-4 shadow-2xl animate-bounce-subtle">
-                  <Icon icon="lucide:message-square-plus" class="size-10 text-bejo-500" />
-                </div>
-                <h4 class="text-white text-lg font-black mb-2">Ambil Alih Percakapan</h4>
-                <p class="text-white/70 text-sm mb-6 max-w-xs">Pesan customer saat ini sedang ditangani Bot atau belum terhubung dengan Anda.</p>
-                <button 
-                  @click="handleTakeOver"
-                  class="px-8 py-3 bg-bejo-500 hover:bg-bejo-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-2xl shadow-bejo-500/40 transition-all hover:scale-105 active:scale-95 flex items-center gap-3"
-                >
-                  <Icon icon="lucide:hand" class="size-5" />
-                  Mulai Chat Sekarang
-                </button>
-              </div>
-            </Transition>
 
             <div v-if="!selectedRoomId" class="flex-1 flex flex-col items-center justify-center p-12 text-center text-slate-400">
               <div class="size-20 bg-slate-100 rounded-3xl flex items-center justify-center mb-6">

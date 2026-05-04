@@ -30,6 +30,42 @@ const toggleFilter = () => {
 
 const provinces = ref<any[]>(PROVINCES)
 
+import { useRoute, useRouter } from 'vue-router'
+import { onMounted } from 'vue'
+
+const route = useRoute()
+const router = useRouter()
+
+onMounted(() => {
+  // Handle query params for region
+  const queryProv = route.query.province as string
+  const queryCity = route.query.city as string
+  
+  let hasFilter = false
+  
+  if (queryProv) {
+    const foundProv = PROVINCES.find(p => p.name.toLowerCase() === queryProv.toLowerCase())
+    if (foundProv) {
+      region.value.province = foundProv.name
+      region.value.provinceId = foundProv.id
+      hasFilter = true
+    } else {
+      region.value.province = queryProv
+      hasFilter = true
+    }
+  }
+
+  if (queryCity) {
+    region.value.city = queryCity
+    hasFilter = true
+  }
+
+  if (hasFilter) {
+    // Clear query params to keep URL clean after initial load
+    router.replace({ query: {} })
+  }
+})
+
 </script>
 
 <template>

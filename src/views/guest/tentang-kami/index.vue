@@ -53,9 +53,7 @@ const teamMembers = [
         <div class="absolute right-10 -bottom-20 size-64 bg-gradient-to-tr from-bejo-300 via-bejo-500 to-bejo-700 rounded-full blur-3xl opacity-10"></div>
         
         <div class="relative z-10 text-center px-6 w-full max-w-4xl mx-auto">
-          <span class="inline-flex items-center gap-2 px-4 py-2 bg-bejo-50 rounded-full text-bejo-600 font-bold tracking-widest text-xs uppercase shadow-sm border border-bejo-100 mx-auto mb-4">
-            <Icon icon="lucide:info" class="size-4" /> Company Profile
-          </span>
+
           <h1 class="text-4xl sm:text-5xl lg:text-7xl font-black text-slate-900 tracking-tight mb-6">
             Mengenal <span class="text-transparent bg-clip-text bg-gradient-to-r from-bejo-500 via-bejo-700 to-bejo-900">{{ settingsStore.business.appName }}</span>
           </h1>
@@ -129,7 +127,7 @@ const teamMembers = [
            <div class="absolute top-1/2 left-0 w-full h-px bg-slate-200 -z-0 hidden md:block border-t border-dashed"></div>
            
            <div v-for="(step, i) in workProcesses" :key="i" class="relative z-10 bg-white border border-slate-100 p-8 rounded-[2rem] shadow-lg text-center hover:shadow-2xl transition-all group">
-              <div class="size-16 rounded-full bg-slate-900 text-white flex items-center justify-center mx-auto mb-6 font-black text-2xl group-hover:bg-bejo-500 transition-colors shadow-xl">
+              <div class="size-16 rounded-full bg-bejo-600 text-white flex items-center justify-center mx-auto mb-6 font-black text-2xl group-hover:bg-bejo-500 transition-colors shadow-xl shadow-bejo-600/20">
                  {{ i + 1 }}
               </div>
               <h4 class="text-xl font-black text-slate-900 mb-3">{{ step.title }}</h4>
@@ -154,8 +152,8 @@ const teamMembers = [
             </p>
           </div>
           <div class="lg:w-2/3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div v-for="(member, i) in teamMembers" :key="i" class="bg-white border border-slate-100 rounded-3xl p-6 text-center hover:shadow-xl transition-all group">
-                 <div class="size-24 rounded-2xl bg-slate-100 mx-auto mb-5 overflow-hidden border border-slate-200 group-hover:border-bejo-500 transition-colors">
+              <div v-for="(member, i) in teamMembers" :key="i" class="bg-white border border-bejo-100 rounded-3xl p-6 text-center hover:shadow-xl transition-all group">
+                 <div class="size-24 rounded-2xl bg-bejo-50 mx-auto mb-5 overflow-hidden border border-bejo-100 group-hover:border-bejo-500 transition-colors">
                     <img :src="member.photo" :alt="member.name" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
                  </div>
                  <h5 class="text-lg font-black text-slate-900 mb-1">{{ member.name }}</h5>

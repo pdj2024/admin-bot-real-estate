@@ -12,14 +12,12 @@
         <div class="absolute right-10 -bottom-20 size-64 bg-gradient-to-tr from-bejo-300 via-bejo-500 to-bejo-700 rounded-full blur-3xl opacity-10"></div>
         
         <div class="relative z-10 text-center px-6 w-full max-w-4xl mx-auto">
-          <span class="inline-flex items-center gap-2 px-4 py-2 bg-bejo-50 rounded-full text-bejo-600 font-bold tracking-widest text-xs uppercase shadow-sm border border-bejo-100 mx-auto mb-4">
-            <Icon icon="lucide:message-square" class="size-4" /> Bantuan & Kemitraan
-          </span>
+
           <h1 class="text-4xl sm:text-5xl lg:text-7xl font-black text-slate-900 tracking-tight mb-6">
             Temukan Kami <span class="text-transparent bg-clip-text bg-gradient-to-r from-bejo-500 via-bejo-700 to-bejo-900">Di Sini</span>
           </h1>
           <p class="text-slate-500 text-lg sm:text-xl font-medium leading-relaxed max-w-2xl mx-auto">
-            Tim Rumah Bejo selalu bersiaga membantu Anda mencari properti, menawarkan hunian, atau perihal kerja sama kemitraan.
+            Tim {{ settingsStore.business.appName }} selalu bersiaga membantu Anda mencari properti, menawarkan hunian, atau perihal kerja sama kemitraan.
           </p>
         </div>
       </div>
@@ -34,7 +32,7 @@
           </div>
           <h3 class="text-xl font-black text-slate-900 mb-3">Kantor Utama</h3>
           <p class="text-sm font-medium text-slate-500 leading-relaxed mb-6">
-            {{ settingsStore.business.address || 'Alamat Kantor Pusat Rumah Bejo' }}
+            {{ settingsStore.business.address || `Alamat Kantor Pusat ${settingsStore.business.appName}` }}
           </p>
           <a :href="settingsStore.business.mapUrl" target="_blank" class="inline-flex items-center gap-2 text-sm font-bold text-bejo-600 hover:text-bejo-700 transition-colors">
             Lihat di Google Maps <Icon icon="lucide:arrow-right" class="size-4" />

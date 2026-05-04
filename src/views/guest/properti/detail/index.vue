@@ -3,15 +3,38 @@ import { onMounted, ref, nextTick, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/services/axios'
 import Guest from '@/layouts/guest.vue'
+import { Icon } from '@iconify/vue'
 import SidebarProduct from './components/SidebarProduct.vue'
 import ProductDetails from './components/ProductDetails.vue'
 import KprSimulation from './components/KprSimulation.vue'
 import SuggestedProducts from './components/SuggestedProducts.vue'
+import GoogleMapsViewer from '@/components/common/GoogleMapsViewer.vue'
 import CompareModal from '@/components/common/CompareModal.vue'
 
 const showCompareModal = ref(false)
 
 const route = useRoute()
+
+const mapCoords = computed(() => {
+  if (!product.value?.Alamat) return null
+  console.log('Processing map coordinates from address:', product.value.Alamat)
+  
+  // Support both "Lat:" and "Latitude:", and "Long:", "Lng:", or "Longitude:"
+  const latMatch = product.value.Alamat.match(/(?:Lat|Latitude):\s*([-+]?\d+\.?\d*)/i)
+  const lngMatch = product.value.Alamat.match(/(?:Long|Lng|Longitude):\s*([-+]?\d+\.?\d*)/i)
+  
+  if (latMatch && lngMatch) {
+    const coords = {
+      lat: parseFloat(latMatch[1]),
+      lng: parseFloat(lngMatch[1]) // Fix: Use index 1 for the first capturing group
+    }
+    console.log('Successfully parsed coordinates:', coords)
+    return coords
+  }
+  
+  console.warn('Failed to parse coordinates from address string')
+  return null
+})
 
 interface MediaUrl {
   Url: string | null
@@ -52,7 +75,9 @@ export interface Product {
   Slug: string
   Flag_Sewa: string
   Satuan_Minimal_Sewa: string
-  Area: string
+  Minimal_Sewa?: string
+  Nama_Kota?: string
+  Area: string | string[]
   Hide_alamat: boolean
   Akses_Jalan: string[]
   File_Image: string[]
@@ -151,6 +176,24 @@ onMounted(async () => {
         <SidebarProduct :product="product" :isAdmin="isAdmin" @openCompare="showCompareModal = true" />
         <div class="lg:col-span-2 col-span-1 flex flex-col gap-5">
           <ProductDetails :product="product" :isAdmin="isAdmin" class="!col-span-1" />
+          
+          <!-- Map Section -->
+          <div v-if="mapCoords" class="w-full">
+            <div class="flex items-center gap-2 mb-4">
+              <div class="size-8 bg-bejo-50 rounded-lg flex items-center justify-center border border-bejo-100">
+                <Icon icon="lucide:map" class="size-4 text-bejo-600" />
+              </div>
+              <h3 class="text-sm font-black uppercase tracking-widest text-slate-900">Lokasi Properti</h3>
+            </div>
+            <GoogleMapsViewer 
+              :lat="mapCoords.lat" 
+              :lng="mapCoords.lng" 
+              :title="product?.Nama_Produk"
+              height="400px"
+              mapId="MAIN_PRODUCT_MAP"
+            />
+          </div>
+
           <KprSimulation :product="product" />
         </div>
         

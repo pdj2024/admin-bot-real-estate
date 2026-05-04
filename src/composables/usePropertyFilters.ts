@@ -88,15 +88,15 @@ export function usePropertyFilters(
       if (regionFilter.value.province) {
         const prov = regionFilter.value.province.toLowerCase()
         result = result.filter((p) => {
-          const areaStr = String(Array.isArray(p.Area) ? p.Area[0] || '' : p.Area || '')
-          return areaStr.toLowerCase().includes(prov)
+          const locationStr = String(p.Nama_Kota || p.Area || '').toLowerCase()
+          return locationStr.includes(prov)
         })
       }
       if (regionFilter.value.city) {
         const city = regionFilter.value.city.toLowerCase()
         result = result.filter((p) => {
-          const areaStr = String(Array.isArray(p.Area) ? p.Area[0] || '' : p.Area || '')
-          return areaStr.toLowerCase().includes(city)
+          const locationStr = String(p.Nama_Kota || p.Area || '').toLowerCase()
+          return locationStr.includes(city)
         })
       }
     }

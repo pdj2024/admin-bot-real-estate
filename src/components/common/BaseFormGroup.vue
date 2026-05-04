@@ -20,7 +20,7 @@ defineProps<{
     <div :class="['relative group', innerClass]">
       <Icon v-if="icon" :icon="icon" 
             :class="[
-              'absolute left-3 text-slate-400 size-4 pointer-events-none group-focus-within:text-primary transition-colors z-10',
+              'absolute left-3 text-slate-400 size-4 pointer-events-none group-focus-within:text-primary transition-colors z-10 transform',
               alignIcon === 'top' ? 'top-4' : 'top-1/2 -translate-y-1/2'
             ]" />
       

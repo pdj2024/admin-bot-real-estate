@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, computed, markRaw, nextTick } from 'vue'
+
+defineOptions({
+  inheritAttrs: false
+})
 import { Icon } from '@iconify/vue'
 import api from '@/services/axios'
 const audio = markRaw(new Audio('/sounds/Ding.mp3'))
@@ -101,6 +105,7 @@ export interface Chat {
   Last_Message_At: string | Date
   Last_Message: string
   Status: string
+  Status_Bot?: string
   User_Ids: string[]
   Count_Status_Sent: number
   List_Id_Message_Sent: string[]
@@ -115,6 +120,7 @@ export interface TakeOverPayload {
   status: boolean
   room: string
   phoneNumber: string
+  customerId: string
 }
 
 const getDateChat = (date: any) => {
@@ -151,14 +157,23 @@ const fetchData = async (tab: 'bot' | 'chat_saya') => {
 
     if (tab === 'bot') {
       chatsBot.value = []
-      const endpoint = '/api/chat/getRoomsGlobal?orderby=Last_Message_At&orderdir=desc'
+      roomIdsBot.value = []
+      const endpoint = '/api/chat/getRoomsGlobal?status_bot=aktif&orderby=Last_Message_At&orderdir=desc'
 
       const { data } = await api.get(endpoint, {
         headers: { 'X-Jenis-User': 'Admin' }
       })
 
       data.Data.forEach((item: any) => {
-        if (item.Username_Lawan !== '' && item.Telepon_User_Lawan !== '') {
+        // Hanya masukkan jika status chat aktif dan memiliki id_lawan
+        if (item.Status !== 'aktif' || !item.Id_Lawan) return
+
+        // Fallback jika Username_Lawan null
+        if (!item.Username_Lawan || item.Username_Lawan === '') {
+          item.Username_Lawan = item.User_Ids?.[0] || item.Room_Id
+        }
+
+        if (item.Room_Id) {
           // Merge local unread counts
           if (unreadCounts.value[item.Room_Id] !== undefined) {
             item.New_Message_Count = unreadCounts.value[item.Room_Id]
@@ -172,35 +187,46 @@ const fetchData = async (tab: 'bot' | 'chat_saya') => {
     } else {
       chatsAktif.value = []
       chatsAssign.value = []
+      roomIdsAktif.value = []
+      roomIdsAssign.value = []
 
       const userId = localStorage.getItem('no_id') || ''
-      const endpointBalasan = '/api/chat/getRooms?user_id=' + userId + '&orderby=Last_Message_At'
-      const endpointHandle = '/api/chat/getRoomsGlobal?status=aktif&orderby=Last_Message_At&orderdir=desc'
+      const endpoint = '/api/chat/getRoomsGlobal?status_bot=nonaktif&orderby=Last_Message_At&orderdir=desc'
 
-      const [resBalasan, resHandle] = await Promise.all([api.get(endpointBalasan, { headers: { 'X-Jenis-User': 'Admin' } }), api.get(endpointHandle, { headers: { 'X-Jenis-User': 'Admin' } })])
-
-      resHandle.data.Data.forEach((item: any) => {
-        if (item.Username_Lawan !== '' && item.Telepon_User_Lawan !== '') {
-          // Merge local unread counts
-          if (unreadCounts.value[item.Room_Id] !== undefined) {
-            item.New_Message_Count = unreadCounts.value[item.Room_Id]
-          } else {
-            unreadCounts.value[item.Room_Id] = item.New_Message_Count || 0
-          }
-          chatsAssign.value.push(item)
-          roomIdsAssign.value.push(item.Room_Id)
-        }
+      const { data } = await api.get(endpoint, {
+        headers: { 'X-Jenis-User': 'Admin' }
       })
-      resBalasan.data.Data.forEach((item: any, idx: number) => {
-        if (item.Username_Lawan !== '' && (item.Telepon_User_Lawan !== '' || idx == 0)) {
+
+      data.Data.forEach((item: any) => {
+        // Hanya masukkan jika status chat aktif dan memiliki id_lawan
+        if (item.Status !== 'aktif' || !item.Id_Lawan) return
+
+        // Fallback jika Username_Lawan null
+        if (!item.Username_Lawan || item.Username_Lawan === '') {
+          item.Username_Lawan = item.User_Ids?.[0] || item.Room_Id
+        }
+        
+        // Tetap masukkan ke list selama ada minimal Room_Id
+        if (item.Room_Id) {
           // Merge local unread counts
           if (unreadCounts.value[item.Room_Id] !== undefined) {
             item.New_Message_Count = unreadCounts.value[item.Room_Id]
           } else {
             unreadCounts.value[item.Room_Id] = item.New_Message_Count || 0
           }
-          chatsAktif.value.push(item)
-          roomIdsAktif.value.push(item.Room_Id)
+
+          const userIds = item.User_Ids || []
+          
+          // Logika 1: Chat Aktif (ID admin kita ada di dalam list)
+          if (userIds.includes(userId)) {
+            chatsAktif.value.push(item)
+            roomIdsAktif.value.push(item.Room_Id)
+          }
+          // Logika 2: Perlu diassign (Status aktif & bot nonaktif, tapi admin kita tidak di dalam list)
+          else {
+            chatsAssign.value.push(item)
+            roomIdsAssign.value.push(item.Room_Id)
+          }
         }
       })
     }
@@ -213,9 +239,13 @@ const fetchData = async (tab: 'bot' | 'chat_saya') => {
 }
 
 const changeTab = (tab: 'bot' | 'chat_saya') => {
-  if (activeTab.value === tab) return
   activeTab.value = tab
-
+  
+  // Clear all lists to prevent stale data
+  chatsBot.value = []
+  chatsAktif.value = []
+  chatsAssign.value = []
+  
   selectedActiveChats.value = []
   selectedBotChats.value = []
 
@@ -223,10 +253,6 @@ const changeTab = (tab: 'bot' | 'chat_saya') => {
   emit('changeTab', tab)
 }
 
-const forceRefreshToUntukSaya = () => {
-  activeTab.value = 'chat_saya'
-  // fetchData('chat_saya')
-}
 
 const refreshChatList = (data?: any) => {
   if (data && data.roomId) {
@@ -298,6 +324,7 @@ const formatMessage = (msg: string, maxLength: number = 50) => {
     .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
 }
 
+
 const updateSidebarUI = (newName: string) => {
   const updateItem = (chatList: Chat[]) => {
     const index = chatList.findIndex((c) => c.Room_Id === props.activeRoomId)
@@ -309,6 +336,29 @@ const updateSidebarUI = (newName: string) => {
   updateItem(chatsBot.value)
   updateItem(chatsAktif.value)
   updateItem(chatsAssign.value)
+}
+
+const toggleBotStatus = async (chat: Chat) => {
+  const newStatusBot = chat.Status_Bot === 'aktif' ? 'nonaktif' : 'aktif'
+  try {
+    const payload = {
+      Status: chat.Status,
+      Status_Bot: newStatusBot,
+      Last_Message: null,
+      User_Ids: chat.User_Ids
+    }
+    const { data } = await api.put(`/api/chat/update-room?room_id=${chat.Room_Id}`, payload, {
+      headers: { 'X-Jenis-User': 'Admin' }
+    })
+    if (data.StatusCode === 200) {
+      chat.Status_Bot = newStatusBot
+      
+      // Refresh list after small delay to reflect the tab changes if needed
+      setTimeout(() => fetchData(activeTab.value), 500)
+    }
+  } catch {
+    console.error('Gagal memperbarui status bot')
+  }
 }
 
 const openContextMenu = (event: MouseEvent, chat: Chat, group: string, idx: number) => {
@@ -354,7 +404,8 @@ const handleEndConversation = () => {
         type: 'system_keluar',
         status: true,
         room: chat.Room_Id,
-        phoneNumber: chat.Telepon_User_Lawan
+        phoneNumber: chat.Telepon_User_Lawan,
+        customerId: chat.Id_Lawan
       }
     ]
 
@@ -372,7 +423,8 @@ const handleTakeOverConversation = () => {
         type: 'system_masuk',
         status: false,
         room: chat.Room_Id,
-        phoneNumber: chat.Telepon_User_Lawan
+        phoneNumber: chat.Telepon_User_Lawan,
+        customerId: chat.Id_Lawan
       }
     ]
     emit('chatTakeOverBatch', dataTakeOverChat)
@@ -388,7 +440,8 @@ const handleBatchEndActive = () => {
       type: 'system_keluar',
       status: true,
       room: chat.Room_Id,
-      phoneNumber: chat.Telepon_User_Lawan
+      phoneNumber: chat.Telepon_User_Lawan,
+      customerId: chat.Id_Lawan
     }
   })
 
@@ -404,7 +457,8 @@ const handleBatchTakeOverBot = () => {
       type: 'system_masuk',
       status: false,
       room: chat.Room_Id,
-      phoneNumber: chat.Telepon_User_Lawan
+      phoneNumber: chat.Telepon_User_Lawan,
+      customerId: chat.Id_Lawan
     }
   })
 
@@ -420,7 +474,8 @@ const handleBatchTakeOverAssign = () => {
       type: 'system_masuk',
       status: false,
       room: chat.Room_Id,
-      phoneNumber: chat.Telepon_User_Lawan
+      phoneNumber: chat.Telepon_User_Lawan,
+      customerId: chat.Id_Lawan
     }
   })
 
@@ -525,13 +580,13 @@ onUnmounted(() => {
 })
 
 defineExpose({
-  forceRefreshToUntukSaya,
-  refreshChatList
+  refreshChatList,
+  changeTab
 })
 </script>
 
 <template>
-  <div class="sidebar-container h-full">
+  <div class="sidebar-container h-full" v-bind="$attrs">
     <div class="lg:border-e border-slate-200 bg-white">
     <div id="hs-offcanvas-left" class="hs-overlay [--auto-close:lg] lg:block lg:translate-x-0 lg:static lg:end-auto lg:bottom-0 w-80 hs-overlay-open:translate-x-0 -translate-x-full transition-all duration-300 transform h-full hidden fixed top-0 start-0 bottom-0 overflow-hidden z-60" role="dialog" tabindex="-1" aria-label="Sidebar">
       <div class="card rounded-none shadow-none relative flex flex-row h-full max-h-full overflow-hidden divide-x divide-slate-200 bg-white">
@@ -624,8 +679,21 @@ defineExpose({
                         <div class="flex items-center justify-between gap-2">
                           <p class="text-[11px] font-bold truncate text-slate-500 leading-none" v-html="formatMessage(chat.Last_Message.replace('_X7#mQ9!vW2_', ' '))"></p>
 
-                          <div v-if="chat.New_Message_Count! > 0" class="flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[9px] font-black text-white bg-red-500 rounded-full shrink-0 shadow-lg shadow-red-500/30 ring-2 ring-white animate-bounce-subtle">
-                            {{ chat.New_Message_Count! > 99 ? '99+' : chat.New_Message_Count }}
+                          <div class="flex items-center gap-2">
+                            <!-- Quick Bot Toggle -->
+                            <button 
+                              @click.stop="toggleBotStatus(chat)"
+                              class="flex items-center gap-1.5 px-2 py-1 rounded-lg transition-all border"
+                              :class="chat.Status_Bot === 'aktif' ? 'bg-green-50 border-green-100 text-green-600' : 'bg-slate-50 border-slate-100 text-slate-400'"
+                              :title="chat.Status_Bot === 'aktif' ? 'Bot Aktif (Klik untuk Ambil Alih)' : 'Bot Nonaktif (Klik untuk Serahkan ke Bot)'"
+                            >
+                              <Icon :icon="chat.Status_Bot === 'aktif' ? 'lucide:bot' : 'lucide:user-cog'" class="size-3" />
+                              <span class="text-[8px] font-black uppercase tracking-tighter">{{ chat.Status_Bot === 'aktif' ? 'Bot' : 'Admin' }}</span>
+                            </button>
+
+                            <div v-if="chat.New_Message_Count! > 0" class="flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[9px] font-black text-white bg-red-500 rounded-full shrink-0 shadow-lg shadow-red-500/30 ring-2 ring-white animate-bounce-subtle">
+                              {{ chat.New_Message_Count! > 99 ? '99+' : chat.New_Message_Count }}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -687,8 +755,21 @@ defineExpose({
                         <div class="flex items-center justify-between gap-2">
                           <p class="text-[11px] font-bold truncate text-slate-500 leading-none" v-html="formatMessage(chat.Last_Message.replace('_X7#mQ9!vW2_', ' '))"></p>
 
-                          <div v-if="chat.New_Message_Count! > 0" class="flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[9px] font-black text-white bg-red-500 rounded-full shrink-0 shadow-lg shadow-red-500/30 ring-2 ring-white animate-bounce-subtle">
-                            {{ chat.New_Message_Count! > 99 ? '99+' : chat.New_Message_Count }}
+                          <div class="flex items-center gap-2">
+                            <!-- Quick Bot Toggle -->
+                            <button 
+                              @click.stop="toggleBotStatus(chat)"
+                              class="flex items-center gap-1.5 px-2 py-1 rounded-lg transition-all border"
+                              :class="chat.Status_Bot === 'aktif' ? 'bg-green-50 border-green-100 text-green-600' : 'bg-slate-50 border-slate-100 text-slate-400'"
+                              :title="chat.Status_Bot === 'aktif' ? 'Bot Aktif' : 'Admin Aktif'"
+                            >
+                              <Icon :icon="chat.Status_Bot === 'aktif' ? 'lucide:bot' : 'lucide:user-cog'" class="size-3" />
+                              <span class="text-[8px] font-black uppercase tracking-tighter">{{ chat.Status_Bot === 'aktif' ? 'Bot' : 'Admin' }}</span>
+                            </button>
+
+                            <div v-if="chat.New_Message_Count! > 0" class="flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[9px] font-black text-white bg-red-500 rounded-full shrink-0 shadow-lg shadow-red-500/30 ring-2 ring-white animate-bounce-subtle">
+                              {{ chat.New_Message_Count! > 99 ? '99+' : chat.New_Message_Count }}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -744,8 +825,21 @@ defineExpose({
                         <div class="flex items-center justify-between gap-2">
                           <p class="text-[11px] font-bold truncate text-slate-500 leading-none" v-html="formatMessage(chat.Last_Message.replace('_X7#mQ9!vW2_', ' '))"></p>
 
-                          <div v-if="chat.New_Message_Count! > 0" class="flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[9px] font-black text-white bg-red-500 rounded-full shrink-0 shadow-lg shadow-red-500/30 ring-2 ring-white animate-bounce-subtle">
-                            {{ chat.New_Message_Count! > 99 ? '99+' : chat.New_Message_Count }}
+                          <div class="flex items-center gap-2">
+                            <!-- Quick Bot Toggle -->
+                            <button 
+                              @click.stop="toggleBotStatus(chat)"
+                              class="flex items-center gap-1.5 px-2 py-1 rounded-lg transition-all border"
+                              :class="chat.Status_Bot === 'aktif' ? 'bg-green-50 border-green-100 text-green-600' : 'bg-slate-50 border-slate-100 text-slate-400'"
+                              :title="chat.Status_Bot === 'aktif' ? 'Bot Aktif' : 'Admin Aktif'"
+                            >
+                              <Icon :icon="chat.Status_Bot === 'aktif' ? 'lucide:bot' : 'lucide:user-cog'" class="size-3" />
+                              <span class="text-[8px] font-black uppercase tracking-tighter">{{ chat.Status_Bot === 'aktif' ? 'Bot' : 'Admin' }}</span>
+                            </button>
+
+                            <div v-if="chat.New_Message_Count! > 0" class="flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[9px] font-black text-white bg-red-500 rounded-full shrink-0 shadow-lg shadow-red-500/30 ring-2 ring-white animate-bounce-subtle">
+                              {{ chat.New_Message_Count! > 99 ? '99+' : chat.New_Message_Count }}
+                            </div>
                           </div>
                         </div>
                       </div>

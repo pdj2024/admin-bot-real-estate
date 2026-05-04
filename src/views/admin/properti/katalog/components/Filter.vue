@@ -409,6 +409,16 @@ const handleClickOutside = (event: MouseEvent) => {
 
 onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
+  
+  // Fetch regencies if provinceId is already set (from query params)
+  if (props.region.provinceId) {
+    try {
+      const res = await fetch(`/region/regencies/${props.region.provinceId}.json`)
+      regencies.value = await res.json()
+    } catch (err) {
+      console.error('Error fetching regencies on mount:', err)
+    }
+  }
 })
 
 onBeforeUnmount(() => {

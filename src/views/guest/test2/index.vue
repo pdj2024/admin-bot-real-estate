@@ -192,6 +192,7 @@ const loadGoogleMaps = () => {
     e.set("libraries", [...r].join(","));
     e.set("key", GOOGLE_MAPS_API_KEY);
     e.set("v", "beta"); // Menggunakan v=beta untuk fitur terbaru
+    e.set("loading", "async");
     a.src = `https://maps.${c}apis.com/maps/api/js?` + e;
     d[q] = f;
     a.onerror = () => h = n(Error(p + " could not load."));
@@ -270,7 +271,7 @@ const initMap = async () => {
     });
 
     // Map Click: Move Marker & Geocode
-    gMap.addListener('click', (e: google.maps.MapMouseEvent) => {
+    gMap.addListener('gmp-click', (e: google.maps.MapMouseEvent) => {
       if (e.latLng) {
         const newPos = { lat: e.latLng.lat(), lng: e.latLng.lng() };
         gMarker.position = newPos;

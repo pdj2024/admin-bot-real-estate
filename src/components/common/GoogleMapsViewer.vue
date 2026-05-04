@@ -24,114 +24,156 @@ const loadError = ref<string | null>(null)
 let gMap: any = null
 
 const loadGoogleMaps = () => {
-  if (typeof window.google?.maps?.importLibrary === 'function') {
+  if (typeof window.google?.maps?.Map === 'function') {
     initMap()
     return
   }
 
-  const g: any = window
-  let h: any, a: any
-  const p = 'The Google Maps JavaScript API'
-  const c = 'google'
-  const l = 'importLibrary'
-  const q = '__ib__'
+  const existingScript = document.querySelector('script[src*="maps.googleapis.com/maps/api/js"]')
+  if (existingScript) {
+    if (typeof window.google?.maps?.Map === 'function') {
+      initMap()
+    } else {
+      existingScript.addEventListener('load', () => initMap())
+      existingScript.addEventListener('error', () => {
+        isLoading.value = false
+        loadError.value = 'Gagal memuat SDK Google Maps'
+      })
+    }
+    return
+  }
+
   const m = document
-  const b: any = g[c] || (g[c] = {})
-  const d = b.maps || (b.maps = {})
-  const r = new Set()
+  const b = 'google'
   const e = new URLSearchParams()
+  e.set('key', GOOGLE_MAPS_API_KEY)
+  e.set('language', 'id')
+  e.set('region', 'ID')
+  
+  const script = m.createElement('script')
+  script.src = `https://maps.${b}apis.com/maps/api/js?` + e
+  script.async = true
+  script.defer = true
+  script.onload = () => initMap()
+  script.onerror = () => {
+    isLoading.value = false
+    loadError.value = 'Gagal memuat SDK Google Maps'
+  }
+  m.head.append(script)
 
-  const u = () =>
-    h ||
-    (h = new Promise(async (f, n) => {
-      await (a = m.createElement('script'))
-      e.set('libraries', [...r].join(','))
-      e.set('key', GOOGLE_MAPS_API_KEY)
-      e.set('v', 'beta')
-      e.set('callback', c + '.maps.' + q)
-      a.src = `https://maps.${c}apis.com/maps/api/js?` + e
-      d[q] = f
-      a.onerror = () => (h = n(Error(p + ' could not load.')))
-      a.nonce = (m.querySelector('script[nonce]') as any)?.nonce || ''
-      m.head.append(a)
-    }))
-
-  d[l] = (f: any, ...n: any[]) => r.add(f) && u().then(() => d[l](f, ...n))
-  initMap()
+  // Safety timeout for loading
+  setTimeout(() => {
+    if (isLoading.value && !loadError.value && !isMapLoaded.value) {
+      isLoading.value = false
+      loadError.value = 'Waktu muat habis. Silakan periksa koneksi internet atau kunci API Anda.'
+    }
+  }, 10000)
 }
 
 const initMap = async () => {
-  if (!mapContainer.value || !props.lat || !props.lng) return
+  if (!mapContainer.value) {
+    console.warn('Map container ref is missing during initMap')
+    return
+  }
   
+  if (!props.lat || !props.lng) {
+    console.warn('Invalid coordinates provided to GoogleMapsViewer:', { lat: props.lat, lng: props.lng })
+    isLoading.value = false
+    return
+  }
+  
+  console.log('Initializing map at:', { lat: props.lat, lng: props.lng })
   isLoading.value = true
   loadError.value = null
 
   try {
-    const [libraryMap, libraryMarker] = (await Promise.all([
-      google.maps.importLibrary('maps'),
-      google.maps.importLibrary('marker')
-    ])) as [google.maps.MapsLibrary, google.maps.MarkerLibrary]
+    let retryCount = 0
+    while (typeof window.google?.maps?.Map !== 'function' && retryCount < 30) {
+      await new Promise(resolve => setTimeout(resolve, 200))
+      retryCount++
+    }
 
-    const { Map } = libraryMap
-    const { AdvancedMarkerElement } = libraryMarker
+    if (typeof window.google?.maps?.Map !== 'function') {
+      throw new Error('SDK Google Maps tidak tersedia setelah menunggu')
+    }
 
-    const pos = { lat: props.lat, lng: props.lng }
+    const pos = { lat: Number(props.lat), lng: Number(props.lng) }
     
-    gMap = new Map(mapContainer.value, {
+    gMap = new google.maps.Map(mapContainer.value, {
       center: pos,
       zoom: props.zoom,
-      mapId: props.mapId,
       mapTypeControl: false,
-      streetViewControl: false
+      streetViewControl: false,
+      fullscreenControl: true,
+      zoomControl: true,
+      mapId: props.mapId || 'DEMO_MAP_ID',
+      gestureHandling: 'cooperative'
     })
 
-    new AdvancedMarkerElement({
-      map: gMap,
+    console.log('Map instance created successfully')
+
+    new google.maps.Marker({
       position: pos,
-      title: props.title
+      map: gMap,
+      title: props.title,
+      animation: google.maps.Animation.DROP
     })
 
+    console.log('Marker added to map at:', pos)
     isMapLoaded.value = true
   } catch (err: any) {
-    console.error('Error initializing product map:', err)
-    loadError.value = 'Gagal memuat peta'
+    console.error('CRITICAL: Error initializing map:', err)
+    loadError.value = err.message || 'Gagal menginisialisasi peta'
   } finally {
     isLoading.value = false
   }
 }
 
-watch([() => props.lat, () => props.lng], () => {
-  if (props.lat && props.lng) {
+watch([() => props.lat, () => props.lng], ([newLat, newLng]) => {
+  console.log('Coordinates changed, re-loading map...', { lat: newLat, lng: newLng })
+  if (newLat && newLng) {
     nextTick(() => {
       loadGoogleMaps()
     })
+  } else {
+    isLoading.value = false
   }
 }, { immediate: true })
 
 onMounted(() => {
+  console.log('GoogleMapsViewer mounted with props:', { lat: props.lat, lng: props.lng })
   if (props.lat && props.lng) {
     loadGoogleMaps()
+  } else {
+    isLoading.value = false
   }
 })
 </script>
 
 <template>
   <div class="relative w-full rounded-2xl overflow-hidden border border-slate-100 shadow-sm" :style="{ height: props.height }">
-    <div v-show="!loadError" ref="mapContainer" class="w-full h-full grayscale-[20%] contrast-[1.1]"></div>
+    <div v-show="!loadError" ref="mapContainer" class="w-full h-full grayscale-[10%] contrast-[1.05]"></div>
     
     <!-- Loading Overlay -->
-    <div v-if="isLoading && !loadError" class="absolute inset-0 bg-slate-50 flex flex-col items-center justify-center gap-3">
-      <div class="size-12 rounded-full border-4 border-slate-200 border-t-bejo-600 animate-spin"></div>
-      <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Memuat Peta...</span>
+    <div v-if="isLoading && !loadError" class="absolute inset-0 bg-slate-50 flex flex-col items-center justify-center gap-4">
+      <div class="relative size-14">
+        <div class="absolute inset-0 rounded-full border-4 border-slate-100"></div>
+        <div class="absolute inset-0 rounded-full border-4 border-transparent border-t-bejo-500 animate-spin"></div>
+      </div>
+      <span class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Sinkronisasi Lokasi...</span>
     </div>
 
     <!-- Error Overlay -->
-    <div v-if="loadError" class="absolute inset-0 bg-slate-50 flex flex-col items-center justify-center p-6 text-center">
-      <div class="size-16 bg-red-50 rounded-full flex items-center justify-center mb-4 text-red-500">
+    <div v-if="loadError" class="absolute inset-0 bg-slate-50 flex flex-col items-center justify-center p-8 text-center">
+      <div class="size-16 bg-red-50 rounded-2xl flex items-center justify-center mb-5 text-red-500 border border-red-100">
         <Icon icon="lucide:map-pin-off" class="size-8" />
       </div>
-      <h4 class="text-sm font-black text-slate-900 mb-1 uppercase tracking-wider">Peta Tidak Tersedia</h4>
-      <p class="text-xs font-medium text-slate-500">{{ loadError }}</p>
+      <h4 class="text-sm font-black text-slate-900 mb-2 uppercase tracking-wider">Peta Tidak Tersedia</h4>
+      <p class="text-xs font-medium text-slate-500 max-w-[200px] leading-relaxed mb-6">{{ loadError }}</p>
+      
+      <button @click="loadGoogleMaps" class="px-5 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all shadow-sm">
+        Coba Lagi
+      </button>
     </div>
   </div>
 </template>

@@ -34,9 +34,21 @@ export function useChatTransfer(props: any, emit: any, sendChat: any) {
       if (formattedPhone.startsWith('0')) formattedPhone = '62' + formattedPhone.substring(1)
 
       try {
-        await api.post('/api/chat/toggle-bot', { customer_phone: formattedPhone, admin_id: myId, status_bot: true }, { headers: { 'X-Jenis-User': 'admin' } })
+        await api.post('/api/chat/toggle-bot', { 
+          customer_phone: formattedPhone, 
+          admin_id: myId, 
+          customer_id: props.idLawan,
+          room_id: props.roomId,
+          status_bot: true 
+        }, { headers: { 'X-Jenis-User': 'admin' } })
         await sendChat('system_keluar_tukar', undefined, props.roomId!, formattedPhone)
-        await api.post('/api/chat/toggle-bot', { customer_phone: formattedPhone, admin_id: targetAdmin.No_Id, status_bot: false }, { headers: { 'X-Jenis-User': 'admin' } })
+        await api.post('/api/chat/toggle-bot', { 
+          customer_phone: formattedPhone, 
+          admin_id: targetAdmin.No_Id, 
+          customer_id: props.idLawan,
+          room_id: props.roomId,
+          status_bot: false 
+        }, { headers: { 'X-Jenis-User': 'admin' } })
         await sendChat('system_masuk_tukar', undefined, props.roomId!, formattedPhone, undefined, undefined, targetAdmin.Nama_User)
 
         success(`Berhasil mengalihkan ke ${targetAdmin.Nama_User}`)

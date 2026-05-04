@@ -28,13 +28,7 @@ onMounted(() => {
 
     <div class="relative z-10 grid grid-cols-1 md:grid-cols-12 items-center">
       <div class="md:col-span-8 p-6 md:p-10">
-        <div class="inline-flex items-center gap-2.5 px-3 py-1 bg-bejo-50 border border-bejo-100 rounded-full mb-6">
-          <span class="relative flex h-2 w-2">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-bejo-400 opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-2 w-2 bg-bejo-500"></span>
-          </span>
-          <span class="text-[9px] font-black uppercase tracking-[0.2em] text-bejo-600">Dashboard Rumah Bejo</span>
-        </div>
+
 
         <h1 class="text-2xl md:text-4xl font-black text-slate-900 leading-tight mb-4">
           Selamat Datang, <br>

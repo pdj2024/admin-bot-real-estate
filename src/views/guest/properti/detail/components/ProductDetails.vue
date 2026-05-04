@@ -57,14 +57,15 @@ const formatCurrency = (value: number) => {
           <div class="flex items-center gap-2" :class="!product ? 'text-transparent bg-slate-200 rounded-lg animate-pulse select-none w-fit' : 'text-slate-500'">
             <Icon icon="lucide:map-pin" class="size-4" :class="!product ? 'text-transparent' : 'text-bejo-600'" />
             <span class="text-sm font-semibold">
-              {{ product?.Alamat || 'Memuat alamat jalan...' }}
+              {{ product?.Alamat.split(',')[0]+", "+product?.Nama_Kota || 'Memuat alamat jalan...' }}
               <span v-if="formattedArea">, {{ formattedArea }}</span>
             </span>
           </div>
         </div>
+        
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          <div v-show="!product || product?.Status_Transaksi?.includes('Jual')" class="bg-slate-50 p-5 rounded-2xl border border-slate-100">
+          <div v-show="!product || product?.Status_Transaksi?.includes('Jual')" class="bg-bejo-50/30 p-5 rounded-2xl border border-bejo-100/50">
             <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1.5" :class="!product ? 'text-transparent bg-slate-200 rounded animate-pulse w-fit select-none' : ''">Harga Jual</p>
             <h4 class="flex flex-wrap items-center gap-x-3 gap-y-1">
               <span class="font-extrabold text-3xl" :class="!product ? 'text-transparent bg-slate-200 rounded-xl animate-pulse select-none' : 'text-slate-900'">
@@ -107,7 +108,7 @@ const formatCurrency = (value: number) => {
           <PropertySpecsGrid :product="product" />
         </div>
 
-        <div class="mb-10 p-6 bg-slate-50/50 rounded-2xl border-s-[6px] border-bejo-500 relative flex flex-col">
+        <div class="mb-10 p-6 bg-bejo-50/30 rounded-2xl border-s-[6px] border-bejo-500 relative flex flex-col">
           <Icon icon="lucide:quote" class="absolute top-4 right-4 size-8 text-slate-200 opacity-50" v-if="product" />
           <h6 class="text-[11px] font-black text-slate-800 uppercase tracking-widest mb-3" :class="!product ? 'text-transparent bg-slate-200 rounded animate-pulse w-max select-none shrink-0' : ''">Deskripsi Lengkap</h6>
           <p class="text-sm leading-relaxed font-medium" :class="!product ? 'text-transparent bg-slate-200 rounded-lg animate-pulse select-none' : 'text-slate-600'">{{ product?.Keterangan || 'Sedang memuat deskripsi lengkap tentang properti ini. Hal ini mungkin membutuhkan sedikit waktu untuk menyelesaikan rendering dari peladen web server dan jaringan internet Anda yang stabil.' }}</p>
@@ -119,7 +120,7 @@ const formatCurrency = (value: number) => {
             <table class="w-full text-sm">
               <tbody class="divide-y divide-slate-100">
                 <template v-if="product">
-                  <tr v-for="(akses, idx) in product?.Akses_Jalan" :key="idx" class="hover:bg-slate-50/80 transition-colors group">
+                  <tr v-for="(akses, idx) in product?.Akses_Jalan" :key="idx" class="hover:bg-bejo-50/50 transition-colors group">
                     <td class="px-5 py-3.5 text-slate-700 font-bold flex items-center gap-3">
                       <span class="size-2 rounded-full bg-bejo-300 group-hover:bg-bejo-600 transition-colors"></span>
                       {{ akses }}
@@ -147,20 +148,20 @@ const formatCurrency = (value: number) => {
           <div class="overflow-hidden border border-slate-100 rounded-2xl">
             <table class="w-full text-sm">
               <tbody class="divide-y divide-slate-100">
-                <tr class="hover:bg-slate-50/80 transition-colors">
-                  <td class="px-6 py-4 font-bold bg-slate-50/50 w-1/3 italic" :class="!product ? 'text-transparent bg-slate-200 rounded animate-pulse w-max select-none shrink-0' : 'text-slate-500'">Daya Listrik</td>
+                <tr class="hover:bg-bejo-50/50 transition-colors">
+                  <td class="px-6 py-4 font-bold bg-bejo-50/30 w-1/3 italic" :class="!product ? 'text-transparent bg-slate-200 rounded animate-pulse w-max select-none shrink-0' : 'text-slate-500'">Daya Listrik</td>
                   <td class="px-6 py-4 font-bold"><span :class="!product ? 'text-transparent bg-slate-300 rounded animate-pulse select-none shrink-0' : 'text-slate-800'">{{ !product ? 'Memuat..' : product?.Daya_Listrik.toLocaleString('id-ID') + ' Watt' }}</span></td>
                 </tr>
-                <tr class="hover:bg-slate-50/80 transition-colors">
-                  <td class="px-6 py-4 font-bold bg-slate-50/50 w-1/3 italic" :class="!product ? 'text-transparent bg-slate-200 rounded animate-pulse w-max select-none shrink-0' : 'text-slate-500'">Tipe Unit</td>
+                <tr class="hover:bg-bejo-50/50 transition-colors">
+                  <td class="px-6 py-4 font-bold bg-bejo-50/30 w-1/3 italic" :class="!product ? 'text-transparent bg-slate-200 rounded animate-pulse w-max select-none shrink-0' : 'text-slate-500'">Tipe Unit</td>
                   <td class="px-6 py-4 font-bold"><span :class="!product ? 'text-transparent bg-slate-300 rounded animate-pulse select-none shrink-0' : 'text-slate-800'">{{ product?.Tipe || 'Memuat..' }}</span></td>
                 </tr>
-                <tr class="hover:bg-slate-50/80 transition-colors">
-                  <td class="px-6 py-4 font-bold bg-slate-50/50 w-1/3 italic" :class="!product ? 'text-transparent bg-slate-200 rounded animate-pulse w-max select-none shrink-0' : 'text-slate-500'">Sertifikat</td>
+                <tr class="hover:bg-bejo-50/50 transition-colors">
+                  <td class="px-6 py-4 font-bold bg-bejo-50/30 w-1/3 italic" :class="!product ? 'text-transparent bg-slate-200 rounded animate-pulse w-max select-none shrink-0' : 'text-slate-500'">Sertifikat</td>
                   <td class="px-6 py-4 font-bold"><span :class="!product ? 'text-transparent bg-slate-300 rounded animate-pulse select-none shrink-0' : 'text-slate-800'">{{ product?.Jenis_Sertifikat || 'Memuat..' }}</span></td>
                 </tr>
-                <tr v-if="!product || product?.Status_Transaksi?.includes('Sewa')" class="hover:bg-slate-50/80 transition-colors">
-                  <td class="px-6 py-4 font-bold bg-slate-50/50 w-1/3 italic" :class="!product ? 'text-transparent bg-slate-200 rounded animate-pulse w-max select-none shrink-0' : 'text-slate-500'">Minimal Sewa</td>
+                <tr v-if="!product || product?.Status_Transaksi?.includes('Sewa')" class="hover:bg-bejo-50/50 transition-colors">
+                  <td class="px-6 py-4 font-bold bg-bejo-50/30 w-1/3 italic" :class="!product ? 'text-transparent bg-slate-200 rounded animate-pulse w-max select-none shrink-0' : 'text-slate-500'">Minimal Sewa</td>
                   <td class="px-6 py-4 font-bold"><span :class="!product ? 'text-transparent bg-slate-300 rounded animate-pulse select-none shrink-0' : 'text-slate-800'">{{ !product ? 'Memuat..' : ((product?.minimal_sewa || (product as any)?.Minimal_Sewa) ? ((product.minimal_sewa || (product as any).Minimal_Sewa) + ' ' + product.Satuan_Minimal_Sewa) : '-') }}</span></td>
                 </tr>
               </tbody>

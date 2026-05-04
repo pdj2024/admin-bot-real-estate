@@ -85,6 +85,7 @@ export interface Product {
   Minimal_Sewa: number | null
   Satuan_Minimal_Sewa: string
   Area: string[]
+  Nama_Kota: string
   Hide_alamat: boolean
   Akses_Jalan: string[]
   File_Image: string[]

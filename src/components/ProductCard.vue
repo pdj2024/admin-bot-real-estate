@@ -70,12 +70,13 @@
       <div class="flex items-start gap-1.5 text-bejo-600 mb-3" :class="isLoading ? 'opacity-50 grayscale' : ''">
         <Icon icon="lucide:map-pin" class="size-4 mt-0.5" />
         <div class="flex flex-col">
-          <span class="text-[11px] font-black uppercase tracking-wider" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-24 mb-1' : 'text-bejo-600'">
-            {{ isLoading ? '.' : (product.Area && product.Area[0]) ? (product.Area[0].split(',').length > 2 ? product.Area[0].split(',').slice(2).join(',').trim() : product.Area[0]) : '' }}
+          <span class="text-[10px] font-black uppercase tracking-[0.15em]" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-24 mb-1' : 'text-bejo-600'">
+            {{ isLoading ? '.' : product.Nama_Kota ? product.Nama_Kota : 'Lokasi Tidak Tersedia' }}
           </span>
           <p class="text-[11px] font-bold text-slate-500" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-48' : ''">
-            <span v-if="!isLoading && !product.Hide_alamat">{{ product.Alamat }}</span>
-            <span v-if="!isLoading && product.Area && product.Area[1]"> ({{ product.Area[1] }})</span>
+            <span v-if="!isLoading && !product.Hide_alamat">{{ product.Alamat ? product.Alamat.split(', Lat:')[0] : '' }}</span>
+            <span v-else-if="!isLoading && product.Hide_alamat" class="italic opacity-60">Alamat disembunyikan</span>
+            <span v-if="!isLoading && product.Nama_Kota && !product.Hide_alamat"> ({{ product.Nama_Area }})</span>
             <span v-if="isLoading">Memuat Detail Lokasi...</span>
           </p>
         </div>
@@ -96,9 +97,9 @@
 
       <!-- Specs Details -->
       <div v-if="!props.hideSpecs" class="mb-4 relative">
-        <button v-if="collapsibleDetails" type="button" @click.stop="emit('toggleExpand', product.No_Id)" class="flex items-center justify-between w-full px-4 py-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-100 transition-all group/expand cursor-pointer relative z-30">
-          <span class="text-[11px] font-black uppercase tracking-widest text-slate-500 pointer-events-none">Detail Unit</span>
-          <Icon :icon="props.isExpanded ? 'lucide:chevron-up' : 'lucide:chevron-down'" class="size-4 text-slate-400 group-hover/expand:text-bejo-600 transition-transform pointer-events-none" />
+        <button v-if="collapsibleDetails" type="button" @click.stop="emit('toggleExpand', product.No_Id)" class="flex items-center justify-between w-full px-4 py-2.5 bg-bejo-50/50 hover:bg-bejo-100 rounded-xl border border-bejo-100 transition-all group/expand cursor-pointer relative z-30">
+          <span class="text-[10px] font-black uppercase tracking-[0.2em] text-bejo-700 pointer-events-none">Detail Unit</span>
+          <Icon :icon="props.isExpanded ? 'lucide:chevron-up' : 'lucide:chevron-down'" class="size-4 text-bejo-400 group-hover/expand:text-bejo-600 transition-transform pointer-events-none" />
         </button>
 
         <Transition 
@@ -200,7 +201,7 @@
 
         <!-- Admin Actions Dropdown -->
         <div v-if="isAdmin && !isLoading" class="absolute bottom-1 right-0 z-20" @click.stop>
-          <button @click="$emit('toggleDropdown', product.No_Id)" class="size-10 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:bg-bejo-600 hover:text-white transition-all shadow-sm">
+          <button @click="$emit('toggleDropdown', product.No_Id)" class="size-10 flex items-center justify-center rounded-xl bg-bejo-50 text-bejo-600 hover:bg-bejo-600 hover:text-white transition-all shadow-sm border border-bejo-100">
             <Icon icon="lucide:more-vertical" class="size-5" />
           </button>
 

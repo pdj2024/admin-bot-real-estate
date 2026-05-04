@@ -72,6 +72,15 @@ const router = createRouter({
       component: () => import('@/views/guest/kontak/index.vue')
     },
     {
+      path: '/faq',
+      name: 'FAQ',
+      meta: {
+        title: 'FAQ',
+        requiresAuth: false
+      },
+      component: () => import('@/views/guest/faq/index.vue')
+    },
+    {
       path: '/test',
       name: 'Test Address',
       meta: {

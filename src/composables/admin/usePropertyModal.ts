@@ -113,15 +113,21 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
         Deskripsi: null
       }
       const { data } = await api.post('/api/kota/create', payload)
-      if (data.StatusCode === 200) {
+      if (data.StatusCode === 200 && data.Data) {
         await fetchCities()
         return data.Data.No_Id || data.Data.No_Id_Kota
       }
-    } catch {
-      // If fails (maybe already exists but not matched), try to fetch and find again
-      await fetchCities()
+    } catch (err: any) {
+      const status = err.response?.status || err.response?.data?.StatusCode
+      if (status !== 409) {
+        console.error('Failed to create city:', err)
+      }
     }
-    return null
+    
+    // Fallback: fetch and find by name if already exists or creation failed
+    await fetchCities()
+    const existing = cities.value.find(c => (c.Nama || '').toLowerCase() === name.toLowerCase())
+    return existing ? (existing.No_Id || existing.No_Id_Kota) : null
   }
 
   const createArea = async (name: string, idKota?: string) => {
@@ -133,15 +139,53 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
         Id_Kota: idKota || ''
       }
       const { data } = await api.post('/api/area/create', payload)
-      if (data.StatusCode === 200) {
+      if (data.StatusCode === 200 && data.Data) {
         await fetchAreas()
         return data.Data.No_Id || data.Data.No_Id_Area
       }
-    } catch (err) {
-      console.error('Failed to create area:', err)
-      await fetchAreas()
+    } catch (err: any) {
+      const status = err.response?.status || err.response?.data?.StatusCode
+      if (status !== 409) {
+        console.error('Failed to create area:', err)
+      }
     }
-    return null
+    
+    // Fallback: fetch and find by name if already exists or creation failed
+    await fetchAreas()
+    const existing = areas.value.find(a => 
+      (a.Nama || '').toLowerCase() === name.toLowerCase() && 
+      (!idKota || a.Id_Kota === idKota)
+    )
+    return existing ? (existing.No_Id || existing.No_Id_Area) : null
+  }
+
+  const createPriority = async (name: string, idArea?: string, desc?: string) => {
+    if (!name) return null
+    try {
+      const payload = {
+        Nama: name,
+        Deskripsi: desc || '',
+        Id_Area: idArea || ''
+      }
+      const { data } = await api.post('/api/prioritas/create', payload)
+      if (data.StatusCode === 200 && data.Data) {
+        await fetchPriorities()
+        return data.Data.No_Id || data.Data.No_Id_Prioritas
+      }
+    } catch (err: any) {
+      const status = err.response?.status || err.response?.data?.StatusCode
+      if (status !== 409) {
+        console.error('Failed to create priority:', err)
+      }
+    }
+    
+    // Fallback: fetch and find by name if already exists or creation failed
+    await fetchPriorities()
+    const existing = priorities.value.find(p => 
+      (p.Nama || '').toLowerCase() === name.toLowerCase() && 
+      (!idArea || p.Id_Area === idArea)
+    )
+    return existing ? (existing.No_Id || existing.No_Id_Prioritas) : null
   }
 
   const handleWilayahSuccess = async (newData: any) => {
@@ -277,6 +321,7 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
     { immediate: true }
   )
 
+
   const initData = (itemData?: any) => {
     media.photos.value = []
     media.previewPhotos.value = []
@@ -320,6 +365,14 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
         location.currentCoords.lat = lat
         location.currentCoords.lng = lng
       }
+    } else if (form.value.Alamat) {
+      const latMatch = form.value.Alamat.match(/Lat:\s*(-?\d+\.\d+)/i)
+      const lngMatch = form.value.Alamat.match(/Long:\s*(-?\d+\.\d+)/i)
+      if (latMatch && lngMatch) {
+        location.isLocationSelected.value = true
+        location.currentCoords.lat = parseFloat(latMatch[1])
+        location.currentCoords.lng = parseFloat(lngMatch[1])
+      }
     }
 
     nextTick(() => {
@@ -327,14 +380,22 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
     })
   }
 
-  const submitForm = async () => {
+  const submitForm = async (mode?: 'active' | 'draft') => {
     if (isLoading.value) return
     
-    // Validation
-    const required = [form.value.Nama_Produk, form.value.Tipe, form.value.Jenis_Sertifikat, form.value.Status_Transaksi?.length, form.value.Area[0], form.value.Luas_Bangunan]
-    if (required.some((v) => !v)) return fail('Lengkapi semua field wajib (bintang merah)!')
-    if (form.value.Status_Transaksi?.includes('Jual') && !form.value.Harga_Jual1) return fail('Harga Jual harus diisi!')
-    if (form.value.Status_Transaksi?.includes('Sewa') && !form.value.Harga_Sewa1) return fail('Harga Sewa harus diisi!')
+    const targetStatus = mode === 'active' ? 'Aktif' : mode === 'draft' ? 'Draft' : form.value.Status_Display
+    const isStrict = targetStatus === 'Aktif'
+    
+    if (isStrict) {
+      const required = [form.value.Nama_Produk, form.value.Tipe, form.value.Jenis_Sertifikat, form.value.Status_Transaksi?.length, form.value.Id_Kota, form.value.Luas_Bangunan]
+      const isEmpty = (v: any) => v === null || v === undefined || v === ''
+      if (required.some(isEmpty)) return fail('Lengkapi semua field wajib (bintang merah) untuk mengaktifkan properti!')
+      if (form.value.Status_Transaksi?.includes('Jual') && !form.value.Harga_Jual1) return fail('Harga Jual harus diisi!')
+      if (form.value.Status_Transaksi?.includes('Sewa') && !form.value.Harga_Sewa1) return fail('Harga Sewa harus diisi!')
+    } else {
+      // Minimal validation for draft
+      if (!form.value.Nama_Produk) return fail('Minimal isi Nama Properti untuk menyimpan sebagai draft!')
+    }
 
     isLoading.value = true
     try {
@@ -386,25 +447,35 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
             prioName = String(prioName).replace('virtual-', '')
           }
           
-          const { data: prioData } = await api.post('/api/prioritas/create', {
-            Nama: prioName,
-            Deskripsi: virtualPrio?.Deskripsi || '',
-            Id_Area: finalAreaId
-          })
-          
-          if (prioData.StatusCode === 200) {
-            finalPrioId = prioData.Data.No_Id || prioData.Data.No_Id_Prioritas
-            form.value.Id_Prioritas = finalPrioId
-          } else {
-            throw new Error(prioData.Message || 'Gagal membuat prioritas otomatis')
-          }
+          const createdPrioId = await createPriority(prioName, finalAreaId, virtualPrio?.Deskripsi)
+          if (!createdPrioId) throw new Error('Gagal membuat prioritas otomatis')
+          finalPrioId = createdPrioId
+          form.value.Id_Prioritas = finalPrioId
         }
       }
-      
+      // 4. Append Lat/Long to Address for storage
+      let finalAlamat = form.value.Alamat || ''
+      if (form.value.Area[2] && form.value.Area[2].includes(',')) {
+        const [lat, lng] = form.value.Area[2].split(',')
+        // Only append if not already there
+        if (!finalAlamat.includes('Lat:')) {
+          finalAlamat = `${finalAlamat.trim()}, Lat: ${lat.trim()} Long: ${lng.trim()}`
+        }
+      }
+
       const payload = { 
         ...form.value, 
+        Status_Display: targetStatus,
+        Alamat: finalAlamat,
         Id_Area: finalAreaId,
         Id_Prioritas: finalPrioId,
+        Luas_Tanah: String(form.value.Luas_Tanah || '0'),
+        Luas_Bangunan: String(form.value.Luas_Bangunan || '0'),
+        Jumlah_Lantai: String(form.value.Jumlah_Lantai || '0'),
+        Jumlah_Kamar_Tidur: String(form.value.Jumlah_Kamar_Tidur || '0'),
+        Jumlah_Kamar_Mandi: String(form.value.Jumlah_Kamar_Mandi || '0'),
+        Jumlah_Carpot: String(form.value.Jumlah_Carpot || '0'),
+        Daya_Listrik: String(form.value.Daya_Listrik || '0'),
         File_Image: [...new Set([...(form.value.File_Image || []), ...newMediaIds])], 
         Flag_Sewa: form.value.Status_Transaksi?.includes('Sewa') ? 'Ya' : 'Tidak' 
       }
@@ -419,6 +490,7 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
       await media.clearDeletedMedia()
       
       success(isEdit ? 'Properti diperbarui' : 'Properti ditambah')
+      form.value.Status_Display = targetStatus
       emit('success')
       handleCloseFn()
     } catch (err: any) {

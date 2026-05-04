@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue'
 import api from '@/services/axios'
 import * as signalR from '@microsoft/signalr'
 
@@ -29,6 +29,11 @@ const chats = ref<any[]>([])
 const isLoadingChat = ref(false)
 const signalRConnection = ref<signalR.HubConnection | null>(null)
 const audio = new Audio('/sounds/Ding.mp3')
+ 
+const isTakenOver = computed(() => {
+  if (!selectedRoomId.value) return false
+  return roomIdsAktif.value.includes(selectedRoomId.value)
+})
 
 const handleSelectChat = async (id: string) => {
   // if (selectedRoomId.value && signalRConnection.value?.state === signalR.HubConnectionState.Connected) {
@@ -79,9 +84,17 @@ const handleClearRoom = () => {
   selectedPhone.value = ''
 }
 
-const handleTakeOver = () => {
-  currentActiveTab.value = 'chat_saya'
-  if (sidebarRef.value) sidebarRef.value.forceRefreshToUntukSaya()
+const handleTakeOver = (status: boolean) => {
+  const targetTab = status ? 'bot' : 'chat_saya'
+  currentActiveTab.value = targetTab
+  
+  // Beri jeda sedikit agar backend selesai update sebelum fetch ulang
+  setTimeout(() => {
+    if (sidebarRef.value) sidebarRef.value.changeTab(targetTab)
+  }, 500)
+  
+  // Jika status true (kembali ke bot), tutup room chat
+  if (status === true) handleClearRoom()
 }
 
 const handleLastMessage = (id: string) => {
@@ -206,7 +219,7 @@ const startSignalR = async () => {
     console.log('[Event: ReceiveHandoverAlert]', payload)
     if (payload && payload.roomId === selectedRoomId.value) {
       handleClearRoom()
-      handleTakeOver()
+      handleTakeOver(true)
     }
   })
 
@@ -237,7 +250,7 @@ const startSignalR = async () => {
 const fetchChatContent = async (id: string) => {
   isLoadingChat.value = true
   try {
-    const response = await api.get(`/api/chat/getAll?room_id=${id}`, {
+    const response = await api.get(`/api/chat/getAll?orderby=sent_at&orderdir=asc&room_id=${id}`, {
       headers: { 'X-Jenis-User': 'Admin' }
     })
     chats.value = response.data.Data
@@ -311,7 +324,7 @@ onBeforeUnmount(() => {
             :isLoadingChat="isLoadingChat"
             :lastMessageId="lastMessageId" 
             :takeOverBatch="takeOverBatch" 
-            :takeOverStatus="takeOverSuccess" 
+            :isTakenOver="isTakenOver"
             @chatTakeOver="handleTakeOver" 
             @clearRoom="handleClearRoom" 
             @usernameChange="handleUsernameChange" 

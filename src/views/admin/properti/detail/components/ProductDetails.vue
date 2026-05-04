@@ -57,7 +57,7 @@ const formatCurrency = (value: number) => {
           <div class="flex items-center gap-2" :class="!product ? 'text-transparent bg-slate-200 rounded-lg animate-pulse select-none w-fit' : 'text-slate-500'">
             <Icon icon="lucide:map-pin" class="size-4" :class="!product ? 'text-transparent' : 'text-bejo-600'" />
             <span class="text-sm font-semibold">
-              {{ product?.Alamat || 'Memuat alamat jalan...' }}
+              {{ product?.Alamat.split(',')[0]+", "+product?.Nama_Kota || 'Memuat alamat jalan...' }}
               <span v-if="formattedArea">, {{ formattedArea }}</span>
             </span>
           </div>
