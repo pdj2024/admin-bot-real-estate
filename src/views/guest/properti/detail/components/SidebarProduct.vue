@@ -94,7 +94,7 @@ const handleDragEnd = (e: TouchEvent | MouseEvent) => {
 const handleWaContact = () => {
   const url = window.location.href
   const text = `Halo Admin, saya tertarik untuk menanyakan lebih lanjut mengenai properti *${props.product?.Nama_Produk}*\n\n${url}`
-  const targetNumber = settingsStore.business.whatsapp || '62895353837000'
+  const targetNumber = settingsStore.business.whatsapp || '6287700083370'
 
   window.open(`https://wa.me/${targetNumber}?text=${encodeURIComponent(text)}`, '_blank')
 }
@@ -277,8 +277,8 @@ onUnmounted(() => {
             <!-- Label Status -->
             <div v-if="product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia')" class="absolute inset-0 bg-black/40 backdrop-grayscale-[60%] z-[5] pointer-events-none transition-all duration-500"></div>
             <div v-if="product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia')" class="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
-              <div class="glass-dark px-4 py-2 rounded-2xl border border-white/10 shadow-2xl transform transition-transform duration-500 group-hover:scale-110">
-                <span class="text-xs md:text-sm font-black uppercase tracking-[0.2em] text-white/90">
+              <div class="bg-bejo-600/90 backdrop-blur-xl px-6 py-3 rounded-2xl border border-white/20 shadow-2xl transform transition-transform duration-500 group-hover:scale-110">
+                <span class="text-xs md:text-sm font-black uppercase tracking-[0.3em] text-white">
                   {{ product.Status_Properti != 'Tersedia' ? product.Status_Properti : product.Status_Display }}
                 </span>
               </div>

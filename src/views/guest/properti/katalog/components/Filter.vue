@@ -1,11 +1,35 @@
 <template>
-  <div ref="filterRef" :class="[!openFilter ? 'hidden lg:block' : 'block']" class="z-[60] fixed inset-x-4 bottom-6 lg:static lg:w-full lg:inset-auto">
-    <div class="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/40 overflow-hidden">
-      <div class="p-6">
-        <div class="flex items-center justify-between mb-6">
-          <h6 class="text-lg font-bold text-slate-800 tracking-tight uppercase">Filter</h6>
-          <button @click="clearAll" class="text-[10px] font-semibold text-bejo-400 uppercase tracking-widest hover:text-red-500 transition-colors underline underline-offset-4 decoration-transparent hover:decoration-red-500">Hapus Semua</button>
+  <div>
+    <!-- Backdrop for Mobile -->
+    <Transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div v-if="openFilter" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[55] lg:hidden" @click="$emit('update:openFilter', false)"></div>
+    </Transition>
+
+    <div 
+      ref="filterRef" 
+      :class="[
+        !openFilter ? 'translate-y-full lg:translate-y-0 hidden lg:block' : 'translate-y-0 block',
+        'fixed inset-x-0 bottom-0 z-[60] lg:static lg:w-full lg:inset-auto transition-transform duration-500 ease-out'
+      ]"
+    >
+      <div class="bg-white rounded-t-[2.5rem] lg:rounded-[2.5rem] shadow-2xl lg:shadow-xl shadow-slate-900/20 overflow-hidden max-h-[85vh] lg:max-h-none flex flex-col">
+        <!-- Bottom Sheet Handle (Mobile Only) -->
+        <div class="flex justify-center pt-4 pb-2 lg:hidden">
+          <div class="w-12 h-1.5 bg-slate-200 rounded-full"></div>
         </div>
+
+        <div class="p-6 overflow-y-auto custom-scroll lg:overflow-visible">
+          <div class="flex items-center justify-between mb-6">
+            <h6 class="text-lg font-black text-slate-800 tracking-tight uppercase">Filter Properti</h6>
+            <button @click="clearAll" class="text-[10px] font-black text-bejo-500 uppercase tracking-widest hover:text-red-500 transition-all underline underline-offset-4 decoration-transparent hover:decoration-red-500">Hapus Semua</button>
+          </div>
 
         <div class="space-y-5">
           <div class="relative group">
@@ -255,10 +279,11 @@
           </div>
         </div>
 
-        <div class="mt-8 pt-6 border-t border-slate-200">
-          <button @click="$emit('update:openFilter', false)" class="w-full py-3 bg-bejo-600 text-white rounded-xl font-bold hover:bg-bejo-700 transition-colors uppercase tracking-widest text-xs border border-transparent shadow shadow-bejo-600/20 hover:shadow-lg hover:shadow-bejo-600/40 active:scale-95 text-center">
-            Lihat Hasil
-          </button>
+          <div class="mt-8 pt-6 border-t border-slate-200 sticky bottom-0 bg-white lg:static">
+            <button @click="$emit('update:openFilter', false)" class="w-full py-4 bg-bejo-600 text-white rounded-2xl font-black hover:bg-bejo-700 transition-all uppercase tracking-widest text-xs shadow-lg shadow-bejo-600/30 active:scale-95 text-center">
+              Tampilkan Hasil
+            </button>
+          </div>
         </div>
       </div>
     </div>

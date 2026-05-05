@@ -6,7 +6,7 @@ import { useSettings } from '@/stores/settings'
 const settingsStore = useSettings()
 
 const handleWaContact = () => {
-  const targetNumber = settingsStore.business.whatsapp || '62895353837000'
+  const targetNumber = settingsStore.business.whatsapp || '6287700083370'
   const message = 'Halo Admin Rumah Bejo, saya melihat situs sedang dalam perbaikan. Saya ingin menanyakan perihal properti...'
   window.open(`https://wa.me/${targetNumber}?text=${encodeURIComponent(message)}`, '_blank')
 }

@@ -11,10 +11,6 @@
         
         <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-12">
           <div class="max-w-3xl space-y-8">
-            <div class="inline-flex items-center gap-3 px-4 py-2 bg-bejo-50 rounded-full border border-bejo-100">
-              <div class="size-2 bg-bejo-500 rounded-full animate-pulse"></div>
-              <span class="text-[10px] font-black text-bejo-700 uppercase tracking-[0.2em]">Listing Terverifikasi</span>
-            </div>
             <h1 class="text-6xl md:text-7xl text-slate-900 tracking-tighter leading-[0.9] font-black">
               Eksplorasi Katalog <br />
               <span class="text-transparent bg-clip-text bg-gradient-to-br from-bejo-500 via-bejo-600 to-bejo-900">{{ settingsStore.business.appName }}</span>

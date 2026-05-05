@@ -260,6 +260,21 @@
           </div>
         </div>
       </footer>
+
+      <!-- Floating WhatsApp Button -->
+      <div class="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-[999] flex flex-col items-end gap-3 group print:hidden">
+        <div class="bg-white px-4 py-2 rounded-2xl shadow-premium border border-bejo-100 text-[10px] font-black text-slate-800 uppercase tracking-widest translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none mb-1">
+          Butuh Bantuan?
+        </div>
+        <a 
+          :href="'https://wa.me/' + (settingsStore.business.whatsapp || '6287700083370')" 
+          target="_blank"
+          class="size-14 md:size-18 rounded-[1.8rem] md:rounded-[2.2rem] bg-emerald-500 text-white flex items-center justify-center shadow-2xl shadow-emerald-500/40 hover:bg-emerald-600 hover:rotate-12 hover:scale-110 active:scale-95 transition-all duration-500 relative"
+        >
+          <div class="absolute inset-0 rounded-inherit bg-emerald-500 animate-ping opacity-25 group-hover:opacity-40"></div>
+          <Icon icon="ic:baseline-whatsapp" class="size-7 md:size-9 relative z-10" />
+        </a>
+      </div>
     </div>
   </div>
 </template>

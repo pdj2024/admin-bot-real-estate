@@ -166,10 +166,19 @@ onMounted(async () => {
 
 <template>
   <Guest>
-    <div class="p-10 max-w-[1440px] mx-auto w-full min-h-[60vh]">
-      <div v-if="isLoading" class="flex flex-col items-center justify-center py-20">
-        <Icon icon="lucide:loader-2" class="size-12 animate-spin text-bejo-500 mb-4" />
-        <p class="text-slate-400 font-bold uppercase tracking-widest text-xs">Memuat Data...</p>
+    <div class="w-full !px-4 sm:!px-8 lg:!px-10 py-10 min-h-[60vh]">
+      <!-- Skeleton Loading State -->
+      <div v-if="isLoading" class="grid lg:grid-cols-3 grid-cols-1 gap-8">
+        <!-- Sidebar Skeleton -->
+        <div class="flex flex-col gap-6">
+          <div class="h-[500px] bg-slate-100 rounded-[2.5rem] animate-pulse"></div>
+          <div class="h-32 bg-slate-100 rounded-[2rem] animate-pulse"></div>
+        </div>
+        <!-- Details Skeleton -->
+        <div class="lg:col-span-2 flex flex-col gap-6">
+          <div class="h-[600px] bg-slate-100 rounded-[2.5rem] animate-pulse"></div>
+          <div class="h-48 bg-slate-100 rounded-[2.5rem] animate-pulse"></div>
+        </div>
       </div>
       
       <div v-else-if="product" class="grid lg:grid-cols-3 grid-cols-1 gap-5">

@@ -89,30 +89,57 @@
 
         <!-- Result Section -->
         <div class="xl:col-span-5 flex flex-col justify-center relative z-10 mt-6 xl:mt-0">
-          <div class="bg-white rounded-[2rem] p-5 sm:p-8 shadow-2xl shadow-bejo-600/10 w-full flex flex-col border border-bejo-100 relative overflow-hidden mb-5">
-            <div class="absolute top-0 right-0 size-32 bg-bejo-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+          <div class="bg-white rounded-[2rem] p-6 sm:p-10 shadow-2xl shadow-bejo-600/10 w-full flex flex-col border border-bejo-100 relative overflow-hidden mb-6">
+            <div class="absolute top-0 right-0 size-48 bg-bejo-100 rounded-full blur-[100px] opacity-30 pointer-events-none"></div>
             
-            <h3 class="text-xl font-black text-slate-900 mb-8 pb-4 border-b border-bejo-50">Hasil Simulasi KPR</h3>
+            <div class="flex items-center justify-between mb-8 pb-4 border-b border-bejo-50">
+              <h3 class="text-xl font-black text-slate-900">Hasil Simulasi</h3>
+              <div class="px-3 py-1 bg-bejo-50 text-bejo-600 text-[10px] font-black uppercase tracking-widest rounded-lg">Estimasi Fixed</div>
+            </div>
             
-            <div class="space-y-8 relative z-10">
-              <div>
-                <span class="text-[10px] font-black uppercase tracking-widest text-bejo-600 mb-2 block">Estimasi Angsuran / Bulan</span>
-                <div class="text-4xl sm:text-5xl font-black text-slate-900 flex items-baseline gap-2">
-                  <span class="text-2xl text-bejo-500">Rp</span> {{ formatCurrencyShort(angsuran) }}
-                </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-1 gap-8 items-center mb-8">
+              <!-- Chart Area -->
+              <div class="relative flex items-center justify-center py-4">
+                <ApexChart 
+                  height="280" 
+                  width="100%" 
+                  :options="chartOptions" 
+                  :series="chartSeries" 
+                />
               </div>
-              
-              <div class="pt-6 border-t border-bejo-50">
-                <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Total Pinjaman Bank</span>
-                <div class="text-2xl font-black text-slate-700">
-                  Rp {{ formatCurrency(totalPinjaman) }}
+
+              <!-- Metrics -->
+              <div class="space-y-6 relative z-10">
+                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-bejo-200 transition-all">
+                  <span class="text-[10px] font-black uppercase tracking-widest text-bejo-600 mb-2 block">Angsuran Per Bulan</span>
+                  <div class="text-3xl font-black text-slate-900 flex items-baseline gap-2">
+                    <span class="text-xl text-bejo-500">Rp</span> {{ formatCurrencyShort(angsuran) }}
+                  </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="p-4 rounded-2xl bg-white border border-slate-100">
+                    <span class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1 block">Total Bunga</span>
+                    <div class="text-sm font-black text-slate-700">Rp {{ formatCurrencyShort(totalBunga) }}</div>
+                  </div>
+                  <div class="p-4 rounded-2xl bg-white border border-slate-100">
+                    <span class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1 block">Tenor</span>
+                    <div class="text-sm font-black text-slate-700">{{ years }} Tahun</div>
+                  </div>
+                </div>
+
+                <div class="pt-4">
+                  <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Total Pinjaman Pokok</span>
+                  <div class="text-xl font-black text-slate-700">
+                    Rp {{ formatCurrency(totalPinjaman) }}
+                  </div>
                 </div>
               </div>
             </div>
             
-            <button @click="handleKprWa" class="mt-10 w-full bg-bejo-500 hover:bg-bejo-600 text-white py-5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-xl shadow-bejo-500/20 flex items-center justify-center gap-3 active:scale-95 group">
+            <button @click="handleKprWa" class="w-full bg-bejo-600 hover:bg-bejo-700 text-white py-5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-xl shadow-bejo-600/20 flex items-center justify-center gap-3 active:scale-95 group">
               <Icon icon="ic:baseline-whatsapp" class="size-6 transition-transform group-hover:scale-110" />
-              Tanya kami
+              Konsultasikan Sekarang
             </button>
           </div>
 
@@ -195,11 +222,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, defineAsyncComponent } from 'vue'
 import { Icon } from '@iconify/vue'
 import GuestLayout from '@/layouts/guest.vue'
 import { useSettings } from '@/stores/settings'
 
+const ApexChart = defineAsyncComponent(() => import('vue3-apexcharts'))
 const settingsStore = useSettings()
 
 const formatCurrency = (value: number) => {
@@ -221,10 +249,10 @@ const parseNumber = (val: string | number) => {
 }
 
 // Simulasi KPR State
-const propertyPrice = ref<number>(850000000)
-const dpPercentage = ref<number>(15)
-const years = ref<number>(15)
-const interestRate = ref<number>(5.0)
+const propertyPrice = ref<number>(0)
+const dpPercentage = ref<number>(0)
+const years = ref<number>(0)
+const interestRate = ref<number>(0)
 
 const totalPinjaman = computed(() => {
   return Math.max(0, propertyPrice.value - dpValue.value)
@@ -254,20 +282,91 @@ const setDpValueFromInput = (e: Event) => {
 
 const angsuran = computed(() => {
   const p = totalPinjaman.value
-  if (p <= 0) return 0
   const r = (interestRate.value / 100) / 12
   const n = years.value * 12
   
   if (r === 0) return p / n
   
-  const pmt = p * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1)
-  return Math.round(pmt)
+  return (p * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1)
 })
+
+// Logika Chart
+const totalBunga = computed(() => {
+  const totalBayar = angsuran.value * (years.value * 12)
+  return Math.max(0, totalBayar - totalPinjaman.value)
+})
+
+const chartSeries = computed(() => [
+  totalPinjaman.value,
+  totalBunga.value
+])
+
+const chartOptions = computed(() => ({
+  chart: {
+    type: 'donut',
+    fontFamily: 'Outfit, sans-serif',
+    animations: {
+      enabled: true,
+      easing: 'easeinout',
+      speed: 800,
+    }
+  },
+  stroke: {
+    width: 0
+  },
+  colors: ['#EA8455', '#7c2d12'],
+  labels: ['Pokok Pinjaman', 'Total Bunga'],
+  plotOptions: {
+    pie: {
+      donut: {
+        size: '82%',
+        labels: {
+          show: true,
+          name: {
+            show: true,
+            fontSize: '12px',
+            fontWeight: 900,
+            color: '#94a3b8',
+            offsetY: -10
+          },
+          value: {
+            show: true,
+            fontSize: '20px',
+            fontWeight: 900,
+            color: '#7c2d12',
+            offsetY: 10,
+            formatter: (val: any) => 'Rp ' + formatCurrencyShort(val)
+          },
+          total: {
+            show: true,
+            label: 'Angsuran/Bln',
+            color: '#94a3b8',
+            fontWeight: 900,
+            fontSize: '10px',
+            formatter: () => 'Rp ' + formatCurrencyShort(angsuran.value)
+          }
+        }
+      }
+    }
+  },
+  dataLabels: {
+    enabled: false
+  },
+  legend: {
+    show: false
+  },
+  tooltip: {
+    enabled: true,
+    y: {
+      formatter: (val: any) => 'Rp ' + formatCurrency(val)
+    }
+  }
+}))
 
 const handleKprWa = () => {
   const defaultGreeting = `Halo Admin ${settingsStore.business.appName}, saya baru saja melakukan simulasi KPR di situs dan ingin berkonsultasi lebih lanjut.`
   const message = `${defaultGreeting}\n\nBerikut simulasi anggaran saya:\n- Harga Properti: Rp ${formatCurrency(propertyPrice.value)}\n- DP / Uang Muka (${dpPercentage.value}%): Rp ${formatCurrency(dpValue.value)}\n- Pinjaman Bank: Rp ${formatCurrency(totalPinjaman.value)}\n- Suku Bunga: ${interestRate.value}%\n- Tenor Waktu: ${years.value} thn\n\n*Estimasi Angsuran:* Rp ${formatCurrency(angsuran.value)}/bln\n\nApakah pihak agen bisa membantu merekomendasikan properti yang sesuai dengan anggaran saya?`
-  const targetNumber = settingsStore.business.whatsapp || '62895353837000'
+  const targetNumber = settingsStore.business.whatsapp || '6287700083370'
   
   window.open(`https://wa.me/${targetNumber}?text=${encodeURIComponent(message)}`, '_blank')
 }

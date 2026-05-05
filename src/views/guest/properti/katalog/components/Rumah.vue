@@ -87,6 +87,17 @@
       </div>
     </div>
 
+    <!-- Floating Filter Button (Mobile Only) -->
+    <div class="lg:hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-[50] flex justify-center w-full px-4 pointer-events-none">
+      <button 
+        @click="$emit('openFilter')" 
+        class="pointer-events-auto flex items-center gap-2 px-8 py-3.5 bg-slate-900/90 backdrop-blur-xl text-white rounded-full font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-slate-900/40 active:scale-95 transition-all border border-white/10"
+      >
+        <Icon icon="lucide:filter" class="size-4" />
+        Saring Properti
+      </button>
+    </div>
+
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-6">
       <template v-if="isLoading">
         <ProductCard v-for="i in 15" :key="i" :product="{}" is-loading />

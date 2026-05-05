@@ -3,7 +3,7 @@
     <!-- Hero Section Beranda -->
     <section class="relative pt-10 pb-10 bg-white">
       <div class="w-full !px-4 sm:!px-8 lg:!px-10">
-        <div class="relative overflow-hidden rounded-[3.5rem] bg-white border border-bejo-100 shadow-premium p-8 md:p-24 lg:p-32 flex flex-col justify-center items-center min-h-[80vh]">
+        <div class="relative overflow-hidden rounded-[3.5rem] bg-white border border-bejo-100 shadow-premium px-8 pt-8 pb-48 md:px-24 md:pt-24 md:pb-64 lg:px-32 lg:pt-32 lg:pb-80 flex flex-col justify-center items-center min-h-[90vh]">
           <!-- Mesh Gradient Background -->
           <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <div class="absolute -top-[20%] -right-[10%] size-[800px] bg-bejo-100/50 rounded-full blur-[120px] animate-pulse"></div>
@@ -54,8 +54,6 @@
                 <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Populer:</span>
                 <button @click="quickSearch('Rumah')" class="px-4 py-1.5 bg-bejo-50 hover:bg-bejo-600 hover:text-white text-bejo-700 text-[10px] font-black rounded-full border border-bejo-100 transition-all uppercase tracking-wider">Rumah</button>
                 <button @click="quickSearch('Apartemen')" class="px-4 py-1.5 bg-bejo-50 hover:bg-bejo-600 hover:text-white text-bejo-700 text-[10px] font-black rounded-full border border-bejo-100 transition-all uppercase tracking-wider">Apartemen</button>
-                <button @click="quickSearch('Modern')" class="px-4 py-1.5 bg-bejo-50 hover:bg-bejo-600 hover:text-white text-bejo-700 text-[10px] font-black rounded-full border border-bejo-100 transition-all uppercase tracking-wider">Modern</button>
-                <button @click="quickSearch('Siap Huni')" class="px-4 py-1.5 bg-bejo-50 hover:bg-bejo-600 hover:text-white text-bejo-700 text-[10px] font-black rounded-full border border-bejo-100 transition-all uppercase tracking-wider">Siap Huni</button>
               </div>
             </div>
 
@@ -71,7 +69,7 @@
     </section>
 
     <!-- Stats Floating Bottom -->
-    <div class="relative z-20 !px-4 sm:!px-12 lg:!px-20 -mt-30 md:-mt-45 top-20">
+    <div class="relative z-20 !px-4 sm:!px-12 lg:!px-20 -mt-40 md:-mt-56 lg:-mt-64">
       <div class="w-full mx-auto glass backdrop-blur-3xl rounded-[4rem] p-10 md:p-14 shadow-premium border border-white/60 grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-4 divide-y md:divide-y-0 md:divide-x divide-slate-100/50">
         <div class="text-center px-6 group hover-float">
           <div class="text-bejo-600 mb-2 opacity-0 group-hover:opacity-100 transition-all duration-700 translate-y-3 group-hover:translate-y-0 scale-150">

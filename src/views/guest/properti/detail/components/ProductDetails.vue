@@ -39,14 +39,6 @@ const formatCurrency = (value: number) => {
       <div class="card-body p-6">
         <div class="flex justify-between items-center mb-4">
           <div class="flex items-center gap-3">
-            <template v-for="(transaksi, index) in product?.Status_Transaksi" :key="index">
-              <span class="glass-bejo px-4 py-1.5 text-[10px] uppercase tracking-widest font-black rounded-xl text-bejo-900">
-                {{ transaksi }}
-              </span>
-            </template>
-            <span v-if="product?.Tipe" class="glass px-4 py-1.5 text-[10px] uppercase tracking-widest font-black rounded-xl text-slate-700">
-              {{ product.Tipe }}
-            </span>
           </div>
         </div>
 

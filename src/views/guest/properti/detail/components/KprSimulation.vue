@@ -29,9 +29,9 @@ const propertyPrice = computed(() => {
   return props.product.Harga_Sewa1 || 0
 })
 
-const dpPercentage = ref(20)
-const years = ref(15)
-const interestRate = ref(5)
+const dpPercentage = ref(0)
+const years = ref(0)
+const interestRate = ref(0)
 
 const dpValue = computed({
   get: () => {
@@ -72,7 +72,7 @@ const handleKprWa = () => {
   const url = window.location.href
   const defaultGreeting = `Halo Admin ${settingsStore.business.appName}, saya sedang melihat properti "${props.product?.Nama_Produk}" dan ingin berkonsultasi mengenai simulasi KPR yang baru saja saya lakukan di situs.`
   const message = `${defaultGreeting}\n\nEstimasi saya:\n- Harga: ${formatCurrencyShort(propertyPrice.value)}\n- DP (${dpPercentage.value}%): Rp ${formatCurrency(dpValue.value)}\n- Tenor: ${years.value} thn\n- Angsuran: Rp ${formatCurrency(angsuran.value)}/bln\n\nBerikut tautan propertinya: ${url}`
-  const targetNumber = settingsStore.business.whatsapp || '62895353837000'
+  const targetNumber = settingsStore.business.whatsapp || '6287700083370'
   
   window.open(`https://wa.me/${targetNumber}?text=${encodeURIComponent(message)}`, '_blank')
 }
@@ -136,20 +136,20 @@ const handleKprWa = () => {
         </div>
       </div>
 
-      <div class="bg-gradient-to-r from-slate-900 to-slate-800 p-5 rounded-2xl mt-5 text-white flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative overflow-hidden shadow-xl shadow-slate-900/30">
-        <Icon icon="lucide:calculator" class="absolute -right-4 -bottom-4 size-24 text-white/5" />
+      <div class="bg-gradient-to-r from-bejo-600 to-bejo-700 p-6 md:p-8 rounded-[2.5rem] mt-6 text-white flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden shadow-2xl shadow-bejo-600/30 border border-white/10">
+        <Icon icon="lucide:calculator" class="absolute -right-6 -bottom-6 size-40 text-white/10" />
         
         <div class="relative z-10 w-full md:w-auto">
-          <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mb-1">Jumlah Angsuran</p>
+          <p class="text-[10px] text-white/70 font-black uppercase tracking-[0.2em] mb-2">Estimasi Angsuran</p>
           <div class="flex items-baseline gap-2 flex-wrap">
-            <span class="text-bejo-400 font-black text-xl md:text-2xl lg:text-3xl">Rp {{ formatCurrency(angsuran) }}</span>
-            <span class="text-xs font-semibold text-slate-400">/ bulan</span>
+            <span class="text-white font-black text-2xl md:text-3xl lg:text-4xl">Rp {{ formatCurrency(angsuran) }}</span>
+            <span class="text-[10px] font-bold text-white/60 uppercase tracking-widest">/ bulan</span>
           </div>
         </div>
 
-        <button @click="handleKprWa" class="relative z-10 w-full md:w-auto shrink-0 flex items-center justify-center gap-2 px-6 py-3 bg-bejo-500 text-white rounded-xl font-bold shadow-lg shadow-bejo-500/20 hover:bg-bejo-600 hover:shadow-bejo-600/40 hover:-translate-y-0.5 transition-all focus:ring-4 focus:ring-bejo-500/30">
-          <Icon icon="lucide:message-circle" class="size-5" />
-          Hubungi Whatsapp Terkait KPR
+        <button @click="handleKprWa" class="relative z-10 w-full md:w-auto shrink-0 flex items-center justify-center gap-3 px-8 py-4 bg-white text-bejo-700 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-black/10 hover:bg-bejo-50 hover:-translate-y-1 transition-all active:scale-95 group">
+          <Icon icon="ic:baseline-whatsapp" class="size-6 text-bejo-600 transition-transform group-hover:scale-110" />
+          Konsultasi KPR
         </button>
       </div>
     </div>

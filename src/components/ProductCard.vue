@@ -45,14 +45,9 @@
 
         <!-- Status Badges Top Left -->
         <div class="absolute top-4 left-4 flex flex-col gap-2 z-10">
-          <span class="w-fit glass-bejo text-bejo-900 text-[10px] uppercase tracking-widest font-black px-4 py-2 rounded-xl shadow-sm">
-            {{ product.Status_Display === 'Aktif' ? product.Status_Properti : product.Status_Display }}
+          <span v-if="!isLoading" class="w-fit bg-bejo-600/90 backdrop-blur-md text-white text-[9px] uppercase tracking-[0.2em] font-black px-3 py-1.5 rounded-lg border border-white/10 shadow-lg">
+            Direct Owner
           </span>
-          <div class="flex flex-wrap gap-1.5" v-if="product.Status_Transaksi">
-            <span v-for="(trans, i) in product.Status_Transaksi" :key="i" class="glass-dark text-white text-[9px] uppercase tracking-wider font-bold px-3 py-1 rounded-lg">
-              {{ trans }}
-            </span>
-          </div>
         </div>
 
         <!-- Access Road Stickers Bottom Right -->

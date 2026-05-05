@@ -1,11 +1,11 @@
 <template>
-  <GuestLayout>
-    <div class="mb-10 print:hidden space-y-10">
+  <GuestLayout main-class="!p-0">
+    <div class="p-4 sm:p-8 lg:p-10 mb-10 print:hidden space-y-10">
       
       <!-- Breadcrumb -->
 
       <!-- Hero Banner -->
-      <div class="relative overflow-hidden rounded-[3.5rem] bg-white mt-10 p-12 md:p-16 lg:p-20 shadow-xl shadow-bejo-600/5 border border-bejo-100">
+      <div class="relative overflow-hidden rounded-[3.5rem] bg-white p-12 md:p-16 lg:p-20 shadow-xl shadow-bejo-600/5 border border-bejo-100">
         <!-- Dekorasi Background -->
         <div class="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-bejo-50 via-bejo-50/50 to-transparent"></div>
         <div class="absolute -right-20 -top-20 size-96 bg-gradient-to-br from-bejo-100 via-bejo-200 to-bejo-400 rounded-full blur-3xl opacity-40"></div>
@@ -23,7 +23,7 @@
       </div>
 
       <!-- Info Kontak Grid -->
-      <div class="grid lg:grid-cols-3 gap-8 relative z-10 mt-8">
+      <div class="grid lg:grid-cols-3 gap-8 relative z-10 mt-10">
         
         <!-- Alamat -->
         <div class="bg-white rounded-[2.5rem] p-8 border border-bejo-100 shadow-xl shadow-bejo-600/5 hover:-translate-y-2 transition-transform duration-300 group">
@@ -48,7 +48,7 @@
           <p class="text-sm font-medium text-slate-500 leading-relaxed mb-6">
             Layanan cepat (Fast Response) {{ (settingsStore.business as any).Hari_Buka || 'Senin—Jumat' }} ({{ (settingsStore.business as any).Jam_Buka || '08:00 - 18:00 WIB' }}). Tersedia khusus Chat WhatsApp.
           </p>
-          <a :href="'https://wa.me/' + (settingsStore.business.whatsapp || '62895353837000')" target="_blank" class="inline-flex items-center gap-2 text-sm font-bold text-bejo-600 hover:text-bejo-700 transition-colors">
+          <a :href="'https://wa.me/' + (settingsStore.business.whatsapp || '6287700083370')" target="_blank" class="inline-flex items-center gap-2 text-sm font-bold text-bejo-600 hover:text-bejo-700 transition-colors">
             {{ settingsStore.business.phone || '+62 895-3538-37000' }} <Icon icon="lucide:arrow-right" class="size-4" />
           </a>
         </div>
