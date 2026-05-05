@@ -4,7 +4,7 @@
       
 
       <!-- Hero Section -->
-      <div class="relative overflow-hidden rounded-[3rem] bg-white mt-4 h-72 sm:h-80 lg:h-96 shadow-xl shadow-bejo-600/5 flex items-center justify-center border border-bejo-100 uppercase tracking-widest font-semibold mt-10">
+      <div class="relative overflow-hidden rounded-[3.5rem] bg-white border border-bejo-100 mt-10 p-12 md:p-16 lg:p-20 shadow-xl shadow-bejo-600/5">
         <!-- Dekorasi Background -->
         <div class="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-bejo-50 via-bejo-50/50 to-transparent"></div>
         <div class="absolute -right-20 -top-20 size-96 bg-gradient-to-br from-bejo-100 via-bejo-200 to-bejo-400 rounded-full blur-3xl opacity-40"></div>
@@ -22,64 +22,66 @@
       </div>
 
       <!-- KPR Calculator Area -->
-      <div class="relative overflow-hidden rounded-[3rem] bg-gradient-to-br from-bejo-400 via-bejo-500 to-bejo-600 shadow-2xl shadow-bejo-600/30">
-        <!-- Decoration Geometric Elements -->
-        <div class="absolute -top-40 -right-40 size-96 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div class="absolute -bottom-40 -left-40 size-96 bg-black/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="relative overflow-hidden rounded-[3.5rem] bg-white border border-bejo-100 shadow-2xl shadow-bejo-600/10">
+        <!-- Mesh Gradient Background -->
+        <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+          <div class="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-bejo-50 via-bejo-50/30 to-transparent"></div>
+          <div class="absolute -left-20 bottom-0 size-96 bg-gradient-to-tr from-bejo-50 via-bejo-100 to-bejo-200 rounded-full blur-3xl opacity-30"></div>
+        </div>
         
         <div class="max-w-6xl mx-auto px-6 py-10 sm:px-12 sm:py-16 grid grid-cols-1 xl:grid-cols-12 gap-10 lg:gap-16 relative z-10">
         
         <!-- Input Form Section -->
         <div class="xl:col-span-7 space-y-6 relative z-10">
           <div class="mb-8">
-            <h2 class="text-2xl font-black text-white drop-shadow-sm mb-2 flex items-center gap-3">
-              <Icon icon="lucide:calculator" class="size-6 text-bejo-50" />
+            <h2 class="text-2xl font-black text-slate-900 mb-2 flex items-center gap-3">
+              <Icon icon="lucide:calculator" class="size-6 text-bejo-600" />
               Detail Pinjaman
             </h2>
-            <p class="text-bejo-50 font-medium text-sm">Silakan ubah angka di bawah ini sesuai dengan profil kemampuan finansial Anda.</p>
+            <p class="text-slate-500 font-medium text-sm">Silakan ubah angka di bawah ini sesuai dengan profil kemampuan finansial Anda.</p>
           </div>
 
           <!-- Harga Properti -->
-          <div class="bg-bejo-700/30 p-2 rounded-2xl backdrop-blur-sm border border-bejo-100/10">
-            <label class="block text-[10px] font-black text-bejo-50 uppercase tracking-widest px-3 pt-2 mb-1">Harga Properti</label>
+          <div class="bg-slate-50/50 p-2 rounded-2xl border border-slate-100">
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-3 pt-2 mb-1">Harga Properti</label>
             <div class="relative">
-              <span class="absolute inset-y-0 left-4 flex items-center justify-center text-slate-800 font-bold">Rp</span>
-              <input type="text" :value="formatCurrency(propertyPrice)" @input="setPropertyPrice" class="w-full bg-white border-0 rounded-xl px-4 py-3.5 pl-12 text-lg sm:text-xl font-black text-slate-900 shadow-xl focus:outline-none focus:ring-4 focus:ring-white/50 transition-all hover:-translate-y-0.5" placeholder="0" />
+              <span class="absolute inset-y-0 left-4 flex items-center justify-center text-slate-400 font-bold">Rp</span>
+              <input type="text" :value="formatCurrency(propertyPrice)" @input="setPropertyPrice" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 pl-12 text-lg sm:text-xl font-black text-slate-900 shadow-sm focus:outline-none focus:ring-4 focus:ring-bejo-500/10 transition-all" placeholder="0" />
             </div>
           </div>
 
           <!-- Uang Muka -->
           <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div class="col-span-1 bg-bejo-700/30 p-2 rounded-2xl backdrop-blur-sm border border-bejo-100/10">
-              <label class="block text-[10px] font-black text-bejo-50 uppercase tracking-widest px-3 pt-2 mb-1">Uang Muka (%)</label>
+            <div class="col-span-1 bg-slate-50/50 p-2 rounded-2xl border border-slate-100">
+              <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-3 pt-2 mb-1">Uang Muka (%)</label>
               <div class="relative">
-                <input type="number" v-model.number="dpPercentage" min="0" max="100" class="w-full bg-white border-0 rounded-xl px-4 py-3.5 pr-10 text-lg font-black text-center text-slate-900 shadow-xl focus:outline-none focus:ring-4 focus:ring-white/50 transition-all hover:-translate-y-0.5" />
+                <input type="number" v-model.number="dpPercentage" min="0" max="100" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 pr-10 text-lg font-black text-center text-slate-900 shadow-sm focus:outline-none focus:ring-4 focus:ring-bejo-500/10 transition-all" />
                 <span class="absolute inset-y-0 right-4 flex items-center justify-center text-slate-400 font-black">%</span>
               </div>
             </div>
-            <div class="col-span-1 md:col-span-2 bg-bejo-700/30 p-2 rounded-2xl backdrop-blur-sm border border-bejo-100/10">
-              <label class="block text-[10px] font-black text-bejo-50 uppercase tracking-widest px-3 pt-2 mb-1">Nominal Uang Muka</label>
+            <div class="col-span-1 md:col-span-2 bg-slate-50/50 p-2 rounded-2xl border border-slate-100">
+              <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-3 pt-2 mb-1">Nominal Uang Muka</label>
               <div class="relative">
-                <span class="absolute inset-y-0 left-4 flex items-center justify-center text-slate-800 font-bold">Rp</span>
-                <input type="text" :value="formatCurrency(dpValue)" @input="setDpValueFromInput" class="w-full bg-white border-0 rounded-xl px-4 py-3.5 pl-12 text-lg font-black text-slate-900 shadow-xl focus:outline-none focus:ring-4 focus:ring-white/50 text-left md:text-right transition-all hover:-translate-y-0.5" />
+                <span class="absolute inset-y-0 left-4 flex items-center justify-center text-slate-400 font-bold">Rp</span>
+                <input type="text" :value="formatCurrency(dpValue)" @input="setDpValueFromInput" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 pl-12 text-lg font-black text-slate-900 shadow-sm focus:outline-none focus:ring-4 focus:ring-bejo-500/10 text-left md:text-right transition-all" />
               </div>
             </div>
           </div>
 
           <!-- Pinjaman & Suku Bunga -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <div class="bg-bejo-700/30 p-2 rounded-2xl backdrop-blur-sm border border-bejo-100/10">
-              <label class="block text-[10px] font-black text-bejo-50 uppercase tracking-widest px-3 pt-2 mb-1">Tenor (Waktu)</label>
+            <div class="bg-slate-50/50 p-2 rounded-2xl border border-slate-100">
+              <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-3 pt-2 mb-1">Tenor (Waktu)</label>
               <div class="relative">
-                <input type="number" v-model.number="years" min="1" max="35" class="w-full bg-white border-0 rounded-xl px-4 py-3.5 pr-20 text-lg font-black text-slate-900 shadow-xl focus:outline-none focus:ring-4 focus:ring-white/50 text-center transition-all hover:-translate-y-0.5" />
-                <span class="absolute inset-y-0 right-1.5 top-1.5 bottom-1.5 flex items-center justify-center text-slate-600 font-bold bg-slate-100 px-3 rounded-lg text-xs border border-slate-200 shadow-sm pointer-events-none">Tahun</span>
+                <input type="number" v-model.number="years" min="1" max="35" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 pr-20 text-lg font-black text-slate-900 shadow-sm focus:outline-none focus:ring-4 focus:ring-bejo-500/10 text-center transition-all" />
+                <span class="absolute inset-y-0 right-1.5 top-1.5 bottom-1.5 flex items-center justify-center text-slate-400 font-bold bg-slate-50 px-3 rounded-lg text-xs border border-slate-100 shadow-sm pointer-events-none">Tahun</span>
               </div>
             </div>
-            <div class="bg-bejo-700/30 p-2 rounded-2xl backdrop-blur-sm border border-bejo-100/10">
-              <label class="block text-[10px] font-black text-bejo-50 uppercase tracking-widest px-3 pt-2 mb-1">Suku Bunga Fixed</label>
+            <div class="bg-slate-50/50 p-2 rounded-2xl border border-slate-100">
+              <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-3 pt-2 mb-1">Suku Bunga Fixed</label>
               <div class="relative">
-                <input type="number" v-model.number="interestRate" step="0.1" min="0" max="100" class="w-full bg-white border-0 rounded-xl px-4 py-3.5 pr-12 text-lg font-black text-slate-900 shadow-xl focus:outline-none focus:ring-4 focus:ring-white/50 text-center transition-all hover:-translate-y-0.5" />
-                <span class="absolute inset-y-0 right-1.5 top-1.5 bottom-1.5 flex items-center justify-center text-slate-600 font-bold bg-slate-100 px-3 rounded-lg text-xs border border-slate-200 shadow-sm pointer-events-none">%</span>
+                <input type="number" v-model.number="interestRate" step="0.1" min="0" max="100" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 pr-12 text-lg font-black text-slate-900 shadow-sm focus:outline-none focus:ring-4 focus:ring-bejo-500/10 text-center transition-all" />
+                <span class="absolute inset-y-0 right-1.5 top-1.5 bottom-1.5 flex items-center justify-center text-slate-400 font-bold bg-slate-50 px-3 rounded-lg text-xs border border-slate-100 shadow-sm pointer-events-none">%</span>
               </div>
             </div>
           </div>

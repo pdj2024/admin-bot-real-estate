@@ -270,15 +270,15 @@ onUnmounted(() => {
         </RouterLink>
       </div>
 
-      <div class="card mb-4 border-none shadow-sm bg-white overflow-hidden rounded-xl">
-        <div class="card-body p-4 relative">
+      <div class="mb-4 border-none shadow-premium bg-white overflow-hidden rounded-[2.5rem]">
+        <div class="p-5 relative">
           <!-- Main Carousel -->
-          <div class="relative overflow-hidden mb-4 rounded-lg h-[350px] md:h-[420px] group bg-default-50 shadow-inner cursor-zoom-in active:cursor-grabbing" @mousedown="handleDragStart" @mouseup="handleDragEnd" @mouseleave="handleDragEnd" @touchstart="handleDragStart" @touchend="handleDragEnd">
+          <div class="relative overflow-hidden mb-6 rounded-[2rem] h-[350px] md:h-[450px] group bg-white shadow-inner cursor-zoom-in active:cursor-grabbing" @mousedown="handleDragStart" @mouseup="handleDragEnd" @mouseleave="handleDragEnd" @touchstart="handleDragStart" @touchend="handleDragEnd">
             <!-- Label Status -->
             <div v-if="product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia')" class="absolute inset-0 bg-black/40 backdrop-grayscale-[60%] z-[5] pointer-events-none transition-all duration-500"></div>
             <div v-if="product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia')" class="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
-              <div class="px-2 py-1 bg-black/30 backdrop-blur-md rounded-xl border border-white/10 shadow-2xl transform transition-transform duration-500 group-hover:scale-110">
-                <span class="text-xs md:text-sm font-black uppercase tracking-widest text-white/90">
+              <div class="glass-dark px-4 py-2 rounded-2xl border border-white/10 shadow-2xl transform transition-transform duration-500 group-hover:scale-110">
+                <span class="text-xs md:text-sm font-black uppercase tracking-[0.2em] text-white/90">
                   {{ product.Status_Properti != 'Tersedia' ? product.Status_Properti : product.Status_Display }}
                 </span>
               </div>
@@ -286,7 +286,7 @@ onUnmounted(() => {
 
             <!-- Media Content -->
             <div @click="openLightbox" class="h-full w-full transition-all duration-700 ease-out group-hover:scale-105 will-change-transform transform-gpu relative">
-              <div v-if="isVideoLoading" class="absolute inset-0 flex items-center justify-center bg-slate-100 z-20">
+              <div v-if="isVideoLoading" class="absolute inset-0 flex items-center justify-center bg-white z-20">
                 <Icon icon="lucide:loader-2" class="size-8 text-bejo-500 animate-spin" />
               </div>
 
@@ -311,13 +311,13 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <div class="grid gap-3 relative" :class="isAdmin ? 'grid-cols-1' : 'grid-cols-2'">
-            <button v-if="!isAdmin" @click="handleWaContact" class="flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-black text-[10px] uppercase tracking-widest leading-tight transition-all shadow-md bg-bejo-600 text-white hover:bg-bejo-700 hover:shadow-bejo-600/30">
-              <Icon icon="logos:whatsapp-icon" class="size-5" />
+          <div class="grid gap-4 relative" :class="isAdmin ? 'grid-cols-1' : 'grid-cols-2'">
+            <button v-if="!isAdmin" @click="handleWaContact" class="flex items-center justify-center gap-3 py-4 px-6 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] leading-tight transition-all shadow-bejo-premium bg-bejo-600 text-white hover:bg-bejo-700 hover:-translate-y-1 active:scale-95">
+              <Icon icon="logos:whatsapp-icon" class="size-6" />
               Tanya kami
             </button>
-            <button type="button" @click.prevent="shareProduct" class="flex w-full items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm tracking-wide transition-all shadow-sm border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300">
-              <Icon icon="lucide:share-2" class="size-4" />
+            <button type="button" @click.prevent="shareProduct" class="flex w-full items-center justify-center gap-3 py-4 px-6 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-sm border border-slate-100 text-slate-700 hover:bg-slate-50 hover:border-slate-200 hover:-translate-y-1 active:scale-95">
+              <Icon icon="lucide:share-2" class="size-5" />
               Bagikan
             </button>
           </div>

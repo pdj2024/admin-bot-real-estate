@@ -35,23 +35,23 @@ const formatCurrency = (value: number) => {
 
 <template>
   <div class="lg:col-span-2 col-span-1">
-    <div class="card relative transition-all duration-500 border-none shadow-sm hover:shadow-md bg-white rounded-xl overflow-hidden">
+    <div class="card relative transition-all duration-700 border-none shadow-premium bg-white rounded-[2.5rem] overflow-hidden">
       <div class="card-body p-6">
         <div class="flex justify-between items-center mb-4">
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-3">
             <template v-for="(transaksi, index) in product?.Status_Transaksi" :key="index">
-              <span class="px-3 py-1 text-[11px] uppercase tracking-wider font-bold rounded-xl bg-bejo-50 text-bejo-600 border border-bejo-200">
+              <span class="glass-bejo px-4 py-1.5 text-[10px] uppercase tracking-widest font-black rounded-xl text-bejo-900">
                 {{ transaksi }}
               </span>
             </template>
-            <span v-if="product?.Tipe" class="px-3 py-1 text-[11px] uppercase tracking-wider font-bold rounded-xl bg-slate-100 text-slate-700 border border-slate-200">
+            <span v-if="product?.Tipe" class="glass px-4 py-1.5 text-[10px] uppercase tracking-widest font-black rounded-xl text-slate-700">
               {{ product.Tipe }}
             </span>
           </div>
         </div>
 
         <div class="mb-6 border-b border-slate-100 pb-6 relative">
-          <h5 class="text-3xl font-extrabold tracking-tight mb-2 uppercase leading-tight" :class="!product ? 'text-transparent bg-slate-200 rounded-xl animate-pulse select-none w-fit' : 'text-slate-900'">
+          <h5 class="text-4xl md:text-5xl font-black tracking-tighter mb-4 uppercase leading-[0.9]" :class="!product ? 'text-transparent bg-slate-200 rounded-2xl animate-pulse select-none w-fit' : 'text-slate-900'">
             {{ product?.Nama_Produk || 'Memuat Nama Properti Disini...' }}
           </h5>
           <div class="flex items-center gap-2" :class="!product ? 'text-transparent bg-slate-200 rounded-lg animate-pulse select-none w-fit' : 'text-slate-500'">
@@ -108,10 +108,13 @@ const formatCurrency = (value: number) => {
           <PropertySpecsGrid :product="product" />
         </div>
 
-        <div class="mb-10 p-6 bg-bejo-50/30 rounded-2xl border-s-[6px] border-bejo-500 relative flex flex-col">
-          <Icon icon="lucide:quote" class="absolute top-4 right-4 size-8 text-slate-200 opacity-50" v-if="product" />
-          <h6 class="text-[11px] font-black text-slate-800 uppercase tracking-widest mb-3" :class="!product ? 'text-transparent bg-slate-200 rounded animate-pulse w-max select-none shrink-0' : ''">Deskripsi Lengkap</h6>
-          <p class="text-sm leading-relaxed font-medium" :class="!product ? 'text-transparent bg-slate-200 rounded-lg animate-pulse select-none' : 'text-slate-600'">{{ product?.Keterangan || 'Sedang memuat deskripsi lengkap tentang properti ini. Hal ini mungkin membutuhkan sedikit waktu untuk menyelesaikan rendering dari peladen web server dan jaringan internet Anda yang stabil.' }}</p>
+        <div class="mb-10 p-8 bg-bejo-50/40 rounded-[2rem] border-l-[8px] border-bejo-500 relative flex flex-col group hover:bg-bejo-50 transition-colors duration-500">
+          <Icon icon="lucide:quote" class="absolute top-6 right-8 size-12 text-bejo-200/40 group-hover:scale-110 transition-transform" v-if="product" />
+          <h6 class="text-[11px] font-black text-slate-800 uppercase tracking-widest mb-6 flex items-center gap-3">
+            <div class="w-10 h-[2px] bg-bejo-500 rounded-full"></div>
+            Deskripsi Lengkap
+          </h6>
+          <p class="text-base leading-relaxed font-medium" :class="!product ? 'text-transparent bg-slate-200 rounded-lg animate-pulse select-none' : 'text-slate-600'">{{ product?.Keterangan || 'Sedang memuat deskripsi lengkap tentang properti ini...' }}</p>
         </div>
 
         <div class="mt-10 mb-10">

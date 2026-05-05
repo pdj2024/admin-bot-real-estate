@@ -99,6 +99,46 @@
   box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.5);
 }
 
+/* Glassmorphism Utilities */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.glass-dark {
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-bejo {
+  background: color-mix(in srgb, var(--color-bejo-500) 10%, rgba(255, 255, 255, 0.8));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+/* Shadow Utilities */
+.shadow-premium {
+  box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.08);
+}
+
+.shadow-bejo-premium {
+  box-shadow: 0 20px 50px -12px color-mix(in srgb, var(--color-bejo-600) 20%, transparent);
+}
+
+/* Animation Utilities */
+.hover-float {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-float:hover {
+  transform: translateY(-6px);
+}
+
 :root {
   color-scheme: light;
 }

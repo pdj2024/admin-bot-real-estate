@@ -1,69 +1,75 @@
 <template>
   <GuestLayout main-class="max-w-none">
     <!-- Hero Section Beranda -->
-    <section class="relative min-h-[95vh] flex flex-col justify-center items-center py-20 mt-0 overflow-hidden bg-white">
-      <!-- Decorative Background Elements -->
-      <div class="absolute top-0 right-0 w-3/4 h-full bg-gradient-to-l from-bejo-50/40 via-transparent to-transparent pointer-events-none"></div>
-      <div class="absolute -right-20 -top-20 size-[700px] bg-gradient-to-br from-bejo-100/30 via-bejo-200/20 to-transparent rounded-full blur-[120px] opacity-60 pointer-events-none"></div>
-      <div class="absolute -left-20 bottom-10 size-[600px] bg-gradient-to-tr from-bejo-50/40 via-bejo-100/20 to-transparent rounded-full blur-[100px] opacity-40 pointer-events-none"></div>
+    <section class="relative pt-10 pb-10 bg-white">
+      <div class="w-full !px-4 sm:!px-8 lg:!px-12">
+        <div class="relative overflow-hidden rounded-[3.5rem] bg-white border border-bejo-100 shadow-premium p-12 md:p-24 lg:p-32 flex flex-col justify-center items-center min-h-[70vh]">
+          <!-- Mesh Gradient Background -->
+          <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+            <div class="absolute -top-[20%] -right-[10%] size-[800px] bg-bejo-100/50 rounded-full blur-[120px] animate-pulse"></div>
+            <div class="absolute top-[10%] -left-[15%] size-[600px] bg-bejo-200/30 rounded-full blur-[100px]"></div>
+            <div class="absolute bottom-[-10%] left-[20%] size-[700px] bg-bejo-50/60 rounded-full blur-[140px]"></div>
+          </div>
 
-      <!-- Pattern -->
-      <div class="absolute inset-0 opacity-[0.015] pointer-events-none" style="background-image: url('https://www.transparenttextures.com/patterns/cubes.png')"></div>
+          <!-- Pattern -->
+          <div class="absolute inset-0 opacity-[0.015] pointer-events-none" style="background-image: url('https://www.transparenttextures.com/patterns/cubes.png')"></div>
 
-      <div class="relative z-10 w-full mx-auto text-center space-y-12 !px-4 sm:!px-8 lg:!px-12">
-        <div class="space-y-6">
-          <h1 class="text-6xl md:text-8xl lg:text-9xl font-black text-slate-900 tracking-tighter leading-[0.9] max-w-6xl mx-auto">
-            Wujudkan <br class="hidden sm:block" />
-            <span class="relative inline-block">
-              <span class="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-bejo-500 via-bejo-600 to-bejo-800">Rumah Impian</span>
-              <div class="absolute -bottom-2 left-0 right-0 h-4 bg-bejo-100/60 -z-0 rounded-full blur-sm"></div>
-            </span>
-            Anda.
-          </h1>
+          <div class="relative z-10 w-full mx-auto text-center space-y-12">
+            <div class="space-y-6">
+              <h1 class="text-6xl md:text-8xl lg:text-[10rem] font-black text-slate-900 tracking-tighter leading-[0.85] max-w-6xl mx-auto drop-shadow-sm">
+                Wujudkan <br class="hidden sm:block" />
+                <span class="relative inline-block py-2">
+                  <span class="relative z-10 text-transparent bg-clip-text bg-gradient-to-br from-bejo-500 via-bejo-600 to-bejo-900 animate-gradient-x">Rumah Impian</span>
+                  <div class="absolute bottom-4 left-0 right-0 h-6 bg-bejo-100/40 -z-0 rounded-full blur-md"></div>
+                </span>
+                Anda.
+              </h1>
 
-          <p class="text-lg md:text-2xl text-slate-500 font-medium max-w-3xl mx-auto leading-relaxed opacity-80">
-            Eksplorasi ribuan properti premium di seluruh Indonesia. Dari hunian minimalis hingga apartemen mewah, <br />
-            semua ada di <span class="text-slate-900 font-black border-b-2 border-bejo-200">{{ settingsStore.business.appName }}</span
-            >.
-          </p>
-        </div>
+              <p class="text-lg md:text-2xl text-slate-500 font-medium max-w-3xl mx-auto leading-relaxed opacity-80">
+                Eksplorasi ribuan properti premium di seluruh Indonesia. Dari hunian minimalis hingga apartemen mewah, <br />
+                semua ada di <span class="text-slate-900 font-black border-b-2 border-bejo-200">{{ settingsStore.business.appName }}</span
+                >.
+              </p>
+            </div>
 
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-6 pt-6">
-          <RouterLink to="/katalog" class="w-full sm:w-auto px-12 py-5 bg-bejo-600 hover:bg-bejo-700 text-white rounded-[2rem] font-black text-base lg:text-lg transition-all hover:-translate-y-2 shadow-2xl shadow-bejo-600/20 flex justify-center items-center gap-4 group">
-            Eksplorasi Katalog
-            <Icon icon="lucide:arrow-right" class="size-5 group-hover:translate-x-1 transition-transform" />
-          </RouterLink>
-          <RouterLink to="/simulasi-kpr" class="w-full sm:w-auto px-12 py-5 bg-white hover:bg-bejo-50 text-slate-800 border-2 border-bejo-100 rounded-[2rem] font-black text-base lg:text-lg transition-all hover:-translate-y-2 shadow-xl shadow-bejo-200/40 flex justify-center items-center gap-4">
-            <Icon icon="lucide:calculator" class="size-5 text-bejo-600" />
-            Simulasi KPR
-          </RouterLink>
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-6 pt-6">
+              <RouterLink to="/katalog" class="w-full sm:w-auto px-12 py-5 bg-bejo-600 hover:bg-bejo-700 text-white rounded-[2rem] font-black text-base lg:text-lg transition-all hover:-translate-y-2 shadow-2xl shadow-bejo-600/20 flex justify-center items-center gap-4 group">
+                Eksplorasi Katalog
+                <Icon icon="lucide:arrow-right" class="size-5 group-hover:translate-x-1 transition-transform" />
+              </RouterLink>
+              <RouterLink to="/simulasi-kpr" class="w-full sm:w-auto px-12 py-5 bg-white hover:bg-bejo-50 text-slate-800 border-2 border-bejo-100 rounded-[2rem] font-black text-base lg:text-lg transition-all hover:-translate-y-2 shadow-xl shadow-bejo-200/40 flex justify-center items-center gap-4">
+                <Icon icon="lucide:calculator" class="size-5 text-bejo-600" />
+                Simulasi KPR
+              </RouterLink>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
     <!-- Stats Floating Bottom -->
     <div class="relative z-20 !px-4 sm:!px-12 lg:!px-20 -mt-30 md:-mt-45 top-20">
-      <div class="w-full mx-auto bg-white/90 backdrop-blur-3xl rounded-[3.5rem] p-8 md:p-12 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] border border-white/50 grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-4 divide-y md:divide-y-0 md:divide-x divide-slate-100/80">
-        <div class="text-center px-6 group">
-          <div class="text-bejo-500 mb-1 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-2 group-hover:translate-y-0">
-            <Icon icon="lucide:building-2" class="size-5 mx-auto" />
+      <div class="w-full mx-auto glass backdrop-blur-3xl rounded-[4rem] p-10 md:p-14 shadow-premium border border-white/60 grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-4 divide-y md:divide-y-0 md:divide-x divide-slate-100/50">
+        <div class="text-center px-6 group hover-float">
+          <div class="text-bejo-600 mb-2 opacity-0 group-hover:opacity-100 transition-all duration-700 translate-y-3 group-hover:translate-y-0 scale-150">
+            <Icon icon="lucide:building-2" class="size-6 mx-auto" />
           </div>
-          <h4 class="text-5xl lg:text-6xl font-black text-slate-900 mb-2 tracking-tighter">1,2k<span class="text-bejo-500">.</span></h4>
-          <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em]">Properti Terjamin</p>
+          <h4 class="text-6xl lg:text-7xl font-black text-slate-900 mb-2 tracking-tighter">1,2k<span class="text-bejo-600">.</span></h4>
+          <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Properti Terjamin</p>
         </div>
-        <div class="text-center px-6 group">
-          <div class="text-bejo-500 mb-1 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-2 group-hover:translate-y-0">
-            <Icon icon="lucide:users-2" class="size-5 mx-auto" />
+        <div class="text-center px-6 group hover-float">
+          <div class="text-bejo-600 mb-2 opacity-0 group-hover:opacity-100 transition-all duration-700 translate-y-3 group-hover:translate-y-0 scale-150">
+            <Icon icon="lucide:users-2" class="size-6 mx-auto" />
           </div>
-          <h4 class="text-5xl lg:text-6xl font-black text-slate-900 mb-2 tracking-tighter">480<span class="text-bejo-500">.</span></h4>
-          <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em]">Klien Puas</p>
+          <h4 class="text-6xl lg:text-7xl font-black text-slate-900 mb-2 tracking-tighter">480<span class="text-bejo-600">.</span></h4>
+          <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Klien Puas</p>
         </div>
-        <div class="text-center px-6 group">
-          <div class="text-bejo-500 mb-1 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-2 group-hover:translate-y-0">
-            <Icon icon="lucide:map-pin" class="size-5 mx-auto" />
+        <div class="text-center px-6 group hover-float">
+          <div class="text-bejo-600 mb-2 opacity-0 group-hover:opacity-100 transition-all duration-700 translate-y-3 group-hover:translate-y-0 scale-150">
+            <Icon icon="lucide:map-pin" class="size-6 mx-auto" />
           </div>
-          <h4 class="text-5xl lg:text-6xl font-black text-slate-900 mb-2 tracking-tighter">15<span class="text-bejo-500">.</span></h4>
-          <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em]">Kota Utama</p>
+          <h4 class="text-6xl lg:text-7xl font-black text-slate-900 mb-2 tracking-tighter">15<span class="text-bejo-600">.</span></h4>
+          <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Kota Utama</p>
         </div>
       </div>
     </div>
@@ -146,44 +152,44 @@
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          <div class="bg-white p-10 rounded-[3rem] border border-slate-100 hover:border-bejo-200 shadow-xl shadow-slate-200/20 hover:shadow-2xl hover:shadow-bejo-600/5 transition-all duration-500 group relative overflow-hidden">
-            <div class="absolute -right-4 -top-4 size-24 bg-bejo-50 rounded-full group-hover:scale-150 transition-transform duration-700 -z-0"></div>
+          <div class="bg-white p-12 rounded-[3.5rem] border border-slate-100 hover:border-bejo-200 shadow-premium hover:shadow-bejo-premium transition-all duration-700 group relative overflow-hidden">
+            <div class="absolute -right-6 -top-6 size-32 bg-bejo-50 rounded-full group-hover:scale-150 transition-transform duration-700 -z-0"></div>
             <div class="relative z-10">
-              <div class="size-16 rounded-2xl bg-bejo-50 text-bejo-600 flex items-center justify-center mb-8 group-hover:bg-bejo-500 group-hover:text-white transition-all shadow-sm">
-                <Icon icon="lucide:house-plus" class="size-8" />
+              <div class="size-20 rounded-3xl bg-bejo-50 text-bejo-600 flex items-center justify-center mb-10 group-hover:bg-bejo-600 group-hover:text-white transition-all shadow-sm">
+                <Icon icon="lucide:house-plus" class="size-10" />
               </div>
-              <h3 class="text-2xl font-black text-slate-900 mb-4">Jual & Beli</h3>
-              <p class="text-sm font-medium text-slate-500 leading-relaxed">Tersedia beragam pilihan rumah, ruko, apartemen hingga kavling tanah terbaik.</p>
+              <h3 class="text-3xl font-black text-slate-900 mb-6">Jual & Beli</h3>
+              <p class="text-base font-medium text-slate-500 leading-relaxed opacity-80">Tersedia beragam pilihan rumah, ruko, apartemen hingga kavling tanah terbaik.</p>
             </div>
           </div>
-          <div class="bg-white p-10 rounded-[3rem] border border-slate-100 hover:border-bejo-200 shadow-xl shadow-slate-200/20 hover:shadow-2xl hover:shadow-bejo-600/5 transition-all duration-500 group relative overflow-hidden">
-            <div class="absolute -right-4 -top-4 size-24 bg-bejo-50 rounded-full group-hover:scale-150 transition-transform duration-700 -z-0"></div>
+          <div class="bg-white p-12 rounded-[3.5rem] border border-slate-100 hover:border-bejo-200 shadow-premium hover:shadow-bejo-premium transition-all duration-700 group relative overflow-hidden">
+            <div class="absolute -right-6 -top-6 size-32 bg-bejo-50 rounded-full group-hover:scale-150 transition-transform duration-700 -z-0"></div>
             <div class="relative z-10">
-              <div class="size-16 rounded-2xl bg-bejo-50 text-bejo-600 flex items-center justify-center mb-8 group-hover:bg-bejo-500 group-hover:text-white transition-all shadow-sm">
-                <Icon icon="lucide:key-round" class="size-8" />
+              <div class="size-20 rounded-3xl bg-bejo-50 text-bejo-600 flex items-center justify-center mb-10 group-hover:bg-bejo-600 group-hover:text-white transition-all shadow-sm">
+                <Icon icon="lucide:key-round" class="size-10" />
               </div>
-              <h3 class="text-2xl font-black text-slate-900 mb-4">Sewa Hunian</h3>
-              <p class="text-sm font-medium text-slate-500 leading-relaxed">Cari kost atau sewa rumah jangka panjang dengan proses kontrak yang transparan.</p>
+              <h3 class="text-3xl font-black text-slate-900 mb-6">Sewa Hunian</h3>
+              <p class="text-base font-medium text-slate-500 leading-relaxed opacity-80">Cari kost atau sewa rumah jangka panjang dengan proses kontrak yang transparan.</p>
             </div>
           </div>
-          <div class="bg-white p-10 rounded-[3rem] border border-slate-100 hover:border-bejo-200 shadow-xl shadow-slate-200/20 hover:shadow-2xl hover:shadow-bejo-600/5 transition-all duration-500 group relative overflow-hidden">
-            <div class="absolute -right-4 -top-4 size-24 bg-bejo-50 rounded-full group-hover:scale-150 transition-transform duration-700 -z-0"></div>
+          <div class="bg-white p-12 rounded-[3.5rem] border border-slate-100 hover:border-bejo-200 shadow-premium hover:shadow-bejo-premium transition-all duration-700 group relative overflow-hidden">
+            <div class="absolute -right-6 -top-6 size-32 bg-bejo-50 rounded-full group-hover:scale-150 transition-transform duration-700 -z-0"></div>
             <div class="relative z-10">
-              <div class="size-16 rounded-2xl bg-bejo-50 text-bejo-600 flex items-center justify-center mb-8 group-hover:bg-bejo-500 group-hover:text-white transition-all shadow-sm">
-                <Icon icon="lucide:calculator" class="size-8" />
+              <div class="size-20 rounded-3xl bg-bejo-50 text-bejo-600 flex items-center justify-center mb-10 group-hover:bg-bejo-600 group-hover:text-white transition-all shadow-sm">
+                <Icon icon="lucide:calculator" class="size-10" />
               </div>
-              <h3 class="text-2xl font-black text-slate-900 mb-4">Simulasi KPR</h3>
-              <p class="text-sm font-medium text-slate-500 leading-relaxed">Plafon pinjaman dan angsuran bulanan yang disesuaikan dengan profil finansial.</p>
+              <h3 class="text-3xl font-black text-slate-900 mb-6">Simulasi KPR</h3>
+              <p class="text-base font-medium text-slate-500 leading-relaxed opacity-80">Plafon pinjaman dan angsuran bulanan yang disesuaikan dengan profil finansial.</p>
             </div>
           </div>
-          <div class="bg-white p-10 rounded-[3rem] border border-slate-100 hover:border-bejo-200 shadow-xl shadow-slate-200/20 hover:shadow-2xl hover:shadow-bejo-600/5 transition-all duration-500 group relative overflow-hidden">
-            <div class="absolute -right-4 -top-4 size-24 bg-bejo-50 rounded-full group-hover:scale-150 transition-transform duration-700 -z-0"></div>
+          <div class="bg-white p-12 rounded-[3.5rem] border border-slate-100 hover:border-bejo-200 shadow-premium hover:shadow-bejo-premium transition-all duration-700 group relative overflow-hidden">
+            <div class="absolute -right-6 -top-6 size-32 bg-bejo-50 rounded-full group-hover:scale-150 transition-transform duration-700 -z-0"></div>
             <div class="relative z-10">
-              <div class="size-16 rounded-2xl bg-bejo-50 text-bejo-600 flex items-center justify-center mb-8 group-hover:bg-bejo-500 group-hover:text-white transition-all shadow-sm">
-                <Icon icon="lucide:shield-check" class="size-8" />
+              <div class="size-20 rounded-3xl bg-bejo-50 text-bejo-600 flex items-center justify-center mb-10 group-hover:bg-bejo-600 group-hover:text-white transition-all shadow-sm">
+                <Icon icon="lucide:shield-check" class="size-10" />
               </div>
-              <h3 class="text-2xl font-black text-slate-900 mb-4">Legalitas Aman</h3>
-              <p class="text-sm font-medium text-slate-500 leading-relaxed">Jaminan keamanan dokumen sertifikat (SHM/SHGB) setiap unit properti kami.</p>
+              <h3 class="text-3xl font-black text-slate-900 mb-6">Legalitas Aman</h3>
+              <p class="text-base font-medium text-slate-500 leading-relaxed opacity-80">Jaminan keamanan dokumen sertifikat (SHM/SHGB) setiap unit properti kami.</p>
             </div>
           </div>
         </div>
@@ -207,30 +213,30 @@
             <div class="absolute -bottom-12 -right-12 w-64 aspect-square bg-bejo-500 rounded-[3rem] -z-0 opacity-10 animate-pulse"></div>
             <div class="absolute -top-8 -left-8 size-40 bg-slate-900/5 rounded-full -z-0"></div>
 
-            <!-- Floating Property Info (Replacing Rating) -->
-            <div v-if="randomProduct" class="absolute -bottom-6 -left-6 md:-left-12 w-72 md:w-80 bg-white/95 backdrop-blur-xl rounded-3xl z-20 p-6 md:p-8 flex flex-col gap-4 shadow-2xl border border-white transform hover:-translate-y-2 transition-transform duration-500">
-              <div class="flex items-center gap-4">
-                <div class="size-12 rounded-2xl bg-bejo-500 text-white flex items-center justify-center shadow-lg shadow-bejo-500/30">
-                  <Icon icon="lucide:home" class="size-6" />
+            <!-- Floating Property Info -->
+            <div v-if="randomProduct" class="absolute -bottom-6 -left-6 md:-left-12 w-72 md:w-80 glass backdrop-blur-3xl rounded-[2.5rem] z-20 p-8 flex flex-col gap-6 shadow-premium border border-white/60 transform hover:-translate-y-3 transition-all duration-700">
+              <div class="flex items-center gap-5">
+                <div class="size-14 rounded-2xl bg-bejo-600 text-white flex items-center justify-center shadow-bejo-premium">
+                  <Icon icon="lucide:home" class="size-7" />
                 </div>
                 <div class="min-w-0">
-                  <span class="block text-sm font-black text-slate-900 truncate tracking-tight">{{ randomProduct.Nama_Produk }}</span>
-                  <span class="text-[9px] font-black text-bejo-600 uppercase tracking-widest">{{ randomProduct.Tipe }}</span>
+                  <span class="block text-base font-black text-slate-900 truncate tracking-tight">{{ randomProduct.Nama_Produk }}</span>
+                  <span class="text-[10px] font-black text-bejo-600 uppercase tracking-[0.25em]">{{ randomProduct.Tipe }}</span>
                 </div>
               </div>
-              <div class="space-y-3 pt-2 border-t border-slate-100">
-                <div class="flex items-start gap-2.5">
-                  <Icon icon="lucide:map-pin" class="size-3.5 text-slate-400 mt-0.5" />
-                  <span class="text-[10px] font-bold text-slate-500 leading-relaxed truncate">{{ randomProduct.Alamat.split('Lat:')[0].trim() }}</span>
+              <div class="space-y-4 pt-4 border-t border-slate-100/50">
+                <div class="flex items-start gap-3">
+                  <Icon icon="lucide:map-pin" class="size-4 text-slate-400 mt-1" />
+                  <span class="text-[11px] font-bold text-slate-500 leading-relaxed line-clamp-2">{{ randomProduct.Alamat.split('Lat:')[0].trim() }}</span>
                 </div>
                 <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 rounded-lg">
-                    <Icon icon="lucide:map" class="size-3 text-slate-400" />
-                    <span class="text-[9px] font-black text-slate-700 uppercase tracking-widest">{{ (randomProduct.Area?.[0]?.split(',').pop() || 'Indonesia').trim() }}</span>
+                  <div class="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100">
+                    <Icon icon="lucide:map" class="size-3.5 text-slate-400" />
+                    <span class="text-[10px] font-black text-slate-700 uppercase tracking-widest">{{ (randomProduct.Area?.[0]?.split(',').pop() || 'Indonesia').trim() }}</span>
                   </div>
-                  <RouterLink :to="`/detail/${randomProduct.Slug}`" class="text-[9px] font-black text-bejo-600 uppercase tracking-widest hover:text-bejo-700 flex items-center gap-1 group/link">
-                    Lihat Detail
-                    <Icon icon="lucide:chevron-right" class="size-3 group-hover/link:translate-x-1 transition-transform" />
+                  <RouterLink :to="`/detail/${randomProduct.Slug}`" class="text-[10px] font-black text-bejo-600 uppercase tracking-widest hover:text-bejo-800 flex items-center gap-2 group/link">
+                    Detail
+                    <Icon icon="lucide:chevron-right" class="size-4 group-hover/link:translate-x-1 transition-transform" />
                   </RouterLink>
                 </div>
               </div>
@@ -252,32 +258,32 @@
               </h2>
             </div>
 
-            <div class="space-y-10">
-              <div class="flex gap-8 group">
-                <div class="size-20 rounded-[1.5rem] bg-white border border-slate-100 shadow-xl shadow-slate-200/50 flex items-center justify-center shrink-0 group-hover:bg-bejo-600 group-hover:text-white transition-all duration-500">
-                  <Icon icon="lucide:verified" class="size-10 text-bejo-500 group-hover:text-white" />
+            <div class="space-y-12">
+              <div class="flex gap-10 group hover-float">
+                <div class="size-24 rounded-[2rem] bg-white border border-slate-100 shadow-premium flex items-center justify-center shrink-0 group-hover:bg-bejo-600 group-hover:text-white transition-all duration-700">
+                  <Icon icon="lucide:verified" class="size-12 text-bejo-600 group-hover:text-white" />
                 </div>
-                <div class="space-y-3 pt-2">
-                  <h4 class="text-2xl font-black text-slate-900 tracking-tight">100% Data Tervalidasi</h4>
-                  <p class="text-slate-500 font-medium leading-relaxed opacity-80">Semua unit melalui verifikasi lapangan oleh tim {{ settingsStore.business.appName }} untuk menjamin akurasi info 1:1.</p>
-                </div>
-              </div>
-              <div class="flex gap-8 group">
-                <div class="size-20 rounded-[1.5rem] bg-white border border-slate-100 shadow-xl shadow-slate-200/50 flex items-center justify-center shrink-0 group-hover:bg-bejo-600 group-hover:text-white transition-all duration-500">
-                  <Icon icon="lucide:user-check-2" class="size-10 text-bejo-500 group-hover:text-white" />
-                </div>
-                <div class="space-y-3 pt-2">
-                  <h4 class="text-2xl font-black text-slate-900 tracking-tight">Personal Agent Dedicated</h4>
-                  <p class="text-slate-500 font-medium leading-relaxed opacity-80">Dapatkan asisten pribadi yang siap menemani proses survei unit hingga tanda tangan akad di hadapan Notaris.</p>
+                <div class="space-y-4 pt-3">
+                  <h4 class="text-3xl font-black text-slate-900 tracking-tight">100% Data Tervalidasi</h4>
+                  <p class="text-base font-medium text-slate-500 leading-relaxed opacity-80">Semua unit melalui verifikasi lapangan oleh tim {{ settingsStore.business.appName }} untuk menjamin akurasi info 1:1.</p>
                 </div>
               </div>
-              <div class="flex gap-8 group">
-                <div class="size-20 rounded-[1.5rem] bg-white border border-slate-100 shadow-xl shadow-slate-200/50 flex items-center justify-center shrink-0 group-hover:bg-bejo-600 group-hover:text-white transition-all duration-500">
-                  <Icon icon="lucide:banknote" class="size-10 text-bejo-500 group-hover:text-white" />
+              <div class="flex gap-10 group hover-float">
+                <div class="size-24 rounded-[2rem] bg-white border border-slate-100 shadow-premium flex items-center justify-center shrink-0 group-hover:bg-bejo-600 group-hover:text-white transition-all duration-700">
+                  <Icon icon="lucide:user-check-2" class="size-12 text-bejo-600 group-hover:text-white" />
                 </div>
-                <div class="space-y-3 pt-2">
-                  <h4 class="text-2xl font-black text-slate-900 tracking-tight">Investasi Aman & Terjamin</h4>
-                  <p class="text-slate-500 font-medium leading-relaxed opacity-80">Sistem transaksi legal yang diawasi oleh Notaris berpengalaman untuk menjamin keamanan aset dan dana Anda.</p>
+                <div class="space-y-4 pt-3">
+                  <h4 class="text-3xl font-black text-slate-900 tracking-tight">Personal Agent Dedicated</h4>
+                  <p class="text-base font-medium text-slate-500 leading-relaxed opacity-80">Dapatkan asisten pribadi yang siap menemani proses survei unit hingga tanda tangan akad di hadapan Notaris.</p>
+                </div>
+              </div>
+              <div class="flex gap-10 group hover-float">
+                <div class="size-24 rounded-[2rem] bg-white border border-slate-100 shadow-premium flex items-center justify-center shrink-0 group-hover:bg-bejo-600 group-hover:text-white transition-all duration-700">
+                  <Icon icon="lucide:banknote" class="size-12 text-bejo-600 group-hover:text-white" />
+                </div>
+                <div class="space-y-4 pt-3">
+                  <h4 class="text-3xl font-black text-slate-900 tracking-tight">Investasi Aman & Terjamin</h4>
+                  <p class="text-base font-medium text-slate-500 leading-relaxed opacity-80">Sistem transaksi legal yang diawasi oleh Notaris berpengalaman untuk menjamin keamanan aset dan dana Anda.</p>
                 </div>
               </div>
             </div>

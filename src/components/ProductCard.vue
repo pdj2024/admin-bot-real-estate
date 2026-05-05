@@ -1,7 +1,7 @@
 <template>
-  <div v-if="isLoading || isAdmin || (product.Status_Display == 'Aktif' && product.Status_Properti == 'Tersedia')" class="group flex flex-col h-full rounded-[2.5rem] border transition-all duration-500 relative bg-white border-slate-100 shadow-xl shadow-slate-200/30" :class="!isLoading ? (showSelectButton ? '' : 'hover:-translate-y-2 hover:shadow-2xl hover:border-bejo-200 hover:shadow-bejo-600/10 cursor-pointer') : ''" @click="showSelectButton ? null : handleClick">
+  <div v-if="isLoading || isAdmin || (product.Status_Display == 'Aktif' && product.Status_Properti == 'Tersedia')" class="group flex flex-col h-full rounded-[2.5rem] border transition-all duration-700 relative bg-white border-slate-100 shadow-premium" :class="!isLoading ? (showSelectButton ? '' : 'hover:-translate-y-3 hover:shadow-bejo-premium hover:border-bejo-200 cursor-pointer') : ''" @click="showSelectButton ? null : handleClick">
     <!-- Card Image Header -->
-    <div class="relative h-60 overflow-hidden rounded-t-[2.5rem]" :class="isLoading ? 'bg-slate-200 animate-pulse' : 'bg-slate-100 p-3 pb-0'">
+    <div class="relative h-60 overflow-hidden rounded-t-[2.5rem]" :class="isLoading ? 'bg-slate-200 animate-pulse' : 'bg-white p-3 pb-0'">
       <div v-if="!isLoading" class="w-full h-full rounded-[2rem] overflow-hidden relative">
         <!-- Overlay for Non-Active -->
         <div v-if="product.Status_Display != 'Aktif' || product.Status_Properti != 'Tersedia'" class="absolute inset-0 bg-black/40 backdrop-grayscale-[60%] z-[20] pointer-events-none transition-all duration-500"></div>
@@ -29,7 +29,7 @@
           </Transition>
           
           <!-- Loading State for Image -->
-          <div v-if="!isImageLoaded" class="absolute inset-0 bg-slate-100 animate-pulse flex items-center justify-center">
+          <div v-if="!isImageLoaded" class="absolute inset-0 bg-white animate-pulse flex items-center justify-center">
              <Icon icon="lucide:loader-2" class="size-8 text-bejo-200 animate-spin" />
           </div>
         </div>
@@ -44,11 +44,11 @@
 
         <!-- Status Badges Top Left -->
         <div class="absolute top-4 left-4 flex flex-col gap-2 z-10">
-          <span class="w-fit bg-bejo-600/90 backdrop-blur-md text-white text-[10px] uppercase tracking-widest font-black px-3 py-1.5 rounded-lg shadow-md border border-bejo-400">
+          <span class="w-fit glass-bejo text-bejo-900 text-[10px] uppercase tracking-widest font-black px-4 py-2 rounded-xl shadow-sm">
             {{ product.Status_Display === 'Aktif' ? product.Status_Properti : product.Status_Display }}
           </span>
           <div class="flex flex-wrap gap-1.5" v-if="product.Status_Transaksi">
-            <span v-for="(trans, i) in product.Status_Transaksi" :key="i" class="bg-black/60 backdrop-blur-md text-bejo-100 text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-md border border-slate-600">
+            <span v-for="(trans, i) in product.Status_Transaksi" :key="i" class="glass-dark text-white text-[9px] uppercase tracking-wider font-bold px-3 py-1 rounded-lg">
               {{ trans }}
             </span>
           </div>
@@ -56,8 +56,8 @@
 
         <!-- Access Road Stickers Bottom Right -->
         <div class="absolute bottom-4 right-4 flex flex-col gap-1.5 items-end z-10" v-if="product.Akses_Jalan">
-          <span v-for="(akses, idx) in product.Akses_Jalan.slice(0, 3)" :key="idx" class="bg-white/90 backdrop-blur-md text-slate-700 text-[10px] font-bold px-2.5 py-1 rounded-md border-l-4 border-bejo-600 shadow-sm flex items-center gap-1.5">
-            <Icon icon="lucide:map-pin" class="size-2.5 text-bejo-600" />
+          <span v-for="(akses, idx) in product.Akses_Jalan.slice(0, 3)" :key="idx" class="glass text-slate-800 text-[9px] font-black px-3 py-1.5 rounded-xl shadow-sm flex items-center gap-2 group/akses">
+            <Icon icon="lucide:map-pin" class="size-2.5 text-bejo-600 group-hover/akses:scale-110 transition-transform" />
             {{ akses }}
           </span>
         </div>
@@ -73,17 +73,17 @@
           <span class="text-[10px] font-black uppercase tracking-[0.15em]" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-24 mb-1' : 'text-bejo-600'">
             {{ isLoading ? '.' : product.Nama_Kota ? product.Nama_Kota : 'Lokasi Tidak Tersedia' }}
           </span>
-          <p class="text-[11px] font-bold text-slate-500" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-48' : ''">
+          <p class="text-[11px] font-bold text-slate-500 leading-tight" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-48' : ''">
             <span v-if="!isLoading && !product.Hide_alamat">{{ product.Alamat ? product.Alamat.split(', Lat:')[0] : '' }}</span>
             <span v-else-if="!isLoading && product.Hide_alamat" class="italic opacity-60">Alamat disembunyikan</span>
-            <span v-if="!isLoading && product.Nama_Kota && !product.Hide_alamat"> ({{ product.Nama_Area }})</span>
+            <span v-if="!isLoading && product.Nama_Kota && !product.Hide_alamat" class="block mt-0.5 font-black text-slate-400 uppercase tracking-widest text-[9px]">Area: {{ product.Nama_Area }}</span>
             <span v-if="isLoading">Memuat Detail Lokasi...</span>
           </p>
         </div>
       </div>
 
       <!-- Title -->
-      <h6 class="text-lg md:text-xl text-slate-900 font-black transition-colors mb-2 leading-tight line-clamp-2 [text-wrap:pretty]" :class="[isLoading ? 'text-transparent bg-slate-200 animate-pulse rounded-xl w-full' : '', !showSelectButton ? 'group-hover:text-bejo-600' : '']">
+      <h6 class="text-xl md:text-2xl text-slate-900 font-black tracking-tighter transition-colors mb-3 leading-[1.1] line-clamp-2 [text-wrap:pretty]" :class="[isLoading ? 'text-transparent bg-slate-200 animate-pulse rounded-xl w-full' : '', !showSelectButton ? 'group-hover:text-bejo-600' : '']">
         <RouterLink v-if="!isLoading && !disableRouting" :to="targetUrl" class="before:absolute before:inset-0">{{ product.Nama_Produk }}</RouterLink>
         <div v-else-if="!isLoading && disableRouting" class="before:absolute before:inset-0">{{ product.Nama_Produk }}</div>
         <span v-else>.</span>
@@ -164,15 +164,15 @@
             Harga Sewa <span v-if="!isLoading && (product.Minimal_Sewa || product.minimal_sewa)"> (min. {{ product.Minimal_Sewa || product.minimal_sewa }} {{ product.Satuan_Minimal_Sewa }})</span>
           </span>
           <div class="flex flex-wrap items-baseline gap-2">
-            <span class="text-xl font-black" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-32 h-6 mt-1' : 'text-slate-900'">
+            <span class="text-2xl font-black tracking-tight" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-32 h-6 mt-1' : 'text-bejo-600'">
               {{ isLoading ? '' : formatCurrency(product.Harga_Sewa2 > 0 ? product.Harga_Sewa2 : product.Harga_Sewa1) }}
             </span>
             <div v-if="!isLoading && product.Harga_Sewa2 > 0" class="flex items-center gap-2">
-              <span class="relative text-xs text-slate-400 font-bold px-1 line-through decoration-red-500 decoration-2">
+              <span class="relative text-xs text-slate-400 font-bold px-1 line-through decoration-slate-300">
                 {{ formatCurrency(product.Harga_Sewa1) }}
               </span>
             </div>
-            <span v-if="!isLoading" class="text-[10px] text-slate-400 font-bold ml-1 italic">/ {{ product.Satuan_Minimal_Sewa || 'thn' }}</span>
+            <span v-if="!isLoading" class="text-[10px] text-slate-400 font-black ml-1 uppercase tracking-widest">/ {{ product.Satuan_Minimal_Sewa || 'thn' }}</span>
           </div>
         </div>
 
@@ -180,11 +180,11 @@
         <div v-if="!isLoading && product.Harga_Jual1 > 0" class="flex flex-col">
           <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Harga Jual</span>
           <div class="flex flex-wrap items-baseline gap-2">
-            <span class="text-2xl font-black text-slate-900">
+            <span class="text-3xl font-black text-slate-900 tracking-tighter">
               {{ formatCurrency(product.Harga_Jual2 > 0 ? product.Harga_Jual2 : product.Harga_Jual1) }}
             </span>
             <div v-if="product.Harga_Jual2 > 0" class="flex items-center gap-2">
-              <span class="relative text-xs text-slate-400 font-bold px-1 line-through decoration-red-500 decoration-2">
+              <span class="relative text-xs text-slate-400 font-bold px-1 line-through decoration-slate-300">
                 {{ formatCurrency(product.Harga_Jual1) }}
               </span>
             </div>

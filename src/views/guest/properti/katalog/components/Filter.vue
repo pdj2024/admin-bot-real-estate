@@ -1,6 +1,6 @@
 <template>
   <div ref="filterRef" :class="[!openFilter ? 'hidden lg:block' : 'block']" class="z-[60] fixed inset-x-4 bottom-6 lg:static lg:w-full lg:inset-auto">
-    <div class="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden">
+    <div class="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/40 overflow-hidden">
       <div class="p-6">
         <div class="flex items-center justify-between mb-6">
           <h6 class="text-lg font-bold text-slate-800 tracking-tight uppercase">Filter</h6>
