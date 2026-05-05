@@ -70,7 +70,7 @@ onMounted(fetchAgents)
 
     <div class="flex items-center justify-between mb-10 relative z-10">
       <div class="flex items-center gap-4">
-        <div class="size-12 bg-slate-900 rounded-[1.25rem] flex items-center justify-center text-white shadow-lg shadow-slate-900/20">
+        <div class="size-12 bg-bejo-950 rounded-[1.25rem] flex items-center justify-center text-white shadow-lg shadow-bejo-950/20">
            <Icon icon="lucide:bar-chart-3" class="size-6" />
         </div>
         <div>
@@ -110,15 +110,15 @@ onMounted(fetchAgents)
             <td class="px-4 py-5 text-right">
               <div class="flex items-center justify-end gap-3">
                  <div class="flex items-center gap-1.5 px-2 py-1 bg-slate-50 rounded-lg border border-slate-100/50 group-hover:bg-white group-hover:border-slate-200 transition-colors">
-                    <Icon v-if="agent.stats.trend === 'up'" icon="lucide:trending-up" class="size-3.5 text-emerald-500" />
-                    <Icon v-else-if="agent.stats.trend === 'down'" icon="lucide:trending-down" class="size-3.5 text-amber-500" />
+                    <Icon v-if="agent.stats.trend === 'up'" icon="lucide:trending-up" class="size-3.5 text-bejo-600" />
+                    <Icon v-else-if="agent.stats.trend === 'down'" icon="lucide:trending-down" class="size-3.5 text-stone-400" />
                     <Icon v-else icon="lucide:minus" class="size-3.5 text-slate-300" />
-                    <span class="text-xs font-black" :class="agent.stats.prospekPercent > 50 ? 'text-emerald-700' : 'text-amber-700'">
+                    <span class="text-xs font-black" :class="agent.stats.prospekPercent > 50 ? 'text-bejo-700' : 'text-stone-600'">
                         {{ agent.stats.prospekPercent }}%
                     </span>
                  </div>
                  <div class="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden hidden sm:block">
-                    <div class="h-full transition-all duration-1000" :class="agent.stats.prospekPercent > 50 ? 'bg-emerald-500' : 'bg-amber-500'" :style="{ width: agent.stats.prospekPercent + '%' }"></div>
+                    <div class="h-full transition-all duration-1000" :class="agent.stats.prospekPercent > 50 ? 'bg-bejo-500' : 'bg-stone-300'" :style="{ width: agent.stats.prospekPercent + '%' }"></div>
                  </div>
               </div>
               
@@ -144,17 +144,17 @@ onMounted(fetchAgents)
                   </div>
 
                   <div class="grid grid-cols-3 gap-3">
-                    <div class="p-4 rounded-3xl bg-emerald-500/5 border border-emerald-500/10 text-center">
-                        <span class="block text-[8px] font-black uppercase text-emerald-500 mb-2">Berhasil</span>
-                        <span class="text-sm font-black text-emerald-700">{{ agent.stats.berhasil }}</span>
-                    </div>
                     <div class="p-4 rounded-3xl bg-bejo-500/5 border border-bejo-500/10 text-center">
-                        <span class="block text-[8px] font-black uppercase text-bejo-500 mb-2">Terjual</span>
-                        <span class="text-sm font-black text-bejo-700">{{ agent.stats.terjual }}</span>
+                        <span class="block text-[8px] font-black uppercase text-bejo-500 mb-2">Berhasil</span>
+                        <span class="text-sm font-black text-bejo-700">{{ agent.stats.berhasil }}</span>
                     </div>
-                    <div class="p-4 rounded-3xl bg-sky-500/5 border border-sky-500/10 text-center">
-                        <span class="block text-[8px] font-black uppercase text-sky-500 mb-2">Tersewa</span>
-                        <span class="text-sm font-black text-sky-700">{{ agent.stats.tersewa }}</span>
+                    <div class="p-4 rounded-3xl bg-stone-500/5 border border-stone-500/10 text-center">
+                        <span class="block text-[8px] font-black uppercase text-stone-500 mb-2">Terjual</span>
+                        <span class="text-sm font-black text-stone-700">{{ agent.stats.terjual }}</span>
+                    </div>
+                    <div class="p-4 rounded-3xl bg-bejo-900/5 border border-bejo-900/10 text-center">
+                        <span class="block text-[8px] font-black uppercase text-bejo-900 mb-2">Tersewa</span>
+                        <span class="text-sm font-black text-bejo-900">{{ agent.stats.tersewa }}</span>
                     </div>
                   </div>
                 </div>

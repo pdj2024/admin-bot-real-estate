@@ -6,22 +6,22 @@ import VueApexCharts from 'vue3-apexcharts'
 import { distributionOptions as baseOptions } from './data'
 
 const typeColorMap: Record<string, string> = {
-  'Rumah': '#f75211',
-  'Tanah': '#0ea5e9',
-  'Ruko': '#6366f1',
-  'Apartemen': '#10b981',
-  'Gudang': '#f59e0b',
-  'Villa': '#ef4444',
-  'SOHO': '#8b5cf6',
-  'Pabrik': '#ec4899',
-  'Perkantoran': '#22c55e',
-  'Hotel': '#3b82f6',
-  'Rumah Kos': '#a855f7',
-  'Stand': '#fb923c',
-  'Toko': '#06b6d4',
-  'Gedung': '#64748b',
-  'Condotel': '#475569',
-  'Lain-lain': '#94a3b8'
+  'Rumah': '#EA8455',      // bejo-500
+  'Tanah': '#7c2d12',      // bejo-900
+  'Ruko': '#c2410c',       // bejo-700
+  'Apartemen': '#a8a29e',  // stone-400
+  'Gudang': '#57534e',     // stone-700
+  'Villa': '#f97316',      // orange-500
+  'SOHO': '#44403c',       // stone-800
+  'Pabrik': '#78350f',     // amber-900
+  'Perkantoran': '#451a03',// amber-950
+  'Hotel': '#fb923c',      // orange-400
+  'Rumah Kos': '#d6d3d1',  // stone-300
+  'Stand': '#fed7aa',      // orange-100
+  'Toko': '#ffedd5',       // orange-50
+  'Gedung': '#1c1917',     // stone-950
+  'Condotel': '#292524',   // stone-900
+  'Lain-lain': '#a8a29e'   // stone-400
 }
 
 const propertyTypes = Object.keys(typeColorMap)

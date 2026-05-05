@@ -29,7 +29,7 @@ export const prospectOptions: ApexOptions = {
       stops: [20, 100]
     }
   },
-  colors: ['#f75211', '#0ea5e9'], // bejo-500, sky-500
+  colors: ['#EA8455', '#7c2d12'], // bejo-500, bejo-900
   dataLabels: { enabled: false },
   grid: {
     borderColor: '#f1f5f9',
@@ -62,7 +62,7 @@ export const distributionOptions: ApexOptions = {
     height: 300,
   },
   labels: ['Rumah', 'Apartemen', 'Ruko/Komersial'],
-  colors: ['#f75211', '#0ea5e9', '#6366f1'], // bejo-500, sky-500, indigo-500
+  colors: ['#EA8455', '#7c2d12', '#a8a29e'], // bejo-500, bejo-900, stone-400
   legend: {
     position: 'bottom',
     fontWeight: 700,
@@ -101,14 +101,14 @@ export const operationalStats = [
     label: 'Janji Temu Hari Ini', 
     value: '06', 
     icon: 'lucide:calendar-clock', 
-    color: 'sky',
+    color: 'bejo-dark',
     trend: '3 dikonfirmasi'
   },
   { 
     label: 'Total Prospek (Bulan Ini)', 
     value: '142', 
     icon: 'lucide:user-plus', 
-    color: 'emerald',
+    color: 'bejo-soft',
     trend: '+24 prospek baru'
   },
   {
@@ -122,9 +122,9 @@ export const operationalStats = [
 
 // Data: Inventory (InventoryStatus.vue)
 export const inventoryStats = [
-  { label: 'Tersedia', value: '24', icon: 'lucide:home', color: 'emerald' },
+  { label: 'Tersedia', value: '24', icon: 'lucide:home', color: 'bejo-soft' },
   { label: 'Terjual', value: '150', icon: 'lucide:award', color: 'bejo' },
-  { label: 'Tersewa', value: '89', icon: 'lucide:key', color: 'amber' },
+  { label: 'Tersewa', value: '89', icon: 'lucide:key', color: 'bejo-dark' },
   { label: 'Total Unit', value: '263', icon: 'lucide:layers', color: 'slate' },
 ]
 

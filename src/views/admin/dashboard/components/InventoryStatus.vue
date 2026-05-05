@@ -12,9 +12,9 @@ interface StatDetail {
 }
 
 const stats = ref<StatDetail[]>([
-  { label: 'Tersedia', value: '0', icon: 'lucide:home', color: 'emerald', breakdown: {} },
+  { label: 'Tersedia', value: '0', icon: 'lucide:home', color: 'bejo-soft', breakdown: {} },
   { label: 'Terjual', value: '0', icon: 'lucide:award', color: 'bejo', breakdown: {} },
-  { label: 'Tersewa', value: '0', icon: 'lucide:key', color: 'amber', breakdown: {} },
+  { label: 'Tersewa', value: '0', icon: 'lucide:key', color: 'bejo-dark', breakdown: {} },
   { label: 'Nonaktif', value: '0', icon: 'lucide:eye-off', color: 'slate', breakdown: {} },
 ])
 
@@ -69,9 +69,9 @@ const fetchStats = async () => {
     })
 
     stats.value = [
-      { label: 'Tersedia', value: String(count.Tersedia.total), icon: 'lucide:home', color: 'emerald', breakdown: count.Tersedia.types },
+      { label: 'Tersedia', value: String(count.Tersedia.total), icon: 'lucide:home', color: 'bejo-soft', breakdown: count.Tersedia.types },
       { label: 'Terjual', value: String(count.Terjual.total), icon: 'lucide:award', color: 'bejo', breakdown: count.Terjual.types },
-      { label: 'Tersewa', value: String(count.Tersewa.total), icon: 'lucide:key', color: 'amber', breakdown: count.Tersewa.types },
+      { label: 'Tersewa', value: String(count.Tersewa.total), icon: 'lucide:key', color: 'bejo-dark', breakdown: count.Tersewa.types },
       { label: 'Nonaktif', value: String(count.Nonaktif.total), icon: 'lucide:eye-off', color: 'slate', breakdown: count.Nonaktif.types },
     ]
   } catch (err) {
@@ -88,9 +88,8 @@ onMounted(() => {
 const getColorClass = (color: string) => {
   const map: Record<string, string> = {
     bejo: 'text-bejo-600 bg-bejo-500/10 border-bejo-500/20',
-    sky: 'text-sky-600 bg-sky-500/10 border-sky-500/20',
-    emerald: 'text-emerald-600 bg-emerald-500/10 border-emerald-500/20',
-    amber: 'text-amber-600 bg-amber-500/10 border-amber-500/20',
+    'bejo-dark': 'text-bejo-900 bg-bejo-900/10 border-bejo-900/20',
+    'bejo-soft': 'text-bejo-700 bg-bejo-100 border-bejo-200',
     slate: 'text-slate-600 bg-slate-500/10 border-slate-500/20',
   }
   return map[color] || map.bejo

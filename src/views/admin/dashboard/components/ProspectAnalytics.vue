@@ -50,7 +50,7 @@ onMounted(() => {
           <span class="text-xs font-bold text-slate-600">Total Prospek: <span class="text-slate-900">722</span></span>
         </div>
         <div class="flex items-center gap-3">
-          <div class="size-2 rounded-full bg-sky-500"></div>
+          <div class="size-2 rounded-full bg-bejo-900"></div>
           <span class="text-xs font-bold text-slate-600">Total Visit: <span class="text-slate-900">315</span></span>
         </div>
       </div>
