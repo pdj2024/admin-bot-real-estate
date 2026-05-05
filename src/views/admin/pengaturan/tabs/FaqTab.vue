@@ -153,7 +153,7 @@ onMounted(() => {
                 <button 
                   @click.stop="toggleFaqStatus(faq)"
                   class="relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-bejo-600 focus:ring-offset-2 shadow-sm"
-                  :class="faq.Status === 'aktif' ? 'bg-green-500' : 'bg-slate-300'"
+                  :class="faq.Status === 'aktif' ? 'bg-bejo-600' : 'bg-slate-300'"
                 >
                   <span class="sr-only">Toggle Status</span>
                   <span
@@ -162,11 +162,11 @@ onMounted(() => {
                     :class="faq.Status === 'aktif' ? 'translate-x-5' : 'translate-x-0'"
                   />
                 </button>
-                <span class="text-[10px] font-black uppercase tracking-tighter" :class="faq.Status === 'aktif' ? 'text-green-600' : 'text-slate-400'">{{ faq.Status }}</span>
+                <span class="text-[10px] font-black uppercase tracking-tighter" :class="faq.Status === 'aktif' ? 'text-bejo-600' : 'text-slate-400'">{{ faq.Status }}</span>
               </div>
               
               <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                <button @click="openFaqModal(faq)" class="size-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-sky-600 hover:border-sky-200 transition-colors shadow-sm">
+                <button @click="openFaqModal(faq)" class="size-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-bejo-600 hover:border-bejo-200 transition-colors shadow-sm">
                   <Icon icon="lucide:edit-3" class="size-4" />
                 </button>
                 <button @click="handleDeleteFaq(faq.No_Id)" class="size-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-red-600 hover:border-red-200 transition-colors shadow-sm">

@@ -164,7 +164,7 @@ onMounted(() => {
                 <button 
                   @click.stop="toggleStatus(prompt)"
                   class="relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none shadow-sm"
-                  :class="prompt.Status === 'aktif' ? 'bg-green-500' : 'bg-slate-300'"
+                  :class="prompt.Status === 'aktif' ? 'bg-bejo-600' : 'bg-slate-300'"
                 >
                   <span class="sr-only">Toggle Status</span>
                   <span

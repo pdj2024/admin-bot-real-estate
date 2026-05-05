@@ -262,7 +262,7 @@ const hierarchicalData = computed(() => {
                   <button 
                     @click.stop="toggleStatus('kota', city)"
                     class="relative inline-flex h-4 w-8 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none shadow-sm mr-2"
-                    :class="city.Status === 'aktif' ? 'bg-green-500' : 'bg-slate-300'"
+                    :class="city.Status === 'aktif' ? 'bg-bejo-600' : 'bg-slate-300'"
                   >
                     <span class="sr-only">Toggle City Status</span>
                     <span
@@ -272,7 +272,7 @@ const hierarchicalData = computed(() => {
                     />
                   </button>
 
-                  <button @click="handleAdd('area', city._id)" title="Tambah Area" class="size-8 rounded-lg bg-emerald-100/80 text-emerald-700 flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-all">
+                  <button @click="handleAdd('area', city._id)" title="Tambah Area" class="size-8 rounded-lg bg-bejo-50 text-bejo-600 flex items-center justify-center hover:bg-bejo-600 hover:text-white transition-all border border-bejo-100">
                     <Icon icon="lucide:plus" class="size-3.5" />
                   </button>
                   <button @click="handleEdit('kota', city)" class="size-8 rounded-lg bg-slate-100 text-slate-600 hover:text-bejo-600 hover:bg-bejo-50 transition-all flex items-center justify-center">
@@ -305,7 +305,7 @@ const hierarchicalData = computed(() => {
                       <button 
                         @click.stop="toggleStatus('area', area)"
                         class="relative inline-flex h-3.5 w-7 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none shadow-sm mr-1.5"
-                        :class="area.Status === 'aktif' ? 'bg-green-500' : 'bg-slate-300'"
+                        :class="area.Status === 'aktif' ? 'bg-bejo-600' : 'bg-slate-300'"
                       >
                         <span class="sr-only">Toggle Area Status</span>
                         <span
@@ -315,7 +315,7 @@ const hierarchicalData = computed(() => {
                         />
                       </button>
 
-                      <button @click="handleAdd('prioritas', area._id)" title="Tambah Kawasan" class="size-7 rounded-lg bg-blue-100/80 text-blue-700 flex items-center justify-center hover:bg-blue-500 hover:text-white transition-all">
+                      <button @click="handleAdd('prioritas', area._id)" title="Tambah Kawasan" class="size-7 rounded-lg bg-stone-50 text-stone-600 flex items-center justify-center hover:bg-stone-600 hover:text-white transition-all border border-stone-100">
                         <Icon icon="lucide:plus" class="size-3" />
                       </button>
                       <button @click="handleEdit('area', area)" class="size-7 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-bejo-600 hover:bg-bejo-50 transition-all flex items-center justify-center">
@@ -340,7 +340,7 @@ const hierarchicalData = computed(() => {
                         <button 
                           @click.stop="toggleStatus('prioritas', prio)"
                           class="relative inline-flex h-3 w-6 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none shadow-sm mr-1"
-                          :class="prio.Status === 'aktif' ? 'bg-green-500' : 'bg-slate-300'"
+                          :class="prio.Status === 'aktif' ? 'bg-bejo-600' : 'bg-slate-300'"
                         >
                           <span class="sr-only">Toggle Priority Status</span>
                           <span

@@ -390,7 +390,7 @@ onMounted(() => {
       <!-- Lokasi & Operasional -->
       <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
         <div class="px-8 py-5 border-b border-slate-50 bg-slate-50/50 flex items-center gap-3">
-          <div class="size-8 rounded-lg bg-sky-600 flex items-center justify-center text-white shadow-lg shadow-sky-600/20">
+          <div class="size-8 rounded-lg bg-bejo-950 flex items-center justify-center text-white shadow-lg shadow-bejo-950/20">
             <Icon icon="lucide:map-pin" class="size-4" />
           </div>
           <h4 class="text-xs font-black text-slate-800 uppercase tracking-widest">Lokasi & Jam Operasional</h4>
@@ -400,14 +400,14 @@ onMounted(() => {
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="md:col-span-2">
               <label class="label">
-                <Icon icon="lucide:map" class="size-4 text-sky-600" />
+                <Icon icon="lucide:map" class="size-4 text-bejo-600" />
                 Alamat Lengkap
               </label>
               <input v-model="form.Alamat_Toko" type="text" class="field-input" placeholder="Jalan raya..." />
             </div>
             <div>
               <label class="label">
-                <Icon icon="lucide:map-pinned" class="size-4 text-sky-600" />
+                <Icon icon="lucide:map-pinned" class="size-4 text-bejo-600" />
                 Kode Pos
               </label>
               <input v-model="form.Kode_Pos" type="text" class="field-input" placeholder="12345" />
@@ -418,7 +418,7 @@ onMounted(() => {
           <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div class="space-y-4">
               <label class="label">
-                <Icon icon="lucide:calendar-days" class="size-4 text-sky-600" />
+                <Icon icon="lucide:calendar-days" class="size-4 text-bejo-600" />
                 Hari Operasional
               </label>
               <div class="flex items-center gap-3">
@@ -438,7 +438,7 @@ onMounted(() => {
 
             <div class="space-y-4">
               <label class="label">
-                <Icon icon="lucide:clock" class="size-4 text-sky-600" />
+                <Icon icon="lucide:clock" class="size-4 text-bejo-600" />
                 Jam Operasional
               </label>
               <div class="flex items-center gap-3">
@@ -459,7 +459,7 @@ onMounted(() => {
           <div class="space-y-4 pt-4 border-t border-slate-50">
             <div class="flex items-center justify-between">
               <label class="label !mb-0">
-                <Icon icon="lucide:navigation" class="size-4 text-sky-600" />
+                <Icon icon="lucide:navigation" class="size-4 text-bejo-600" />
                 Koordinat Lokasi (Peta)
               </label>
               <div class="text-[10px] font-bold text-slate-400 bg-slate-50 px-3 py-1 rounded-full border border-slate-100 font-mono">
@@ -479,7 +479,7 @@ onMounted(() => {
                 <div class="max-h-60 overflow-y-auto p-2 flex flex-col">
                   <button v-for="p in predictions" :key="p.placeId" @mousedown="selectPrediction(p)" type="button" class="w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors rounded-xl group">
                     <div class="flex items-start gap-3">
-                      <Icon icon="lucide:map-pin" class="size-4 mt-0.5 text-slate-400 group-hover:text-sky-600" />
+                      <Icon icon="lucide:map-pin" class="size-4 mt-0.5 text-slate-400 group-hover:text-bejo-600" />
                       <div class="flex-1">
                         <span class="text-xs font-black text-slate-700 block leading-tight">{{ p.mainText }}</span>
                         <span class="text-[10px] font-bold text-slate-400 block mt-0.5" v-if="p.secondaryText">{{ p.secondaryText }}</span>
@@ -496,13 +496,13 @@ onMounted(() => {
 
               <!-- Loading Overlay -->
               <div v-if="!isMapLoaded" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-50/80 backdrop-blur-sm z-10">
-                <Icon icon="lucide:loader-2" class="size-10 animate-spin text-sky-600/40" />
+                <Icon icon="lucide:loader-2" class="size-10 animate-spin text-bejo-600/40" />
                 <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-4">Memuat Peta...</span>
               </div>
 
               <!-- Geolocation Button -->
               <button @click="getCurrentLocation" type="button" class="absolute bottom-6 right-6 p-3 bg-white hover:bg-slate-50 text-slate-700 rounded-2xl shadow-xl border border-slate-100 transition-all active:scale-90 flex items-center gap-2 group z-20" :disabled="isLocating">
-                <Icon :icon="isLocating ? 'lucide:loader-2' : 'lucide:locate-fixed'" class="size-5" :class="isLocating ? 'animate-spin text-sky-600' : 'text-slate-400 group-hover:text-sky-600'" />
+                <Icon :icon="isLocating ? 'lucide:loader-2' : 'lucide:locate-fixed'" class="size-5" :class="isLocating ? 'animate-spin text-bejo-600' : 'text-slate-400 group-hover:text-bejo-600'" />
                 <span class="text-[10px] font-black uppercase tracking-widest">{{ isLocating ? 'Mencari...' : 'Gunakan Lokasi Saat Ini' }}</span>
               </button>
             </div>
