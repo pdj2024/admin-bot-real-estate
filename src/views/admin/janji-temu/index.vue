@@ -10,6 +10,7 @@ import ChatWidget from '@/components/ChatWidget.vue'
 const calendarRef = ref<InstanceType<typeof Calendar> | null>(null)
 const chatWidgetRef = ref<any>(null)
 const openAppointment = ref(false)
+const isShrinkCalendar = ref(false)
 const selectedEvent = ref<any>(null)
 const appointmentData = ref<any>(null)
 
@@ -38,19 +39,27 @@ const openAppointmentHandler = (data: any) => {
   selectedEvent.value = data
   appointmentData.value = data
   openAppointment.value = true
+  isShrinkCalendar.value = true
   nextTick(() => {
     calendarRef.value?.refreshCalendar()
   })
 }
 
 const closeAppointment = () => {
+  // 1. Tutup detail janji dahulu (Fade Out)
   openAppointment.value = false
+  
+  // 2. Barulah div calendar stretch full wide setelah fade out selesai
+  setTimeout(() => {
+    isShrinkCalendar.value = false
+    nextTick(() => {
+      calendarRef.value?.refreshCalendar()
+    })
+  }, 400) // Delay sedikit lebih lama dari durasi slide-fade-leave (300ms)
+
   setTimeout(() => {
     selectedEvent.value = null
-  }, 300)
-  nextTick(() => {
-    calendarRef.value?.refreshCalendar()
-  })
+  }, 500)
 }
 </script>
 
@@ -73,7 +82,7 @@ const closeAppointment = () => {
         <!-- Main Calendar -->
         <Calendar 
           ref="calendarRef" 
-          :appointmentOpen="openAppointment && !showAsPopup" 
+          :appointmentOpen="isShrinkCalendar && !showAsPopup" 
           @openAppointment="openAppointmentHandler" 
         />
         

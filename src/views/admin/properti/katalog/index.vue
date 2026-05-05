@@ -22,6 +22,7 @@ const priceRange = ref({
   min: '',
   max: ''
 })
+const transactionType = ref('Semua')
 const rumahRef = ref<any>(null)
 
 const toggleFilter = () => {
@@ -80,6 +81,7 @@ onMounted(() => {
             v-model:facilities="facilities"
             v-model:region="region"
             v-model:priceRange="priceRange"
+            v-model:transactionType="transactionType"
             :provinces="provinces"
             class="lg:sticky lg:top-24"
           />
@@ -92,12 +94,14 @@ onMounted(() => {
             v-model:facilities="facilities"
             v-model:region="region"
             v-model:priceRange="priceRange"
+            v-model:transactionType="transactionType"
             @openFilter="toggleFilter" 
             @resetFilter="() => {
               searchQuery = '';
               facilities = { kamarTidur: '', kamarMandi: '', carport: '', lantai: '' };
               region = { province: '', city: '', provinceId: '' };
               priceRange = { min: '', max: '' };
+              transactionType = 'Semua';
             }"
           />
         </section>

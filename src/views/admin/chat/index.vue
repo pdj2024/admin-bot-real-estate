@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue'
+import { onBeforeRouteLeave } from 'vue-router'
 import api from '@/services/axios'
 import * as signalR from '@microsoft/signalr'
 
@@ -8,14 +9,15 @@ import ChatContent from './components/ChatContent.vue'
 import SideBar from './components/SideBar.vue'
 import { type TakeOverPayload } from './components/SideBar.vue'
 
-const selectedRoomId = ref<string | null>(null)
+const selectedRoomId = ref<string | null>(localStorage.getItem('active_room_id'))
 const roomIdsBot = ref<string[]>([])
 const roomIdsAktif = ref<string[]>([])
 const roomIdsAssign = ref<string[]>([])
-const selectedUsername = ref<string>('')
+const selectedUsername = ref<string>(localStorage.getItem('active_username') || '')
 const selectedUsernameChange = ref<string>('')
-const selectedPhone = ref<string>('')
-const selectedIdLawan = ref<string>('')
+const selectedPhone = ref<string>(localStorage.getItem('active_phone') || '')
+const selectedIdLawan = ref<string>(localStorage.getItem('active_id_lawan') || '')
+const selectedStatusBot = ref<string>(localStorage.getItem('active_status_bot') || 'nonaktif')
 const lastMessageId = ref<string>('')
 const takeOverBatch = ref<TakeOverPayload[]>([])
 const takeOverSuccess = ref<string[]>([])
@@ -36,15 +38,8 @@ const isTakenOver = computed(() => {
 })
 
 const handleSelectChat = async (id: string) => {
-  // if (selectedRoomId.value && signalRConnection.value?.state === signalR.HubConnectionState.Connected) {
-  //   try {
-  //     await signalRConnection.value.invoke('LeaveRoom', selectedRoomId.value)
-  //   } catch (err) {
-  //     console.warn(`[SignalR] Gagal keluar dari room lama ${selectedRoomId.value}:`, err)
-  //   }
-  // }
-
   selectedRoomId.value = id
+  localStorage.setItem('active_room_id', id)
 
   if (signalRConnection.value?.state === signalR.HubConnectionState.Connected) {
     try {
@@ -54,20 +49,28 @@ const handleSelectChat = async (id: string) => {
       console.error(`[SignalR] Gagal Join ke Room ${id}:`, err)
     }
   } else {
-    console.warn('[SignalR] Koneksi belum siap, gagal join room.')
+    console.warn('[SignalR] Koneksi belum siap, gagal join room. ID disimpan untuk join otomatis nanti.')
   }
 }
 
 const handleIdLawan = (name: string) => {
   selectedIdLawan.value = name
+  localStorage.setItem('active_id_lawan', name)
 }
 
 const handleUsername = (name: string) => {
   selectedUsername.value = name
+  localStorage.setItem('active_username', name)
 }
 
 const handlePhone = (phone: string) => {
   selectedPhone.value = phone
+  localStorage.setItem('active_phone', phone)
+}
+
+const handleStatusBot = (status: string) => {
+  selectedStatusBot.value = status
+  localStorage.setItem('active_status_bot', status)
 }
 
 const handleUsernameChange = (username: string) => {
@@ -82,7 +85,20 @@ const handleClearRoom = () => {
   selectedRoomId.value = null
   selectedUsername.value = ''
   selectedPhone.value = ''
+  selectedIdLawan.value = ''
+  selectedStatusBot.value = 'nonaktif'
+  localStorage.removeItem('active_room_id')
+  localStorage.removeItem('active_username')
+  localStorage.removeItem('active_phone')
+  localStorage.removeItem('active_id_lawan')
+  localStorage.removeItem('active_status_bot')
 }
+
+// Tambahkan hook untuk menghapus session saat pindah halaman
+onBeforeRouteLeave(() => {
+  console.log('[Chat] Meninggalkan halaman chat, membersihkan session...')
+  handleClearRoom()
+})
 
 const handleTakeOver = (status: boolean) => {
   const targetTab = status ? 'bot' : 'chat_saya'
@@ -93,8 +109,13 @@ const handleTakeOver = (status: boolean) => {
     if (sidebarRef.value) sidebarRef.value.changeTab(targetTab)
   }, 500)
   
-  // Jika status true (kembali ke bot), tutup room chat
-  if (status === true) handleClearRoom()
+  // Jika status true (kembali ke bot), tutup room chat dan hapus dari list aktif segera
+  if (status === true) {
+    if (sidebarRef.value && selectedRoomId.value) {
+      sidebarRef.value.removeRoomFromList(selectedRoomId.value)
+    }
+    handleClearRoom()
+  }
 }
 
 const handleLastMessage = (id: string) => {
@@ -223,6 +244,22 @@ const startSignalR = async () => {
     }
   })
 
+  signalRConnection.value.on('GlobalHandoverAlert', (payload) => {
+    console.log('[Event: GlobalHandoverAlert]', payload)
+    
+    // Selalu refresh tab aktif secara silent agar chat room bertambah/hilang secara halus
+    if (sidebarRef.value) {
+      sidebarRef.value.refreshChatList(undefined, true)
+    }
+
+    // Jika room yang sedang dibuka dikembalikan ke bot, tutup room
+    const isToBot = payload.adminId === 'adm_bot'
+    if (isToBot && payload && payload.roomId === selectedRoomId.value) {
+      handleClearRoom()
+      handleTakeOver(true)
+    }
+  })
+
   signalRConnection.value.onreconnected(async (connectionId) => {
     console.log(`[SignalR] Reconnected otomatis. Connection ID: ${connectionId}`)
     await joinUserChannel()
@@ -242,6 +279,17 @@ const startSignalR = async () => {
     console.log('[SignalR] Connected via Index')
     await joinUserChannel()
     await joinRoom(roomIdsBot.value, roomIdsAktif.value, roomIdsAssign.value)
+    
+    // Join kembali ke room yang sedang dibuka (jika ada)
+    const savedRoomId = selectedRoomId.value || localStorage.getItem('active_room_id')
+    if (savedRoomId) {
+      try {
+        await signalRConnection.value.invoke('JoinRoom', savedRoomId)
+        console.log(`[SignalR] Berhasil Join ke Active Room: ${savedRoomId}`)
+      } catch (err) {
+        console.warn(`[SignalR] Gagal join ke active room ${savedRoomId}:`, err)
+      }
+    }
   } catch (err) {
     console.error('[SignalR] Connection Error:', err)
   }
@@ -292,10 +340,10 @@ onBeforeUnmount(() => {
 
 <template>
   <Vertical>
-    <div class="p-0 md:p-3 md:pt-1 h-full">
+    <div class="p-0 md:p-2 md:pt-1 md:pb-0 h-full overflow-hidden">
       <!-- Premium Main Container -->
       <div class="bg-white border-0 md:border border-slate-100 shadow-none md:shadow-xl md:shadow-slate-200/40 md:rounded-[2rem] overflow-hidden">
-        <div class="flex h-[calc(100vh-120px)] md:h-[calc(100vh-130px)] min-h-[500px]">
+        <div class="flex h-[calc(100vh-180px)] md:h-[calc(100vh-170px)] min-h-[500px]">
           <SideBar 
             ref="sidebarRef" 
             class="shrink-0"
@@ -308,6 +356,7 @@ onBeforeUnmount(() => {
             @changeTab="handleTabChange" 
             @allRoomIds="handleAllRoomIds" 
             @lastMessageId="handleLastMessage" 
+            @statusBot="handleStatusBot"
             @chatTakeOverBatch="handleChatTakeOverBatch" 
           />
 
@@ -317,7 +366,7 @@ onBeforeUnmount(() => {
             class="flex-1 w-full min-w-0"
             :roomId="selectedRoomId" 
             :idLawan="selectedIdLawan" 
-            :username="selectedUsername" 
+            v-model:username="selectedUsername" 
             :phoneNumber="selectedPhone" 
             :activeTab="currentActiveTab" 
             :chats="chats" 
@@ -325,6 +374,7 @@ onBeforeUnmount(() => {
             :lastMessageId="lastMessageId" 
             :takeOverBatch="takeOverBatch" 
             :isTakenOver="isTakenOver"
+            :statusBot="selectedStatusBot"
             @chatTakeOver="handleTakeOver" 
             @clearRoom="handleClearRoom" 
             @usernameChange="handleUsernameChange" 

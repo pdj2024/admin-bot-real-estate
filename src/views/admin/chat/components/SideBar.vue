@@ -8,6 +8,19 @@ import { Icon } from '@iconify/vue'
 import api from '@/services/axios'
 const audio = markRaw(new Audio('/sounds/Ding.mp3'))
 
+const props = withDefaults(
+  defineProps<{
+    activeRoomId?: string
+    usernameChange?: string
+    takeOverStatus?: string[]
+  }>(),
+  {
+    activeRoomId: '',
+    usernameChange: '',
+    takeOverStatus: () => []
+  }
+)
+
 const chatsBot = ref<Chat[]>([])
 const chatsAktif = ref<Chat[]>([])
 const chatsAssign = ref<Chat[]>([])
@@ -16,7 +29,14 @@ const roomIdsAktif = ref<string[]>([])
 const roomIdsAssign = ref<string[]>([])
 const activeTab = ref<'chat_saya' | 'bot'>('chat_saya')
 const isLoading = ref<boolean>(false)
-const selectedChatId = ref<string>('')
+const selectedChatId = ref<string>(props.activeRoomId)
+
+watch(() => props.activeRoomId, (newId) => {
+  selectedChatId.value = newId
+  if (newId) {
+    checkAndEmitActiveChat()
+  }
+})
 const showContextMenu = ref(false)
 const showTakeOverButton = ref(false)
 const showEndChatButton = ref(false)
@@ -37,17 +57,19 @@ const emit = defineEmits<{
   (e: 'idLawan', id_lawan: string): void
   (e: 'username', username: string): void
   (e: 'phoneNumber', phoneNumber: string): void
+  (e: 'statusBot', status: string): void
   (e: 'changeTab', tab: string): void
   (e: 'allRoomIds', roomIdsBot: string[], roomIdsAktif: string[], roomIdsAssign: string[]): void
   (e: 'lastMessageId', id: string): void
   (e: 'chatTakeOverBatch', payload: TakeOverPayload[]): void
 }>()
 
-const selectChat = (idx: number, group: string, id: string, idLawan: string, username: string, phoneNumber: string) => {
+const selectChat = (idx: number, group: string, id: string, idLawan: string, username: string, phoneNumber: string, statusBot: string) => {
   emit('selectChat', id)
   emit('idLawan', idLawan)
-  emit('username', username)
-  emit('phoneNumber', phoneNumber)
+  emit('username', username || '')
+  emit('phoneNumber', phoneNumber || '')
+  emit('statusBot', statusBot || 'nonaktif')
   emit('changeTab', activeTab.value)
   if (group == 'bot') {
     emit('lastMessageId', chatsBot.value[idx]?.Last_Id_Message_Viewed ?? '')
@@ -72,18 +94,34 @@ const selectChat = (idx: number, group: string, id: string, idLawan: string, use
   updateCountInList(chatsAssign.value)
 }
 
-const props = withDefaults(
-  defineProps<{
-    activeRoomId?: string
-    usernameChange?: string
-    takeOverStatus?: string[]
-  }>(),
-  {
-    activeRoomId: '',
-    usernameChange: '',
-    takeOverStatus: () => []
+const checkAndEmitActiveChat = () => {
+  if (!props.activeRoomId) return
+
+  const allChats = [...chatsBot.value, ...chatsAktif.value, ...chatsAssign.value]
+  const chat = allChats.find(c => String(c.Room_Id) === String(props.activeRoomId))
+  
+  if (chat) {
+    emit('idLawan', chat.Id_Lawan)
+    emit('username', chat.Username_Lawan || chat.Room_Name || '')
+    emit('phoneNumber', chat.Telepon_User_Lawan || '')
+    emit('statusBot', chat.Status_Bot || 'nonaktif')
+    
+    // Sinkronkan selectedChatId lokal
+    selectedChatId.value = chat.Room_Id
+    
+    // Capture first unread message ID for the divider jika baru dibuka
+    if (unreadCounts.value[chat.Room_Id] > 0) {
+      const firstUnreadId = firstUnreadIds.value[chat.Room_Id] || ''
+      emit('lastMessageId', firstUnreadId)
+      
+      // Reset unread counts
+      unreadCounts.value[chat.Room_Id] = 0
+      firstUnreadIds.value[chat.Room_Id] = ''
+      chat.New_Message_Count = 0
+    }
   }
-)
+}
+
 
 export interface Chat {
   Room_Id: string
@@ -151,64 +189,54 @@ const closeSidebar = (): void => {
   }
 }
 
-const fetchData = async (tab: 'bot' | 'chat_saya') => {
+const fetchData = async (tab: 'bot' | 'chat_saya', silent: boolean = false) => {
   try {
-    isLoading.value = true
+    if (!silent) isLoading.value = true
 
     if (tab === 'bot') {
-      chatsBot.value = []
-      roomIdsBot.value = []
       const endpoint = '/api/chat/getRoomsGlobal?status_bot=aktif&orderby=Last_Message_At&orderdir=desc'
 
       const { data } = await api.get(endpoint, {
-        headers: { 'X-Jenis-User': 'Admin' }
+        headers: { 'X-Jenis-User': 'admin' }
       })
+
+      const tempBot: Chat[] = []
+      const tempIdsBot: string[] = []
 
       data.Data.forEach((item: any) => {
-        // Hanya masukkan jika status chat aktif dan memiliki id_lawan
-        if (item.Status !== 'aktif' || !item.Id_Lawan) return
-
-        // Fallback jika Username_Lawan null
         if (!item.Username_Lawan || item.Username_Lawan === '') {
-          item.Username_Lawan = item.User_Ids?.[0] || item.Room_Id
+          item.Username_Lawan = item.Telepon_User_Lawan || item.Id_Lawan || item.Room_Id
         }
-
+        
         if (item.Room_Id) {
-          // Merge local unread counts
-          if (unreadCounts.value[item.Room_Id] !== undefined) {
-            item.New_Message_Count = unreadCounts.value[item.Room_Id]
-          } else {
-            unreadCounts.value[item.Room_Id] = item.New_Message_Count || 0
-          }
-          chatsBot.value.push(item)
-          roomIdsBot.value.push(item.Room_Id)
+          tempBot.push(item)
+          tempIdsBot.push(item.Room_Id)
         }
       })
-    } else {
-      chatsAktif.value = []
-      chatsAssign.value = []
-      roomIdsAktif.value = []
-      roomIdsAssign.value = []
 
+      chatsBot.value = tempBot
+      roomIdsBot.value = tempIdsBot
+    } else {
       const userId = localStorage.getItem('no_id') || ''
       const endpoint = '/api/chat/getRoomsGlobal?status_bot=nonaktif&orderby=Last_Message_At&orderdir=desc'
 
       const { data } = await api.get(endpoint, {
-        headers: { 'X-Jenis-User': 'Admin' }
+        headers: { 'X-Jenis-User': 'admin' }
       })
 
-      data.Data.forEach((item: any) => {
-        // Hanya masukkan jika status chat aktif dan memiliki id_lawan
-        if (item.Status !== 'aktif' || !item.Id_Lawan) return
+      const tempAktif: Chat[] = []
+      const tempAssign: Chat[] = []
+      const tempIdsAktif: string[] = []
+      const tempIdsAssign: string[] = []
 
-        // Fallback jika Username_Lawan null
+      data.Data.forEach((item: any) => {
+        if (item.Status !== 'aktif' || !item.Id_Lawan || !item.Telepon_User_Lawan) return
+
         if (!item.Username_Lawan || item.Username_Lawan === '') {
-          item.Username_Lawan = item.User_Ids?.[0] || item.Room_Id
+          item.Username_Lawan = item.Telepon_User_Lawan || item.Id_Lawan || item.Room_Id
         }
         
-        // Tetap masukkan ke list selama ada minimal Room_Id
         if (item.Room_Id) {
-          // Merge local unread counts
           if (unreadCounts.value[item.Room_Id] !== undefined) {
             item.New_Message_Count = unreadCounts.value[item.Room_Id]
           } else {
@@ -217,20 +245,27 @@ const fetchData = async (tab: 'bot' | 'chat_saya') => {
 
           const userIds = item.User_Ids || []
           
-          // Logika 1: Chat Aktif (ID admin kita ada di dalam list)
           if (userIds.includes(userId)) {
-            chatsAktif.value.push(item)
-            roomIdsAktif.value.push(item.Room_Id)
-          }
-          // Logika 2: Perlu diassign (Status aktif & bot nonaktif, tapi admin kita tidak di dalam list)
-          else {
-            chatsAssign.value.push(item)
-            roomIdsAssign.value.push(item.Room_Id)
+            tempAktif.push(item)
+            tempIdsAktif.push(item.Room_Id)
+          } else {
+            tempAssign.push(item)
+            tempIdsAssign.push(item.Room_Id)
           }
         }
       })
+
+      chatsAktif.value = tempAktif
+      chatsAssign.value = tempAssign
+      roomIdsAktif.value = tempIdsAktif
+      roomIdsAssign.value = tempIdsAssign
     }
     emit('allRoomIds', roomIdsBot.value, roomIdsAktif.value, roomIdsAssign.value)
+    
+    // Auto-emit metadata for active room if it exists in the fetched lists
+    nextTick(() => {
+      checkAndEmitActiveChat()
+    })
   } catch (err: any) {
     console.error('DATA ERROR:', err.response?.data || err.message)
   } finally {
@@ -254,7 +289,7 @@ const changeTab = (tab: 'bot' | 'chat_saya') => {
 }
 
 
-const refreshChatList = (data?: any) => {
+const refreshChatList = (data?: any, silent: boolean = false) => {
   if (data && data.roomId) {
     const formattedDate = data.sentAt ? data.sentAt.substring(0, 19) : ''
     const roomIdStr = String(data.roomId)
@@ -274,16 +309,25 @@ const refreshChatList = (data?: any) => {
       unreadCounts.value[roomIdStr] = (unreadCounts.value[roomIdStr] || 0) + 1
     }
 
-    const updateLocalChat = (chatList: any[]) => {
+    const updateLocalChat = (chatList: Chat[]) => {
       const index = chatList.findIndex((c) => String(c.Room_Id) === roomIdStr)
 
       if (index !== -1) {
-        chatList[index].Last_Message = data.message
-        chatList[index].Last_Message_At = formattedDate
-        chatList[index].New_Message_Count = unreadCounts.value[roomIdStr]
-
-        const updatedChat = chatList.splice(index, 1)[0]
+        // Gunakan object spreading untuk memicu reaktivitas Vue 3 pada object dalam array
+        const updatedChat = {
+          ...chatList[index],
+          Last_Message: data.message,
+          Last_Message_At: formattedDate,
+          New_Message_Count: unreadCounts.value[roomIdStr]
+        }
+        
+        chatList.splice(index, 1)
         chatList.unshift(updatedChat)
+        
+        // Memaksa UI refresh jika diperlukan
+        nextTick(() => {
+          // Trigger any additional UI updates
+        })
       }
     }
 
@@ -296,12 +340,15 @@ const refreshChatList = (data?: any) => {
         console.error('Gagal memutar audio:', error)
       })
     }
-
-    if (!chatsBot.value.some((chat) => String(chat.Room_Id) === roomIdStr) && !roomIdsBot.value.includes(roomIdStr)) {
-      roomIdsBot.value.push(roomIdStr)
-      emit('allRoomIds', roomIdsBot.value, roomIdsAktif.value, roomIdsAssign.value)
-    }
+  } else {
+    fetchData(activeTab.value, silent)
   }
+}
+
+const removeRoomFromList = (roomId: string) => {
+  chatsBot.value = chatsBot.value.filter(c => c.Room_Id !== roomId)
+  chatsAktif.value = chatsAktif.value.filter(c => c.Room_Id !== roomId)
+  chatsAssign.value = chatsAssign.value.filter(c => c.Room_Id !== roomId)
 }
 
 const formatMessage = (msg: string, maxLength: number = 50) => {
@@ -390,7 +437,15 @@ const closeContextMenu = () => {
 const handleViewConversation = () => {
   const chat = selectedChatForMenu.value
   if (chat) {
-    selectChat(selectedChatIdx.value, selectedChatGroup.value, chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan || chat.Room_Name, chat.Telepon_User_Lawan)
+    selectChat(
+      selectedChatIdx.value, 
+      selectedChatGroup.value, 
+      chat.Room_Id, 
+      chat.Id_Lawan, 
+      chat.Username_Lawan || chat.Room_Name, 
+      chat.Telepon_User_Lawan, 
+      chat.Status_Bot || 'nonaktif'
+    )
   }
   closeContextMenu()
 }
@@ -428,6 +483,17 @@ const handleTakeOverConversation = () => {
       }
     ]
     emit('chatTakeOverBatch', dataTakeOverChat)
+    
+    // Langsung buka chatnya agar admin tidak perlu klik dua kali
+    selectChat(
+      selectedChatIdx.value, 
+      selectedChatGroup.value, 
+      chat.Room_Id, 
+      chat.Id_Lawan, 
+      chat.Username_Lawan || chat.Room_Name, 
+      chat.Telepon_User_Lawan, 
+      chat.Status_Bot || 'nonaktif'
+    )
   }
   closeContextMenu()
 }
@@ -581,7 +647,8 @@ onUnmounted(() => {
 
 defineExpose({
   refreshChatList,
-  changeTab
+  changeTab,
+  removeRoomFromList
 })
 </script>
 
@@ -648,8 +715,8 @@ defineExpose({
                     <div
                       v-for="(chat, idx) in filteredChatsBot"
                       :key="chat.Room_Id"
-                      v-memo="[chat.Room_Id, chat.Last_Message_At, chat.New_Message_Count, selectedChatId === chat.Room_Id, selectedBotChats.includes(chat)]"
-                      @click="selectChat(idx, 'bot', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan || chat.Room_Name, chat.Telepon_User_Lawan)"
+                      v-memo="[chat.Room_Id, chat.Last_Message_At, chat.Last_Message, chat.New_Message_Count, selectedChatId === chat.Room_Id, selectedBotChats.includes(chat)]"
+                      @click="selectChat(idx, 'bot', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan || chat.Room_Name, chat.Telepon_User_Lawan, chat.Status_Bot || 'aktif')"
                       @contextmenu.prevent="openContextMenu($event, chat, 'bot', idx)"
                       class="relative flex items-center gap-3 py-3 px-4 bg-white cursor-pointer border-b border-slate-50 hover:bg-slate-50/80 transition-all duration-300 group"
                       :class="{
@@ -724,8 +791,8 @@ defineExpose({
                     <div
                       v-for="(chat, idx) in filteredChatsAssign.slice().reverse()"
                       :key="chat.Room_Id"
-                      v-memo="[chat.Room_Id, chat.Last_Message_At, chat.New_Message_Count, selectedChatId === chat.Room_Id, selectedAssignChats.includes(chat)]"
-                      @click="selectChat(idx, 'chat_saya', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan || chat.Room_Name, chat.Telepon_User_Lawan)"
+                      v-memo="[chat.Room_Id, chat.Last_Message_At, chat.Last_Message, chat.New_Message_Count, selectedChatId === chat.Room_Id, selectedAssignChats.includes(chat)]"
+                      @click="selectChat(idx, 'chat_saya', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan || chat.Room_Name, chat.Telepon_User_Lawan, chat.Status_Bot || 'nonaktif')"
                       @contextmenu.prevent="openContextMenu($event, chat, 'assign', idx)"
                       class="relative flex items-center gap-3 py-3 px-4 bg-white cursor-pointer border-b border-slate-50 hover:bg-slate-50/80 transition-all duration-300 group"
                       :class="{
@@ -761,10 +828,10 @@ defineExpose({
                               @click.stop="toggleBotStatus(chat)"
                               class="flex items-center gap-1.5 px-2 py-1 rounded-lg transition-all border"
                               :class="chat.Status_Bot === 'aktif' ? 'bg-green-50 border-green-100 text-green-600' : 'bg-slate-50 border-slate-100 text-slate-400'"
-                              :title="chat.Status_Bot === 'aktif' ? 'Bot Aktif' : 'Admin Aktif'"
+                              :title="chat.Status_Bot === 'aktif' ? 'Bot Aktif' : 'Menunggu Admin'"
                             >
-                              <Icon :icon="chat.Status_Bot === 'aktif' ? 'lucide:bot' : 'lucide:user-cog'" class="size-3" />
-                              <span class="text-[8px] font-black uppercase tracking-tighter">{{ chat.Status_Bot === 'aktif' ? 'Bot' : 'Admin' }}</span>
+                              <Icon :icon="chat.Status_Bot === 'aktif' ? 'lucide:bot' : 'lucide:clock'" class="size-3" />
+                              <span class="text-[8px] font-black uppercase tracking-tighter">{{ chat.Status_Bot === 'aktif' ? 'Bot' : 'Menunggu' }}</span>
                             </button>
 
                             <div v-if="chat.New_Message_Count! > 0" class="flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[9px] font-black text-white bg-red-500 rounded-full shrink-0 shadow-lg shadow-red-500/30 ring-2 ring-white animate-bounce-subtle">
@@ -794,8 +861,8 @@ defineExpose({
                     <div
                       v-for="(chat, idx) in filteredChatsAktif"
                       :key="chat.Room_Id"
-                      v-memo="[chat.Room_Id, chat.Last_Message_At, chat.New_Message_Count, selectedChatId === chat.Room_Id, selectedActiveChats.includes(chat)]"
-                      @click="selectChat(idx, 'chat_saya', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan || chat.Room_Name, chat.Telepon_User_Lawan)"
+                      v-memo="[chat.Room_Id, chat.Last_Message_At, chat.Last_Message, chat.New_Message_Count, selectedChatId === chat.Room_Id, selectedActiveChats.includes(chat)]"
+                      @click="selectChat(idx, 'chat_saya', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan || chat.Room_Name, chat.Telepon_User_Lawan, chat.Status_Bot || 'nonaktif')"
                       @contextmenu.prevent="openContextMenu($event, chat, 'aktif', idx)"
                       class="relative flex items-center gap-3 py-3 px-4 bg-white cursor-pointer border-b border-slate-50 hover:bg-slate-50/80 transition-all duration-300 group"
                       :class="{

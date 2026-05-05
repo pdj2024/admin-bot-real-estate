@@ -22,13 +22,15 @@ export function useChatProducts(props: any, sendChat: any) {
   const facilitiesFilter = ref<FacilitiesFilter>({ kamarTidur: '', kamarMandi: '', carport: '', lantai: '' })
   const regionFilter = ref<RegionFilter>({ province: '', city: '' })
   const priceRangeFilter = ref<PriceRangeFilter>({ min: '', max: '' })
+  const transactionTypeFilter = ref('Semua')
+  const typeFilter = ref('Semua')
 
   // Use central filter composable
   const filteredProducts = usePropertyFilters(
     products, 
     debouncedSearchKatalog, 
-    undefined, 
-    undefined, 
+    transactionTypeFilter, 
+    typeFilter, 
     facilitiesFilter, 
     regionFilter, 
     priceRangeFilter
@@ -128,6 +130,8 @@ export function useChatProducts(props: any, sendChat: any) {
     facilitiesFilter,
     regionFilter,
     priceRangeFilter,
+    transactionTypeFilter,
+    typeFilter,
     fetchProducts,
     sendProduct
   }

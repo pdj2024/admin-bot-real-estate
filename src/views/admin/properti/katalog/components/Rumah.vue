@@ -15,7 +15,10 @@ const isTransactionOpen = ref(false)
 const activeDropdownId = ref<string | null>(null)
 const filter = ref('')
 const products = ref<Product[]>([])
-const transactionFilter = ref('Semua')
+const transactionFilter = computed({
+  get: () => props.transactionType,
+  set: (val) => emit('update:transactionType', val)
+})
 const selectedItem = ref<Product | null>(null)
 const sorting = ref<SortingState>([])
 const selectedSort = ref('Terbaru')
@@ -40,6 +43,7 @@ const props = defineProps<{
     min: string
     max: string
   }
+  transactionType: string
 }>()
 
 const propertyTypes = ['Rumah', 'Tanah', 'Ruko', 'Apartemen', 'Gudang', 'Villa', 'SOHO', 'Pabrik', 'Perkantoran', 'Hotel', 'Rumah Kos', 'Stand', 'Toko', 'Gedung', 'Condotel', 'Lain-lain']
@@ -278,6 +282,7 @@ const emit = defineEmits<{
   (e: 'update:facilities', value: any): void
   (e: 'update:region', value: any): void
   (e: 'update:priceRange', value: any): void
+  (e: 'update:transactionType', value: string): void
 }>()
 
 const handlePageChange = async (action: 'prev' | 'next' | number) => {
@@ -325,6 +330,7 @@ defineExpose({ openAddModal })
               <button @click="handleTransactionFilter('Semua')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Semua <Icon v-if="transactionFilter === 'Semua'" icon="lucide:check" class="size-3 text-bejo-600" /></button>
               <button @click="handleTransactionFilter('Jual')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Jual Saja <Icon v-if="transactionFilter === 'Jual'" icon="lucide:check" class="size-3 text-bejo-600" /></button>
               <button @click="handleTransactionFilter('Sewa')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Sewa Saja <Icon v-if="transactionFilter === 'Sewa'" icon="lucide:check" class="size-3 text-bejo-600" /></button>
+              <button @click="handleTransactionFilter('Jual & Sewa')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Jual & Sewa <Icon v-if="transactionFilter === 'Jual & Sewa'" icon="lucide:check" class="size-3 text-bejo-600" /></button>
             </div>
           </Transition>
         </div>
@@ -394,19 +400,18 @@ defineExpose({ openAddModal })
     </div>
 
     <!-- Empty State -->
-    <div v-else class="flex flex-col items-center justify-center py-24 bg-white rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/20 text-center px-6">
-      <div class="size-24 bg-slate-50 rounded-full flex items-center justify-center mb-6">
+    <div v-else class="flex flex-col items-center justify-center py-20 bg-slate-50/50 rounded-[3rem] border border-dashed border-slate-200 text-center px-6">
+      <div class="size-24 bg-white rounded-full flex items-center justify-center mb-6 shadow-sm border border-slate-100">
         <Icon icon="lucide:search-x" class="size-12 text-slate-300" />
       </div>
-      <h3 class="text-xl font-black text-slate-900 mb-2">Properti Tidak Ditemukan</h3>
-      <p class="text-slate-500 text-sm max-w-sm mb-8 font-medium">Maaf, kami tidak menemukan properti yang sesuai dengan kriteria filter Anda. Silakan coba hapus beberapa filter atau gunakan kata kunci lain.</p>
+      <h3 class="text-xl font-black text-slate-900 mb-2">Unit Tidak Ditemukan</h3>
+      <p class="text-slate-500 text-sm max-w-sm mb-8 font-medium">Coba sesuaikan filter atau kata kunci pencarian Anda untuk menemukan unit lainnya.</p>
       <button 
         v-if="isAnyFilterActive"
         @click="handleReset"
-        class="px-8 py-3 bg-[#ca6d2c] hover:bg-[#b05d24] text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-[#ca6d2c]/20 active:scale-95 flex items-center gap-2"
+        class="px-10 py-3.5 bg-white border border-slate-200 text-bejo-600 rounded-2xl font-black text-[11px] uppercase tracking-[0.15em] transition-all shadow-sm hover:bg-bejo-50 hover:border-bejo-200 active:scale-95 flex items-center gap-2"
       >
-        <Icon icon="lucide:rotate-ccw" class="size-4" />
-        Hapus Semua Filter
+        Atur Ulang Filter
       </button>
     </div>
 

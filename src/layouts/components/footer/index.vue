@@ -1,5 +1,5 @@
 <template>
-  <footer class="mt-auto footer flex items-center py-5 border-t border-default-200">
+  <footer class="mt-1 footer flex items-center py-5 border-t border-default-200">
     <div class="lg:px-8 px-6 w-full flex md:justify-between justify-center gap-4">
       <div>
         {{ currentYear }}

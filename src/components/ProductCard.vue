@@ -44,9 +44,21 @@
         <div class="absolute top-0 inset-x-0 min-h-24 bg-gradient-to-b from-slate-900/60 to-transparent"></div>
 
         <!-- Status Badges Top Left -->
-        <div class="absolute top-4 left-4 flex flex-col gap-2 z-10">
+        <div class="absolute top-4 left-4 flex flex-col gap-1.5 z-10">
           <span v-if="!isLoading" class="w-fit bg-bejo-600/90 backdrop-blur-md text-white text-[9px] uppercase tracking-[0.2em] font-black px-3 py-1.5 rounded-lg border border-white/10 shadow-lg">
-            Direct Owner
+            {{ product.Status_Properti }}
+          </span>
+          <!-- Transaction Type Badge -->
+          <span v-if="!isLoading && product.Status_Transaksi" class="w-fit bg-slate-900/80 backdrop-blur-md text-white text-[9px] uppercase tracking-[0.2em] font-black px-3 py-1.5 rounded-lg border border-white/10 shadow-lg">
+            <template v-if="product.Status_Transaksi.includes('Jual') && product.Status_Transaksi.includes('Sewa')">
+              Jual & Sewa
+            </template>
+            <template v-else-if="product.Status_Transaksi.includes('Jual')">
+              Dijual
+            </template>
+            <template v-else-if="product.Status_Transaksi.includes('Sewa')">
+              Disewa
+            </template>
           </span>
         </div>
 

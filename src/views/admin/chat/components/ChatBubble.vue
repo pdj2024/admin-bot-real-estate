@@ -173,11 +173,6 @@ watch(
       </span>
     </div>
 
-    <div v-if="chat.Message_Id === props.lastMessageId" class="w-full my-6 flex items-center justify-center relative">
-      <div v-once class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 20px 20px"></div>
-      <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-red-200/50 border-dashed"></div></div>
-      <span class="relative px-4 py-1 bg-red-50 text-red-500 border border-red-100 rounded-full text-[10px] font-bold shadow-sm uppercase tracking-wider"> Pesan Belum Terbaca </span>
-    </div>
     <div v-if="chat.Message && chat.Message.includes('_X7#mQ9!vW2_')" class="w-full my-6 flex justify-center px-4">
       <div class="flex flex-col items-center justify-center text-center px-6 py-2.5 bg-slate-50/80 backdrop-blur-md border border-slate-100 rounded-2xl shadow-sm max-w-[85%] transition-all hover:bg-white hover:shadow-md group">
         <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 opacity-70 group-hover:opacity-100 transition-opacity">

@@ -18,7 +18,6 @@ import { useChatAppointments } from '@/composables/admin/useChatAppointments'
 const PanelEtalase = defineAsyncComponent(() => import('./panels/PanelEtalase.vue'))
 const PanelTukarCS = defineAsyncComponent(() => import('./panels/PanelTukarCS.vue'))
 const PanelAppointment = defineAsyncComponent(() => import('./panels/PanelAppointment.vue'))
-const Filter = defineAsyncComponent(() => import('../../properti/katalog/components/Filter.vue'))
 
 const etalaseRef = ref<HTMLElement | null>(null)
 const tukarCSRef = ref<HTMLElement | null>(null)
@@ -65,6 +64,11 @@ const activeSearchMatchIndex = computed(() => {
   if (currentSearchMatch.value === -1 || searchChatResults.value.length === 0) return -1
   return searchChatResults.value[currentSearchMatch.value].matchIndex
 })
+
+const firstUnreadIndex = computed(() => {
+  if (props.activeTab !== 'chat_saya') return -1
+  return props.chats.findIndex((chat) => chat.Tipe_User === 'customer' && chat.Send_Status === 'delivered')
+})
 const isPreviewOpen = ref(false)
 const previewImages = ref<PreviewImage[]>([])
 const activeIndex = ref(0)
@@ -82,6 +86,7 @@ const props = defineProps<{
   isLoadingChat?: boolean
   isDark?: boolean
   isTakenOver?: boolean
+  statusBot?: string
 }>()
 
 const emit = defineEmits<{
@@ -197,7 +202,7 @@ const prevSearchMatch = () => {
 const { 
   products, isLoadingProducts, searchKatalog, 
   filteredProducts, activeExpandedProductId, fetchProducts, sendProduct,
-  facilitiesFilter, regionFilter, priceRangeFilter
+  facilitiesFilter, regionFilter, priceRangeFilter, transactionTypeFilter, typeFilter
 } = useChatProducts(props, (t: string, u?: string, r?: string, p?: string, id?: string, url?: string, user?: string) => sendChat(t, u, r, p, id, url, user))
 
 const { 
@@ -278,6 +283,39 @@ const scrollToBottom = async () => {
   setTimeout(scroll, 200) // Safety for slow image loads
 }
 
+const markMessagesAsRead = async () => {
+  if (props.activeTab !== 'chat_saya') return
+  
+  const deliveredMessages = props.chats.filter(
+    (chat) => chat.Tipe_User === 'customer' && (chat.Send_Status === 'delivered' || chat.Send_Status === 'send')
+  )
+  
+  if (deliveredMessages.length === 0) return
+
+  try {
+    const promises = deliveredMessages.map((msg) => 
+      api.put(`/api/chat/update-send-status?message_id=${msg.Message_Id}&send_status=read`, {}, {
+        headers: { 'X-Jenis-User': 'Admin' }
+      })
+    )
+    await Promise.all(promises)
+    
+    // Update local state
+    deliveredMessages.forEach(msg => {
+      msg.Send_Status = 'read'
+    })
+  } catch (error) {
+    console.error('Gagal memperbarui status pesan:', error)
+  }
+}
+
+// Auto mark as read when opening chat
+watch(() => props.chats, (newChats) => {
+  if (newChats && newChats.length > 0) {
+    markMessagesAsRead()
+  }
+}, { immediate: true })
+
 const sendChat = async (type: string, url?: string, targetRoomId?: string, targetPhone?: string, idPaket?: string, mediaUrl?: string, usernameCS?: string) => {
   if (!type.includes('system') && !sendChatContent.value.trim()) return
 
@@ -338,6 +376,9 @@ const sendChat = async (type: string, url?: string, targetRoomId?: string, targe
     await api.post('/api/chat/create', { Chat: { Jenis_Pesan: type.includes('system') ? type : 'text', Sent_At: sentAt, Sender_Id: myId, Tipe_User: role, Message: type.includes('system_image') ? url : messageText, Id_Paket: type == 'system_image_product' ? idPaket : null, No_Pesanan: null, No_Penawaran: type == 'system_image_appointment' ? idPaket : null, Send_Status: 'send' }, Room_Id: activeRoomId, User_Ids: currentUserIds }, { headers: { 'X-Jenis-User': 'admin' } })
     if (isCurrentActiveRoom) emit('updateChatStatus', { index: tempIndex, status: 'send' })
     if ((type === 'system_keluar' || type === 'system_masuk_tukar') && isCurrentActiveRoom) emit('clearRoom')
+    
+    // Mark previous messages as read after replying
+    if (!type.includes('system')) await markMessagesAsRead()
   } catch (err: any) {
     if (isCurrentActiveRoom) emit('updateChatStatus', { index: tempIndex, status: 'failed' })
 
@@ -442,6 +483,7 @@ const sendImages = async () => {
       await api.post('/api/waha/send-image', item, config)
       sendChat('system_image', item.Caption + '_' + item.FileUrl)
     }
+    await markMessagesAsRead()
     closePreview()
   } finally {
     isSendingImage.value = false
@@ -540,7 +582,7 @@ watch(
       emit('takeOverStatus', takeOverSuccess)
     }
   },
-  { deep: true }
+  { deep: true, immediate: true }
 )
 
 watch(sendChatContent, () => nextTick(() => adjustInputHeight()))
@@ -689,7 +731,27 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
           </div>
 
           <div v-else class="relative z-10 flex flex-col gap-4 px-4 py-4 sm:px-6 sm:py-6">
-            <ChatBubble v-for="(chat, i) in chats" v-memo="[chat.Message_Id || chat.Sent_At, chat.Send_Status === 'pending', i === activeSearchChatIndex]" :id="'chat-message-' + i" :key="i" :idx="i" :chat="chat" :chats="chats" :lastMessageId="props.lastMessageId" :highlight="searchChatQuery" :isActiveMatch="i === activeSearchChatIndex" :activeMatchIndex="activeSearchMatchIndex" @imageLoaded="scrollToBottom" />
+            <template v-for="(chat, i) in chats" :key="chat.Message_Id || i">
+              <!-- Unread Messages Divider -->
+              <div v-if="i === firstUnreadIndex" class="flex items-center justify-center my-6 relative py-2 px-10">
+                <div class="absolute inset-x-0 h-px bg-bejo-200/50"></div>
+                <div class="relative bg-bejo-50 text-bejo-600 text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full border border-bejo-100 shadow-sm">
+                  Pesan Belum Terbaca
+                </div>
+              </div>
+
+              <ChatBubble 
+                :id="'chat-message-' + i" 
+                :idx="i" 
+                :chat="chat" 
+                :chats="chats" 
+                :lastMessageId="props.lastMessageId" 
+                :highlight="searchChatQuery" 
+                :isActiveMatch="i === activeSearchChatIndex" 
+                :activeMatchIndex="activeSearchMatchIndex" 
+                @imageLoaded="scrollToBottom" 
+              />
+            </template>
           </div>
         </simplebar>
 
@@ -703,7 +765,14 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
       </div>
 
       <div v-if="!isLoadingChat" class="p-1 md:p-3.5 bg-white border-t border-slate-50" :class="{ hidden: isPreviewMode }">
-        <div v-if="activeTab != 'bot' && props.isTakenOver" class="flex gap-1 md:gap-4 items-center bg-slate-50 p-1.5 md:p-2.5 pl-2 md:pl-4 rounded-xl md:rounded-[1.5rem] border border-transparent focus-within:border-bejo-500/20 focus-within:bg-white focus-within:ring-8 focus-within:ring-bejo-500/5 focus-within:shadow-xl focus-within:shadow-bejo-500/5 transition-all duration-300">
+        <div v-if="!props.isTakenOver" class="w-full">
+          <button @click="takeOverChat(false)" class="w-full py-4 bg-bejo-500 hover:bg-bejo-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl flex justify-center items-center gap-3 shadow-xl shadow-bejo-500/20 active:scale-[0.98] transition-all px-8 border-2 border-white/20">
+            <Icon icon="lucide:message-square-plus" class="size-5" />
+            <span>Ambil Alih Percakapan</span>
+          </button>
+        </div>
+
+        <div v-else class="flex gap-1 md:gap-4 items-center bg-slate-50 p-1.5 md:p-2.5 pl-2 md:pl-4 rounded-xl md:rounded-[1.5rem] border border-transparent focus-within:border-bejo-500/20 focus-within:bg-white focus-within:ring-8 focus-within:ring-bejo-500/5 focus-within:shadow-xl focus-within:shadow-bejo-500/5 transition-all duration-300">
           <div class="relative" ref="dropdownRef">
             <button @click.stop="openMenu = !openMenu" class="size-9 md:size-11 rounded-xl md:rounded-2xl bg-white border border-slate-100 text-slate-400 hover:text-bejo-600 hover:border-bejo-100 hover:shadow-lg hover:shadow-bejo-500/10 transition-all duration-300 flex items-center justify-center">
               <Icon icon="lucide:plus" class="size-5 md:size-6 transition-transform duration-300" :class="{ 'rotate-45': openMenu }"></Icon>
@@ -762,13 +831,6 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
             </button>
           </div>
         </div>
-
-        <div v-else class="w-full">
-          <button @click="takeOverChat(false)" class="w-full py-4 bg-bejo-500 hover:bg-bejo-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl flex justify-center items-center gap-3 shadow-xl shadow-bejo-500/20 active:scale-[0.98] transition-all px-8 border-2 border-white/20">
-            <Icon icon="lucide:message-square-plus" class="size-5" />
-            <span>Ambil Alih Percakapan</span>
-          </button>
-        </div>
       </div>
     </div>
     <div v-else class="relative w-full h-full min-h-[500px] flex flex-col items-center justify-center bg-slate-50/50 overflow-hidden">
@@ -798,6 +860,12 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
         v-model:searchKatalog="searchKatalog" 
         v-model:openFilter="openFilter" 
         v-model:activeExpandedProductId="activeExpandedProductId" 
+        v-model:facilitiesFilter="facilitiesFilter"
+        v-model:regionFilter="regionFilter"
+        v-model:priceRangeFilter="priceRangeFilter"
+        v-model:transactionTypeFilter="transactionTypeFilter"
+        v-model:typeFilter="typeFilter"
+        :provinces="PROVINCES"
         :isLoadingProducts="isLoadingProducts" 
         :filteredProducts="filteredProducts" 
         @close="closeEtalase" 
@@ -824,20 +892,6 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
         :filteredAdmins="filteredAdmins" 
         @close="openTukarCS = false" 
         @transfer="handleTransferChat($event, () => { openTukarCS = false })" 
-      />
-
-      <Filter 
-        v-if="openFilter" 
-        v-model:facilities="facilitiesFilter"
-        v-model:region="regionFilter"
-        v-model:priceRange="priceRangeFilter"
-        v-model:searchQuery="searchKatalog"
-        v-model:openFilter="openFilter"
-        :provinces="PROVINCES"
-        :hideSearch="true"
-        @close="openFilter = false" 
-        ref="filterRef" 
-        class="z-[250] bg-white sm:shadow-none fixed left-1/2 bottom-20 -translate-x-1/2 w-[95vw] sm:w-[850px] sm:fixed sm:right-5 sm:bottom-24 sm:left-auto sm:translate-x-0 rounded-[2rem] shadow-2xl p-6 border border-slate-50 max-h-[85vh] overflow-y-auto custom-scrollbar" 
       />
     </Teleport>
   </div>
