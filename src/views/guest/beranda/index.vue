@@ -2,8 +2,8 @@
   <GuestLayout main-class="max-w-none">
     <!-- Hero Section Beranda -->
     <section class="relative pt-10 pb-10 bg-white">
-      <div class="w-full !px-4 sm:!px-8 lg:!px-12">
-        <div class="relative overflow-hidden rounded-[3.5rem] bg-white border border-bejo-100 shadow-premium p-12 md:p-24 lg:p-32 flex flex-col justify-center items-center min-h-[70vh]">
+      <div class="w-full !px-4 sm:!px-8 lg:!px-10">
+        <div class="relative overflow-hidden rounded-[3.5rem] bg-white border border-bejo-100 shadow-premium p-8 md:p-24 lg:p-32 flex flex-col justify-center items-center min-h-[80vh]">
           <!-- Mesh Gradient Background -->
           <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <div class="absolute -top-[20%] -right-[10%] size-[800px] bg-bejo-100/50 rounded-full blur-[120px] animate-pulse"></div>
@@ -16,7 +16,7 @@
 
           <div class="relative z-10 w-full mx-auto text-center space-y-12">
             <div class="space-y-6">
-              <h1 class="text-6xl md:text-8xl lg:text-[10rem] font-black text-slate-900 tracking-tighter leading-[0.85] max-w-6xl mx-auto drop-shadow-sm">
+              <h1 class="text-5xl md:text-8xl lg:text-[9rem] font-black text-slate-900 tracking-tighter leading-[0.85] max-w-7xl mx-auto drop-shadow-sm">
                 Wujudkan <br class="hidden sm:block" />
                 <span class="relative inline-block py-2">
                   <span class="relative z-10 text-transparent bg-clip-text bg-gradient-to-br from-bejo-500 via-bejo-600 to-bejo-900 animate-gradient-x">Rumah Impian</span>
@@ -25,21 +25,44 @@
                 Anda.
               </h1>
 
-              <p class="text-lg md:text-2xl text-slate-500 font-medium max-w-3xl mx-auto leading-relaxed opacity-80">
-                Eksplorasi ribuan properti premium di seluruh Indonesia. Dari hunian minimalis hingga apartemen mewah, <br />
-                semua ada di <span class="text-slate-900 font-black border-b-2 border-bejo-200">{{ settingsStore.business.appName }}</span
-                >.
+              <p class="text-base md:text-2xl text-slate-500 font-medium max-w-3xl mx-auto leading-relaxed opacity-80">
+                Koleksi properti premium milik <span class="text-slate-900 font-black border-b-2 border-bejo-200">{{ settingsStore.business.appName }}</span>. <br />
+                Aman, terverifikasi, dan siap huni langsung dari tangan pertama.
               </p>
             </div>
 
-            <div class="flex flex-col sm:flex-row items-center justify-center gap-6 pt-6">
-              <RouterLink to="/katalog" class="w-full sm:w-auto px-12 py-5 bg-bejo-600 hover:bg-bejo-700 text-white rounded-[2rem] font-black text-base lg:text-lg transition-all hover:-translate-y-2 shadow-2xl shadow-bejo-600/20 flex justify-center items-center gap-4 group">
-                Eksplorasi Katalog
-                <Icon icon="lucide:arrow-right" class="size-5 group-hover:translate-x-1 transition-transform" />
-              </RouterLink>
-              <RouterLink to="/simulasi-kpr" class="w-full sm:w-auto px-12 py-5 bg-white hover:bg-bejo-50 text-slate-800 border-2 border-bejo-100 rounded-[2rem] font-black text-base lg:text-lg transition-all hover:-translate-y-2 shadow-xl shadow-bejo-200/40 flex justify-center items-center gap-4">
-                <Icon icon="lucide:calculator" class="size-5 text-bejo-600" />
-                Simulasi KPR
+            <!-- Global Search Bar -->
+            <div class="max-w-5xl mx-auto w-full relative z-20 px-4 md:px-0">
+              <div class="bg-white/80 backdrop-blur-2xl p-2 md:p-4 rounded-[2.5rem] border border-bejo-100 shadow-2xl shadow-bejo-600/10 flex flex-col md:flex-row items-center gap-4">
+                <div class="flex-1 flex items-center gap-4 px-6 w-full">
+                  <Icon icon="lucide:search" class="size-6 text-bejo-600 shrink-0" />
+                  <input 
+                    type="text" 
+                    v-model="heroSearch" 
+                    @keyup.enter="handleHeroSearch"
+                    placeholder="Cari lokasi atau nama properti..." 
+                    class="w-full bg-transparent border-none focus:ring-0 text-slate-800 font-bold placeholder:text-slate-400 text-lg md:text-xl py-3"
+                  />
+                </div>
+                <button @click="handleHeroSearch" class="w-full md:w-auto px-10 py-4 md:py-5 bg-bejo-600 hover:bg-bejo-700 text-white rounded-[1.8rem] font-black text-sm uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-xl shadow-bejo-600/20 flex items-center justify-center gap-3">
+                  <Icon icon="lucide:search" class="size-5" />
+                  Cari Unit
+                </button>
+              </div>
+              <!-- Trending Tags -->
+              <div class="flex flex-wrap items-center justify-center gap-3 mt-6">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Populer:</span>
+                <button @click="quickSearch('Rumah')" class="px-4 py-1.5 bg-bejo-50 hover:bg-bejo-600 hover:text-white text-bejo-700 text-[10px] font-black rounded-full border border-bejo-100 transition-all uppercase tracking-wider">Rumah</button>
+                <button @click="quickSearch('Apartemen')" class="px-4 py-1.5 bg-bejo-50 hover:bg-bejo-600 hover:text-white text-bejo-700 text-[10px] font-black rounded-full border border-bejo-100 transition-all uppercase tracking-wider">Apartemen</button>
+                <button @click="quickSearch('Modern')" class="px-4 py-1.5 bg-bejo-50 hover:bg-bejo-600 hover:text-white text-bejo-700 text-[10px] font-black rounded-full border border-bejo-100 transition-all uppercase tracking-wider">Modern</button>
+                <button @click="quickSearch('Siap Huni')" class="px-4 py-1.5 bg-bejo-50 hover:bg-bejo-600 hover:text-white text-bejo-700 text-[10px] font-black rounded-full border border-bejo-100 transition-all uppercase tracking-wider">Siap Huni</button>
+              </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-6 pt-6 hidden md:flex">
+              <RouterLink to="/katalog" class="flex items-center gap-3 text-slate-400 hover:text-bejo-600 font-black text-sm uppercase tracking-[0.2em] transition-all group">
+                Atau lihat koleksi lengkap
+                <Icon icon="lucide:arrow-right" class="size-4 group-hover:translate-x-1 transition-transform" />
               </RouterLink>
             </div>
           </div>
@@ -55,21 +78,21 @@
             <Icon icon="lucide:building-2" class="size-6 mx-auto" />
           </div>
           <h4 class="text-6xl lg:text-7xl font-black text-slate-900 mb-2 tracking-tighter">1,2k<span class="text-bejo-600">.</span></h4>
-          <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Properti Terjamin</p>
+          <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Unit Eksklusif</p>
         </div>
         <div class="text-center px-6 group hover-float">
           <div class="text-bejo-600 mb-2 opacity-0 group-hover:opacity-100 transition-all duration-700 translate-y-3 group-hover:translate-y-0 scale-150">
-            <Icon icon="lucide:users-2" class="size-6 mx-auto" />
+            <Icon icon="lucide:shield-check" class="size-6 mx-auto" />
           </div>
-          <h4 class="text-6xl lg:text-7xl font-black text-slate-900 mb-2 tracking-tighter">480<span class="text-bejo-600">.</span></h4>
-          <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Klien Puas</p>
+          <h4 class="text-6xl lg:text-7xl font-black text-slate-900 mb-2 tracking-tighter">100<span class="text-bejo-600">%</span></h4>
+          <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Pemilik Langsung</p>
         </div>
         <div class="text-center px-6 group hover-float">
           <div class="text-bejo-600 mb-2 opacity-0 group-hover:opacity-100 transition-all duration-700 translate-y-3 group-hover:translate-y-0 scale-150">
             <Icon icon="lucide:map-pin" class="size-6 mx-auto" />
           </div>
           <h4 class="text-6xl lg:text-7xl font-black text-slate-900 mb-2 tracking-tighter">15<span class="text-bejo-600">.</span></h4>
-          <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Kota Utama</p>
+          <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Area Strategis</p>
         </div>
       </div>
     </div>
@@ -84,9 +107,9 @@
           <div class="max-w-2xl space-y-4">
             <span class="text-bejo-600 font-black uppercase tracking-[0.3em] text-[10px] flex items-center gap-2">
               <div class="w-8 h-[2px] bg-bejo-500"></div>
-              Unit Properti Terbaru
+              Koleksi Terbaru {{ settingsStore.business.appName }}
             </span>
-            <h2 class="text-5xl md:text-6xl font-black text-slate-900 tracking-tight leading-[1.1]">Temukan Hunian <br />Impian <span class="text-bejo-500">Terbaru.</span></h2>
+            <h2 class="text-5xl md:text-6xl font-black text-slate-900 tracking-tight leading-[1.1]">Unit Pilihan <br />Siap <span class="text-bejo-500">Huni.</span></h2>
           </div>
 
           <RouterLink to="/katalog" class="group flex items-center gap-3 px-8 py-4 bg-bejo-50 hover:bg-bejo-600 hover:text-white rounded-2xl font-black text-xs uppercase tracking-widest text-bejo-700 transition-all shadow-sm shrink-0 active:scale-95 border border-bejo-100">
@@ -232,7 +255,7 @@
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100">
                     <Icon icon="lucide:map" class="size-3.5 text-slate-400" />
-                    <span class="text-[10px] font-black text-slate-700 uppercase tracking-widest">{{ (randomProduct.Area?.[0]?.split(',').pop() || 'Indonesia').trim() }}</span>
+                    <span class="text-[10px] font-black text-slate-700 uppercase tracking-widest">{{ randomProduct.Nama_Kota || 'Lokasi Terjamin' }}</span>
                   </div>
                   <RouterLink :to="`/detail/${randomProduct.Slug}`" class="text-[10px] font-black text-bejo-600 uppercase tracking-widest hover:text-bejo-800 flex items-center gap-2 group/link">
                     Detail
@@ -296,6 +319,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import GuestLayout from '@/layouts/guest.vue'
 import api from '@/services/axios'
@@ -355,9 +379,30 @@ interface ProductPreview {
 }
 
 const settingsStore = useSettings()
+const router = useRouter()
 const isLoading = ref(true)
 const displayedProducts = ref<ProductPreview[]>([])
 const allProducts = ref<ProductPreview[]>([])
+
+const heroSearch = ref('')
+
+const handleHeroSearch = () => {
+  if (heroSearch.value.trim()) {
+    router.push({
+      path: '/katalog',
+      query: { search: heroSearch.value.trim() }
+    })
+  } else {
+    router.push('/katalog')
+  }
+}
+
+const quickSearch = (tag: string) => {
+  router.push({
+    path: '/katalog',
+    query: { search: tag }
+  })
+}
 
 // Logic for random product in Why Us section
 const randomProduct = computed(() => {

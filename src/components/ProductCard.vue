@@ -1,7 +1,8 @@
 <template>
   <div v-if="isLoading || isAdmin || (product.Status_Display == 'Aktif' && product.Status_Properti == 'Tersedia')" class="group flex flex-col h-full rounded-[2.5rem] border transition-all duration-700 relative bg-white border-slate-100 shadow-premium" :class="!isLoading ? (showSelectButton ? '' : 'hover:-translate-y-3 hover:shadow-bejo-premium hover:border-bejo-200 cursor-pointer') : ''" @click="showSelectButton ? null : handleClick">
     <!-- Card Image Header -->
-    <div class="relative h-60 overflow-hidden rounded-t-[2.5rem]" :class="isLoading ? 'bg-slate-200 animate-pulse' : 'bg-white p-3 pb-0'">
+    <div class="relative h-60 overflow-hidden rounded-t-[2.5rem]" :class="isLoading ? 'bg-slate-100 animate-pulse' : 'bg-white p-3 pb-0'">
+      <div v-if="isLoading" class="absolute inset-0 bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer"></div>
       <div v-if="!isLoading" class="w-full h-full rounded-[2rem] overflow-hidden relative">
         <!-- Overlay for Non-Active -->
         <div v-if="product.Status_Display != 'Aktif' || product.Status_Properti != 'Tersedia'" class="absolute inset-0 bg-black/40 backdrop-grayscale-[60%] z-[20] pointer-events-none transition-all duration-500"></div>
@@ -77,7 +78,7 @@
             <span v-if="!isLoading && !product.Hide_alamat">{{ product.Alamat ? product.Alamat.split(', Lat:')[0] : '' }}</span>
             <span v-else-if="!isLoading && product.Hide_alamat" class="italic opacity-60">Alamat disembunyikan</span>
             <span v-if="!isLoading && product.Nama_Kota && !product.Hide_alamat" class="block mt-0.5 font-black text-slate-400 uppercase tracking-widest text-[9px]">Area: {{ product.Nama_Area }}</span>
-            <span v-if="isLoading">Memuat Detail Lokasi...</span>
+            <div v-if="isLoading" class="h-3 w-32 bg-slate-100 rounded animate-pulse"></div>
           </p>
         </div>
       </div>
@@ -159,21 +160,27 @@
       <!-- Pricing Info -->
       <div class="mt-auto pt-4 border-t border-slate-100 flex flex-col gap-3 relative">
         <!-- Rental Price -->
-        <div v-if="isLoading || product.Harga_Sewa1 > 0" class="flex flex-col">
-          <span class="text-[10px] font-black uppercase tracking-widest mb-0.5" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-16' : 'text-slate-400'">
-            Harga Sewa <span v-if="!isLoading && (product.Minimal_Sewa || product.minimal_sewa)"> (min. {{ product.Minimal_Sewa || product.minimal_sewa }} {{ product.Satuan_Minimal_Sewa }})</span>
-          </span>
-          <div class="flex flex-wrap items-baseline gap-2">
-            <span class="text-2xl font-black tracking-tight" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-32 h-6 mt-1' : 'text-bejo-600'">
-              {{ isLoading ? '' : formatCurrency(product.Harga_Sewa2 > 0 ? product.Harga_Sewa2 : product.Harga_Sewa1) }}
-            </span>
-            <div v-if="!isLoading && product.Harga_Sewa2 > 0" class="flex items-center gap-2">
-              <span class="relative text-xs text-slate-400 font-bold px-1 line-through decoration-slate-300">
-                {{ formatCurrency(product.Harga_Sewa1) }}
-              </span>
-            </div>
-            <span v-if="!isLoading" class="text-[10px] text-slate-400 font-black ml-1 uppercase tracking-widest">/ {{ product.Satuan_Minimal_Sewa || 'thn' }}</span>
+        <div v-if="isLoading || (product.Harga_Sewa1 > 0)" class="flex flex-col">
+          <div v-if="isLoading" class="space-y-2">
+            <div class="h-2.5 w-16 bg-slate-100 rounded animate-pulse"></div>
+            <div class="h-6 w-32 bg-slate-100 rounded-lg animate-pulse"></div>
           </div>
+          <template v-else>
+            <span class="text-[10px] font-black uppercase tracking-widest mb-0.5 text-slate-400">
+              Harga Sewa <span v-if="product.Minimal_Sewa || product.minimal_sewa"> (min. {{ product.Minimal_Sewa || product.minimal_sewa }} {{ product.Satuan_Minimal_Sewa }})</span>
+            </span>
+            <div class="flex flex-wrap items-baseline gap-2">
+              <span class="text-2xl font-black tracking-tight text-bejo-600">
+                {{ formatCurrency(product.Harga_Sewa2 > 0 ? product.Harga_Sewa2 : product.Harga_Sewa1) }}
+              </span>
+              <div v-if="product.Harga_Sewa2 > 0" class="flex items-center gap-2">
+                <span class="relative text-xs text-slate-400 font-bold px-1 line-through decoration-slate-300">
+                  {{ formatCurrency(product.Harga_Sewa1) }}
+                </span>
+              </div>
+              <span class="text-[10px] text-slate-400 font-black ml-1 uppercase tracking-widest">/ {{ product.Satuan_Minimal_Sewa || 'thn' }}</span>
+            </div>
+          </template>
         </div>
 
         <!-- Sale Price -->

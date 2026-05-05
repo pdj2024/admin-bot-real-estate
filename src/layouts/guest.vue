@@ -48,7 +48,7 @@
     <div class="flex flex-col min-h-screen w-full flex-grow">
       <header v-if="!hideHeader" class="bg-white/80 backdrop-blur-xl border-b border-white/50 sticky top-0 z-[80] shadow-sm shadow-slate-200/50 transition-all duration-300">
         <div class="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-bejo-200 to-transparent opacity-50"></div>
-        <div class="w-full !px-4 sm:!px-12 lg:!px-20 h-20 flex items-center justify-between mx-auto">
+        <div class="w-full !px-4 sm:!px-8 lg:!px-10 h-20 flex items-center justify-between mx-auto">
           
           <div class="flex items-center gap-3 sm:gap-10">
             <RouterLink to="/" class="shrink-0 group flex items-center gap-2">
@@ -138,7 +138,7 @@
 
 
 
-      <main :class="['flex-grow w-full !px-4 sm:!px-12 lg:!px-20 py-10 md:py-16', mainClass]">
+      <main :class="['flex-grow w-full !px-4 sm:!px-8 lg:!px-10 py-10 md:py-16', mainClass]">
         <slot />
       </main>
 
@@ -147,7 +147,7 @@
         <div class="absolute -top-40 -left-40 size-80 bg-bejo-600/10 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
         <div class="absolute top-0 right-0 w-1/4 h-full bg-gradient-to-l from-white/5 to-transparent pointer-events-none"></div>
 
-        <div class="w-full !px-4 sm:!px-12 lg:!px-20">
+        <div class="w-full !px-4 sm:!px-8 lg:!px-10">
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-16 mb-16">
             
             <!-- Company Info -->

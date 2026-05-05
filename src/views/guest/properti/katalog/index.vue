@@ -61,6 +61,7 @@
             v-model:facilities="facilities"
             v-model:region="region"
             v-model:priceRange="priceRange"
+            v-model:transactionType="transactionType"
             :provinces="provinces"
             :isAdmin="isAdmin"
             class="lg:sticky lg:top-24"
@@ -74,6 +75,7 @@
             :facilities="facilities"
             :region="region"
             :priceRange="priceRange"
+            v-model:transactionType="transactionType"
             :isAdmin="isAdmin"
           />
         </section>
@@ -116,9 +118,9 @@ const region = ref({
   provinceId: ''
 })
 const priceRange = ref({
-  min: '',
   max: ''
 })
+const transactionType = ref('Semua Label')
 
 const provinces = ref<any[]>(PROVINCES)
 
@@ -158,6 +160,13 @@ onMounted(() => {
 
   if (queryCity) {
     region.value.city = queryCity
+    hasFilter = true
+  }
+
+  // Handle global search query
+  const querySearch = route.query.search as string
+  if (querySearch) {
+    searchQuery.value = querySearch
     hasFilter = true
   }
 

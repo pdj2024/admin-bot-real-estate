@@ -60,15 +60,15 @@ onMounted(() => {
       <div class="absolute -right-20 -top-20 size-[500px] bg-gradient-to-br from-bejo-100/40 via-bejo-200/20 to-transparent rounded-full blur-3xl opacity-60 pointer-events-none"></div>
       <div class="absolute -left-20 top-1/2 size-96 bg-gradient-to-tr from-bejo-50/40 to-transparent rounded-full blur-3xl opacity-30 pointer-events-none"></div>
 
-      <div class="container mx-auto px-4 py-16 md:py-24 relative z-10 max-w-5xl">
+      <div class="w-full pt-2 pb-16 relative z-10">
         <!-- Hero Banner Section -->
-        <div class="relative overflow-hidden rounded-[3rem] bg-white border border-bejo-100 shadow-xl shadow-bejo-600/5 mb-16 mt-10">
+        <div class="relative overflow-hidden rounded-[3rem] bg-white border border-bejo-100 shadow-xl shadow-bejo-600/5 mb-16">
           <!-- Dekorasi Background -->
           <div class="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-bejo-50 via-bejo-50/50 to-transparent"></div>
           <div class="absolute -right-20 -top-20 size-96 bg-gradient-to-br from-bejo-100 via-bejo-200 to-bejo-400 rounded-full blur-3xl opacity-40"></div>
           <div class="absolute right-10 -bottom-20 size-64 bg-gradient-to-tr from-bejo-300 via-bejo-500 to-bejo-700 rounded-full blur-3xl opacity-10"></div>
           
-          <div class="relative z-10 flex flex-col items-center text-center px-6 py-16 md:py-24 max-w-4xl mx-auto">
+          <div class="relative z-10 flex flex-col items-center text-center px-6 py-12 md:py-16 max-w-7xl mx-auto">
             <h1 class="text-4xl md:text-6xl font-black text-slate-900 mb-8 tracking-tight leading-[1.1]">
               Ada yang bisa kami <br />
               <span class="text-transparent bg-clip-text bg-gradient-to-r from-bejo-500 via-bejo-700 to-bejo-900">Bantu Jawaban?</span>
@@ -167,43 +167,6 @@ onMounted(() => {
           </div>
         </div>
 
-        <!-- Support CTA -->
-        <div class="mt-24">
-          <div class="relative overflow-hidden rounded-[3.5rem] bg-white border border-bejo-100 shadow-xl shadow-bejo-600/5 p-8 md:p-16 text-center group">
-            <!-- Mesh Gradient Background -->
-            <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-              <div class="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-bejo-50 via-bejo-50/50 to-transparent"></div>
-              <div class="absolute -right-20 -top-20 size-96 bg-gradient-to-br from-bejo-100 via-bejo-200 to-bejo-400 rounded-full blur-3xl opacity-40"></div>
-              <div class="absolute right-10 -bottom-20 size-64 bg-gradient-to-tr from-bejo-300 via-bejo-500 to-bejo-700 rounded-full blur-3xl opacity-10"></div>
-            </div>
-            
-            <div class="relative z-10 flex flex-col items-center">
-              <div class="size-20 bg-bejo-50 rounded-[2rem] border border-bejo-100 flex items-center justify-center text-bejo-600 mb-8 shadow-sm group-hover:bg-bejo-600 group-hover:text-white transition-all duration-500">
-                <Icon icon="lucide:message-circle" class="size-10" />
-              </div>
-              
-              <h2 class="text-3xl md:text-5xl font-black text-slate-900 mb-6 tracking-tight">
-                Masih butuh <span class="text-transparent bg-clip-text bg-gradient-to-r from-bejo-500 to-bejo-700">jawaban khusus?</span>
-              </h2>
-              
-              <p class="text-slate-500 text-lg font-medium max-w-2xl mb-12 leading-relaxed">
-                Jangan ragu untuk berkonsultasi langsung dengan tim ahli kami. <br class="hidden md:block" />
-                Kami siap membantu Anda menemukan hunian impian 24/7.
-              </p>
-              
-              <div class="flex flex-col sm:flex-row items-center gap-4 w-full justify-center">
-                <a :href="'https://wa.me/' + (settingsStore.business.whatsapp || '62895353837000')" target="_blank" class="w-full sm:w-auto px-10 py-5 bg-bejo-600 hover:bg-bejo-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-bejo-600/20 flex items-center justify-center gap-3 active:scale-95">
-                  <Icon icon="ic:baseline-whatsapp" class="size-5" />
-                  Hubungi via WhatsApp
-                </a>
-                <RouterLink to="/kontak" class="w-full sm:w-auto px-10 py-5 bg-white hover:bg-bejo-50 text-slate-700 border border-slate-200 rounded-2xl font-black text-xs uppercase tracking-widest transition-all hover:shadow-lg flex items-center justify-center gap-3">
-                  <Icon icon="lucide:phone" class="size-5 text-bejo-600" />
-                  Lihat Kontak Lengkap
-                </RouterLink>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   </GuestLayout>

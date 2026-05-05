@@ -10,12 +10,12 @@
         <div class="absolute -right-20 -top-20 size-96 bg-gradient-to-br from-bejo-100 via-bejo-200 to-bejo-400 rounded-full blur-3xl opacity-40"></div>
         <div class="absolute right-10 -bottom-20 size-64 bg-gradient-to-tr from-bejo-300 via-bejo-500 to-bejo-700 rounded-full blur-3xl opacity-10"></div>
         
-        <div class="relative z-10 text-center px-6 w-full max-w-4xl mx-auto">
+        <div class="relative z-10 text-center px-6 w-full max-w-6xl mx-auto">
           <h1 class="text-4xl sm:text-5xl lg:text-7xl font-black text-slate-900 tracking-tight mb-6">
             Simulasikan <br />
             <span class="text-transparent bg-clip-text bg-gradient-to-r from-bejo-500 via-bejo-700 to-bejo-900">Pinjamanmu!</span>
           </h1>
-          <p class="text-slate-500 text-lg sm:text-xl font-medium leading-relaxed max-w-2xl mx-auto">
+          <p class="text-slate-500 text-lg sm:text-xl font-medium leading-relaxed max-w-3xl mx-auto">
             Hitung estimasi angsuran rumah impian Anda dengan cepat dan akurat menggunakan fasilitas kalkulator simulasi KPR kami.
           </p>
         </div>
@@ -29,7 +29,7 @@
           <div class="absolute -left-20 bottom-0 size-96 bg-gradient-to-tr from-bejo-50 via-bejo-100 to-bejo-200 rounded-full blur-3xl opacity-30"></div>
         </div>
         
-        <div class="max-w-6xl mx-auto px-6 py-10 sm:px-12 sm:py-16 grid grid-cols-1 xl:grid-cols-12 gap-10 lg:gap-16 relative z-10">
+        <div class="w-full px-6 py-10 sm:px-12 sm:py-16 grid grid-cols-1 xl:grid-cols-12 gap-10 lg:gap-16 relative z-10">
         
         <!-- Input Form Section -->
         <div class="xl:col-span-7 space-y-6 relative z-10">

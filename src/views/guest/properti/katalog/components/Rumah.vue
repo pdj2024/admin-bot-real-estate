@@ -12,7 +12,7 @@
           <button @click="isTransaksiOpen = !isTransaksiOpen" class="w-full flex items-center justify-between gap-3 px-4 py-2 border border-bejo-100 rounded-xl bg-white text-sm font-bold hover:bg-bejo-50 hover:border-bejo-200 transition-all text-slate-700">
             <div class="flex items-center gap-2">
               <Icon icon="lucide:tag" class="size-4 text-bejo-600" />
-              <span>{{ selectedTransaksi }}</span>
+              <span>{{ transactionType }}</span>
             </div>
             <Icon icon="lucide:chevron-down" class="size-4 opacity-50" />
           </button>
@@ -157,13 +157,13 @@ const products = ref<Product[]>([])
 const sorting = ref<SortingState>([])
 const selectedSort = ref('Terbaru')
 const isTransaksiOpen = ref(false)
-const selectedTransaksi = ref('Semua Label')
-const selectedType = ref('Semua Tipe')
 const isTypeOpen = ref(false)
+const selectedType = ref('Semua Tipe')
 
 const props = defineProps<{
   isAdmin: boolean
   searchQuery: string
+  transactionType: string
   facilities: {
     kamarTidur: string
     kamarMandi: string
@@ -181,10 +181,15 @@ const props = defineProps<{
   }
 }>()
 
+const emit = defineEmits<{
+  (e: 'openFilter'): void
+  (e: 'update:transactionType', value: string): void
+}>()
+
 const propertyTypes = ['Rumah', 'Tanah', 'Ruko', 'Apartemen', 'Gudang', 'Villa', 'SOHO', 'Pabrik', 'Perkantoran', 'Hotel', 'Rumah Kos', 'Stand', 'Toko', 'Gedung', 'Condotel', 'Lain-lain']
 
 const resetFilters = () => {
-  selectedTransaksi.value = 'Semua Label'
+  emit('update:transactionType', 'Semua Label')
   selectedType.value = 'Semua Tipe'
   selectedSort.value = 'Terbaru'
   sorting.value = []
@@ -275,7 +280,7 @@ const handleSort = (type: string) => {
 }
 
 const handleTransaksi = (type: string) => {
-  selectedTransaksi.value = type
+  emit('update:transactionType', type)
   isTransaksiOpen.value = false
 }
 
@@ -285,14 +290,14 @@ const handleType = (type: string) => {
 }
 
 // Reset ke halaman pertama saat filter atau pencarian berubah
-watch([() => props.searchQuery, selectedTransaksi, selectedType, () => props.facilities, () => props.region, () => props.priceRange], () => {
+watch([() => props.searchQuery, () => props.transactionType, selectedType, () => props.facilities, () => props.region, () => props.priceRange], () => {
   table.setPageIndex(0)
 }, { deep: true })
 
 const filteredProducts = usePropertyFilters(
   products,
   computed(() => props.searchQuery),
-  selectedTransaksi,
+  computed(() => props.transactionType),
   selectedType,
   computed(() => props.facilities),
   computed(() => props.region),

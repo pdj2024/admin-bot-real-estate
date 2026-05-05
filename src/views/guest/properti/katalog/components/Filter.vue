@@ -21,6 +21,28 @@
 
           <div class="hs-accordion-group space-y-4">
 
+            <div class="hs-accordion active" id="filter-transaksi">
+              <button class="hs-accordion-toggle flex items-center justify-between w-full font-semibold text-xs uppercase tracking-widest text-slate-500 pb-2 border-b border-slate-200" aria-expanded="true" aria-controls="content-transaksi">
+                Tipe Transaksi
+                <Icon icon="lucide:chevron-down" class="size-4 hs-accordion-active:rotate-180 transition-transform" />
+              </button>
+              <div id="content-transaksi" class="hs-accordion-content w-full overflow-hidden transition-[height] duration-300">
+                <div class="grid grid-cols-2 gap-2 pt-4">
+                  <button 
+                    v-for="type in ['Semua Label', 'Jual Saja', 'Sewa Saja', 'Jual & Sewa']" 
+                    :key="type"
+                    @click="$emit('update:transactionType', type)"
+                    class="px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border text-center"
+                    :class="transactionType === type 
+                      ? 'bg-bejo-600 text-white border-bejo-600 shadow-lg shadow-bejo-600/20' 
+                      : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-bejo-300 hover:bg-bejo-50 hover:text-bejo-600'"
+                  >
+                    {{ type }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <div class="hs-accordion active" id="filter-regional">
               <button class="hs-accordion-toggle flex items-center justify-between w-full font-semibold text-xs uppercase tracking-widest text-slate-500 pb-2 border-b border-slate-200" aria-expanded="true" aria-controls="content-regional">
                 Wilayah
@@ -265,6 +287,7 @@ interface Props {
     min: string
     max: string
   }
+  transactionType: string
   provinces: any[]
 }
 
@@ -275,6 +298,7 @@ const emit = defineEmits<{
   (e: 'update:facilities', value: Props['facilities']): void
   (e: 'update:region', value: Props['region']): void
   (e: 'update:priceRange', value: Props['priceRange']): void
+  (e: 'update:transactionType', value: string): void
 }>()
 
 const handleFacilityInput = (key: keyof Props['facilities'], value: string) => {
@@ -393,6 +417,7 @@ const clearAll = () => {
   })
   emit('update:region', { province: '', city: '', provinceId: '' })
   emit('update:priceRange', { min: '', max: '' })
+  emit('update:transactionType', 'Semua Label')
 }
 
 
