@@ -372,6 +372,7 @@ interface ProductPreview {
   Harga_Jual1: number
   Harga_Jual2: number
   Harga_Sewa1: number
+  Nama_Kota?: string
   Hide_alamat: boolean
   MediaUrls: { Id_Media: string }[]
 }

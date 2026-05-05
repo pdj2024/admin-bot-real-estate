@@ -73,7 +73,7 @@
             <span v-if="!isLoading && !product.Hide_alamat">{{ product.Alamat ? product.Alamat.split(', Lat:')[0] : '' }}</span>
             <span v-else-if="!isLoading && product.Hide_alamat" class="italic opacity-60">Alamat disembunyikan</span>
             <span v-if="!isLoading && product.Nama_Kota && !product.Hide_alamat" class="block mt-0.5 font-black text-slate-400 uppercase tracking-widest text-[9px]">Area: {{ product.Nama_Area }}</span>
-            <div v-if="isLoading" class="h-3 w-32 bg-slate-100 rounded animate-pulse"></div>
+            <span v-if="isLoading" class="block h-3 w-32 bg-slate-100 rounded animate-pulse"></span>
           </p>
         </div>
       </div>

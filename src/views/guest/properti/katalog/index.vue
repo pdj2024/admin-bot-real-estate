@@ -114,6 +114,7 @@ const region = ref({
   provinceId: ''
 })
 const priceRange = ref({
+  min: '',
   max: ''
 })
 const transactionType = ref('Semua Label')
