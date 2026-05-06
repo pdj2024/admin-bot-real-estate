@@ -16,18 +16,13 @@
 
         <!-- Main Image with Smooth Transition -->
         <div v-if="product.MediaUrls && product.MediaUrls.length >= 1" class="absolute inset-0">
-          <Transition
-            enter-active-class="transition-opacity duration-700 ease-out"
-            enter-from-class="opacity-0"
-            enter-to-class="opacity-100"
-          >
-            <img 
-              v-show="isImageLoaded"
-              :src="product.MediaUrls[0].Id_Media" 
-              class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              @load="isImageLoaded = true"
-            />
-          </Transition>
+          <img 
+            :src="product.MediaUrls[0].Id_Media" 
+            class="absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
+            :class="isImageLoaded ? 'opacity-100' : 'opacity-0'"
+            loading="lazy"
+            @load="isImageLoaded = true"
+          />
           
           <!-- Loading State for Image -->
           <div v-if="!isImageLoaded" class="absolute inset-0 bg-white animate-pulse flex items-center justify-center">
@@ -223,8 +218,13 @@
             <div v-show="activeDropdownId === product.No_Id" class="absolute right-0 bottom-12 z-[100] min-w-[200px] bg-white p-2 shadow-2xl border border-slate-200 rounded-2xl">
               <button @click="$emit('updateStatus', product, 'Terjual')" v-if="product.Status_Transaksi?.includes('Jual') && product.Status_Properti != 'Terjual'" class="admin-dropdown-item hover:bg-emerald-50 hover:text-emerald-600"><Icon icon="lucide:badge-check" class="size-4" /> Tandai Terjual</button>
               <button @click="$emit('updateStatus', product, 'Tersewa')" v-if="product.Status_Transaksi?.includes('Sewa') && product.Status_Properti != 'Tersewa'" class="admin-dropdown-item hover:bg-emerald-50 hover:text-emerald-600"><Icon icon="lucide:key" class="size-4" /> Tandai Tersewa</button>
-              <button @click="$emit('updateStatus', product, 'Tersedia')" v-if="product.Status_Properti != 'Tersedia'" class="admin-dropdown-item hover:bg-bejo-50 hover:text-bejo-600"><Icon icon="lucide:rotate-ccw" class="size-4" /> Batal Status</button>
+              <button @click="$emit('updateStatus', product, 'Tersedia')" v-if="product.Status_Properti != 'Tersedia'" class="admin-dropdown-item hover:bg-bejo-50 hover:text-bejo-600">
+                <Icon icon="lucide:rotate-ccw" class="size-4" /> 
+                {{ product.Status_Properti == 'Terjual' ? 'Batal Terjual' : (product.Status_Properti == 'Tersewa' ? 'Batal Tersewa' : 'Batal Status') }}
+              </button>
               <hr class="my-2 border-slate-100" />
+              <button @click="$emit('updateStatus', product, 'Aktif')" v-if="product.Status_Display == 'Draft' && product.Status_Properti == 'Tersedia'" class="admin-dropdown-item hover:bg-blue-50 hover:text-blue-600"><Icon icon="lucide:eye" class="size-4" /> Tampilkan Produk</button>
+              <button @click="$emit('updateStatus', product, 'Draft')" v-if="product.Status_Display == 'Aktif' && product.Status_Properti == 'Tersedia'" class="admin-dropdown-item hover:bg-amber-50 hover:text-amber-600"><Icon icon="lucide:eye-off" class="size-4" /> Jadikan Draft</button>
               <button @click="$emit('edit', product.Slug)" class="admin-dropdown-item hover:bg-slate-50 hover:text-slate-900"><Icon icon="lucide:pencil" class="size-4" /> Ubah Data</button>
               <button @click="$emit('delete', product)" class="admin-dropdown-item text-red-500 hover:bg-red-50"><Icon icon="lucide:trash-2" class="size-4" /> Hapus Unit</button>
             </div>

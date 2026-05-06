@@ -1,9 +1,9 @@
 <template>
-  <GuestLayout main-class="max-w-none">
+  <GuestLayout main-class="!max-w-none !mx-0 !px-0">
     <!-- Hero Section Beranda -->
     <section class="relative pt-10 pb-10 bg-white">
       <div class="w-full !px-4 sm:!px-8 lg:!px-10">
-        <div class="relative overflow-hidden rounded-[3.5rem] bg-white border border-bejo-100 shadow-premium px-8 pt-8 pb-48 md:px-24 md:pt-24 md:pb-64 lg:px-32 lg:pt-32 lg:pb-80 flex flex-col justify-center items-center min-h-[90vh]">
+        <div class="relative overflow-hidden rounded-[3.5rem] bg-white border border-bejo-100 shadow-premium px-8 pt-8 pb-16 md:px-24 md:pt-24 md:pb-24 lg:px-32 lg:pt-32 lg:pb-32 flex flex-col justify-center items-center min-h-[90vh]">
           <!-- Mesh Gradient Background -->
           <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <div class="absolute -top-[20%] -right-[10%] size-[800px] bg-bejo-100/50 rounded-full blur-[120px] animate-pulse"></div>
@@ -64,36 +64,37 @@
               </RouterLink>
             </div>
           </div>
+
+          <!-- Stats Section (Wrapped inside Hero Card) -->
+          <div class="relative z-20 w-full max-w-6xl mt-20">
+            <div class="w-full mx-auto glass backdrop-blur-3xl rounded-[4rem] p-10 md:p-14 shadow-premium border border-white/60 grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-4 divide-y md:divide-y-0 md:divide-x divide-slate-100/50">
+              <div class="text-center px-6 group hover-float">
+                <div class="text-bejo-600 mb-2 opacity-0 group-hover:opacity-100 transition-all duration-700 translate-y-3 group-hover:translate-y-0 scale-150">
+                  <Icon icon="lucide:building-2" class="size-6 mx-auto" />
+                </div>
+                <h4 class="text-6xl lg:text-7xl font-black text-slate-900 mb-2 tracking-tighter">1,2k<span class="text-bejo-600">.</span></h4>
+                <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Unit Eksklusif</p>
+              </div>
+              <div class="text-center px-6 group hover-float">
+                <div class="text-bejo-600 mb-2 opacity-0 group-hover:opacity-100 transition-all duration-700 translate-y-3 group-hover:translate-y-0 scale-150">
+                  <Icon icon="lucide:shield-check" class="size-6 mx-auto" />
+                </div>
+                <h4 class="text-6xl lg:text-7xl font-black text-slate-900 mb-2 tracking-tighter">100<span class="text-bejo-600">%</span></h4>
+                <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Pemilik Langsung</p>
+              </div>
+              <div class="text-center px-6 group hover-float">
+                <div class="text-bejo-600 mb-2 opacity-0 group-hover:opacity-100 transition-all duration-700 translate-y-3 group-hover:translate-y-0 scale-150">
+                  <Icon icon="lucide:map-pin" class="size-6 mx-auto" />
+                </div>
+                <h4 class="text-6xl lg:text-7xl font-black text-slate-900 mb-2 tracking-tighter">15<span class="text-bejo-600">.</span></h4>
+                <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Area Strategis</p>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </section>
-
-    <!-- Stats Floating Bottom -->
-    <div class="relative z-20 !px-4 sm:!px-12 lg:!px-20 -mt-40 md:-mt-56 lg:-mt-64">
-      <div class="w-full mx-auto glass backdrop-blur-3xl rounded-[4rem] p-10 md:p-14 shadow-premium border border-white/60 grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-4 divide-y md:divide-y-0 md:divide-x divide-slate-100/50">
-        <div class="text-center px-6 group hover-float">
-          <div class="text-bejo-600 mb-2 opacity-0 group-hover:opacity-100 transition-all duration-700 translate-y-3 group-hover:translate-y-0 scale-150">
-            <Icon icon="lucide:building-2" class="size-6 mx-auto" />
-          </div>
-          <h4 class="text-6xl lg:text-7xl font-black text-slate-900 mb-2 tracking-tighter">1,2k<span class="text-bejo-600">.</span></h4>
-          <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Unit Eksklusif</p>
-        </div>
-        <div class="text-center px-6 group hover-float">
-          <div class="text-bejo-600 mb-2 opacity-0 group-hover:opacity-100 transition-all duration-700 translate-y-3 group-hover:translate-y-0 scale-150">
-            <Icon icon="lucide:shield-check" class="size-6 mx-auto" />
-          </div>
-          <h4 class="text-6xl lg:text-7xl font-black text-slate-900 mb-2 tracking-tighter">100<span class="text-bejo-600">%</span></h4>
-          <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Pemilik Langsung</p>
-        </div>
-        <div class="text-center px-6 group hover-float">
-          <div class="text-bejo-600 mb-2 opacity-0 group-hover:opacity-100 transition-all duration-700 translate-y-3 group-hover:translate-y-0 scale-150">
-            <Icon icon="lucide:map-pin" class="size-6 mx-auto" />
-          </div>
-          <h4 class="text-6xl lg:text-7xl font-black text-slate-900 mb-2 tracking-tighter">15<span class="text-bejo-600">.</span></h4>
-          <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Area Strategis</p>
-        </div>
-      </div>
-    </div>
 
     <!-- Highlight Properti Terbaru Section -->
     <section class="pt-32 pb-5 sm:pt-40 sm:pb-10 px-4 bg-[#f7f9fb] relative overflow-hidden">

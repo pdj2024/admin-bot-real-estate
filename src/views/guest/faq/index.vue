@@ -53,8 +53,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <GuestLayout main-class="!p-0">
-    <div class="relative overflow-hidden min-h-screen p-4 sm:p-8 lg:p-10 space-y-10 print:hidden">
+  <GuestLayout>
+    <div class="relative overflow-hidden min-h-screen mb-10 space-y-10 print:hidden">
       <!-- Background Decorations -->
       <div class="absolute top-0 right-0 w-1/2 h-screen bg-gradient-to-l from-bejo-50/30 via-transparent to-transparent pointer-events-none"></div>
       <div class="absolute -right-20 -top-20 size-[500px] bg-gradient-to-br from-bejo-100/40 via-bejo-200/20 to-transparent rounded-full blur-3xl opacity-60 pointer-events-none"></div>

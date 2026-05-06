@@ -1,6 +1,6 @@
 <template>
-  <GuestLayout main-class="!p-0">
-    <div class="p-4 sm:p-8 lg:p-10 mb-10 print:hidden space-y-10">
+  <GuestLayout>
+    <div class="mb-10 print:hidden space-y-10">
       
       <!-- Breadcrumb -->
 

@@ -362,13 +362,20 @@ const toggleDropdown = (id: string) => {
 }
 
 const updateStatusTransaksi = async (product: any, newStatus: string) => {
-  confirm(`Apakah Anda yakin ingin mengubah status menjadi ${newStatus}?`, async () => {
+  const isDisplayStatus = ['Aktif', 'Draft'].includes(newStatus)
+  const statusLabel = isDisplayStatus ? 'display' : 'properti'
+  
+  confirm(`Apakah Anda yakin ingin mengubah status ${statusLabel} menjadi ${newStatus}?`, async () => {
     try {
-      product.Status_Properti = newStatus
-      
-      // Auto-set to Draft if Sold or Rented
-      if (newStatus === 'Terjual' || newStatus === 'Tersewa') {
-        product.Status_Display = 'Draft'
+      if (isDisplayStatus) {
+        product.Status_Display = newStatus
+      } else {
+        product.Status_Properti = newStatus
+        
+        // Auto-set to Draft if Sold or Rented
+        if (newStatus === 'Terjual' || newStatus === 'Tersewa') {
+          product.Status_Display = 'Draft'
+        }
       }
 
       await api.put('/api/realEstate/update?no_id=' + product.No_Id, product, {

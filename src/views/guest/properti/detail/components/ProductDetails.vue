@@ -111,7 +111,7 @@ const formatCurrency = (value: number) => {
 
         <div class="mt-10 mb-10">
           <h6 class="text-[11px] font-black text-slate-800 uppercase tracking-widest mb-4" :class="!product ? 'text-transparent bg-slate-200 rounded animate-pulse w-max select-none shrink-0' : ''">Aksesibilitas</h6>
-          <div class="overflow-hidden border border-slate-100 rounded-2xl">
+          <div class="overflow-x-auto border border-slate-100 rounded-2xl">
             <table class="w-full text-sm">
               <tbody class="divide-y divide-slate-100">
                 <template v-if="product">
@@ -140,7 +140,7 @@ const formatCurrency = (value: number) => {
         </div>
         <div class="mt-10">
           <h6 class="text-[11px] font-black text-slate-800 uppercase tracking-widest mb-4" :class="!product ? 'text-transparent bg-slate-200 rounded animate-pulse w-max select-none shrink-0' : ''">Informasi Tambahan</h6>
-          <div class="overflow-hidden border border-slate-100 rounded-2xl">
+          <div class="overflow-x-auto border border-slate-100 rounded-2xl">
             <table class="w-full text-sm">
               <tbody class="divide-y divide-slate-100">
                 <tr class="hover:bg-bejo-50/50 transition-colors">
