@@ -128,8 +128,8 @@ const handlePublish = async () => {
           </div>
 
           <div class="flex gap-4 items-center">
-            <!-- Status Toggle Button (Draft <-> Aktif) -->
-            <button :disabled="isLoading" @click="form.Status_Display === 'Draft' ? handlePublish() : handleSaveDraft()" class="px-8 py-3 bg-slate-50 text-slate-500 text-[10px] font-black rounded-[1.25rem] transition-all hover:bg-slate-100 active:scale-95 flex items-center gap-2 group disabled:opacity-50 border border-slate-100 tracking-widest uppercase">
+            <!-- Status Toggle Button (Draft <-> Aktif) - Sembunyikan jika sudah Terjual/Tersewa -->
+            <button v-if="form.Status_Properti !== 'Terjual' && form.Status_Properti !== 'Tersewa'" :disabled="isLoading" @click="form.Status_Display === 'Draft' ? handlePublish() : handleSaveDraft()" class="px-8 py-3 bg-slate-50 text-slate-500 text-[10px] font-black rounded-[1.25rem] transition-all hover:bg-slate-100 active:scale-95 flex items-center gap-2 group disabled:opacity-50 border border-slate-100 tracking-widest uppercase">
               <Icon v-if="isLoading" icon="lucide:loader-2" class="size-4 animate-spin" />
               <template v-else>
                 <Icon :icon="form.Status_Display === 'Draft' ? 'lucide:eye' : 'lucide:archive'" class="size-4 group-hover:scale-110 transition-transform" />

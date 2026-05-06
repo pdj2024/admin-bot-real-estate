@@ -14,17 +14,34 @@
           </div>
         </div>
 
-        <!-- Main Image with Smooth Transition -->
+        <!-- Main Image/Video with Smooth Transition -->
         <div v-if="product.MediaUrls && product.MediaUrls.length >= 1" class="absolute inset-0">
+          <template v-if="product.MediaUrls[0].ContentType?.startsWith('video/')">
+             <!-- Video Thumbnail -->
+             <div class="size-full relative group-hover:scale-105 transition-transform duration-700">
+               <video 
+                 :src="product.MediaUrls[0].Url || product.MediaUrls[0].Id_Media" 
+                 class="absolute inset-0 w-full h-full object-cover" 
+                 preload="metadata" 
+                 muted 
+                 playsinline
+                 @loadeddata="isImageLoaded = true"
+               ></video>
+               <div class="absolute inset-0 flex items-center justify-center bg-black/10">
+                  <Icon icon="lucide:play" class="size-10 text-white fill-white/20 drop-shadow-lg" />
+               </div>
+             </div>
+          </template>
           <img 
-            :src="product.MediaUrls[0].Id_Media" 
+            v-else
+            :src="product.MediaUrls[0].Url || product.MediaUrls[0].Id_Media" 
             class="absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
             :class="isImageLoaded ? 'opacity-100' : 'opacity-0'"
             :loading="lazy ? 'lazy' : 'eager'"
             @load="isImageLoaded = true"
           />
           
-          <!-- Loading State for Image -->
+          <!-- Loading State for Image/Video -->
           <div v-if="!isImageLoaded" class="absolute inset-0 bg-white animate-pulse flex items-center justify-center">
              <Icon icon="lucide:loader-2" class="size-8 text-bejo-200 animate-spin" />
           </div>
@@ -77,7 +94,7 @@
             {{ isLoading ? '.' : product.Nama_Kota ? product.Nama_Kota : 'Lokasi Tidak Tersedia' }}
           </span>
           <p class="text-[11px] font-bold text-slate-500 leading-tight" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-48' : ''">
-            <span v-if="!isLoading && !product.Hide_alamat">{{ product.Alamat ? product.Alamat.split(', Lat:')[0] : '' }}</span>
+            <span v-if="!isLoading && !product.Hide_alamat">{{ product.Alamat ? product.Alamat.split('_Lat:')[0] : '' }}</span>
             <span v-else-if="!isLoading && product.Hide_alamat" class="italic opacity-60">Alamat disembunyikan</span>
             <span v-if="!isLoading && product.Nama_Kota && !product.Hide_alamat" class="block mt-0.5 font-black text-slate-400 uppercase tracking-widest text-[9px]">Area: {{ product.Nama_Area }}</span>
             <span v-if="isLoading" class="block h-3 w-32 bg-slate-100 rounded animate-pulse"></span>

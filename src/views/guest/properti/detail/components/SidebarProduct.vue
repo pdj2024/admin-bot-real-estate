@@ -1,397 +1,216 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
+import { ref, computed } from 'vue'
 import { Icon } from '@iconify/vue'
-import { useSettings } from '@/stores/settings'
 import type { Product } from '../index.vue'
-import { useRouter } from 'vue-router'
-
-const settingsStore = useSettings()
-const router = useRouter()
 
 const props = defineProps<{
   product: Product | null
-  isAdmin: boolean
+  isAdmin?: boolean
 }>()
 
-const emit = defineEmits<{
-  (e: 'openCompare'): void
-}>()
+const emit = defineEmits(['openCompare'])
 
-const currentIndex = ref(0)
-const videoMap = ref<Record<string, boolean>>({})
-const isVideoLoading = ref(false)
-let timer: any = null
+const activeMediaIndex = ref(0)
 
-const nextSlide = (isAuto = false) => {
-  const totalMedia = props.product?.MediaUrls?.length || 0
-  if (totalMedia <= 1) return
-  if (isAuto && videoMap.value[currentMediaUrl.value]) {
-    return
-  }
-  currentIndex.value = (currentIndex.value + 1 + totalMedia) % totalMedia
-  resetTimer()
-}
-
-const prevSlide = () => {
-  const totalMedia = props.product?.MediaUrls?.length || 0
-  if (totalMedia <= 1) return
-  currentIndex.value = (currentIndex.value - 1 + totalMedia) % totalMedia
-  resetTimer()
-}
-
-const goToSlide = (i: number) => {
-  currentIndex.value = i
-  resetTimer()
-}
-
-const preloadNextMedia = (index: number) => {
-  const nextIndex = (index + 1) % (props.product?.MediaUrls?.length || 1)
-  const nextUrl = props.product?.MediaUrls?.[nextIndex]?.Id_Media
-
-  if (nextUrl) {
-    const isVideo = checkMediaType(nextUrl)
-    if (isVideo) {
-      const video = document.createElement('video')
-      video.src = nextUrl
-      video.preload = 'auto'
-    } else {
-      const img = new Image()
-      img.src = nextUrl
-    }
-  }
-}
-
-const handleVideoEnded = () => {
-  const totalMedia = props.product?.MediaUrls?.length || 0
-  if (totalMedia <= 1) return
-  currentIndex.value = (currentIndex.value + 1) % totalMedia
-
-  resetTimer()
-}
-
-let startX = 0
-let isDragging = false
-
-const handleDragStart = (e: TouchEvent | MouseEvent) => {
-  isDragging = true
-  startX = e instanceof TouchEvent ? e.touches[0].clientX : e.clientX
-}
-
-const handleDragEnd = (e: TouchEvent | MouseEvent) => {
-  if (!isDragging) return
-  isDragging = false
-  const endX = e instanceof TouchEvent ? e.changedTouches[0].clientX : e.clientX
-  const diff = startX - endX
-  if (Math.abs(diff) > 50) {
-    if (diff > 0) {
-      nextSlide(false)
-    } else {
-      prevSlide()
-    }
-  }
-}
-
-const handleWaContact = () => {
-  const url = window.location.href
-  const text = `Halo Admin, saya tertarik untuk menanyakan lebih lanjut mengenai properti *${props.product?.Nama_Produk}*\n\n${url}`
-  const targetNumber = settingsStore.business.whatsapp || '6287700083370'
-
-  window.open(`https://wa.me/${targetNumber}?text=${encodeURIComponent(text)}`, '_blank')
-}
-
-const startTimer = () => {
-  timer = setInterval(() => nextSlide(true), 5000)
-}
-const resetTimer = () => {
-  clearInterval(timer)
-  startTimer()
-}
-
-const shareProduct = async () => {
-  const shareData = {
-    title: props.product?.Nama_Produk || 'Lihat properti ini',
-    text: `Cek ${props.product?.Nama_Produk} di Kota/Kab. ${props.product?.Nama_Kota}.`,
-    url: window.location.href
-  }
-  try {
-    if (navigator.share) {
-      await navigator.share(shareData)
-    } else {
-      await navigator.clipboard.writeText(shareData.url)
-      alert('Tautan berhasil disalin ke clipboard!')
-    }
-  } catch (err) {
-    console.error('Gagal membagikan:', err)
-  }
-}
-
-const checkMediaType = (url: string) => {
-  if (!url) return false
-  return /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(url)
-}
-
-const currentMediaUrl = computed(() => {
-  return props.product?.MediaUrls?.[currentIndex.value]?.Id_Media || ''
+const media = computed(() => {
+  if (!props.product?.MediaUrls) return []
+  return props.product.MediaUrls.map(m => ({
+    url: m.Url || m.Id_Media, // Fallback to Id_Media if Url is missing
+    type: m.ContentType?.startsWith('video/') ? 'video' : 'image',
+    thumb: m.ThumbUrl || m.Url || m.Id_Media
+  }))
 })
 
-watch(
-  () => props.product?.MediaUrls,
-  (mediaList) => {
-    if (!mediaList) return
-    mediaList.forEach((item) => {
-      const url = item.Id_Media
-      if (url) {
-        videoMap.value[url] = checkMediaType(url)
-      }
-    })
-  },
-  { immediate: true }
-)
+const currentMedia = computed(() => media.value[activeMediaIndex.value] || null)
 
-watch(
-  currentIndex,
-  (newIndex) => {
-    preloadNextMedia(newIndex)
-    if (videoMap.value[currentMediaUrl.value]) {
-      isVideoLoading.value = true
-    } else {
-      // Let image load event fire, default to loading
-      isVideoLoading.value = true
-    }
-  },
-  { immediate: true }
-)
-
-const isLightboxOpen = ref(false)
-
-const openLightbox = () => {
-  isLightboxOpen.value = true
-  document.body.style.overflow = 'hidden' // Prevent scroll
-  resetTimer() // Stop carousel auto-play
-}
-
-const closeLightbox = () => {
-  isLightboxOpen.value = false
-  document.body.style.overflow = '' // Restore scroll
-  startTimer()
-}
-
-// Global Keyboard Listener for Esc key
-const handleKeyDown = (e: KeyboardEvent) => {
-  if (e.key === 'Escape' && isLightboxOpen.value) {
-    closeLightbox()
-  } else if (isLightboxOpen.value) {
-    if (e.key === 'ArrowRight') nextSlide(false)
-    if (e.key === 'ArrowLeft') prevSlide()
-  }
-}
-
-const formattedArea = computed(() => {
-  if (!props.product) return ''
-  const kota = props.product.Nama_Kota || ''
-
-  // Get raw area string
-  let areaRaw = ''
-  if (Array.isArray(props.product.Area)) {
-    areaRaw = props.product.Area[0] || ''
-  } else {
-    areaRaw = (props.product.Area as any) || ''
-  }
-
-  // Try to find province from areaRaw
-  let provinsi = ''
-  if (areaRaw) {
-    const parts = areaRaw.split(',').map((s) => s.trim())
-    if (parts.length >= 2) {
-      provinsi = parts[parts.length - 1]
-    }
-  }
-
-  if (kota && provinsi && kota.toLowerCase() !== provinsi.toLowerCase()) {
-    return `${kota}, ${provinsi}`
-  }
-  return kota || provinsi || areaRaw || 'Lokasi tidak tersedia'
-})
-
-const goToArea = () => {
+const handleShare = () => {
   if (!props.product) return
-
-  let city = props.product.Nama_Kota || ''
-  let province = ''
-
-  // Split Nama_Kota if it contains province (e.g. "Surabaya, Jawa Timur")
-  if (city.includes(',')) {
-    const parts = city.split(',').map((s) => s.trim())
-    city = parts[0]
-    province = parts[1]
-  }
-
-  // Fallback province from Area if not in Nama_Kota
-  if (!province) {
-    let areaRaw = ''
-    if (Array.isArray(props.product.Area)) {
-      areaRaw = props.product.Area[0] || ''
-    } else {
-      areaRaw = (props.product.Area as any) || ''
-    }
-    if (areaRaw.includes(',')) {
-      const parts = areaRaw.split(',').map((s) => s.trim())
-      province = parts[parts.length - 1]
-    }
-  }
-
-  router.push({
-    path: '/katalog',
-    query: {
-      province: province,
-      city: city
-    }
-  })
+  const url = window.location.origin + '/properti/detail/' + props.product.Slug
+  navigator.clipboard.writeText(url)
+  alert('Link properti berhasil disalin!')
 }
 
-onMounted(() => {
-  startTimer()
-  window.addEventListener('keydown', handleKeyDown)
-})
-onUnmounted(() => {
-  clearInterval(timer)
-  window.removeEventListener('keydown', handleKeyDown)
-  document.body.style.overflow = ''
-})
+const handleWhatsApp = () => {
+  if (!props.product) return
+  const message = `Halo, saya tertarik dengan properti "${props.product.Nama_Produk}" yang saya lihat di website. Bisa minta info lebih lanjut?%0A%0AUrl: ${window.location.origin}/properti/detail/${props.product.Slug}`
+  window.open(`https://wa.me/6281234567890?text=${message}`, '_blank')
+}
 </script>
 
 <template>
-  <div class="col-span-1">
-    <div class="sticky top-24">
-      <div class="mb-5">
-        <RouterLink :to="isAdmin ? '/properti/katalog' : '/katalog'" class="inline-flex items-center text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-bejo-600 transition-all group">
-          <Icon icon="lucide:arrow-left" class="size-4 me-2 transition-transform group-hover:-translate-x-1" />
-          Kembali ke Katalog
-        </RouterLink>
-      </div>
-
-      <div class="mb-4 border-none shadow-premium bg-white overflow-hidden rounded-[2.5rem]">
-        <div class="p-5 relative">
-          <!-- Main Carousel -->
-          <div class="relative overflow-hidden mb-6 rounded-[2rem] h-[350px] md:h-[450px] group bg-white shadow-inner cursor-zoom-in active:cursor-grabbing" @mousedown="handleDragStart" @mouseup="handleDragEnd" @mouseleave="handleDragEnd" @touchstart="handleDragStart" @touchend="handleDragEnd">
-            <!-- Label Status -->
-            <div v-if="product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia')" class="absolute inset-0 bg-black/40 backdrop-grayscale-[60%] z-[5] pointer-events-none transition-all duration-500"></div>
-            <div v-if="product && (product.Status_Display !== 'Aktif' || product.Status_Properti !== 'Tersedia')" class="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
-              <div class="bg-bejo-600/90 backdrop-blur-xl px-6 py-3 rounded-2xl border border-white/20 shadow-2xl transform transition-transform duration-500 group-hover:scale-110">
-                <span class="text-xs md:text-sm font-black uppercase tracking-[0.3em] text-white">
-                  {{ product.Status_Properti != 'Tersedia' ? product.Status_Properti : product.Status_Display }}
-                </span>
-              </div>
-            </div>
-
-            <!-- Media Content -->
-            <div @click="openLightbox" class="h-full w-full transition-all duration-700 ease-out group-hover:scale-105 will-change-transform transform-gpu relative">
-              <div v-if="isVideoLoading" class="absolute inset-0 flex items-center justify-center bg-white z-20">
-                <Icon icon="lucide:loader-2" class="size-8 text-bejo-500 animate-spin" />
-              </div>
-
-              <video v-if="videoMap[currentMediaUrl]" :key="currentMediaUrl" :src="currentMediaUrl" class="w-full h-full object-cover" autoplay muted playsinline preload="auto" @ended="handleVideoEnded" @waiting="isVideoLoading = true" @playing="isVideoLoading = false" @loadeddata="isVideoLoading = false" @canplay="isVideoLoading = false" :loop="false"></video>
-
-              <img v-else-if="videoMap[currentMediaUrl] === false" :key="currentMediaUrl + 'img'" :src="currentMediaUrl" class="w-full h-full object-cover select-none" loading="eager" @load="isVideoLoading = false" draggable="false" />
-
-              <div v-else class="w-full h-full bg-gray-200 animate-pulse"></div>
-            </div>
-
-            <!-- Navigation Buttons -->
-            <button @click.stop="prevSlide" class="absolute left-3 top-1/2 -translate-y-1/2 size-11 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-lg text-white border border-white/20 opacity-0 group-hover:opacity-100 transition-all z-10 hover:bg-bejo-600 hover:border-bejo-600">
-              <Icon icon="lucide:chevron-left" class="size-6"></Icon>
-            </button>
-            <button @click.stop="nextSlide(false)" class="absolute right-3 top-1/2 -translate-y-1/2 size-11 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-lg text-white border border-white/20 opacity-0 group-hover:opacity-100 transition-all z-10 hover:bg-bejo-600 hover:border-bejo-600">
-              <Icon icon="lucide:chevron-right" class="size-6"></Icon>
-            </button>
-
-            <!-- Indicators -->
-            <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10 bg-black/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
-              <button v-for="(_, index) in product?.MediaUrls?.length" :key="index" @click.stop="goToSlide(index)" class="size-1.5 rounded-full transition-all duration-300" :class="currentIndex === index ? 'bg-bejo-500 w-5' : 'bg-white/50'"></button>
-            </div>
-          </div>
-
-          <div class="grid gap-4 relative" :class="isAdmin ? 'grid-cols-1' : 'grid-cols-2'">
-            <button v-if="!isAdmin" @click="handleWaContact" class="flex items-center justify-center gap-3 py-4 px-6 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] leading-tight transition-all shadow-bejo-premium bg-bejo-600 text-white hover:bg-bejo-700 hover:-translate-y-1 active:scale-95">
-              <Icon icon="logos:whatsapp-icon" class="size-6" />
-              Tanya kami
-            </button>
-            <button type="button" @click.prevent="shareProduct" class="flex w-full items-center justify-center gap-3 py-4 px-6 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-sm border border-slate-100 text-slate-700 hover:bg-slate-50 hover:border-slate-200 hover:-translate-y-1 active:scale-95">
-              <Icon icon="lucide:share-2" class="size-5" />
-              Bagikan
-            </button>
-          </div>
-
-          <button v-if="!isAdmin" @click="emit('openCompare')" type="button" class="mt-3 flex w-full items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm tracking-wide transition-all shadow-sm border border-slate-200 text-bejo-600 hover:bg-bejo-50 hover:border-bejo-200">
-            <Icon icon="lucide:arrow-left-right" class="size-4" />
-            Bandingkan Properti
-          </button>
-        </div>
-      </div>
-
-      <div class="card border-none shadow-sm bg-white rounded-xl overflow-hidden transition-all duration-500 mb-3">
-        <div class="p-4 flex justify-between items-center">
-          <div class="flex items-center gap-2 text-slate-600">
-            <div class="bg-bejo-50 p-1.5 rounded-lg border border-bejo-100" :class="!product ? 'bg-slate-200 border-none animate-pulse *:opacity-0' : ''">
-              <Icon icon="lucide:map-pin" class="size-4 text-bejo-600" />
-            </div>
-            <div class="flex flex-col">
-              <span class="text-sm font-bold tracking-tight" :class="!product ? 'text-transparent bg-slate-200 animate-pulse select-none rounded w-fit' : ''">
-                {{ !product ? 'Memuat area...' : formattedArea }}
-              </span>
-            </div>
-          </div>
-          <button @click="goToArea" class="text-[11px] font-black uppercase tracking-widest border-b px-1 pb-0.5" :class="!product ? 'text-transparent bg-slate-200 border-none animate-pulse select-none rounded' : 'text-bejo-600 hover:text-bejo-800 border-bejo-600/30'">Lihat Area</button>
-        </div>
-      </div>
+  <div class="flex flex-col gap-5 sticky top-28 h-fit">
+    <!-- Back Button -->
+    <div class="flex items-center">
+      <router-link 
+        to="/katalog" 
+        class="group flex items-center gap-2 px-4 py-2 bg-white rounded-2xl border border-slate-100 shadow-sm hover:border-bejo-200 hover:bg-bejo-50 transition-all text-slate-500 hover:text-bejo-600 w-fit"
+      >
+        <Icon icon="lucide:arrow-left" class="size-4 group-hover:-translate-x-1 transition-transform" />
+        <span class="text-[10px] font-black uppercase tracking-widest">Kembali ke Katalog</span>
+      </router-link>
     </div>
-  </div>
 
-  <!-- Media Lightbox (Full Screen) -->
-  <Teleport to="body">
-    <Transition enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0" enter-to-class="opacity-100" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0">
-      <div v-if="isLightboxOpen" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 backdrop-blur-xl">
-        <!-- Close Button -->
-        <button @click="closeLightbox" class="absolute top-6 right-6 z-[10000] size-14 flex items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md border border-white/20 hover:bg-bejo-600 transition-all">
-          <Icon icon="lucide:x" class="size-7" />
-        </button>
-
-        <!-- Navigation -->
-        <button @click="prevSlide" class="absolute left-6 top-1/2 -translate-y-1/2 z-[10000] size-16 flex items-center justify-center rounded-full bg-white/5 text-white backdrop-blur-md border border-white/10 hover:bg-bejo-600 transition-all group">
-          <Icon icon="lucide:chevron-left" class="size-10 group-hover:-translate-x-1 transition-transform" />
-        </button>
-        <button @click="nextSlide(false)" class="absolute right-6 top-1/2 -translate-y-1/2 z-[10000] size-16 flex items-center justify-center rounded-full bg-white/5 text-white backdrop-blur-md border border-white/10 hover:bg-bejo-600 transition-all group">
-          <Icon icon="lucide:chevron-right" class="size-10 group-hover:translate-x-1 transition-transform" />
-        </button>
-
-        <!-- Media Display -->
-        <Transition mode="out-in" enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0 scale-95" enter-to-class="opacity-100 scale-100" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100 scale-100" leave-to-class="opacity-0 scale-95">
-          <div :key="currentMediaUrl" class="w-full h-full flex items-center justify-center p-12 lg:p-24">
-            <video v-if="videoMap[currentMediaUrl]" :src="currentMediaUrl" class="max-h-full max-w-full rounded-2xl shadow-2xl" controls autoplay></video>
-            <img v-else :src="currentMediaUrl" class="max-h-full max-w-full rounded-2xl shadow-2xl object-contain select-none" content="no-referrer" />
+    <!-- Media Showcase -->
+    <div class="card bg-white rounded-[2.5rem] overflow-hidden shadow-premium border-none relative group/main">
+      <!-- Main Display -->
+      <div class="aspect-[4/3] relative bg-slate-100 overflow-hidden">
+        <Transition name="fade" mode="out-in">
+          <div :key="activeMediaIndex" class="size-full">
+            <template v-if="!product">
+              <div class="size-full animate-pulse bg-slate-200"></div>
+            </template>
+            <template v-else-if="currentMedia?.type === 'video'">
+              <video 
+                :src="currentMedia.url!" 
+                class="size-full object-cover" 
+                controls 
+                autoplay 
+                muted 
+                loop
+              ></video>
+            </template>
+            <template v-else-if="currentMedia?.type === 'image'">
+              <img 
+                :src="currentMedia.url!" 
+                class="size-full object-cover transition-transform duration-700 group-hover/main:scale-110" 
+                :alt="product?.Nama_Produk" 
+              />
+            </template>
+            <template v-else>
+               <div class="size-full flex items-center justify-center text-slate-300">
+                  <Icon icon="lucide:image-off" class="size-12" />
+               </div>
+            </template>
           </div>
         </Transition>
 
-        <!-- Status & Indicators -->
-        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 z-[10000]">
-          <div class="px-5 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/10 text-white font-black uppercase tracking-[0.3em] text-[10px]">{{ currentIndex + 1 }} / {{ product?.MediaUrls?.length }}</div>
-          <div class="flex gap-2.5">
-            <button v-for="(_, index) in product?.MediaUrls?.length" :key="index" @click="goToSlide(index)" class="size-2 rounded-full transition-all duration-300 shadow-sm" :class="currentIndex === index ? 'bg-bejo-500 w-8' : 'bg-white/30 hover:bg-white/50'"></button>
+        <!-- Navigation Buttons -->
+        <div v-if="media.length > 1" class="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-between px-4 opacity-0 group-hover/main:opacity-100 transition-opacity z-20 pointer-events-none">
+          <button 
+            @click.stop="activeMediaIndex = (activeMediaIndex - 1 + media.length) % media.length" 
+            class="size-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white hover:text-bejo-600 transition-all pointer-events-auto border border-white/10"
+          >
+            <Icon icon="lucide:chevron-left" class="size-6" />
+          </button>
+          <button 
+            @click.stop="activeMediaIndex = (activeMediaIndex + 1) % media.length" 
+            class="size-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white hover:text-bejo-600 transition-all pointer-events-auto border border-white/10"
+          >
+            <Icon icon="lucide:chevron-right" class="size-6" />
+          </button>
+        </div>
+        
+        <!-- Darkening Overlay for Non-Available Status (Match Catalog Style) -->
+        <div v-if="product && product.Status_Properti != 'Tersedia'" class="absolute inset-0 bg-black/40 backdrop-grayscale-[60%] z-[15] pointer-events-none transition-all duration-500"></div>
+
+        <!-- Status Badges Overlay -->
+        <div v-if="product && product.Status_Properti !== 'Tersedia'" class="absolute top-6 left-6 z-10">
+          <div class="px-6 py-2 rounded-full bg-slate-900/90 backdrop-blur-md border border-white/10 shadow-2xl flex items-center justify-center animate-in fade-in zoom-in duration-500">
+             <span class="text-[11px] font-black uppercase tracking-[0.2em] text-white">{{ product.Status_Properti }}</span>
           </div>
         </div>
+
+        <!-- Large Centered Status Badge (Terjual/Tersewa) -->
+        <div v-if="product && product.Status_Properti !== 'Tersedia'" class="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+          <div class="px-8 py-3 rounded-[1.5rem] bg-slate-900/80 backdrop-blur-md border border-white/10 shadow-2xl animate-in zoom-in fade-in duration-500 scale-125">
+             <span class="text-sm font-black uppercase tracking-[0.2em] text-white">
+               {{ product.Status_Properti }}
+             </span>
+          </div>
+        </div>
+
+        <!-- Media Counter -->
+        <div v-if="media.length > 1" class="absolute bottom-6 right-6 px-3 py-1 bg-black/40 backdrop-blur-md rounded-lg text-[10px] font-black text-white uppercase tracking-widest">
+           {{ activeMediaIndex + 1 }} / {{ media.length }}
+        </div>
       </div>
-    </Transition>
-  </Teleport>
+
+      <!-- Thumbnails -->
+      <div v-if="media.length > 1" class="p-4 bg-white border-t border-slate-50">
+        <div class="flex gap-2 overflow-x-auto pb-2 custom-scroll">
+          <button 
+            v-for="(item, index) in media" 
+            :key="index"
+            @click="activeMediaIndex = index"
+            class="relative size-16 shrink-0 rounded-xl overflow-hidden border-2 transition-all"
+            :class="activeMediaIndex === index ? 'border-bejo-500 scale-95 shadow-md' : 'border-transparent opacity-60 hover:opacity-100'"
+          >
+            <video 
+               v-if="item.type === 'video'" 
+               :src="`${item.url}#t=0.001`" 
+               class="size-full object-cover" 
+               preload="metadata" 
+               playsinline
+            ></video>
+            <img v-else :src="item.thumb!" class="size-full object-cover" />
+            <div v-if="item.type === 'video'" class="absolute inset-0 flex items-center justify-center bg-black/20">
+               <Icon icon="lucide:play" class="size-4 text-white fill-white/20" />
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="card bg-white rounded-3xl p-6 shadow-premium border-none">
+       <div class="grid grid-cols-1 gap-3">
+          <!-- Contact Button - Hidden if already Sold/Rented -->
+          <button v-if="product?.Status_Properti === 'Tersedia'" @click="handleWhatsApp" class="w-full h-14 bg-green-500 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-green-500/20 hover:bg-green-600 transition-all active:scale-95 flex items-center justify-center gap-3">
+             <Icon icon="ic:baseline-whatsapp" class="size-6" />
+             Hubungi Agen
+          </button>
+
+          <!-- Secondary Actions -->
+          <div class="grid grid-cols-2 gap-3">
+             <button @click="$emit('openCompare')" class="h-12 bg-bejo-50 text-bejo-600 rounded-2xl font-black text-[10px] uppercase tracking-widest border border-bejo-100 hover:bg-bejo-600 hover:text-white transition-all flex items-center justify-center gap-2">
+                <Icon icon="lucide:git-compare" class="size-4" />
+                Bandingkan
+             </button>
+             <button @click="handleShare" class="h-12 bg-slate-50 text-slate-600 rounded-2xl font-black text-[10px] uppercase tracking-widest border border-slate-100 hover:bg-slate-200 transition-all flex items-center justify-center gap-2">
+                <Icon icon="lucide:share-2" class="size-4" />
+                Bagikan
+             </button>
+          </div>
+       </div>
+
+       <!-- Disclaimer -->
+       <div class="mt-6 pt-6 border-t border-slate-50">
+          <p class="text-[9px] font-bold text-slate-400 text-center leading-relaxed">
+             Dengan menghubungi kami, Anda menyetujui Ketentuan Layanan dan Kebijakan Privasi kami.
+          </p>
+       </div>
+    </div>
+  </div>
 </template>
 
 <style scoped>
-video,
-img {
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
+@reference "@/assets/css/style.css";
+
+.shadow-premium {
+  box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.08);
 }
 
-.animate-pulse {
-  animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+.custom-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #e2e8f0 transparent;
+}
+
+.custom-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 10px;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

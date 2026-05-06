@@ -2,29 +2,32 @@
 import { computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import type { Product } from '../index.vue'
-import GoogleMapsViewer from '@/components/common/GoogleMapsViewer.vue'
 import PropertySpecsGrid from '@/components/common/PropertySpecsGrid.vue'
 
 const props = defineProps<{
   product: Product | null
 }>()
 
-const formattedArea = computed(() => {
-  if (!props.product?.Area?.[0]) return ''
-  const parts = props.product.Area[0].split(',').map(s => s.trim())
-  if (parts.length >= 2) {
-    return parts.slice(-2).join(', ')
-  }
-  return props.product.Area[0]
-})
+const fullAddress = computed(() => {
+  if (!props.product) return ''
+  
+  // 1. Clean up street address (split by '_' and take first part)
+  const street = props.product.Alamat.split('_')[0].trim()
+  
+  // 2. Location parts
+  const kelurahan = (props.product as any).Kelurahan || ''
+  const kecamatan = (props.product as any).Kecamatan || ''
+  const kota = props.product.Nama_Kota || ''
+  const area = props.product.Nama_Area || ''
 
-const coords = computed(() => {
-  if (!props.product?.Area?.[2]) return null
-  const parts = props.product.Area[2].split(',')
-  if (parts.length < 2) return null
-  const lat = parseFloat(parts[0])
-  const lng = parseFloat(parts[1])
-  return isNaN(lat) || isNaN(lng) ? null : { lat, lng }
+  // Build the string: street, kelurahan, kecamatan, kota (area)
+  let result = street
+  if (kelurahan) result += `, ${kelurahan}`
+  if (kecamatan) result += `, ${kecamatan}`
+  if (kota) result += `, ${kota}`
+  if (area) result += ` (${area})`
+  
+  return result
 })
 
 const formatCurrency = (value: number) => {
@@ -35,148 +38,157 @@ const formatCurrency = (value: number) => {
 
 <template>
   <div class="lg:col-span-2 col-span-1">
-    <div class="card relative transition-all duration-500 border-none shadow-sm hover:shadow-md bg-white rounded-xl overflow-hidden">
-      <div class="card-body p-6 md:p-8">
-        <div class="flex justify-between items-center mb-6">
-          <div class="flex items-center gap-2">
-            <template v-for="(transaksi, index) in product?.Status_Transaksi" :key="index">
-              <span class="px-3 py-1 text-[11px] uppercase tracking-wider font-bold rounded-xl bg-bejo-50 text-bejo-600 border border-bejo-200">
-                {{ transaksi }}
-              </span>
-            </template>
-            <span v-if="product?.Tipe" class="px-3 py-1 text-[11px] uppercase tracking-wider font-bold rounded-xl bg-slate-100 text-slate-700 border border-slate-200">
-              {{ product.Tipe }}
+    <div class="card relative transition-all duration-700 border-none shadow-premium bg-white rounded-[2.5rem] overflow-hidden">
+      <div class="card-body p-8 md:p-10">
+        <!-- Header: Title & Address -->
+        <div class="mb-10 border-b border-slate-100 pb-10 relative">
+          <!-- Badges -->
+          <div v-if="product" class="flex flex-wrap items-center gap-2 mb-5">
+            <div v-for="tag in product.Status_Transaksi" :key="tag" class="px-4 py-1 rounded-full bg-bejo-500 text-white text-[9px] font-black uppercase tracking-widest shadow-sm shadow-bejo-500/20">
+              {{ tag }}
+            </div>
+          </div>
+          <div v-else class="flex gap-2 mb-5 animate-pulse">
+            <div class="h-6 w-16 bg-slate-100 rounded-full"></div>
+          </div>
+
+          <h1 class="text-4xl md:text-5xl font-black tracking-tighter mb-4 uppercase leading-[0.85] text-slate-900" :class="!product ? 'text-transparent bg-slate-200 rounded-2xl animate-pulse select-none' : ''">
+            {{ product?.Nama_Produk || 'Memuat Nama Properti...' }}
+          </h1>
+          <div class="flex items-start gap-2" :class="!product ? 'text-transparent bg-slate-200 rounded-lg animate-pulse select-none w-fit' : 'text-slate-500'">
+            <Icon icon="lucide:map-pin" class="size-4 mt-1" :class="!product ? 'text-transparent' : 'text-bejo-600'" />
+            <span class="text-sm font-bold tracking-tight leading-relaxed">
+              {{ fullAddress || 'Memuat detail alamat...' }}
             </span>
           </div>
-        </div>
 
-        <div class="mb-8 border-b border-slate-100 pb-8 relative">
-          <h5 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-3 uppercase leading-tight" :class="!product ? 'text-transparent bg-slate-200 rounded-xl animate-pulse select-none w-fit' : 'text-slate-900'">
-            {{ product?.Nama_Produk || 'Memuat Nama Properti Disini...' }}
-          </h5>
-          <div class="flex items-center gap-2" :class="!product ? 'text-transparent bg-slate-200 rounded-lg animate-pulse select-none w-fit' : 'text-slate-500'">
-            <Icon icon="lucide:map-pin" class="size-4" :class="!product ? 'text-transparent' : 'text-bejo-600'" />
-            <span class="text-sm font-semibold">
-              {{ product?.Alamat.split(',')[0]+", "+product?.Nama_Kota || 'Memuat alamat jalan...' }}
-              <span v-if="formattedArea">, {{ formattedArea }}</span>
-            </span>
+          <!-- Property Type Badge -->
+          <div v-if="product?.Tipe" class="mt-4 px-4 py-1 rounded-full bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest w-fit shadow-sm shadow-slate-900/20">
+            {{ product.Tipe }}
           </div>
+          <div v-else-if="!product" class="mt-4 h-6 w-20 bg-slate-100 rounded-full animate-pulse"></div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-10">
-          <div v-show="!product || product?.Status_Transaksi?.includes('Jual')" class="bg-slate-50 p-6 rounded-2xl border border-slate-100 shadow-sm">
-            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-2" :class="!product ? 'text-transparent bg-slate-200 rounded animate-pulse w-fit select-none' : ''">Harga Jual</p>
-            <h4 class="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <span class="font-extrabold text-3xl text-slate-900" :class="!product ? 'text-transparent bg-slate-200 rounded-xl animate-pulse select-none' : ''">
+        <!-- Pricing Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+          <div v-show="!product || product?.Status_Transaksi?.includes('Jual')" class="bg-slate-50/50 p-6 rounded-3xl border border-slate-100 relative group overflow-hidden">
+            <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-2" :class="!product ? 'text-transparent bg-slate-200 rounded animate-pulse w-fit select-none' : ''">Harga Jual</p>
+            <h4 class="flex flex-wrap items-center gap-x-4 gap-y-1">
+              <span class="font-black text-3xl text-slate-900 tracking-tighter" :class="!product ? 'text-transparent bg-slate-200 rounded-xl animate-pulse select-none' : ''">
                 {{ !product ? formatCurrency(5000000000) : (product?.Harga_Jual2 == 0 ? formatCurrency(product.Harga_Jual1) : formatCurrency(product.Harga_Jual2)) }}
               </span>
-              <div v-if="product?.Harga_Jual2 != 0 && product" class="flex items-center gap-2">
-                <span class="relative text-sm font-bold text-slate-400 italic px-1 shrink-0">
+              <div v-if="product?.Harga_Jual2 != 0 && product" class="flex items-center gap-2 mt-1">
+                <span class="relative text-xs font-bold text-slate-400 italic px-1 shrink-0">
                   {{ formatCurrency(product?.Harga_Jual1 || 0) }}
                   <span class="absolute inset-x-0 top-1/2 h-[1.5px] bg-red-500 transform -rotate-[10deg] opacity-80 rounded-full"></span>
                 </span>
-                <span class="bg-red-50 text-red-600 text-[10px] font-black px-2 py-0.5 rounded-md border border-red-100/50">
+                <span class="bg-red-50 text-red-600 text-[10px] font-black px-2 py-0.5 rounded-lg border border-red-100/50">
                   -{{ Math.round(((product.Harga_Jual1 - product.Harga_Jual2) / product.Harga_Jual1) * 100) }}%
                 </span>
               </div>
             </h4>
           </div>
 
-          <div v-show="!product || product?.Status_Transaksi?.includes('Sewa')" class="bg-bejo-50 p-6 rounded-2xl border border-bejo-100 shadow-sm">
-            <p class="text-[10px] text-bejo-700 font-bold uppercase tracking-widest mb-2" :class="!product ? 'text-transparent bg-slate-200 rounded animate-pulse w-fit select-none' : ''">Harga Sewa</p>
-            <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <h4 class="font-extrabold text-3xl text-bejo-600" :class="!product ? 'text-transparent bg-slate-200 rounded-xl animate-pulse select-none' : ''">
+          <div v-show="!product || product?.Status_Transaksi?.includes('Sewa')" class="bg-bejo-50/30 p-6 rounded-3xl border border-bejo-100 relative group overflow-hidden">
+            <p class="text-[10px] text-bejo-600 font-black uppercase tracking-widest mb-2" :class="!product ? 'text-transparent bg-slate-200 rounded animate-pulse w-fit select-none' : ''">Harga Sewa</p>
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
+              <h4 class="font-black text-3xl text-bejo-600 tracking-tighter" :class="!product ? 'text-transparent bg-slate-200 rounded-xl animate-pulse select-none' : ''">
                 {{ !product ? formatCurrency(150000000) : formatCurrency(product?.Harga_Sewa2 == 0 ? product.Harga_Sewa1 : product?.Harga_Sewa2 || 0) }}
               </h4>
-              <div v-if="product?.Harga_Sewa2 != 0 && product" class="flex items-center gap-2">
-                <span class="relative text-sm font-bold text-slate-400 italic px-1 shrink-0">
+              <div v-if="product?.Harga_Sewa2 != 0 && product" class="flex items-center gap-2 mt-1">
+                <span class="relative text-xs font-bold text-slate-400 italic px-1 shrink-0">
                   {{ formatCurrency(product?.Harga_Sewa1 || 0) }}
                   <span class="absolute inset-x-0 top-1/2 h-[1.5px] bg-red-500 transform -rotate-[10deg] opacity-80 rounded-full"></span>
                 </span>
-                <span class="bg-red-50 text-red-600 text-[10px] font-black px-2 py-0.5 rounded-md border border-red-100/50">
+                <span class="bg-red-50 text-red-600 text-[10px] font-black px-2 py-0.5 rounded-lg border border-red-100/50">
                   -{{ Math.round(((product.Harga_Sewa1 - product.Harga_Sewa2) / product.Harga_Sewa1) * 100) }}%
                 </span>
               </div>
-              <span v-if="product" class="text-xs font-bold text-bejo-600/70 lowercase mt-1">/ {{ product?.Satuan_Minimal_Sewa || 'Tahun' }}</span>
+              <span v-if="product" class="text-xs font-bold text-bejo-600/70 lowercase mt-1 tracking-tight">/ {{ product?.Satuan_Minimal_Sewa || 'Tahun' }}</span>
             </div>
           </div>
         </div>
 
-        <div class="mb-12">
-          <h6 class="text-[11px] font-black text-slate-800 uppercase tracking-widest mb-5 flex items-center gap-3"><span class="w-8 h-[2px] bg-bejo-500 rounded-full"></span> RINGKASAN PROPERTI</h6>
+        <!-- Property Summary -->
+        <div class="mb-14">
+          <h6 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
+             <div class="w-8 h-[2px] bg-slate-200 rounded-full"></div>
+             Ringkasan Properti
+          </h6>
           <PropertySpecsGrid :product="product" />
         </div>
 
-        <div class="mb-12 p-8 bg-slate-50/50 rounded-2xl border-s-[6px] border-bejo-500 relative flex flex-col">
-          <Icon icon="lucide:quote" class="absolute top-6 right-6 size-10 text-slate-200 opacity-40" v-if="product" />
-          <h6 class="text-[11px] font-black text-slate-800 uppercase tracking-widest mb-4" :class="!product ? 'text-transparent bg-slate-200 rounded animate-pulse w-max select-none shrink-0' : ''">Deskripsi Lengkap</h6>
-          <p class="text-sm md:text-base leading-relaxed font-medium" :class="!product ? 'text-transparent bg-slate-200 rounded-lg animate-pulse select-none' : 'text-slate-600'">{{ product?.Keterangan || 'Sedang memuat deskripsi lengkap...' }}</p>
+        <!-- Description -->
+        <div class="mb-14 p-8 md:p-10 bg-slate-50/50 rounded-[2.5rem] border border-slate-100 relative flex flex-col">
+          <Icon icon="lucide:quote" class="absolute top-6 right-8 size-16 text-slate-500/5" v-if="product" />
+          <h6 class="text-[10px] font-black text-slate-900 uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
+            <div class="w-10 h-[2px] bg-bejo-500 rounded-full"></div>
+            Deskripsi Lengkap
+          </h6>
+          <p class="text-base md:text-lg leading-relaxed font-medium text-slate-600" :class="!product ? 'text-transparent bg-slate-200 rounded-lg animate-pulse select-none' : ''">
+            {{ product?.Keterangan || 'Sedang memuat deskripsi lengkap...' }}
+          </p>
         </div>
 
-        <div class="mb-12">
-          <h6 class="text-[11px] font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-3">AKSESIBILITAS</h6>
-          <div class="overflow-hidden border border-slate-100 rounded-2xl shadow-sm">
-            <table class="w-full text-sm">
-              <tbody class="divide-y divide-slate-100">
-                <template v-if="product">
-                  <tr v-for="(akses, idx) in product?.Akses_Jalan" :key="idx" class="hover:bg-slate-50 transition-colors group">
-                    <td class="px-6 py-4 text-slate-700 font-bold flex items-center gap-4">
-                      <span class="size-2 rounded-full bg-bejo-400 group-hover:bg-bejo-600 transition-colors"></span>
-                      {{ akses }}
-                    </td>
-                  </tr>
-                  <tr v-if="!product?.Akses_Jalan || product.Akses_Jalan.length === 0">
-                    <td class="px-6 py-6 text-slate-400 font-bold italic text-center bg-slate-50/30">Informasi akses tersedia</td>
-                  </tr>
-                </template>
-                <template v-else>
-                  <tr v-for="i in 3" :key="i">
-                    <td class="px-6 py-4 flex items-center gap-4">
-                       <div class="size-2 rounded-full bg-slate-200 animate-pulse"></div>
-                       <span class="text-transparent bg-slate-200 rounded animate-pulse select-none w-1/3">Memuat akses...</span>
-                    </td>
-                  </tr>
-                </template>
-              </tbody>
-            </table>
+        <!-- Accessibility -->
+        <div class="mb-14">
+          <h6 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-8 flex items-center gap-3">
+             <div class="w-8 h-[2px] bg-slate-200 rounded-full"></div>
+             Aksesibilitas
+          </h6>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 pl-4">
+            <template v-if="product">
+              <div v-for="(akses, idx) in product?.Akses_Jalan" :key="idx" class="flex items-center gap-4 group">
+                <div class="size-2 rounded-full bg-red-500 shadow-lg shadow-red-500/20 group-hover:scale-125 transition-transform"></div>
+                <span class="text-sm md:text-base font-bold text-slate-700 tracking-tight">{{ akses }}</span>
+              </div>
+              <div v-if="!product?.Akses_Jalan || product.Akses_Jalan.length === 0" class="text-sm font-bold text-slate-400 italic">
+                Informasi akses jalan tidak tersedia
+              </div>
+            </template>
+            <template v-else>
+              <div v-for="i in 4" :key="i" class="flex items-center gap-4 animate-pulse">
+                <div class="size-2 rounded-full bg-slate-200"></div>
+                <div class="h-4 w-2/3 bg-slate-100 rounded"></div>
+              </div>
+            </template>
           </div>
         </div>
 
+        <!-- Additional Info -->
         <div class="mb-6">
-          <h6 class="text-[11px] font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-3">INFORMASI TAMBAHAN</h6>
-          <div class="overflow-hidden border border-slate-100 rounded-2xl shadow-sm">
+          <h6 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
+             <div class="w-8 h-[2px] bg-slate-200 rounded-full"></div>
+             Informasi Tambahan
+          </h6>
+          <div class="overflow-hidden border border-slate-100 rounded-3xl">
             <table class="w-full text-sm">
-              <tbody class="divide-y divide-slate-100 italic">
-                <tr v-for="info in [
-                  { label: 'Daya Listrik', val: product ? (product.Daya_Listrik?.toLocaleString('id-ID') + ' Watt') : 'Memuat..' },
-                  { label: 'Tipe Unit', val: product?.Tipe || 'Memuat..' },
-                  { label: 'Sertifikat', val: product?.Jenis_Sertifikat || 'Memuat..' },
-                  { label: 'Minimal Sewa', val: (product?.minimal_sewa || (product as any)?.Minimal_Sewa) ? ((product?.minimal_sewa || (product as any)?.Minimal_Sewa) + ' ' + product?.Satuan_Minimal_Sewa) : '-', show: !product || product?.Status_Transaksi?.includes('Sewa') }
-                ].filter(item => item.show !== false)" :key="info.label" class="hover:bg-slate-50 transition-colors">
-                  <td class="px-6 py-4 font-bold bg-slate-50 w-1/3 text-slate-500">{{ info.label }}</td>
-                  <td class="px-6 py-4 font-bold text-slate-800 not-italic">{{ info.val }}</td>
+              <tbody class="divide-y divide-slate-100 font-bold italic">
+                <tr v-for="item in [
+                  { label: 'Daya Listrik', val: product ? (product.Daya_Listrik.toLocaleString('id-ID') + ' Watt') : null },
+                  { label: 'Tipe Unit', val: product?.Tipe },
+                  { label: 'Sertifikat', val: product?.Jenis_Sertifikat },
+                  { label: 'Minimal Sewa', val: (product?.minimal_sewa || (product as any)?.Minimal_Sewa) ? ((product.minimal_sewa || (product as any).Minimal_Sewa) + ' ' + product.Satuan_Minimal_Sewa) : '-', show: !product || product?.Status_Transaksi?.includes('Sewa') }
+                ].filter(i => i.show !== false)" :key="item.label" class="hover:bg-slate-50 transition-colors">
+                  <td class="px-8 py-5 text-slate-500 bg-slate-50/50 w-1/3">{{ item.label }}</td>
+                  <td class="px-8 py-5 text-slate-900 not-italic">
+                    <span v-if="product">{{ item.val }}</span>
+                    <div v-else class="h-4 w-24 bg-slate-100 rounded animate-pulse"></div>
+                  </td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
-        <div v-if="coords" class="mt-10 pt-10 border-t border-slate-100">
-          <h6 class="text-[11px] font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-3">
-            <span class="w-8 h-[2px] bg-bejo-500 rounded-full"></span> LOKASI PROPERTI
-          </h6>
-          <GoogleMapsViewer 
-            :lat="coords.lat" 
-            :lng="coords.lng" 
-            :title="product?.Nama_Produk" 
-            mapId="ADMIN_PRODUCT_DETAIL_MAP" 
-            height="350px"
-          />
-          <p class="mt-3 text-[10px] font-bold text-slate-400 italic flex items-center gap-1.5">
-            <Icon icon="lucide:info" class="size-3" />
-            Peta ini menunjukkan lokasi tepat properti berdasarkan koordinat yang tersimpan
-          </p>
-        </div>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+@reference "@/assets/css/style.css";
+
+.shadow-premium {
+  box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.05);
+}
+</style>

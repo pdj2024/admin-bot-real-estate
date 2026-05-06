@@ -1,39 +1,35 @@
 <script setup lang="ts">
-import { onMounted, ref, nextTick } from 'vue'
-import { useRoute } from 'vue-router'
+import { onMounted, ref, nextTick, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import api from '@/services/axios'
 import Vertical from '@/layouts/vertical.vue'
 import SidebarProduct from './components/SidebarProduct.vue'
 import ProductDetails from './components/ProductDetails.vue'
 import GoogleMapsViewer from '@/components/common/GoogleMapsViewer.vue'
+import Modal from '../katalog/components/Modal.vue'
 import { Icon } from '@iconify/vue'
-import { computed } from 'vue'
-
+import { confirm, success, fail } from '@/utils/sweet-alert'
 
 const route = useRoute()
+const router = useRouter()
 const slug = route.params.slug
 
 const product = ref<Product | null>(null)
 const isLoading = ref(true)
+const isModalOpen = ref(false)
+const selectedItem = ref<Product | null>(null)
 
 const mapCoords = computed(() => {
   if (!product.value?.Alamat) return null
-  console.log('Processing map coordinates from address:', product.value.Alamat)
-  
-  // Support both "Lat:" and "Latitude:", and "Long:", "Lng:", or "Longitude:"
   const latMatch = product.value.Alamat.match(/(?:Lat|Latitude):\s*([-+]?\d+\.?\d*)/i)
   const lngMatch = product.value.Alamat.match(/(?:Long|Lng|Longitude):\s*([-+]?\d+\.?\d*)/i)
   
   if (latMatch && lngMatch) {
-    const coords = {
+    return {
       lat: parseFloat(latMatch[1]),
-      lng: parseFloat(lngMatch[1]) // Fix: Use index 1 for the first capturing group
+      lng: parseFloat(lngMatch[1])
     }
-    console.log('Successfully parsed coordinates:', coords)
-    return coords
   }
-  
-  console.warn('Failed to parse coordinates from address string')
   return null
 })
 
@@ -82,13 +78,15 @@ export interface Product {
   Akses_Jalan: string[]
   File_Image: string[]
   MediaUrls: MediaUrl[]
+  Nama_Area?: string
+  Kelurahan?: string
+  Kecamatan?: string
 }
-
 
 const fetchData = async () => {
   isLoading.value = true
   try {
-    const { data } = await api.get('/api/realEstate/getAll?slug='+slug, {
+    const { data } = await api.get('/api/realEstate/getAll?slug=' + slug, {
       headers: { 'X-Jenis-User': 'admin' }
     })
     product.value = data.Data[0]
@@ -97,6 +95,42 @@ const fetchData = async () => {
   } finally {
     isLoading.value = false
   }
+}
+
+const openEditModal = () => {
+  if (!product.value) return
+  selectedItem.value = { ...product.value }
+  isModalOpen.value = true
+}
+
+const handleDelete = async () => {
+  if (!product.value) return
+  const data = product.value
+  
+  confirm('Apakah Anda ingin menghapus data ini?', async () => {
+    try {
+      const res = await api.delete('/api/mediacloud/delete-batch', {
+        data: { ids: [...data.File_Image] },
+        headers: { 'X-Jenis-User': 'admin' }
+      })
+      
+      const successMedia: string[] = res.data?.Success || []
+      if (!data.File_Image.every((id: string) => successMedia.includes(id))) {
+        fail('Beberapa gambar gagal dihapus')
+        return
+      }
+
+      await api.delete(`/api/realEstate/delete?no_id=${data.No_Id}`, {
+        headers: { 'X-Jenis-User': 'admin' }
+      })
+      
+      success('Berhasil hapus produk')
+      router.push('/admin/properti/katalog')
+    } catch (err: any) {
+      fail('Gagal menghapus data')
+      console.error(err)
+    }
+  })
 }
 
 onMounted(async () => {
@@ -109,11 +143,16 @@ onMounted(async () => {
 
 <template>
   <Vertical>
-    <div class="p-0 md:p-3 md:pt-1 pb-32 max-w-[1440px] mx-auto w-full">
+    <div class="p-0 md:p-3 py-10 pb-32 max-w-[1440px] mx-auto w-full">
 
-      <div class="grid lg:grid-cols-3 grid-cols-1 gap-5">
-        <SidebarProduct :product="product" />
-        <div class="lg:col-span-2 col-span-1 flex flex-col gap-5">
+      <div class="grid lg:grid-cols-12 grid-cols-1 gap-5">
+        <SidebarProduct 
+          :product="product" 
+          @edit="openEditModal" 
+          @delete="handleDelete" 
+          class="lg:col-span-4"
+        />
+        <div class="lg:col-span-8 col-span-1 flex flex-col gap-5">
           <ProductDetails :product="product" :isAdmin="true" class="!col-span-1" />
           
           <!-- Map Section -->
@@ -135,6 +174,12 @@ onMounted(async () => {
         </div>
       </div>
     </div>
+
+    <!-- Edit Modal -->
+    <Modal 
+      v-model:showModal="isModalOpen" 
+      :itemData="selectedItem" 
+      @success="fetchData" 
+    />
   </Vertical>
 </template>
-

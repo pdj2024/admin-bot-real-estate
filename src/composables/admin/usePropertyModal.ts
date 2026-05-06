@@ -331,6 +331,11 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
     if (itemData) {
       form.value = JSON.parse(JSON.stringify(itemData))
       
+      // Strip technical Lat/Long details from Alamat for a cleaner UI during edit
+      if (form.value.Alamat) {
+        form.value.Alamat = form.value.Alamat.split(', Lat:')[0].split('_Lat:')[0].trim()
+      }
+
       nextTick(() => {
         location.geocodeExistingAddress()
       })
@@ -455,12 +460,13 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
       }
       // 4. Append Lat/Long to Address for storage
       let finalAlamat = form.value.Alamat || ''
+      
+      // Clean existing Lat/Long patterns to avoid duplicates or old formats
+      finalAlamat = finalAlamat.split(', Lat:')[0].split('_Lat:')[0].trim()
+
       if (form.value.Area[2] && form.value.Area[2].includes(',')) {
         const [lat, lng] = form.value.Area[2].split(',')
-        // Only append if not already there
-        if (!finalAlamat.includes('Lat:')) {
-          finalAlamat = `${finalAlamat.trim()}, Lat: ${lat.trim()} Long: ${lng.trim()}`
-        }
+        finalAlamat = `${finalAlamat}_Lat: ${lat.trim()} Long: ${lng.trim()}`
       }
 
       const payload = { 

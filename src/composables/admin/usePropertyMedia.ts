@@ -9,11 +9,78 @@ export function usePropertyMedia(form: any) {
   const selectedFiles = ref<File[]>([])
   const deletedMediaIds = ref<string[]>([])
 
-  const handlePhoto = (event: Event, scrollContainer: any) => {
+  const isCompressing = ref(false)
+  const compressionProgress = ref(0)
+
+  const compressVideo = async (file: File): Promise<File> => {
+    // Only compress if video is larger than 4MB
+    if (file.size <= 4 * 1024 * 1024) return file
+
+    return new Promise((resolve) => {
+      const video = document.createElement('video')
+      const reader = new FileReader()
+
+      reader.onload = (e) => {
+        video.src = e.target?.result as string
+        video.onloadedmetadata = () => {
+          const stream = (video as any).captureStream ? (video as any).captureStream() : (video as any).mozCaptureStream()
+          const supportedMimeTypes = [
+            'video/webm;codecs=vp9',
+            'video/webm;codecs=vp8',
+            'video/webm',
+            'video/mp4'
+          ]
+          const mimeType = supportedMimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || ''
+          
+          const recorder = new MediaRecorder(stream, {
+            mimeType,
+            videoBitsPerSecond: 1500000 // Target ~1.5 Mbps
+          })
+
+          const chunks: Blob[] = []
+          recorder.ondataavailable = (e) => chunks.push(e.data)
+          recorder.onstop = () => {
+            const blob = new Blob(chunks, { type: 'video/webm' })
+            const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".webm", {
+              type: 'video/webm'
+            })
+            resolve(compressedFile)
+          }
+
+          video.play()
+          recorder.start()
+          
+          video.onended = () => {
+            recorder.stop()
+            video.src = ''
+          }
+        }
+      }
+      reader.readAsDataURL(file)
+    })
+  }
+
+  const handlePhoto = async (event: Event, scrollContainer: any) => {
     const target = event.target as HTMLInputElement
     if (!target.files) return
     const fileArray = Array.from(target.files)
-    fileArray.forEach((file) => {
+    
+    isCompressing.value = true
+    
+    for (const file of fileArray) {
+      let fileToProcess = file
+      
+      // Compress video if it's too large
+      if (file.type.startsWith('video/') && file.size > 4 * 1024 * 1024) {
+        try {
+          fileToProcess = await compressVideo(file)
+        } catch (error) {
+          console.error('Video compression failed:', error)
+          // Fallback to original file if compression fails
+          fileToProcess = file
+        }
+      }
+
       const reader = new FileReader()
       reader.onload = (e) => {
         if (typeof e.target?.result === 'string') {
@@ -22,13 +89,14 @@ export function usePropertyMedia(form: any) {
             No_Id_Media: 'new_upload', 
             Url: null, 
             Expired_At: '', 
-            IsCompressed: false, 
-            ContentType: file.type, 
+            IsCompressed: fileToProcess.size < file.size, 
+            ContentType: fileToProcess.type, 
             ThumbUrl: null, 
-            Size: file.size 
+            Size: fileToProcess.size 
           })
-          extensionsPhotos.value.push(file.name.split('.').pop()?.toLowerCase() || '')
-          photos.value.push(file)
+          extensionsPhotos.value.push(fileToProcess.name.split('.').pop()?.toLowerCase() || '')
+          photos.value.push(fileToProcess)
+          
           if(scrollContainer) {
             nextTick(() => {
               scrollContainer.scrollTo({ left: scrollContainer.scrollWidth, behavior: 'smooth' })
@@ -36,8 +104,10 @@ export function usePropertyMedia(form: any) {
           }
         }
       }
-      reader.readAsDataURL(file)
-    })
+      reader.readAsDataURL(fileToProcess)
+    }
+    
+    isCompressing.value = false
     target.value = ''
   }
 
@@ -118,6 +188,7 @@ export function usePropertyMedia(form: any) {
   }
 
   return {
+    isCompressing,
     photos,
     previewPhotos,
     handlePhoto,

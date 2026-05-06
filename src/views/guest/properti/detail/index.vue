@@ -82,6 +82,9 @@ export interface Product {
   Akses_Jalan: string[]
   File_Image: string[]
   MediaUrls: MediaUrl[]
+  Nama_Area?: string
+  Kelurahan?: string
+  Kecamatan?: string
 }
 
 const product = ref<Product | null>(null)
@@ -166,7 +169,8 @@ onMounted(async () => {
 
 <template>
   <Guest>
-    <div class="w-full !px-4 sm:!px-8 lg:!px-10 py-10 min-h-[60vh]">
+    <div class="w-full max-w-[1440px] mx-auto !px-4 sm:!px-8 lg:!px-10 py-10 min-h-[60vh]">
+
       <!-- Skeleton Loading State -->
       <div v-if="isLoading" class="grid lg:grid-cols-3 grid-cols-1 gap-8">
         <!-- Sidebar Skeleton -->
@@ -181,9 +185,9 @@ onMounted(async () => {
         </div>
       </div>
       
-      <div v-else-if="product" class="grid lg:grid-cols-3 grid-cols-1 gap-5">
-        <SidebarProduct :product="product" :isAdmin="isAdmin" @openCompare="showCompareModal = true" />
-        <div class="lg:col-span-2 col-span-1 flex flex-col gap-5">
+      <div v-else-if="product" class="grid lg:grid-cols-12 grid-cols-1 gap-5">
+        <SidebarProduct :product="product" :isAdmin="isAdmin" @openCompare="showCompareModal = true" class="lg:col-span-4" />
+        <div class="lg:col-span-8 col-span-1 flex flex-col gap-5">
           <ProductDetails :product="product" :isAdmin="isAdmin" class="!col-span-1" />
           
           <!-- Map Section -->

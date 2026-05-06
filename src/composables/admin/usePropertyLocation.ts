@@ -199,9 +199,13 @@ export function usePropertyLocation(form: any, deps?: { cities: any, createCity:
       
       if (form.value.Area[2] && form.value.Area[2].includes(',')) {
         const [lat, lng] = form.value.Area[2].split(',').map(Number)
-        if (!isNaN(lat) && !isNaN(lng)) initialPos = { lat, lng }
+        if (!isNaN(lat) && !isNaN(lng)) {
+          initialPos = { lat, lng }
+          isLocationSelected.value = true
+        }
       } else if (coordsFromAlamat) {
         initialPos = coordsFromAlamat
+        isLocationSelected.value = true
       }
       gMap = markRaw(new libraryMap.Map(mapContainer.value, { 
         center: initialPos, 
@@ -215,20 +219,14 @@ export function usePropertyLocation(form: any, deps?: { cities: any, createCity:
       gMarker = markRaw(new libraryMarker.AdvancedMarkerElement({ 
         map: gMap, 
         position: initialPos, 
-        gmpDraggable: true 
+        gmpDraggable: false 
       }))
       
       const { AutocompleteSessionToken } = await google.maps.importLibrary('places') as any
       gAutocompleteSessionToken = markRaw(new AutocompleteSessionToken())
 
-      gMarker.addListener('dragend', () => { 
-        if (gMarker.position) { 
-          updateCoords(gMarker.position.lat, gMarker.position.lng); 
-          geocodePosition(gMarker.position) 
-        }
-      })
       
-      gMap.addListener('gmp-click', (e: any) => { 
+      gMap.addListener('click', (e: any) => { 
         if (e.latLng) { 
           const lat = e.latLng.lat(); const lng = e.latLng.lng(); 
           gMarker.position = {lat, lng}; 

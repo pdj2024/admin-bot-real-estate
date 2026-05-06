@@ -31,42 +31,42 @@
         <div class="w-full px-6 py-8 sm:px-12 sm:py-16 grid grid-cols-1 xl:grid-cols-12 gap-10 lg:gap-16 relative z-10">
         
           <!-- Input Form Section -->
-          <div class="xl:col-span-7 space-y-8 relative z-10">
-            <div class="mb-10">
+          <div class="xl:col-span-7 space-y-6 relative z-10">
+            <div class="mb-6">
               <div class="inline-flex items-center gap-2 px-4 py-2 bg-bejo-50 rounded-full text-bejo-600 text-xs font-black uppercase tracking-widest mb-4">
                 <Icon icon="lucide:calculator" class="size-4" />
                 Calculator
               </div>
-              <h2 class="text-3xl font-black text-slate-900 mb-3">Detail Pinjaman</h2>
-              <p class="text-slate-500 font-medium text-base">Atur parameter di bawah ini untuk melihat simulasi pembiayaan properti Anda.</p>
+              <h2 class="text-3xl font-black text-slate-900 mb-2">Detail Pinjaman</h2>
+              <p class="text-slate-500 font-medium text-sm leading-relaxed">Atur parameter di bawah ini untuk melihat simulasi pembiayaan properti Anda secara akurat.</p>
             </div>
 
-            <div class="space-y-8">
+            <div class="space-y-6">
               <!-- Harga Properti -->
-              <div class="group">
-                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1 group-focus-within:text-bejo-600 transition-colors">Harga Properti</label>
+              <div class="group bg-white rounded-3xl p-6 border border-slate-100 shadow-sm transition-all hover:border-bejo-200">
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-1 group-focus-within:text-bejo-600 transition-colors">Harga Properti</label>
                 <div class="relative">
-                  <span class="absolute inset-y-0 left-5 flex items-center justify-center text-slate-400 font-bold text-lg">Rp</span>
-                  <input type="text" :value="formatCurrency(propertyPrice)" @input="setPropertyPrice" class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-5 pl-14 text-xl sm:text-2xl font-black text-slate-900 shadow-inner focus:outline-none focus:ring-4 focus:ring-bejo-500/10 focus:bg-white focus:border-bejo-200 transition-all" placeholder="0" />
+                  <span class="absolute inset-y-0 left-5 flex items-center justify-center text-slate-400 font-bold text-xl">Rp</span>
+                  <input type="text" :value="formatCurrency(propertyPrice)" @input="setPropertyPrice" class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-5 pl-14 text-2xl font-black text-slate-900 shadow-inner focus:outline-none focus:ring-4 focus:ring-bejo-500/10 focus:bg-white focus:border-bejo-200 transition-all" placeholder="0" />
                 </div>
               </div>
 
               <!-- Uang Muka -->
-              <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-6">
+              <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-6 transition-all hover:border-bejo-200">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <label class="text-xs font-black text-slate-400 uppercase tracking-widest">Uang Muka (DP)</label>
+                  <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Uang Muka (DP)</label>
                   <div class="flex items-center gap-3">
                     <div class="relative w-24">
                       <input type="number" v-model.number="dpPercentage" min="0" max="100" class="w-full bg-bejo-50 border border-bejo-100 rounded-xl px-3 py-2 pr-8 text-sm font-black text-bejo-700 focus:outline-none focus:ring-2 focus:ring-bejo-500/20" />
                       <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-bejo-400 font-black text-[10px]">%</span>
                     </div>
-                    <div class="h-8 w-[1px] bg-slate-100 hidden sm:block"></div>
+                    <div class="h-6 w-[1px] bg-slate-100 hidden sm:block"></div>
                     <span class="text-sm font-bold text-slate-400">Rp {{ formatCurrencyShort(dpValue) }}</span>
                   </div>
                 </div>
-                <div class="relative pt-1">
+                <div class="relative pt-1 px-1">
                   <input type="range" v-model.number="dpPercentage" min="0" max="100" step="1" class="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-bejo-600" />
-                  <div class="flex justify-between mt-2 text-[10px] font-bold text-slate-300 uppercase tracking-tighter">
+                  <div class="flex justify-between mt-3 text-[9px] font-black text-slate-300 uppercase tracking-widest">
                     <span>0%</span>
                     <span>25%</span>
                     <span>50%</span>
@@ -76,37 +76,42 @@
                 </div>
               </div>
 
-              <!-- Tenor & Suku Bunga -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <!-- Tenor -->
-                <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-6">
-                  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <label class="text-xs font-black text-slate-400 uppercase tracking-widest">Tenor (Waktu)</label>
-                    <div class="relative w-28">
-                      <input type="number" v-model.number="years" min="1" max="35" class="w-full bg-bejo-50 border border-bejo-100 rounded-xl px-3 py-2 pr-12 text-sm font-black text-bejo-700 focus:outline-none focus:ring-2 focus:ring-bejo-500/20" />
-                      <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-bejo-400 font-black text-[10px]">THN</span>
+              <!-- Tenor & Suku Bunga (Optimized Row) -->
+              <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-8 transition-all hover:border-bejo-200">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                  <!-- Tenor Control -->
+                  <div class="space-y-6">
+                    <div class="flex items-center justify-between">
+                      <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tenor (Waktu)</label>
+                      <div class="relative w-28">
+                        <input type="number" v-model.number="years" min="1" max="35" class="w-full bg-bejo-50 border border-bejo-100 rounded-xl px-3 py-2 pr-12 text-sm font-black text-bejo-700 focus:outline-none focus:ring-2 focus:ring-bejo-500/20" />
+                        <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-bejo-400 font-black text-[10px]">THN</span>
+                      </div>
+                    </div>
+                    <div class="relative pt-1 px-1">
+                      <input type="range" v-model.number="years" min="1" max="35" step="1" class="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-bejo-600" />
+                      <div class="flex justify-between mt-3 text-[9px] font-black text-slate-300 uppercase tracking-widest">
+                        <span>1 Thn</span>
+                        <span>15 Thn</span>
+                        <span>35 Thn</span>
+                      </div>
                     </div>
                   </div>
-                  <div class="relative pt-1">
-                    <input type="range" v-model.number="years" min="1" max="35" step="1" class="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-bejo-600" />
-                    <div class="flex justify-between mt-2 text-[10px] font-bold text-slate-300 uppercase tracking-tighter">
-                      <span>1 Thn</span>
-                      <span>15 Thn</span>
-                      <span>35 Thn</span>
-                    </div>
-                  </div>
-                </div>
 
-                <!-- Suku Bunga -->
-                <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
-                  <label class="block text-xs font-black text-slate-400 uppercase tracking-widest">Suku Bunga Fixed</label>
-                  <div class="relative flex items-center">
-                    <input type="number" v-model.number="interestRate" step="0.1" min="0" max="100" class="w-full bg-slate-50 border border-slate-100 rounded-xl px-5 py-3 pr-12 text-lg font-black text-slate-900 focus:outline-none focus:ring-4 focus:ring-bejo-500/10 focus:bg-white transition-all" />
-                    <span class="absolute right-4 text-slate-400 font-black">%</span>
+                  <!-- Suku Bunga Control -->
+                  <div class="space-y-4">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Suku Bunga Fixed</label>
+                    <div class="relative flex items-center">
+                      <input type="number" v-model.number="interestRate" step="0.1" min="0" max="100" class="w-full bg-slate-50 border border-slate-100 rounded-xl px-5 py-3 pr-12 text-lg font-black text-slate-900 focus:outline-none focus:ring-4 focus:ring-bejo-500/10 focus:bg-white transition-all" />
+                      <span class="absolute right-4 text-slate-400 font-black">%</span>
+                    </div>
+                    <div class="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-xl border border-slate-100">
+                      <Icon icon="lucide:info" class="size-3 text-bejo-400" />
+                      <p class="text-[9px] font-bold text-slate-400 leading-tight">
+                        Rata-rata suku bunga bank saat ini berkisar antara 3-9%.
+                      </p>
+                    </div>
                   </div>
-                  <p class="text-[10px] font-bold text-slate-400 leading-tight">
-                    *Gunakan estimasi suku bunga bank saat ini (rata-rata 3-9%)
-                  </p>
                 </div>
               </div>
             </div>
@@ -297,10 +302,10 @@ const parseNumber = (val: string | number) => {
 }
 
 // Simulasi KPR State
-const propertyPrice = ref<number>(1000000000)
+const propertyPrice = ref<number>(0)
 const dpPercentage = ref<number>(10)
 const years = ref<number>(15)
-const interestRate = ref<number>(5)
+const interestRate = ref<number>(5.5)
 
 const totalPinjaman = computed(() => {
   return Math.max(0, propertyPrice.value - dpValue.value)
