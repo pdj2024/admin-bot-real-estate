@@ -49,6 +49,14 @@ const loadGoogleMaps = () => {
   e.set('key', GOOGLE_MAPS_API_KEY)
   e.set('language', 'id')
   e.set('region', 'ID')
+  e.set('libraries', 'marker')
+  e.set('loading', 'async')
+  e.set('callback', 'initMaps')
+  
+  // Define dummy callback
+  if (!(window as any).initMaps) {
+    (window as any).initMaps = () => {}
+  }
   
   const script = m.createElement('script')
   script.src = `https://maps.${b}apis.com/maps/api/js?` + e
@@ -99,27 +107,30 @@ const initMap = async () => {
 
     const pos = { lat: Number(props.lat), lng: Number(props.lng) }
     
-    gMap = new google.maps.Map(mapContainer.value, {
+    // Modern loading pattern
+    const { Map } = await google.maps.importLibrary("maps") as google.maps.MapsLibrary;
+    const { AdvancedMarkerElement } = await google.maps.importLibrary("marker") as google.maps.MarkerLibrary;
+
+    gMap = new Map(mapContainer.value, {
       center: pos,
       zoom: props.zoom,
       mapTypeControl: false,
       streetViewControl: false,
       fullscreenControl: true,
       zoomControl: true,
-      mapId: props.mapId || 'DEMO_MAP_ID',
+      mapId: props.mapId || 'GENERIC_MAP_ID', // Required for AdvancedMarker
       gestureHandling: 'cooperative'
     })
 
     console.log('Map instance created successfully')
 
-    new google.maps.Marker({
+    new AdvancedMarkerElement({
       position: pos,
       map: gMap,
       title: props.title,
-      animation: google.maps.Animation.DROP
     })
 
-    console.log('Marker added to map at:', pos)
+    console.log('Advanced Marker added to map at:', pos)
     isMapLoaded.value = true
   } catch (err: any) {
     console.error('CRITICAL: Error initializing map:', err)

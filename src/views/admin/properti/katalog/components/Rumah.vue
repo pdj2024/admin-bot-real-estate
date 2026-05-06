@@ -160,6 +160,7 @@ const table = useVueTable({
   getSortedRowModel: getSortedRowModel(),
   getFilteredRowModel: getFilteredRowModel(),
   autoResetPageIndex: false,
+  getRowId: (row) => row.No_Id,
   initialState: {
     pagination: { pageSize: 15 }
   }
@@ -170,8 +171,8 @@ watch([() => props.searchQuery, transactionFilter, typeFilter, () => props.facil
   table.setPageIndex(0)
 }, { deep: true })
 
-const fetchData = async () => {
-  isLoading.value = true
+const fetchData = async (backgroundRefetch = false) => {
+  if (!backgroundRefetch) isLoading.value = true
   try {
     const { data } = await api.get('/api/realEstate/getAll', {
       headers: { 'X-Jenis-User': 'admin' }
@@ -186,7 +187,7 @@ const fetchData = async () => {
       fail('Gagal mengambil data properti.')
     }
   } finally {
-    isLoading.value = false
+    if (!backgroundRefetch) isLoading.value = false
   }
 }
 
@@ -210,7 +211,7 @@ const updateStatusTransaksi = async (product: any, newStatus: string) => {
       await api.put('/api/realEstate/update?no_id=' + product.No_Id, product, {
         headers: { 'X-Jenis-User': 'admin' }
       })
-      fetchData()
+      fetchData(true)
       activeDropdownId.value = null
     } catch (error) {
       console.error('Gagal mengubah status:', error)

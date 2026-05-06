@@ -15,6 +15,8 @@ onMounted(() => {
   const randomIndex = Math.floor(Math.random() * managementInsights.length)
   randomInsight.value = managementInsights[randomIndex]
 })
+
+const emit = defineEmits(['open-settings'])
 </script>
 
 <template>
@@ -27,18 +29,26 @@ onMounted(() => {
     <div class="absolute bottom-0 left-0 w-[400px] h-[400px] bg-bejo-50/30 blur-[100px] rounded-full translate-y-1/2 -translate-x-1/2 transition-transform duration-1000 group-hover:-translate-x-1/3 group-hover:translate-y-1/3"></div>
 
     <div class="relative z-10 grid grid-cols-1 md:grid-cols-12 items-center">
-      <div class="md:col-span-8 p-6 md:p-10">
+      <div class="md:col-span-8 p-5 md:p-10">
 
 
-        <h1 class="text-2xl md:text-4xl font-black text-slate-900 leading-tight mb-4">
-          Selamat Datang, <br>
-          <span class="inline-flex items-center gap-3 mt-1">
-            <span class="bg-gradient-to-r from-bejo-500 via-bejo-700 to-bejo-900 bg-clip-text text-transparent italic underline-offset-4">
-              {{ displayName }}!
+        <div class="flex items-start justify-between">
+          <h1 class="text-xl sm:text-2xl md:text-4xl font-black text-slate-900 leading-tight mb-4">
+            Selamat Datang, <br>
+            <span class="inline-flex items-center gap-2 sm:gap-3 mt-1">
+              <span class="bg-gradient-to-r from-bejo-500 via-bejo-700 to-bejo-900 bg-clip-text text-transparent italic underline-offset-4">
+                {{ displayName }}!
+              </span>
+              <Icon icon="lucide:sparkles" class="size-5 sm:size-6 text-bejo-500 animate-pulse" />
             </span>
-            <Icon icon="lucide:sparkles" class="size-6 text-bejo-500 animate-pulse" />
-          </span>
-        </h1>
+          </h1>
+          <button 
+            @click="emit('open-settings')"
+            class="md:hidden size-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-bejo-600 transition-all shadow-sm"
+          >
+            <Icon icon="lucide:settings-2" class="size-5" />
+          </button>
+        </div>
         
 
         <!-- Dynamic Insight Section -->
@@ -60,12 +70,12 @@ onMounted(() => {
           </div>
         </div>
 
-        <div class="flex flex-wrap gap-4">
-          <RouterLink to="/properti/katalog" class="group/btn flex items-center gap-2.5 px-6 py-3.5 bg-bejo-500 hover:bg-bejo-600 text-white rounded-xl font-black text-xs transition-all shadow-xl shadow-bejo-500/20 hover:-translate-y-1">
+        <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <RouterLink to="/properti/katalog" class="w-full sm:w-auto group/btn flex items-center justify-center gap-2.5 px-6 py-3.5 bg-bejo-500 hover:bg-bejo-600 text-white rounded-xl font-black text-xs transition-all shadow-xl shadow-bejo-500/20 hover:-translate-y-1">
             <Icon icon="lucide:layout-grid" class="size-4 transition-transform group-hover/btn:rotate-12" />
             Kelola Katalog
           </RouterLink>
-          <RouterLink to="/chat" class="group/btn flex items-center gap-2.5 px-6 py-3.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl font-black text-xs transition-all shadow-lg shadow-slate-200/50 hover:-translate-y-1">
+          <RouterLink to="/chat" class="w-full sm:w-auto group/btn flex items-center justify-center gap-2.5 px-6 py-3.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl font-black text-xs transition-all shadow-lg shadow-slate-200/50 hover:-translate-y-1">
             <Icon icon="lucide:message-circle" class="size-4 text-bejo-600 transition-transform group-hover/btn:scale-110" />
             Cek Pesanan Chat
           </RouterLink>

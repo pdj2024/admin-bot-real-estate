@@ -61,9 +61,9 @@
                 Beranda
                 <span class="absolute inset-x-0 -bottom-1 h-1 bg-bejo-500 rounded-t-full transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
               </RouterLink>
-              <RouterLink to="/katalog" active-class="text-bejo-600 [&>span]:scale-x-100" class="relative text-sm font-bold text-slate-600 hover:text-bejo-600 transition-colors group py-2">
+              <RouterLink to="/katalog" active-class="text-bejo-600 [&>span]:scale-x-100" :class="route.path.startsWith('/detail/') ? 'text-bejo-600 [&>span]:scale-x-100' : ''" class="relative text-sm font-bold text-slate-600 hover:text-bejo-600 transition-colors group py-2">
                 Katalog
-                <span class="absolute inset-x-0 -bottom-1 h-1 bg-bejo-500 rounded-t-full transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
+                <span class="absolute inset-x-0 -bottom-1 h-1 bg-bejo-500 rounded-t-full transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left" :class="route.path.startsWith('/detail/') ? 'scale-x-100' : ''"></span>
               </RouterLink>
               <RouterLink to="/simulasi-kpr" active-class="text-bejo-600 [&>span]:scale-x-100" class="relative text-sm font-bold text-slate-600 hover:text-bejo-600 transition-colors group py-2">
                 Simulasi KPR
@@ -288,6 +288,7 @@ import { Icon } from '@iconify/vue'
 import logo from '@/assets/images/logo-sm.png'
 import { logout } from '@/services/auth'
 import { confirm } from '@/utils/sweet-alert'
+import { useRoute } from 'vue-router'
 
 defineProps<{ 
   mainClass?: string,
@@ -298,6 +299,7 @@ defineProps<{
 const layoutStore = useLayout()
 const settingsStore = useSettings()
 const { layout } = storeToRefs(layoutStore)
+const route = useRoute()
 const { setSideNavSize } = layoutStore
 
 const isLoggedIn = ref(false)

@@ -20,7 +20,7 @@
             :src="product.MediaUrls[0].Id_Media" 
             class="absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
             :class="isImageLoaded ? 'opacity-100' : 'opacity-0'"
-            loading="lazy"
+            :loading="lazy ? 'lazy' : 'eager'"
             @load="isImageLoaded = true"
           />
           
@@ -49,10 +49,10 @@
               Jual & Sewa
             </template>
             <template v-else-if="product.Status_Transaksi.includes('Jual')">
-              Dijual
+              Jual
             </template>
             <template v-else-if="product.Status_Transaksi.includes('Sewa')">
-              Disewa
+              Sewa
             </template>
           </span>
         </div>
@@ -252,6 +252,7 @@ const props = withDefaults(
     showSelectButton?: boolean
     isExpanded?: boolean
     hideSpecs?: boolean
+    lazy?: boolean
   }>(),
   {
     isLoading: false,
@@ -261,7 +262,8 @@ const props = withDefaults(
     collapsibleDetails: false,
     showSelectButton: false,
     isExpanded: false,
-    hideSpecs: false
+    hideSpecs: false,
+    lazy: true
   }
 )
 

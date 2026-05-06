@@ -20,7 +20,7 @@ const props = defineProps<{
 
 const mapRef = ref<HTMLElement | null>(null);
 let map: google.maps.Map | null = null;
-let markers: google.maps.Marker[] = [];
+let markers: any[] = [];
 let markerClusterer: any = null;
 
 const hoveredProperty = ref<any>(null);
@@ -115,10 +115,10 @@ const updateMarkers = async () => {
     });
 
     // Hover effect for tooltip
-    marker.element.addEventListener('mouseenter', () => {
+    marker.addEventListener('mouseenter', () => {
       hoveredProperty.value = property;
       // Approximate position for tooltip
-      const rect = marker.element.getBoundingClientRect();
+      const rect = (marker as any).getBoundingClientRect();
       const mapRect = mapRef.value?.getBoundingClientRect();
       if (mapRect) {
         tooltipPosition.value = {
@@ -128,7 +128,7 @@ const updateMarkers = async () => {
       }
     });
 
-    marker.element.addEventListener('mouseleave', () => {
+    marker.addEventListener('mouseleave', () => {
       hoveredProperty.value = null;
     });
 
@@ -153,7 +153,7 @@ const updateMarkers = async () => {
           const label = document.createElement('div');
           label.className = 'flex items-center justify-center text-[10px] font-black text-white absolute inset-0';
           label.innerText = String(count);
-          pin.element.appendChild(label);
+          pin.appendChild(label);
 
           return new AdvancedMarkerElement({
             position,

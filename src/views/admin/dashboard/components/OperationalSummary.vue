@@ -40,6 +40,8 @@ const getGlowColor = (color: string) => {
   }
   return map[color] || map.bejo
 }
+
+const emit = defineEmits(['open-settings'])
 </script>
 
 <template>
@@ -51,7 +53,10 @@ const getGlowColor = (color: string) => {
         </div>
         <h4 class="text-sm font-black text-slate-900 uppercase tracking-[0.1em]">Ringkasan Operasional</h4>
       </div>
-      <button class="p-2 hover:bg-slate-100 rounded-xl transition-colors">
+      <button 
+        @click="emit('open-settings')"
+        class="p-2 hover:bg-slate-100 rounded-xl transition-colors"
+      >
         <Icon icon="lucide:settings-2" class="size-4 text-slate-400" />
       </button>
     </div>

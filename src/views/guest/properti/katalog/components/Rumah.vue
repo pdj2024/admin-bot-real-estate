@@ -119,11 +119,12 @@
       </template>
       <template v-else>
         <ProductCard 
-          v-for="row in table.getRowModel().rows" 
+          v-for="(row, idx) in table.getRowModel().rows" 
           :key="row.id" 
           :product="row.original" 
           :is-admin="isAdmin"
           :active-dropdown-id="activeDropdownId"
+          :lazy="idx >= 6"
           @toggle-dropdown="toggleDropdown"
           @update-status="updateStatusTransaksi"
           @delete="deleteProduct"
@@ -338,22 +339,24 @@ const table = useVueTable({
   getPaginationRowModel: getPaginationRowModel(),
   getSortedRowModel: getSortedRowModel(),
   getFilteredRowModel: getFilteredRowModel(),
+  autoResetPageIndex: false,
+  getRowId: (row) => row.No_Id,
   initialState: {
     pagination: { pageSize: 15 }
   }
 })
 
-const fetchData = async () => {
-  isLoading.value = true
+const fetchData = async (backgroundRefetch = false) => {
+  if (!backgroundRefetch) isLoading.value = true
   try {
-    const { data } = await api.get('/api/realEstate/getAll', {
+    const { data } = await api.get('/api/realEstate/getAll?limit=100&sort=desc', {
       headers: { 'X-Jenis-User': 'Admin' }
     })
     products.value = data.Data
   } catch (err: any) {
     console.error('DATA:', err.response?.data)
   } finally {
-    isLoading.value = false
+    if (!backgroundRefetch) isLoading.value = false
   }
 }
 
@@ -381,7 +384,7 @@ const updateStatusTransaksi = async (product: any, newStatus: string) => {
       await api.put('/api/realEstate/update?no_id=' + product.No_Id, product, {
         headers: { 'X-Jenis-User': 'admin' }
       })
-      fetchData()
+      fetchData(true)
       activeDropdownId.value = null
     } catch (error) {
       console.error('Gagal mengubah status:', error)
