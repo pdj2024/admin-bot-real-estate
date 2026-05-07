@@ -80,7 +80,7 @@ const formatCurrency = (value: number) => {
               <div v-if="product?.Harga_Jual2 != 0 && product" class="flex items-center gap-2 mt-1">
                 <span class="relative text-xs font-bold text-slate-400 italic px-1 shrink-0">
                   {{ formatCurrency(product?.Harga_Jual1 || 0) }}
-                  <span class="absolute inset-x-0 top-1/2 h-[1.5px] bg-red-500 transform -rotate-[10deg] opacity-80 rounded-full"></span>
+                  <span class="absolute inset-x-0 top-1/2 h-[1.2px] bg-slate-300 transform -rotate-2 opacity-100 rounded-full"></span>
                 </span>
                 <span class="bg-red-50 text-red-600 text-[10px] font-black px-2 py-0.5 rounded-lg border border-red-100/50">
                   -{{ Math.round(((product.Harga_Jual1 - product.Harga_Jual2) / product.Harga_Jual1) * 100) }}%
@@ -98,7 +98,7 @@ const formatCurrency = (value: number) => {
               <div v-if="product?.Harga_Sewa2 != 0 && product" class="flex items-center gap-2 mt-1">
                 <span class="relative text-xs font-bold text-slate-400 italic px-1 shrink-0">
                   {{ formatCurrency(product?.Harga_Sewa1 || 0) }}
-                  <span class="absolute inset-x-0 top-1/2 h-[1.5px] bg-red-500 transform -rotate-[10deg] opacity-80 rounded-full"></span>
+                  <span class="absolute inset-x-0 top-1/2 h-[1.2px] bg-slate-300 transform -rotate-2 opacity-100 rounded-full"></span>
                 </span>
                 <span class="bg-red-50 text-red-600 text-[10px] font-black px-2 py-0.5 rounded-lg border border-red-100/50">
                   -{{ Math.round(((product.Harga_Sewa1 - product.Harga_Sewa2) / product.Harga_Sewa1) * 100) }}%

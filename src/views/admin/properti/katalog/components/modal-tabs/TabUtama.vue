@@ -8,7 +8,7 @@ if (!state) {
   throw new Error('TabUtama must be used within a component providing propertyModalState')
 }
 
-const { form, previewPhotos, handlePhoto, removePhoto, isCompressing } = state
+const { form, previewPhotos, handlePhoto, removePhoto, isCompressing, currentCompressionIndex, totalVideosToCompress } = state
 
 const scrollContainer = ref<HTMLElement | null>(null)
 
@@ -199,8 +199,10 @@ const currentHost = window.location.host
                 <Icon icon="lucide:loader-2" class="size-10 text-bejo-600 animate-spin" />
                 <Icon icon="lucide:video" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-4 text-bejo-600" />
               </div>
-              <p class="mt-4 text-[11px] font-black text-bejo-600 uppercase tracking-[0.2em] animate-pulse">Mengompres Video...</p>
-              <p class="mt-1 text-[9px] font-bold text-slate-400 uppercase tracking-widest italic">Mohon tunggu sebentar</p>
+              <p class="mt-4 text-[11px] font-black text-bejo-600 uppercase tracking-[0.2em] animate-pulse">
+                Mengompres Video {{ totalVideosToCompress > 1 ? `(${currentCompressionIndex}/${totalVideosToCompress})` : '' }}...
+              </p>
+              <p class="mt-1 text-[9px] font-bold text-slate-400 uppercase tracking-widest italic">Mohon tunggu sebentar, sedang mengoptimalkan ukuran</p>
             </div>
           </Transition>
 
@@ -209,7 +211,7 @@ const currentHost = window.location.host
               <div v-for="(img, i) in previewPhotos" :key="i" class="preview-box relative size-24 flex-shrink-0 group/img">
                 <!-- Video Thumbnail with Play Icon -->
                 <div v-if="img.ContentType?.startsWith('video/')" class="size-full relative rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
-                   <video :src="`${img.Url || img.Id_Media}#t=0.001`" class="size-full object-cover" preload="metadata" playsinline></video>
+                   <video :src="`${img.Url || img.Id_Media}#t=0.001`" class="size-full object-cover" preload="metadata" playsinline muted></video>
                    <div class="absolute inset-0 flex items-center justify-center bg-black/20 group-hover/img:bg-black/10 transition-colors">
                       <Icon icon="lucide:play" class="size-6 text-white fill-white/20" />
                    </div>

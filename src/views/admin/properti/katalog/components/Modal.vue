@@ -80,7 +80,7 @@ const handlePublish = async () => {
                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Lengkapi detail properti untuk dipublikasikan</p>
               </div>
             </div>
-            <button @click="handleClose" class="size-10 flex items-center justify-center rounded-2xl bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all border border-slate-100 shadow-sm active:scale-95">
+            <button :disabled="isLoading" @click="handleClose" class="size-10 flex items-center justify-center rounded-2xl bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all border border-slate-100 shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
               <Icon icon="lucide:x" class="size-6" />
             </button>
           </div>
@@ -124,7 +124,7 @@ const handlePublish = async () => {
 
         <div class="px-8 py-6 border-t border-slate-100 flex justify-between items-center bg-white">
           <div class="flex items-center gap-3">
-            <button @click="handleClose" class="px-8 py-3 text-xs font-black text-slate-400 hover:text-red-500 uppercase tracking-widest transition-colors">Batal</button>
+            <button :disabled="isLoading" @click="handleClose" class="px-8 py-3 text-xs font-black text-slate-400 hover:text-red-500 uppercase tracking-widest transition-colors disabled:opacity-30 disabled:cursor-not-allowed">Batal</button>
           </div>
 
           <div class="flex gap-4 items-center">
@@ -146,7 +146,7 @@ const handlePublish = async () => {
               <button v-else :disabled="isLoading" @click="() => modalState.submitForm()" class="px-10 py-3 bg-bejo-600 text-white text-[10px] font-black rounded-[1.25rem] shadow-xl shadow-bejo-600/20 transition-all hover:scale-[1.03] active:scale-95 flex items-center gap-2 disabled:opacity-70 disabled:scale-100 uppercase tracking-widest">
                 <Icon v-if="isLoading" icon="lucide:loader-2" class="size-4 animate-spin" />
                 <Icon v-else icon="lucide:save" class="size-4" />
-                {{ isLoading ? 'Sedang Menyimpan...' : form.No_Id ? 'Simpan Perubahan' : 'Tambah Properti' }}
+                {{ isLoading ? '...Proses Menyimpan' : form.No_Id ? 'Simpan Perubahan' : 'Tambah Properti' }}
               </button>
             </div>
           </div>

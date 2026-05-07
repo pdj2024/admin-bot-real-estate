@@ -31,6 +31,18 @@ const isActive = computed(() => {
   if (props.item.url === '/') {
     return pathname.value === '/'
   }
-  return pathname.value.startsWith(props.item.url)
+  
+  // Check if current path starts with the menu URL
+  if (pathname.value.startsWith(props.item.url)) return true
+
+  // Smart check: Match primary module (e.g., /properti/detail matches /properti/katalog)
+  const menuParts = props.item.url.split('/').filter(Boolean)
+  const currentParts = pathname.value.split('/').filter(Boolean)
+  
+  if (menuParts.length > 0 && currentParts.length > 0) {
+    return menuParts[0] === currentParts[0]
+  }
+
+  return false
 })
 </script>

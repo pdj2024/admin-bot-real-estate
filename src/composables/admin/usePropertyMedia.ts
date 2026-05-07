@@ -10,6 +10,8 @@ export function usePropertyMedia(form: any) {
   const deletedMediaIds = ref<string[]>([])
 
   const isCompressing = ref(false)
+  const currentCompressionIndex = ref(0)
+  const totalVideosToCompress = ref(0)
 
   const compressVideo = async (file: File): Promise<File> => {
     // Only compress if video is larger than 4MB
@@ -17,6 +19,8 @@ export function usePropertyMedia(form: any) {
 
     return new Promise((resolve) => {
       const video = document.createElement('video')
+      video.muted = true
+      video.volume = 0
       const reader = new FileReader()
 
       reader.onload = (e) => {
@@ -46,7 +50,9 @@ export function usePropertyMedia(form: any) {
             resolve(compressedFile)
           }
 
-          video.play()
+          video.currentTime = 0
+          video.playbackRate = 4.0 // Speed up compression 4x
+          video.play().catch(err => console.warn('Video play failed during compression:', err))
           recorder.start()
           
           video.onended = () => {
@@ -64,22 +70,8 @@ export function usePropertyMedia(form: any) {
     if (!target.files) return
     const fileArray = Array.from(target.files)
     
-    isCompressing.value = true
-    
+    // No immediate compression here anymore as requested
     for (const file of fileArray) {
-      let fileToProcess = file
-      
-      // Compress video if it's too large
-      if (file.type.startsWith('video/') && file.size > 4 * 1024 * 1024) {
-        try {
-          fileToProcess = await compressVideo(file)
-        } catch (error) {
-          console.error('Video compression failed:', error)
-          // Fallback to original file if compression fails
-          fileToProcess = file
-        }
-      }
-
       const reader = new FileReader()
       reader.onload = (e) => {
         if (typeof e.target?.result === 'string') {
@@ -88,13 +80,13 @@ export function usePropertyMedia(form: any) {
             No_Id_Media: 'new_upload', 
             Url: null, 
             Expired_At: '', 
-            IsCompressed: fileToProcess.size < file.size, 
-            ContentType: fileToProcess.type, 
+            IsCompressed: false, 
+            ContentType: file.type, 
             ThumbUrl: null, 
-            Size: fileToProcess.size 
+            Size: file.size 
           })
-          extensionsPhotos.value.push(fileToProcess.name.split('.').pop()?.toLowerCase() || '')
-          photos.value.push(fileToProcess)
+          extensionsPhotos.value.push(file.name.split('.').pop()?.toLowerCase() || '')
+          photos.value.push(file)
           
           if(scrollContainer) {
             nextTick(() => {
@@ -103,10 +95,9 @@ export function usePropertyMedia(form: any) {
           }
         }
       }
-      reader.readAsDataURL(fileToProcess)
+      reader.readAsDataURL(file)
     }
     
-    isCompressing.value = false
     target.value = ''
   }
 
@@ -135,13 +126,7 @@ export function usePropertyMedia(form: any) {
     previewPhotos.value.splice(index, 1)
   }
 
-  const reqUploadUrl = async () => {
-    const { data } = await api.post('/api/mediacloud/req-upload-url-batch', { 
-      uploader_id: localStorage.getItem('no_id'), 
-      extensions: extensionsPhotos.value 
-    }, { headers: { 'X-Jenis-User': 'admin' } })
-    return data
-  }
+
 
   const sendMedia = async (uploadUrl: string, media: File) => {
     const response = await axios.put(uploadUrl, media, { 
@@ -160,9 +145,40 @@ export function usePropertyMedia(form: any) {
   const uploadAllMedia = async () => {
     if (photos.value.length === 0) return []
     
-    const uploadTickets = await reqUploadUrl()
-    const validProcessCount = Math.min(uploadTickets.length, photos.value.length)
-    const activePhotos = photos.value.slice(0, validProcessCount)
+    // Process compression here just before upload
+    isCompressing.value = true
+    const videos = photos.value.filter(f => f.type.startsWith('video/') && f.size > 4 * 1024 * 1024)
+    totalVideosToCompress.value = videos.length
+    currentCompressionIndex.value = 0
+
+    const processedPhotos: File[] = []
+    const processedExtensions: string[] = []
+
+    try {
+      for (const file of photos.value) {
+        if (file.type.startsWith('video/') && file.size > 4 * 1024 * 1024) {
+          try {
+            currentCompressionIndex.value++
+            const compressed = await compressVideo(file)
+            processedPhotos.push(compressed)
+            processedExtensions.push(compressed.name.split('.').pop()?.toLowerCase() || '')
+          } catch (error) {
+            console.error('Video compression failed during upload:', error)
+            processedPhotos.push(file)
+            processedExtensions.push(file.name.split('.').pop()?.toLowerCase() || '')
+          }
+        } else {
+          processedPhotos.push(file)
+          processedExtensions.push(file.name.split('.').pop()?.toLowerCase() || '')
+        }
+      }
+    } finally {
+      isCompressing.value = false
+    }
+
+    const uploadTickets = await reqUploadUrlBatch(processedExtensions)
+    const validProcessCount = Math.min(uploadTickets.length, processedPhotos.length)
+    const activePhotos = processedPhotos.slice(0, validProcessCount)
     const activeTickets = uploadTickets.slice(0, validProcessCount)
     
     await Promise.all(activeTickets.map((t: any, i: number) => sendMedia(t.UploadUrl, activePhotos[i])))
@@ -179,6 +195,14 @@ export function usePropertyMedia(form: any) {
     return finalMediaIds
   }
 
+  const reqUploadUrlBatch = async (extensions: string[]) => {
+    const { data } = await api.post('/api/mediacloud/req-upload-url-batch', { 
+      uploader_id: localStorage.getItem('no_id'), 
+      extensions: extensions 
+    }, { headers: { 'X-Jenis-User': 'admin' } })
+    return data
+  }
+
   const clearDeletedMedia = async () => {
     if (deletedMediaIds.value.length) {
       api.post('/api/mediacloud/delete-batch', { ids: deletedMediaIds.value }).catch(() => {})
@@ -188,6 +212,8 @@ export function usePropertyMedia(form: any) {
 
   return {
     isCompressing,
+    currentCompressionIndex,
+    totalVideosToCompress,
     photos,
     previewPhotos,
     handlePhoto,

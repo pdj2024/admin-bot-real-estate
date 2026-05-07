@@ -192,7 +192,7 @@ onBeforeUnmount(() => {
             </td>
 
             <td class="px-6 py-5">
-              <div class="flex items-center gap-2 text-slate-600 font-bold text-xs">
+              <div v-if="row.original.Kota" class="flex items-center gap-2 text-slate-600 font-bold text-xs">
                 <Icon icon="lucide:map-pin" class="size-3.5 text-bejo-500" />
                 {{ row.original.Kota }}
               </div>
