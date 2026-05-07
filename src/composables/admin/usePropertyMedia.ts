@@ -10,7 +10,6 @@ export function usePropertyMedia(form: any) {
   const deletedMediaIds = ref<string[]>([])
 
   const isCompressing = ref(false)
-  const compressionProgress = ref(0)
 
   const compressVideo = async (file: File): Promise<File> => {
     // Only compress if video is larger than 4MB

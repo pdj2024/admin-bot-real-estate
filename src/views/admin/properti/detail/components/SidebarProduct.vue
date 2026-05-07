@@ -20,10 +20,6 @@ const media = computed(() => {
 
 const currentMedia = computed(() => media.value[activeMediaIndex.value] || null)
 
-const formatCurrency = (value: number) => {
-  if (value === undefined || value === null) return 'Rp 0'
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
-}
 
 const emit = defineEmits<{
   (e: 'edit'): void

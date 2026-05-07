@@ -98,47 +98,47 @@ onMounted(fetchAgents)
               <div class="absolute left-[-16px] top-4 bottom-4 w-1 bg-gradient-to-b from-bejo-500 to-bejo-500 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-[0_0_10px_rgba(247,82,17,0.5)]"></div>
 
               <div class="flex items-center gap-4">
-                <div class="size-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 font-black text-xs uppercase shadow-inner border border-slate-100 group-hover:bg-white group-hover:text-bejo-600 group-hover:border-bejo-100 group-hover:shadow-lg group-hover:shadow-bejo-500/10 transition-all duration-500">
+                <div class="size-10 rounded-2xl bg-bejo-50 flex items-center justify-center text-bejo-400 font-black text-xs uppercase shadow-inner border border-bejo-100 group-hover:bg-white group-hover:text-bejo-600 group-hover:border-bejo-100 group-hover:shadow-lg group-hover:shadow-bejo-500/10 transition-all duration-500">
                   {{ agent.Nama_Display.substring(0, 2) }}
                 </div>
                 <div>
                     <span class="text-sm font-black text-slate-800 block leading-none mb-1 group-hover:text-bejo-600 transition-colors uppercase">{{ agent.Nama_Display }}</span>
-                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Lister Aktif</span>
+                    <span class="text-[9px] font-bold text-bejo-400 uppercase tracking-widest">Lister Aktif</span>
                 </div>
               </div>
             </td>
             <td class="px-4 py-5 text-right">
               <div class="flex items-center justify-end gap-3">
-                 <div class="flex items-center gap-1.5 px-2 py-1 bg-slate-50 rounded-lg border border-slate-100/50 group-hover:bg-white group-hover:border-slate-200 transition-colors">
+                 <div class="flex items-center gap-1.5 px-2 py-1 bg-bejo-50 rounded-lg border border-bejo-100/50 group-hover:bg-white group-hover:border-bejo-200 transition-colors">
                     <Icon v-if="agent.stats.trend === 'up'" icon="lucide:trending-up" class="size-3.5 text-bejo-600" />
-                    <Icon v-else-if="agent.stats.trend === 'down'" icon="lucide:trending-down" class="size-3.5 text-stone-400" />
-                    <Icon v-else icon="lucide:minus" class="size-3.5 text-slate-300" />
-                    <span class="text-xs font-black" :class="agent.stats.prospekPercent > 50 ? 'text-bejo-700' : 'text-stone-600'">
+                    <Icon v-else-if="agent.stats.trend === 'down'" icon="lucide:trending-down" class="size-3.5 text-bejo-400" />
+                    <Icon v-else icon="lucide:minus" class="size-3.5 text-bejo-300" />
+                    <span class="text-xs font-black" :class="agent.stats.prospekPercent > 50 ? 'text-bejo-700' : 'text-bejo-600'">
                         {{ agent.stats.prospekPercent }}%
                     </span>
                  </div>
-                 <div class="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden hidden sm:block">
-                    <div class="h-full transition-all duration-1000" :class="agent.stats.prospekPercent > 50 ? 'bg-bejo-500' : 'bg-stone-300'" :style="{ width: agent.stats.prospekPercent + '%' }"></div>
+                 <div class="w-16 h-1.5 bg-bejo-100 rounded-full overflow-hidden hidden sm:block">
+                    <div class="h-full transition-all duration-1000" :class="agent.stats.prospekPercent > 50 ? 'bg-bejo-500' : 'bg-bejo-300'" :style="{ width: agent.stats.prospekPercent + '%' }"></div>
                  </div>
               </div>
               
               <!-- Absolute Hover Popup -->
-              <div class="invisible group-hover:visible absolute right-12 top-0 mt-0 z-[100] w-80 p-7 bg-white/95 backdrop-blur-xl text-slate-900 rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(15,23,42,0.2)] border border-slate-100/50 animate-in fade-in zoom-in-95 slide-in-from-right-4 duration-300 pointer-events-none">
+              <div class="invisible group-hover:visible absolute right-12 top-0 mt-0 z-[100] w-80 p-7 bg-white/95 backdrop-blur-xl text-slate-900 rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(15,23,42,0.2)] border border-bejo-100/50 animate-in fade-in zoom-in-95 slide-in-from-right-4 duration-300 pointer-events-none">
                 <div class="flex items-center gap-4 mb-6">
-                  <div class="size-11 rounded-2xl bg-slate-900 flex items-center justify-center text-white shadow-lg shadow-slate-900/20">
+                  <div class="size-11 rounded-2xl bg-bejo-950 flex items-center justify-center text-white shadow-lg shadow-bejo-950/20">
                     <Icon icon="lucide:user-check" class="size-5" />
                   </div>
                   <div class="text-left">
                     <h6 class="text-base font-black truncate leading-none mb-1 uppercase">{{ agent.Nama_Display }}</h6>
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Detail Performa Akumulatif</span>
+                    <span class="text-[10px] font-bold text-bejo-400 uppercase tracking-widest">Detail Performa Akumulatif</span>
                   </div>
                 </div>
 
                 <div class="space-y-4">
-                  <div class="flex justify-between items-center bg-slate-50/50 p-4 rounded-3xl border border-slate-100">
+                  <div class="flex justify-between items-center bg-bejo-50/50 p-4 rounded-3xl border border-bejo-100">
                     <div class="flex items-center gap-3">
-                        <Icon icon="lucide:calendar-range" class="size-4 text-slate-400" />
-                        <span class="text-[10px] font-black uppercase tracking-widest text-slate-500">Total Janji Temu</span>
+                        <Icon icon="lucide:calendar-range" class="size-4 text-bejo-400" />
+                        <span class="text-[10px] font-black uppercase tracking-widest text-bejo-500">Total Janji Temu</span>
                     </div>
                     <span class="text-base font-black text-slate-900">{{ agent.stats.totalJanjiTemu }}</span>
                   </div>
@@ -148,9 +148,9 @@ onMounted(fetchAgents)
                         <span class="block text-[8px] font-black uppercase text-bejo-500 mb-2">Berhasil</span>
                         <span class="text-sm font-black text-bejo-700">{{ agent.stats.berhasil }}</span>
                     </div>
-                    <div class="p-4 rounded-3xl bg-stone-500/5 border border-stone-500/10 text-center">
-                        <span class="block text-[8px] font-black uppercase text-stone-500 mb-2">Terjual</span>
-                        <span class="text-sm font-black text-stone-700">{{ agent.stats.terjual }}</span>
+                    <div class="p-4 rounded-3xl bg-bejo-600/5 border border-bejo-600/10 text-center">
+                        <span class="block text-[8px] font-black uppercase text-bejo-600 mb-2">Terjual</span>
+                        <span class="text-sm font-black text-bejo-700">{{ agent.stats.terjual }}</span>
                     </div>
                     <div class="p-4 rounded-3xl bg-bejo-900/5 border border-bejo-900/10 text-center">
                         <span class="block text-[8px] font-black uppercase text-bejo-900 mb-2">Tersewa</span>
@@ -158,6 +158,7 @@ onMounted(fetchAgents)
                     </div>
                   </div>
                 </div>
+
 
                 <div class="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between">
                    <div class="flex items-center gap-2">

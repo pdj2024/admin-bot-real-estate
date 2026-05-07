@@ -8,7 +8,7 @@ const props = defineProps<{
   isAdmin?: boolean
 }>()
 
-const emit = defineEmits(['openCompare'])
+defineEmits(['openCompare'])
 
 const activeMediaIndex = ref(0)
 

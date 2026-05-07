@@ -85,15 +85,15 @@ const emit = defineEmits(['open-settings'])
         v-for="(item, idx) in operationalStats" 
         :key="idx"
         class="group relative overflow-hidden bg-white rounded-[2.2rem] p-7 border border-slate-100 shadow-xl shadow-slate-200/40 transition-all duration-500 cursor-pointer"
-        :class="getGlowColor(item.color)"
+        :class="getGlowColor('bejo')"
       >
         <div class="flex items-start justify-between mb-6">
-          <div :class="`size-14 rounded-2xl flex items-center justify-center text-white shadow-lg transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 ${getIconBg(item.color)}`">
+          <div :class="`size-14 rounded-2xl flex items-center justify-center text-white shadow-lg transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 ${getIconBg('bejo')}`">
             <Icon :icon="item.icon" class="size-7" />
           </div>
           <div class="text-right">
             <h2 class="text-4xl font-black text-slate-900 tracking-tight mb-1">{{ item.value }}</h2>
-            <div :class="`inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border transition-all duration-500 ${getColorClass(item.color)}`">
+            <div :class="`inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border transition-all duration-500 ${getColorClass('bejo')}`">
                <Icon icon="lucide:arrow-up-right" class="size-3" />
                {{ item.trend }}
             </div>
@@ -106,11 +106,11 @@ const emit = defineEmits(['open-settings'])
             <span class="text-[10px] font-black text-slate-900">75%</span>
           </div>
           <div class="w-full h-1.5 bg-slate-50 rounded-full overflow-hidden">
-             <div 
-               class="h-full transition-all duration-1000 relative" 
-               :class="getIconBg(item.color)"
-               :style="{ width: '75%' }"
-             >
+            <div 
+              class="h-full transition-all duration-1000 relative" 
+              :class="getIconBg('bejo')"
+              :style="{ width: '75%' }"
+            >
                 <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
              </div>
           </div>

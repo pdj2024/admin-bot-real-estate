@@ -2,7 +2,6 @@
 import { computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import type { Product } from '../index.vue'
-import GoogleMapsViewer from '@/components/common/GoogleMapsViewer.vue'
 import PropertySpecsGrid from '@/components/common/PropertySpecsGrid.vue'
 
 const props = defineProps<{
@@ -32,14 +31,6 @@ const fullAddress = computed(() => {
   return result
 })
 
-const coords = computed(() => {
-  if (!props.product?.Area?.[2]) return null
-  const parts = props.product.Area[2].split(',')
-  if (parts.length < 2) return null
-  const lat = parseFloat(parts[0])
-  const lng = parseFloat(parts[1])
-  return isNaN(lat) || isNaN(lng) ? null : { lat, lng }
-})
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
@@ -184,7 +175,7 @@ const formatCurrency = (value: number) => {
                   { label: 'Daya Listrik', val: product ? (product.Daya_Listrik.toLocaleString('id-ID') + ' Watt') : null },
                   { label: 'Tipe Unit', val: product?.Tipe },
                   { label: 'Sertifikat', val: product?.Jenis_Sertifikat },
-                  { label: 'Minimal Sewa', val: (product?.minimal_sewa || (product as any)?.Minimal_Sewa) ? ((product.minimal_sewa || (product as any).Minimal_Sewa) + ' ' + product.Satuan_Minimal_Sewa) : '-', show: !product || product?.Status_Transaksi?.includes('Sewa') }
+                  { label: 'Minimal Sewa', val: (product?.minimal_sewa || (product as any)?.Minimal_Sewa) ? ((product?.minimal_sewa || (product as any)?.Minimal_Sewa) + ' ' + (product?.Satuan_Minimal_Sewa || '')) : '-', show: !product || product?.Status_Transaksi?.includes('Sewa') }
                 ].filter(i => i.show !== false)" :key="item.label" class="hover:bg-slate-50 transition-colors">
                   <td class="px-8 py-5 text-slate-500 bg-slate-50/50 w-1/3 italic">{{ item.label }}</td>
                   <td class="px-8 py-5 text-slate-900">

@@ -331,6 +331,26 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
     if (itemData) {
       form.value = JSON.parse(JSON.stringify(itemData))
       
+      // 1. Detect location before stripping the address for UI display
+      const coordsFromAlamat = itemData.Alamat ? itemData.Alamat.match(/(?:Lat|Latitude):\s*([-+]?\d+\.?\d*)/i) : null
+      const lngMatch = itemData.Alamat ? itemData.Alamat.match(/(?:Long|Lng|Longitude):\s*([-+]?\d+\.?\d*)/i) : null
+      
+      if (coordsFromAlamat && lngMatch) {
+        location.isLocationSelected.value = true
+        location.currentCoords.lat = parseFloat(coordsFromAlamat[1])
+        location.currentCoords.lng = parseFloat(lngMatch[1])
+      }
+
+      // 2. Check Area[2] as secondary source
+      if (form.value.Area && form.value.Area[2] && form.value.Area[2].includes(',')) {
+        const [lat, lng] = form.value.Area[2].split(',').map(Number)
+        if (!isNaN(lat) && !isNaN(lng)) {
+          location.isLocationSelected.value = true
+          location.currentCoords.lat = lat
+          location.currentCoords.lng = lng
+        }
+      }
+
       // Strip technical Lat/Long details from Alamat for a cleaner UI during edit
       if (form.value.Alamat) {
         form.value.Alamat = form.value.Alamat.split(', Lat:')[0].split('_Lat:')[0].trim()
@@ -371,8 +391,8 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
         location.currentCoords.lng = lng
       }
     } else if (form.value.Alamat) {
-      const latMatch = form.value.Alamat.match(/Lat:\s*(-?\d+\.\d+)/i)
-      const lngMatch = form.value.Alamat.match(/Long:\s*(-?\d+\.\d+)/i)
+      const latMatch = form.value.Alamat.match(/(?:Lat|Latitude):\s*([-+]?\d+\.?\d*)/i)
+      const lngMatch = form.value.Alamat.match(/(?:Long|Lng|Longitude):\s*([-+]?\d+\.?\d*)/i)
       if (latMatch && lngMatch) {
         location.isLocationSelected.value = true
         location.currentCoords.lat = parseFloat(latMatch[1])

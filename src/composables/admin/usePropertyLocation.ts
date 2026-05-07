@@ -42,8 +42,8 @@ export function usePropertyLocation(form: any, deps?: { cities: any, createCity:
 
   const extractCoordsFromAddress = (address: string) => {
     if (!address) return null
-    const latMatch = address.match(/Lat:\s*(-?\d+\.\d+)/i)
-    const lngMatch = address.match(/Long:\s*(-?\d+\.\d+)/i)
+    const latMatch = address.match(/(?:Lat|Latitude):\s*([-+]?\d+\.?\d*)/i)
+    const lngMatch = address.match(/(?:Long|Lng|Longitude):\s*([-+]?\d+\.?\d*)/i)
     if (latMatch && lngMatch) {
       return { lat: parseFloat(latMatch[1]), lng: parseFloat(lngMatch[1]) }
     }

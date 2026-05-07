@@ -5,7 +5,7 @@ import type { Product } from '../index.vue'
 import ProductCard from '@/components/ProductCard.vue'
 import { Icon } from '@iconify/vue'
 
-const props = defineProps<{
+defineProps<{
   products: Product[],
   isLoading?: boolean
 }>()

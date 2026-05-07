@@ -12,6 +12,7 @@ if (!state) {
 }
 
 const { 
+  form,
   mapContainer, 
   isMapLoaded, 
   isLocationSelected, 
@@ -54,7 +55,7 @@ const {
 
     <!-- Selection Indicator -->
     <div 
-      v-if="!isLocationSelected && isMapLoaded" 
+      v-if="!isLocationSelected && isMapLoaded && !form.No_Id" 
       class="absolute inset-0 pointer-events-none flex items-center justify-center bg-black/5 backdrop-blur-[1px]"
     >
       <div class="bg-white/90 px-5 py-3 rounded-2xl shadow-lg border border-white/50 flex flex-col items-center gap-1 animate-bounce">

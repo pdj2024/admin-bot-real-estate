@@ -75,7 +75,7 @@ const handleLogin = async (isQuick = false) => {
     } else {
       fail('Email atau Password salah')
     }
-  } catch (err) {
+  } catch {
     fail('Login gagal, silakan periksa kredensial Anda')
   }
 }
