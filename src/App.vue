@@ -62,6 +62,11 @@ watch(() => settingsStore.app.isMaintenance, (val) => {
   checkMaintenanceRedirect(val)
 })
 
+// Global Sync: Fetch latest settings on every route change as requested
+watch(() => route.path, async () => {
+  await settingsStore.init()
+})
+
 onMounted(async () => {
   await settingsStore.init()
   initLayout()

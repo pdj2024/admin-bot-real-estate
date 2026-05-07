@@ -22,7 +22,7 @@ const emit = defineEmits(['open-settings'])
 <template>
   <div class="relative overflow-hidden rounded-[2.5rem] bg-white shadow-xl shadow-slate-200/50 border border-slate-100 group">
     <!-- Sophisticated Background Pattern -->
-    <div class="absolute inset-0 opacity-[0.05] pointer-events-none" style="background-image: radial-gradient(#EA8455 1px, transparent 1px); background-size: 24px 24px;"></div>
+    <div class="absolute inset-0 opacity-[0.05] pointer-events-none" style="background-image: radial-gradient(var(--color-bejo-500) 1px, transparent 1px); background-size: 24px 24px;"></div>
 
     <!-- Interactive Parallax Gradients -->
     <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-bejo-100/40 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2 transition-transform duration-1000 group-hover:translate-x-1/3 group-hover:-translate-y-1/3"></div>

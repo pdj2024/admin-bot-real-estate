@@ -40,6 +40,12 @@ const extractCoords = (address: string) => {
   return null;
 };
 
+// Helper to get bejo color
+const getBejoColor = () => {
+  if (typeof document === 'undefined') return '#f97316';
+  return getComputedStyle(document.documentElement).getPropertyValue('--color-bejo-500').trim() || '#f97316';
+};
+
 const initMap = async () => {
   if (!window.google || !mapRef.value) return;
 
@@ -58,12 +64,13 @@ const initMap = async () => {
     map = new Map(mapRef.value, mapOptions);
 
     if (map) {
+      const bejoColor = getBejoColor();
       // Load Indonesia Highlight
       map.data.loadGeoJson('https://raw.githubusercontent.com/superpikar/indonesia-geojson/master/indonesia-province-simple.json');
       map.data.setStyle({
-        fillColor: '#f97316',
+        fillColor: bejoColor,
         fillOpacity: 0.08,
-        strokeColor: '#f97316',
+        strokeColor: bejoColor,
         strokeWeight: 0.5,
         clickable: false
       });
@@ -87,6 +94,8 @@ const updateMarkers = async () => {
     markerClusterer.clearMarkers();
   }
 
+  const bejoColor = getBejoColor();
+
   const validProperties = props.properties
     .map(p => ({ ...p, coords: extractCoords(p.Alamat) }))
     .filter(p => p.coords !== null);
@@ -94,7 +103,7 @@ const updateMarkers = async () => {
   validProperties.forEach(property => {
     // Create custom pin content
     const pin = new PinElement({
-      background: '#f97316',
+      background: bejoColor,
       borderColor: '#FFFFFF',
       glyphColor: '#FFFFFF',
       scale: 1.2,
@@ -109,15 +118,11 @@ const updateMarkers = async () => {
 
     marker.addListener('gmp-click', () => {
       hoveredProperty.value = property;
-      // For Advanced Markers, we need a different approach for tooltip position
-      // or just rely on the click event coordinate if needed.
-      // But we'll keep the current logic if it still works for hovered
     });
 
     // Hover effect for tooltip
     marker.addEventListener('mouseenter', () => {
       hoveredProperty.value = property;
-      // Approximate position for tooltip
       const rect = (marker as any).getBoundingClientRect();
       const mapRect = mapRef.value?.getBoundingClientRect();
       if (mapRect) {
@@ -143,7 +148,7 @@ const updateMarkers = async () => {
       renderer: {
         render: ({ count, position }: any) => {
           const pin = new PinElement({
-            background: '#f97316',
+            background: bejoColor,
             borderColor: '#FFFFFF',
             glyphColor: '#FFFFFF',
             scale: 1.5 + Math.min(count / 20, 1),
@@ -173,12 +178,11 @@ const loadScripts = () => {
     return;
   }
 
-  // Load Google Maps with the new recommended pattern (bootstrap)
+  // Load Google Maps pattern
   const g = window as any;
   let h: any, a: any;
   const p = "The Google Maps JavaScript API"; const c = "google"; const l = "importLibrary"; const q = "__ib__"; const m = document; const b = g[c] || (g[c] = {}); const d = b.maps || (b.maps = {}); const r = new Set(); const e = new URLSearchParams(); const u = () => h || (h = new Promise(async (f, n) => { await (a = m.createElement("script")); e.set("libraries", [...r].join(",") + ""); for (const k in b) e.set(k.replace(/[A-Z]/g, t => "_" + t[0].toLowerCase()), b[k]); e.set("callback", c + ".maps." + q); a.src = `https://maps.${c}apis.com/maps/api/js?` + e; d[q] = f; a.onerror = () => h = n(Error(p + " could not load.")); a.nonce = (m as any).querySelector("script[nonce]")?.nonce || ""; m.head.append(a) })); d[l] = (f: any, ...n: any[]) => r.add(f) && u().then(() => d[l](f, ...n));
 
-  // Add the key and other options to the params
   e.set("key", GOOGLE_MAPS_API_KEY);
   e.set("v", "beta");
   e.set("loading", "async");
@@ -209,7 +213,6 @@ const formatCurrency = (val: number) => {
   <div class="relative w-full overflow-hidden bg-white pt-8 pb-12 sm:pt-12 sm:pb-24 border-y border-slate-100">
     <div class="max-w-7xl mx-auto px-4 relative z-10">
       <div class="text-center mb-16 space-y-4">
-
         <h2 class="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">
           Properti <span class="text-bejo-500">{{ settingsStore.business.appName }}</span> di Indonesia
         </h2>
@@ -290,12 +293,3 @@ const formatCurrency = (val: number) => {
     </div>
   </div>
 </template>
-
-<style scoped>
-/* Tooltip styling improvements */
-.truncate {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-</style>

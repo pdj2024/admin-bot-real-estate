@@ -67,8 +67,8 @@ const handleUpdatePassword = async () => {
       </div>
 
       <div class="p-8 space-y-6">
-        <div class="bg-red-50 p-6 rounded-2xl border border-red-100 flex gap-4">
-          <Icon icon="lucide:shield-alert" class="size-5 text-red-600 shrink-0 mt-0.5" />
+        <div class="bg-bejo-50 p-6 rounded-2xl border border-red-100 flex gap-4">
+          <Icon icon="lucide:shield-alert" class="size-5 text-slate-600 shrink-0 mt-0.5" />
           <p class="text-xs text-red-800 font-medium leading-relaxed">Pastikan kata sandi baru Anda terdiri dari minimal 8 karakter dengan kombinasi angka dan simbol untuk keamanan maksimal.</p>
         </div>
 
@@ -101,7 +101,7 @@ const handleUpdatePassword = async () => {
     </div>
 
     <div class="flex items-center justify-end gap-3 pt-6">
-      <button :disabled="isLoading" @click="handleUpdatePassword" class="px-10 py-3.5 bg-red-600 text-white rounded-2xl font-black text-sm shadow-xl shadow-red-600/20 hover:scale-[1.02] transition-all disabled:opacity-50">
+      <button :disabled="isLoading" @click="handleUpdatePassword" class="px-10 py-3.5 bg-bejo-500 text-white rounded-2xl font-black text-sm shadow-xl shadow-red-600/20 hover:scale-[1.02] transition-all disabled:opacity-50">
         <span v-if="isLoading">Memproses...</span>
         <span v-else>Perbarui Kata Sandi</span>
       </button>

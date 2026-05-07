@@ -2,7 +2,7 @@
   <aside id="app-menu" class="app-menu">
     <RouterLink to="/dashboard" class="logo-box sticky top-0 flex min-h-topbar-height items-center justify-start ps-5 pe-4 backdrop-blur-xs">
       <div class="flex items-center gap-2.5 w-full overflow-hidden">
-        <img :src="logo" class="h-7 w-auto shrink-0" alt="Logo Icon" />
+        <img :src="settingsStore.business.Logo || logo" class="h-7 w-auto shrink-0" alt="Logo Icon" />
         <span class="font-bold text-[14px] text-gray-800 truncate transition-colors duration-300">
           {{ settingsStore.business.appName }}
         </span>

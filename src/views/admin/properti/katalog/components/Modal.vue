@@ -275,14 +275,14 @@ const handlePublish = async () => {
 #place-autocomplete-container :deep(gmpx-place-autocomplete::part(input):focus),
 #place-autocomplete-container :deep(gmp-place-autocomplete::part(input):focus) {
   background-color: white !important;
-  border-color: #f59e0b !important; /* Bejo Orange/Amber */
-  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1) !important;
+  border-color: var(--color-bejo-600) !important;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-bejo-600) 10%, transparent) !important;
 }
 
 #place-autocomplete-container :deep(input:focus) {
   background-color: white !important;
-  border-color: #f59e0b !important;
-  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1) !important;
+  border-color: var(--color-bejo-600) !important;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-bejo-600) 10%, transparent) !important;
 }
 
 /* Google Maps Autocomplete Dropdown Optimization */

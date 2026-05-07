@@ -68,7 +68,7 @@ Sidenav Menu
   > .menu-item {
     > .menu-link {
       &:is(.open, .active, :active, :focus) {
-        background-color: var(--sidenav-item-active-bg);
+        background: var(--sidenav-item-active-bg);
       }
 
       &:is(:hover) {
@@ -77,7 +77,7 @@ Sidenav Menu
     }
 
     &.active > .menu-link {
-      background-color: var(--sidenav-item-active-bg);
+      background: var(--sidenav-item-active-bg);
       color: var(--sidenav-item-active-color);
     }
   }

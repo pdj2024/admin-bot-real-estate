@@ -3,15 +3,13 @@ import { Icon } from '@iconify/vue'
 
 const stats = [
   { label: 'Janji Temu Hari Ini', value: '06', icon: 'lucide:calendar-check', color: 'bejo' },
-  { label: 'Menunggu Konfirmasi', value: '08', icon: 'lucide:clock', color: 'bejo-soft' },
-  { label: 'Total Janji Temu (Bulan Ini)', value: '124', icon: 'lucide:users', color: 'bejo-dark' },
+  { label: 'Menunggu Konfirmasi', value: '08', icon: 'lucide:clock', color: 'bejo' },
+  { label: 'Total Janji Temu (Bulan Ini)', value: '124', icon: 'lucide:users', color: 'bejo' },
 ]
 
 const getIconBg = (color: string) => {
   const map: Record<string, string> = {
-    bejo: 'bg-bejo-500',
-    'bejo-soft': 'bg-bejo-400',
-    'bejo-dark': 'bg-bejo-900',
+    bejo: 'bg-bejo-500'
   }
   return map[color] || map.bejo
 }

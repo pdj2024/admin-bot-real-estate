@@ -11,18 +11,22 @@
       <div class="bg-white/95 backdrop-blur-xl rounded-[3rem] shadow-2xl overflow-hidden border border-white/20">
         <div class="px-8 py-12 md:px-12 md:py-16 text-center">
           <RouterLink to="/" class="inline-flex items-center gap-3 mb-8 group">
-            <img :src="logo" alt="Logo Rumah Bejo" class="h-10 group-hover:scale-110 transition-transform" />
-            <span class="text-2xl font-black text-slate-900 tracking-tighter">Rumah <span class="text-bejo-500">Bejo</span></span>
+            <img :src="settingsStore.business.Logo || logo" alt="Logo" class="h-10 group-hover:scale-110 transition-transform" />
+            <span class="text-2xl font-black text-slate-900 tracking-tighter">{{ settingsStore.business.appName || 'Rumah Bejo' }}</span>
           </RouterLink>
           
           <slot />
 
-          <!-- Back to Home Button -->
-          <div class="mt-12">
+          <!-- Footer & Back Button -->
+          <div class="mt-12 space-y-6">
             <RouterLink to="/" class="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-bejo-600 transition-colors">
               <Icon icon="lucide:arrow-left" class="size-4" />
               Kembali ke Beranda
             </RouterLink>
+            
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] pt-6 border-t border-slate-50">
+              © {{ new Date().getFullYear() }} {{ settingsStore.business.appName || 'Rumah Bejo' }}. All rights reserved.
+            </p>
           </div>
         </div>
       </div>
@@ -31,7 +35,15 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { RouterLink } from 'vue-router'
 import logo from '@/assets/images/logo-sm.png'
+import { useSettings } from '@/stores/settings'
+
+const settingsStore = useSettings()
+
+onMounted(() => {
+  settingsStore.init()
+})
 </script>

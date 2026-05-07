@@ -730,7 +730,7 @@ defineExpose({
                       <div class="relative shrink-0 flex items-center justify-center font-black rounded-2xl size-10 bg-gradient-to-br from-bejo-50 to-bejo-100/50 text-bejo-600 border border-white shadow-sm group-hover:scale-105 transition-all duration-300">
                         <span v-if="chat.Username_Lawan || chat.Room_Name" class="text-xs tracking-tighter">{{ chat.Username_Lawan?.charAt(0).toUpperCase() || chat.Room_Name?.charAt(0).toUpperCase() }}</span>
                         <Icon v-else icon="lucide:user" class="size-5 text-bejo-300" />
-                        <span class="absolute -bottom-1 -right-1 size-3.5 border-2 border-white rounded-full bg-green-500 shadow-sm shadow-green-500/20"></span>
+                        <span class="absolute -bottom-1 -right-1 size-3.5 border-2 border-white rounded-full bg-bejo-500 shadow-sm shadow-green-500/20"></span>
                       </div>
 
                       <div class="flex-grow min-w-0">
@@ -876,7 +876,7 @@ defineExpose({
                       <div class="relative shrink-0 flex items-center justify-center font-black rounded-2xl size-10 bg-gradient-to-br from-bejo-50 to-bejo-100/50 text-bejo-600 border border-white shadow-sm group-hover:scale-105 transition-all duration-300">
                         <span v-if="chat.Username_Lawan" class="text-xs tracking-tighter">{{ chat.Username_Lawan.charAt(0).toUpperCase() }}</span>
                         <Icon v-else icon="lucide:user" class="size-5 text-bejo-300" />
-                        <span class="absolute -bottom-1 -right-1 size-3.5 border-2 border-white rounded-full bg-green-500 shadow-sm shadow-green-500/20"></span>
+                        <span class="absolute -bottom-1 -right-1 size-3.5 border-2 border-white rounded-full bg-bejo-500 shadow-sm shadow-green-500/20"></span>
                       </div>
 
                       <div class="flex-grow min-w-0">

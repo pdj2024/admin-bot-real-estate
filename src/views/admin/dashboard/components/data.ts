@@ -29,7 +29,7 @@ export const prospectOptions: ApexOptions = {
       stops: [20, 100]
     }
   },
-  colors: ['#2B00FF', '#1D00B3'], // bejo-500, bejo-700
+  colors: ['var(--color-bejo-500)', 'var(--color-bejo-700)'],
   dataLabels: { enabled: false },
   grid: {
     borderColor: '#f1f5f9',
@@ -62,7 +62,7 @@ export const distributionOptions: ApexOptions = {
     height: 300,
   },
   labels: ['Rumah', 'Apartemen', 'Ruko/Komersial'],
-  colors: ['#2B00FF', '#1D00B3', '#6B4DFF'], // bejo-500, bejo-700, bejo-300
+  colors: ['var(--color-bejo-500)', 'var(--color-bejo-700)', 'var(--color-bejo-300)'],
   legend: {
     position: 'bottom',
     fontWeight: 700,

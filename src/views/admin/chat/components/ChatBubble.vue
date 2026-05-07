@@ -49,10 +49,10 @@ const isCustomer = computed(() => !isMe.value)
 const bubbleStyle = computed(() => {
   switch (props.chat.Tipe_User) {
     case 'customer':
-      return 'bubble-customer bg-amber-50 border border-slate-100 text-slate-800 shadow-sm rounded-2xl rounded-bl-none'
+      return 'bubble-customer bg-bejo-50 border border-slate-100 text-slate-800 shadow-sm rounded-2xl rounded-bl-none'
     case 'admin':
     case 'cs':
-      return 'bubble-admin bg-gradient-to-br from-bejo-50 to-bejo-100 text-slate-800 shadow-lg shadow-bejo-500/20 rounded-2xl rounded-br-none'
+      return 'bubble-admin bg-bejo-200/30 text-slate-800 shadow-sm rounded-2xl rounded-br-none'
     case 'ai':
       return 'bubble-ai bg-white border border-amber-200 text-amber-900 shadow-xl shadow-amber-500/10 rounded-2xl rounded-br-none ring-1 ring-amber-100'
     default:
@@ -112,7 +112,7 @@ const formattedMsg = computed(() => {
       formatted = formatted.replace(regex, (match) => {
         const currentMatchIdx = matchCounter++
         const isThisMatchActive = props.isActiveMatch && props.activeMatchIndex === currentMatchIdx
-        const highlightClass = isThisMatchActive ? 'bg-bejo-500 text-white rounded-md px-1 font-bold shadow-md shadow-bejo-500/20 ring-2 ring-bejo-500 ring-offset-1 transform scale-110 inline-block' : 'bg-amber-200 text-slate-900 rounded-md px-1'
+        const highlightClass = isThisMatchActive ? 'bg-bejo-300 text-white rounded-md px-1 font-bold shadow-md shadow-bejo-500/20 ring-2 ring-bejo-500 ring-offset-1 transform scale-110 inline-block' : 'bg-amber-200 text-slate-900 rounded-md px-1'
         const matchId = `match-${props.idx}-${currentMatchIdx}`
         return `<span id="${matchId}" class="${highlightClass}">${match}</span>`
       })

@@ -23,28 +23,24 @@ const adjustColor = (hex: string, percentage: number): string => {
   return `#${(1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1)}`
 }
 
-export const generateDynamicPalette = (baseHex: string) => {
+export const generateDynamicPalette = (primary: string, secondary: string) => {
   return {
-    50: adjustColor(baseHex, 90),
-    100: adjustColor(baseHex, 80),
-    200: adjustColor(baseHex, 60),
-    300: adjustColor(baseHex, 40),
-    400: adjustColor(baseHex, 20),
-    500: adjustColor(baseHex, 10),
-    600: baseHex,
-    700: adjustColor(baseHex, -20),
-    800: adjustColor(baseHex, -40),
-    900: adjustColor(baseHex, -60),
-    1000: adjustColor(baseHex, -80),
+    50: adjustColor(primary, 95),
+    100: adjustColor(primary, 90),
+    200: adjustColor(primary, 70),
+    300: secondary, // Secondary Color patokan bejo-300
+    400: adjustColor(primary, 30),
+    500: primary,   // Primary Color patokan bejo-500
+    600: adjustColor(primary, -15),
+    700: adjustColor(primary, -30),
+    800: adjustColor(primary, -45),
+    900: adjustColor(primary, -60),
+    1000: adjustColor(primary, -80),
   }
 }
 
 export const applyToDOM = (config: AppSettings) => {
   const root = document.documentElement
-
-  // (Catatan: Pastikan fungsi setSideNavSize & setTheme di-import jika berada di file lain)
-  // setSideNavSize(config.sidenavSize)
-  // setTheme(config.theme)
 
   root.setAttribute('data-sidenav-size', config.sidenavSize)
 
@@ -55,7 +51,7 @@ export const applyToDOM = (config: AppSettings) => {
     `linear-gradient(135deg, ${config.colorPrimary} 0%, ${config.colorSecondary} 100%)`
   )
 
-  const dynamicPalette = generateDynamicPalette(config.colorPrimary)
+  const dynamicPalette = generateDynamicPalette(config.colorPrimary, config.colorSecondary)
   Object.entries(dynamicPalette).forEach(([shade, hexValue]) => {
     root.style.setProperty(`--color-bejo-${shade}`, hexValue)
     root.style.setProperty(`--text-bejo-${shade}`, hexValue)

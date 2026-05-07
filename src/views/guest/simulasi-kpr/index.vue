@@ -362,7 +362,7 @@ const chartOptions = computed(() => ({
     width: 0,
     lineCap: 'round'
   },
-  colors: ['#EA8455', '#fed7aa'],
+  colors: ['var(--color-bejo-600)', 'var(--color-bejo-200)'],
   labels: ['Pokok Pinjaman', 'Total Bunga'],
   plotOptions: {
     pie: {
@@ -450,7 +450,7 @@ input[type=range]::-webkit-slider-thumb {
   height: 20px;
   width: 20px;
   border-radius: 50%;
-  background: #EA8455;
+  background: var(--color-bejo-500);
   cursor: pointer;
   border: 4px solid white;
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);

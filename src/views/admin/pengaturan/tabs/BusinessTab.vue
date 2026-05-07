@@ -390,7 +390,7 @@ onMounted(() => {
       <!-- Lokasi & Operasional -->
       <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
         <div class="px-8 py-5 border-b border-slate-50 bg-slate-50/50 flex items-center gap-3">
-          <div class="size-8 rounded-lg bg-bejo-950 flex items-center justify-center text-white shadow-lg shadow-bejo-950/20">
+          <div class="size-8 rounded-lg bg-bejo-500 flex items-center justify-center text-white shadow-lg shadow-bejo-950/20">
             <Icon icon="lucide:map-pin" class="size-4" />
           </div>
           <h4 class="text-xs font-black text-slate-800 uppercase tracking-widest">Lokasi & Jam Operasional</h4>

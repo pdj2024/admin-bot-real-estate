@@ -74,11 +74,24 @@ const exportToPDF = async () => {
     item.salesName
   ])
 
+  // Get Primary Color from CSS Variable
+  const primaryColorHex = getComputedStyle(document.documentElement).getPropertyValue('--color-bejo-500').trim() || '#ca6d2c'
+  
+  // Convert Hex to RGB
+  const hexToRgb = (hex: string): [number, number, number] => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+    return result ? [
+      parseInt(result[1], 16),
+      parseInt(result[2], 16),
+      parseInt(result[3], 16)
+    ] : [202, 109, 44]
+  }
+
   autoTable(doc, {
     startY: 35,
     head: [['ID', 'Customer', 'Property', 'Schedule', 'Status', 'Sales']],
     body: tableData,
-    headStyles: { fillColor: [202, 109, 44] }, // #ca6d2c in RGB
+    headStyles: { fillColor: hexToRgb(primaryColorHex) }, 
     theme: 'grid'
   })
 
@@ -108,7 +121,7 @@ if (typeof window !== 'undefined') {
        <div class="relative export-container">
           <button 
             @click="isExportOpen = !isExportOpen"
-            class="px-6 py-2.5 bg-[#ca6d2c] hover:bg-[#b05d24] text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-[#ca6d2c]/20 active:scale-95 flex items-center gap-2"
+            class="px-6 py-2.5 bg-bejo-500 hover:bg-bejo-600 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-bejo-500/20 active:scale-95 flex items-center gap-2"
           >
             Export Data
             <Icon icon="lucide:chevron-down" class="size-4 transition-transform" :class="{ 'rotate-180': isExportOpen }" />
@@ -195,13 +208,13 @@ if (typeof window !== 'undefined') {
                <span 
                 class="px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest inline-flex items-center gap-1.5"
                 :class="{
-                  'bg-amber-100 text-amber-700': row.original.status === 'pending',
+                  'bg-bejo-50 text-bejo-700': row.original.status === 'pending',
                   'bg-emerald-100 text-emerald-700': row.original.status === 'confirmed',
                   'bg-red-100 text-red-700': row.original.status === 'cancelled',
                 }"
                >
                   <div class="size-1.5 rounded-full" :class="{
-                    'bg-amber-500': row.original.status === 'pending',
+                    'bg-bejo-500': row.original.status === 'pending',
                     'bg-emerald-500': row.original.status === 'confirmed',
                     'bg-red-500': row.original.status === 'cancelled',
                   }"></div>

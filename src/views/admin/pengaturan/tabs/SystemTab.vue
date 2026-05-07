@@ -259,7 +259,7 @@ onUnmounted(() => {
                 <div class="absolute -right-4 -top-4 size-24 bg-bejo-50 rounded-full blur-2xl group-hover:bg-bejo-100 transition-colors"></div>
                 <div class="relative">
                   <h6 class="text-xs font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2">
-                    <Icon icon="lucide:zap" class="size-4 text-amber-500" />
+                    <Icon icon="lucide:zap" class="size-4 text-bejo-500" />
                     Keunggulan Gateway
                   </h6>
                   <ul class="space-y-3">
@@ -314,13 +314,13 @@ onUnmounted(() => {
       <!-- Maintenance Mode Card -->
       <div 
         class="p-6 rounded-[2rem] border-2 transition-all duration-500"
-        :class="settingsStore.app.isMaintenance ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-100'"
+        :class="settingsStore.app.isMaintenance ? 'bg-bejo-50 border-bejo-200' : 'bg-slate-50 border-slate-100'"
       >
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div class="flex gap-5">
             <div 
               class="size-14 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transition-transform duration-500"
-              :class="settingsStore.app.isMaintenance ? 'bg-amber-500 text-white rotate-12' : 'bg-white text-slate-400 border border-slate-100'"
+              :class="settingsStore.app.isMaintenance ? 'bg-bejo-500 text-white rotate-12' : 'bg-white text-slate-400 border border-slate-100'"
             >
               <Icon :icon="settingsStore.app.isMaintenance ? 'lucide:hammer' : 'lucide:rocket'" class="size-7" />
             </div>
@@ -345,9 +345,9 @@ onUnmounted(() => {
 
         <!-- Warning Message -->
         <Transition enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0 -translate-y-4" enter-to-class="opacity-100 translate-y-0" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-4">
-          <div v-if="settingsStore.app.isMaintenance" class="mt-6 p-4 bg-white/60 rounded-2xl border border-amber-200/50 flex items-center gap-3">
-            <Icon icon="lucide:alert-triangle" class="size-5 text-amber-600 animate-pulse" />
-            <span class="text-xs font-black text-amber-900 uppercase tracking-wider">Akses Pengunjung Dinonaktifkan Secara Global</span>
+          <div v-if="settingsStore.app.isMaintenance" class="mt-6 p-4 bg-white/60 rounded-2xl border border-bejo-200/50 flex items-center gap-3">
+            <Icon icon="lucide:alert-triangle" class="size-5 text-bejo-600 animate-pulse" />
+            <span class="text-xs font-black text-bejo-900 uppercase tracking-wider">Akses Pengunjung Dinonaktifkan Secara Global</span>
           </div>
         </Transition>
       </div>

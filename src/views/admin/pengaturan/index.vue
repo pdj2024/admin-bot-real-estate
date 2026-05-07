@@ -80,7 +80,7 @@ const applyToDOM = (config: AppSettings) => {
     `linear-gradient(135deg, ${config.colorPrimary} 0%, ${config.colorSecondary} 100%)`
   )
 
-  const dynamicPalette = generateDynamicPalette(config.colorPrimary)
+  const dynamicPalette = generateDynamicPalette(config.colorPrimary, config.colorSecondary)
   Object.entries(dynamicPalette).forEach(([shade, hexValue]) => {
     root.style.setProperty(`--color-bejo-${shade}`, hexValue as string)
     root.style.setProperty(`--text-bejo-${shade}`, hexValue as string)
@@ -155,9 +155,10 @@ const handleResetAppearance = async () => {
             :key="tab.id"
             @click="activeTab = tab.id"
             class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left group mb-1 last:mb-0"
-            :class="activeTab === tab.id ? 'bg-bejo-50 text-bejo-600' : 'text-slate-500 hover:bg-slate-50'"
+            :class="activeTab === tab.id ? 'text-white shadow-lg shadow-bejo-500/20' : 'text-slate-500 hover:bg-slate-50'"
+            :style="activeTab === tab.id ? { background: 'var(--background-image-primary-gradient)' } : {}"
           >
-            <div class="size-10 rounded-xl flex items-center justify-center transition-all shrink-0" :class="activeTab === tab.id ? 'bg-bejo-600 text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-bejo-100 group-hover:text-bejo-600'">
+            <div class="size-10 rounded-xl flex items-center justify-center transition-all shrink-0" :class="activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-bejo-100 group-hover:text-bejo-600'">
               <Icon :icon="tab.icon" class="size-5" />
             </div>
             <div class="flex-1 min-w-0">

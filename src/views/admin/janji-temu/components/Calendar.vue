@@ -68,10 +68,10 @@ onMounted(() => {
   --fc-button-hover-bg-color: #f1f5f9;
   --fc-button-hover-border-color: #cbd5e1;
   --fc-button-text-color: #475569;
-  --fc-button-active-bg-color: #ca6d2c;
-  --fc-button-active-border-color: #ca6d2c;
+  --fc-button-active-bg-color: var(--color-bejo-500);
+  --fc-button-active-border-color: var(--color-bejo-500);
   --fc-border-color: #f1f5f9;
-  --fc-today-bg-color: #ca6d2c08;
+  --fc-today-bg-color: color-mix(in srgb, var(--color-bejo-500) 5%, transparent);
   --fc-page-bg-color: transparent;
   
   font-family: inherit;
@@ -98,11 +98,11 @@ onMounted(() => {
 
 :deep(.fc .fc-button-primary:not(:disabled).fc-button-active) {
   color: white;
-  box-shadow: 0 10px 15px -3px rgba(202, 109, 44, 0.3);
+  box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--color-bejo-500) 30%, transparent);
 }
 
 :deep(.fc .fc-button:focus) {
-  box-shadow: 0 0 0 3px rgba(202, 109, 44, 0.1) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-bejo-500) 10%, transparent) !important;
 }
 
 :deep(.fc .fc-col-header-cell) {
@@ -130,24 +130,24 @@ onMounted(() => {
   padding: 4px 8px;
   font-size: 0.7rem;
   font-weight: 800;
-  border: 1px solid #ffedd5;
-  background-color: #fff7ed;
-  color: #ca6d2c;
+  border: 1px solid var(--color-bejo-100);
+  background-color: var(--color-bejo-50);
+  color: var(--color-bejo-600);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
 :deep(.fc-v-event) {
-  background-color: #fff7ed !important;
-  border: 1px solid #ffedd5 !important;
-  border-left: 4px solid #ca6d2c !important;
+  background-color: var(--color-bejo-50) !important;
+  border: 1px solid var(--color-bejo-100) !important;
+  border-left: 4px solid var(--color-bejo-500) !important;
   padding: 4px 6px !important;
-  color: #ca6d2c !important;
+  color: var(--color-bejo-600) !important;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 :deep(.fc-v-event .fc-event-main) {
-  color: #ca6d2c !important;
+  color: var(--color-bejo-600) !important;
 }
 
 :deep(.fc-timegrid-event-harness) {
@@ -159,11 +159,11 @@ onMounted(() => {
 }
 
 :deep(.fc-list-event:hover td) {
-  background-color: #fff7ed !important;
+  background-color: var(--color-bejo-50) !important;
 }
 
 :deep(.fc-list-event-dot) {
-  border-color: #ca6d2c !important;
+  border-color: var(--color-bejo-500) !important;
 }
 
 :deep(.fc-list-day-cushion) {

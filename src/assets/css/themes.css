@@ -8,8 +8,8 @@
 
   --color-card: var(--color-white);
 
-  --color-primary: var(--color-bejo-600, #ca6d2c);
-  --color-secondary: var(--color-bejo-400, #ea8e3e);
+  --color-primary: var(--color-bejo-500, #2b00ff);
+  --color-secondary: var(--color-bejo-300, #ca6d2c);
   --color-success: var(--color-green-500);
   --color-info: var(--color-sky-500);
   --color-warning: var(--color-amber-500);
@@ -150,10 +150,10 @@ html[data-theme='light'],
 html[data-sidenav-color='light'] {
   --sidenav-background: var(--color-white);
   --sidenav-item-color: var(--color-zinc-600);
-  --sidenav-item-active-color: var(--color-primary);
-  --sidenav-item-active-bg: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  --sidenav-item-active-color: var(--color-white);
+  --sidenav-item-active-bg: var(--background-image-primary-gradient);
   --sidenav-item-hover-color: var(--color-primary);
-  --sidenav-item-hover-bg: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  --sidenav-item-hover-bg: var(--color-bejo-50);
 }
 
 /* Dark Menu (Dark Mode - Removed) */

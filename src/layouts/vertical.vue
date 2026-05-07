@@ -53,7 +53,7 @@ const resize = () => {
 
 onMounted(() => {
   layoutStore.init()
-  settingsStore.init(true)
+  settingsStore.init()
   setTimeout(() => {
     resize()
   }, 100)

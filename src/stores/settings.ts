@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { reactive, ref } from 'vue'
 import api from '@/services/axios'
+import { applyToDOM } from '@/utils/theme'
 
 export interface BusinessSettings {
   appName: string
@@ -14,6 +15,8 @@ export interface BusinessSettings {
   twitter: string
   tiktok: string
   mapUrl: string
+  Logo?: string
+  Logo_Dark?: string
 }
 
 export interface BotSettings {
@@ -46,7 +49,7 @@ export interface ThemeSettings {
 
 const DEFAULT_THEME: ThemeSettings = {
   sidebarType: 'hover',
-  primaryColor: '#EA8455',
+  primaryColor: '#2B00FF',
   secondaryColor: '#CA6D2C'
 }
 
@@ -108,15 +111,19 @@ export const useSettings = defineStore('settings', () => {
         app.isMaintenance = defaults.Is_Maintenance
         bot.isActive = defaults.Bot_Active
         theme.sidebarType = defaults.Sidebar_Type || theme.sidebarType
-        theme.primaryColor = defaults.Primary_Color || theme.primaryColor
-        theme.secondaryColor = defaults.Secondary_Color || theme.secondaryColor
+        theme.primaryColor = (defaults.Primary_Color || theme.primaryColor).toUpperCase()
+        theme.secondaryColor = (defaults.Secondary_Color || theme.secondaryColor).toUpperCase()
         
         saveApp()
         saveBot()
         saveTheme()
         
-        // Apply colors to CSS variables
-        applyThemeColors()
+        // Apply colors to CSS variables and generate palette
+        applyToDOM({
+          sidenavSize: theme.sidebarType,
+          colorPrimary: theme.primaryColor,
+          colorSecondary: theme.secondaryColor
+        })
       }
     } catch (err) {
       console.error('Fetch default settings error:', err)
@@ -144,7 +151,7 @@ export const useSettings = defineStore('settings', () => {
   }
 
   // Initialize store
-  const init = async (forceFetch = false) => {
+  const init = async () => {
     // 1. Load from localStorage first (for instant UI)
     const storedBusiness = localStorage.getItem('business_settings')
     if (storedBusiness) {
@@ -167,20 +174,11 @@ export const useSettings = defineStore('settings', () => {
       applyThemeColors()
     }
 
-    // 2. Fetch strategy
-    const token = localStorage.getItem('token')
-    const hasToken = !!token && token !== 'undefined'
-    
-    // If Guest (no token) OR forceFetch is true: Always fetch
-    // If Admin: Only fetch if we don't have essential data yet
-    const shouldFetch = forceFetch || !hasToken || !business.appName || business.appName === 'Rumah Bejo'
-
-    if (shouldFetch) {
-      await Promise.all([
-        fetchBusinessSettings(),
-        fetchDefaultSettings()
-      ])
-    }
+    // 2. Fetch strategy: Always fetch on init as requested by user
+    await Promise.all([
+      fetchBusinessSettings(),
+      fetchDefaultSettings()
+    ])
   }
 
   const saveBusiness = () => {
