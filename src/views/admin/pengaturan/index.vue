@@ -25,6 +25,7 @@ const { setSideNavSize } = useLayout()
 const settingsStore = useSettings()
 
 const activeTab = ref(localStorage.getItem('settings_active_tab') || 'appearance')
+const isDirty = ref(false)
 
 watch(activeTab, (newTab) => {
   localStorage.setItem('settings_active_tab', newTab)
@@ -57,8 +58,10 @@ const settings = reactive<AppSettings>({
   sidenavSize: settingsStore.theme.sidebarType as any
 })
 
-// Sync local settings when global store updates
+// Sync local settings when global store updates (ONLY if user hasn't started editing)
 watch(() => settingsStore.theme, (newTheme) => {
+  if (isDirty.value) return
+  
   settings.colorPrimary = newTheme.primaryColor
   settings.colorSecondary = newTheme.secondaryColor
   settings.sidenavSize = newTheme.sidebarType as any
@@ -102,7 +105,9 @@ onMounted(async () => {
 })
 
 const handleUpdateAppearance = (newData: AppSettings) => {
+  isDirty.value = true
   Object.assign(settings, newData)
+  applyToDOM(settings)
 }
 
 const handleSaveAppearance = async (newData?: AppSettings) => {
@@ -128,6 +133,7 @@ const handleSaveAppearance = async (newData?: AppSettings) => {
   localStorage.setItem(APP_LOCAL_SETTINGS_KEY, JSON.stringify(settings))
   applyToDOM(settings)
   window.dispatchEvent(new Event('app-settings-changed'))
+  isDirty.value = false
   success("Tampilan berhasil diperbarui")
 }
 

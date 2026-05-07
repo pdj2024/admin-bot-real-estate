@@ -24,7 +24,6 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import logo from '@/assets/images/logo-sm.png'
 import { useLayout } from '@/stores/layout'
@@ -36,9 +35,7 @@ import { APP_LOCAL_SETTINGS_KEY } from '@/config/constants'
 const { layout, setSideNavSize } = useLayout()
 const settingsStore = useSettings()
 
-onMounted(() => {
-  settingsStore.init()
-})
+// settingsStore.init() removed to prevent redundant API calls and UI resets during live preview
 
 const toggleSidebar = () => {
   if (window.innerWidth <= 576) return

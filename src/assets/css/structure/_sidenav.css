@@ -49,10 +49,16 @@ Sidenav Menu
 
       &:is(:hover) {
         color: var(--sidenav-item-hover-color);
+        background-color: var(--sidenav-item-hover-bg);
       }
 
-      &:is(.open, .active, :active, :focus) {
+      &:is(.open, .active, :active) {
         color: var(--sidenav-item-active-color);
+        background: var(--sidenav-item-active-bg);
+      }
+
+      &:active {
+        @apply scale-95;
       }
 
       .badge {
@@ -67,13 +73,7 @@ Sidenav Menu
 
   > .menu-item {
     > .menu-link {
-      &:is(:hover) {
-        background-color: var(--sidenav-item-hover-bg);
-      }
-
-      &:is(.open, .active, :active, :focus) {
-        background: var(--sidenav-item-active-bg);
-      }
+      /* Background states handled above for better consistency */
     }
 
     &.active > .menu-link {
@@ -190,7 +190,7 @@ html[data-sidenav-size='hover-active'] {
   }
 
   .app-menu {
-    @apply fixed bottom-0;
+    @apply w-sidenav-width min-w-sidenav-width fixed bottom-0;
   }
 }
 

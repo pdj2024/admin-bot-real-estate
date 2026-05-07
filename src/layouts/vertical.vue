@@ -2,9 +2,9 @@
   <div class="wrapper">
     <div v-if="layout.isMobileMenuOpen" class="fixed inset-0 bg-gray-900/50 z-40 transition-opacity duration-300 cursor-pointer" @click="layoutStore.closeAllMenus"></div>
 
-    <MobileMenu v-if="layout.sidenav.size === 'offcanvas'" :key="'mobile-' + layout.sidenav.size" />
+    <MobileMenu v-if="layout.sidenav.size === 'offcanvas'" />
 
-    <SideNav v-else-if="layout.sidenav.size !== 'hidden'" :key="'desktop-' + layout.sidenav.size" />
+    <SideNav v-else-if="layout.sidenav.size !== 'hidden'" />
 
     <div class="page-content">
       <Topbar />
@@ -26,8 +26,6 @@ import MobileMenu from '@/layouts/components/mobile-menu/index.vue'
 import SideNav from '@/layouts/components/sidenav/index.vue'
 import Topbar from '@/layouts/components/topbar/index.vue'
 
-import { APP_LOCAL_SETTINGS_KEY } from '@/config/constants'
-
 defineProps<{ mainClass?: string }>()
 
 const layoutStore = useLayout()
@@ -38,16 +36,9 @@ const { setSideNavSize } = layoutStore
 const resize = () => {
   if (window.innerWidth <= 768) {
     setSideNavSize('offcanvas')
-  } else {
-    const storedData = localStorage.getItem(APP_LOCAL_SETTINGS_KEY)
-    if (storedData) {
-      const config = JSON.parse(storedData)
-      if (config.sidenavSize) {
-        setSideNavSize(config.sidenavSize)
-      }
-    } else {
-      setSideNavSize(layout.value.sidenav.size)
-    }
+  } else if (layout.value.sidenav.size === 'offcanvas') {
+    // If we were mobile but now desktop, restore the default sidebar type
+    setSideNavSize('hover') 
   }
 }
 
