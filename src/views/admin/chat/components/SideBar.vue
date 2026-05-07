@@ -675,7 +675,7 @@ defineExpose({
 <template>
   <div class="sidebar-container h-full" v-bind="$attrs">
     <div class="lg:border-e border-slate-200 bg-white h-full flex flex-col">
-    <div id="hs-offcanvas-left" class="hs-overlay [--auto-close:lg] lg:block lg:translate-x-0 lg:static lg:end-auto lg:bottom-0 w-80 hs-overlay-open:translate-x-0 -translate-x-full transition-all duration-300 transform h-full hidden fixed top-0 start-0 bottom-0 overflow-hidden z-60" role="dialog" tabindex="-1" aria-label="Sidebar">
+    <div id="hs-offcanvas-left" class="hs-overlay [--auto-close:lg] lg:block lg:translate-x-0 lg:static lg:end-auto lg:bottom-0 w-80 hs-overlay-open:translate-x-0 -translate-x-full transition-all duration-300 transform h-full hidden fixed top-0 start-0 bottom-0 overflow-hidden z-30" role="dialog" tabindex="-1" aria-label="Sidebar">
       <div class="card rounded-none shadow-none relative flex flex-row h-full max-h-full overflow-hidden divide-x divide-slate-200 bg-white">
         <div class="w-80 flex flex-col h-full">
           <div class="px-4 py-3 border-b border-slate-50 shrink-0 bg-white">
