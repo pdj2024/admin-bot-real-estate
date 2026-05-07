@@ -350,7 +350,7 @@ onBeforeUnmount(() => {
         <div class="flex h-[calc(100vh-180px)] md:h-[calc(100vh-170px)] min-h-[500px]">
           <SideBar 
             ref="sidebarRef" 
-            class="shrink-0"
+            class="shrink-0 h-full"
             :activeRoomId="selectedRoomId || ''" 
             :usernameChange="selectedUsernameChange" 
             @selectChat="handleSelectChat" 
