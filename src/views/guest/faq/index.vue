@@ -89,7 +89,7 @@ onMounted(() => {
                   v-model="searchQuery"
                   type="text" 
                   placeholder="Cari topik atau pertanyaan..."
-                  class="flex-1 bg-transparent border-none outline-none px-4 py-2 text-slate-700 font-bold placeholder:text-slate-400 placeholder:font-medium"
+                  class="flex-1 bg-transparent border-none focus:ring-0 focus:outline-none outline-none px-4 py-2 text-slate-700 font-bold placeholder:text-slate-400 placeholder:font-medium shadow-none"
                 />
                 <button 
                   v-if="searchQuery"

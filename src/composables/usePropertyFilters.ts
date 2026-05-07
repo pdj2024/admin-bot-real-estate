@@ -43,7 +43,8 @@ export function usePropertyFilters(
         (p) =>
           (p.Nama_Produk?.toLowerCase() || '').includes(q) ||
           (p.Alamat?.toLowerCase() || '').includes(q) ||
-          (p.Slug?.toLowerCase() || '').includes(q)
+          (p.Slug?.toLowerCase() || '').includes(q) ||
+          (p.Akses_Jalan?.some((akses: any) => String(akses).toLowerCase().includes(q)))
       )
     }
 

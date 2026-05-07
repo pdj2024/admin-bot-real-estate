@@ -128,6 +128,10 @@ const router = createRouter({
       component: () => import('@/views/admin/janji-temu/index.vue')
     },
     {
+      path: '/properti',
+      redirect: '/properti/katalog'
+    },
+    {
       path: '/properti/katalog',
       name: 'Admin Katalog Properti',
       meta: {

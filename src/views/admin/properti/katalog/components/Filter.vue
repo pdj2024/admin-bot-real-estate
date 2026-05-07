@@ -34,7 +34,7 @@
               @input="(e) => $emit('update:searchQuery', (e.target as HTMLInputElement).value)"
               type="text" 
               class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:border-bejo-600 focus:bg-white transition-all outline-none focus:ring-4 focus:ring-bejo-600/10" 
-              placeholder="Cari nama atau lokasi..." 
+              placeholder="Cari nama, lokasi, atau akses..." 
             />
             <Icon icon="lucide:search" class="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-bejo-600 transition-colors" />
           </div>

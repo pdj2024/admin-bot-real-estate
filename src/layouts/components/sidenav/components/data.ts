@@ -39,7 +39,7 @@ export const menuItems: MenuItemType[] = [
     key: 'properti',
     label: 'Properti',
     icon: 'lucide:blocks',
-    url: '/properti/katalog'
+    url: '/properti'
   },
   {
     key: 'data',

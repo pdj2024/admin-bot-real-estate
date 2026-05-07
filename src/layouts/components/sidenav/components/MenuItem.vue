@@ -26,23 +26,12 @@ const props = defineProps<PropsType>()
 const route = useRoute()
 const pathname = computed(() => route.path)
 
-const isActive = computed(() => {
+  const isActive = computed(() => {
   if (!props.item.url) return false
   if (props.item.url === '/') {
     return pathname.value === '/'
   }
   
-  // Check if current path starts with the menu URL
-  if (pathname.value.startsWith(props.item.url)) return true
-
-  // Smart check: Match primary module (e.g., /properti/detail matches /properti/katalog)
-  const menuParts = props.item.url.split('/').filter(Boolean)
-  const currentParts = pathname.value.split('/').filter(Boolean)
-  
-  if (menuParts.length > 0 && currentParts.length > 0) {
-    return menuParts[0] === currentParts[0]
-  }
-
-  return false
+  return pathname.value.startsWith(props.item.url)
 })
 </script>
