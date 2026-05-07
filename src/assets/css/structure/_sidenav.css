@@ -47,12 +47,12 @@ Sidenav Menu
         @apply ms-auto text-sm transition-all rtl:rotate-180 hs-accordion-active:rotate-90;
       }
 
-      &:is(.open, .active, :active, :focus) {
-        color: var(--sidenav-item-active-color);
-      }
-
       &:is(:hover) {
         color: var(--sidenav-item-hover-color);
+      }
+
+      &:is(.open, .active, :active, :focus) {
+        color: var(--sidenav-item-active-color);
       }
 
       .badge {
@@ -67,12 +67,12 @@ Sidenav Menu
 
   > .menu-item {
     > .menu-link {
-      &:is(.open, .active, :active, :focus) {
-        background: var(--sidenav-item-active-bg);
-      }
-
       &:is(:hover) {
         background-color: var(--sidenav-item-hover-bg);
+      }
+
+      &:is(.open, .active, :active, :focus) {
+        background: var(--sidenav-item-active-bg);
       }
     }
 

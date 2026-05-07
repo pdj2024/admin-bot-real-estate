@@ -148,9 +148,9 @@
 /* Light Menu */
 html[data-theme='light'],
 html[data-sidenav-color='light'] {
-  --sidenav-background: var(--color-white);
+  --sidenav-background: #ffffff;
   --sidenav-item-color: var(--color-zinc-600);
-  --sidenav-item-active-color: var(--color-white);
+  --sidenav-item-active-color: #ffffff;
   --sidenav-item-active-bg: var(--background-image-primary-gradient);
   --sidenav-item-hover-color: var(--color-primary);
   --sidenav-item-hover-bg: var(--color-bejo-50);
