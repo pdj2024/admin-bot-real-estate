@@ -6,22 +6,22 @@ import VueApexCharts from 'vue3-apexcharts'
 import { distributionOptions as baseOptions } from './data'
 
 const typeColorMap: Record<string, string> = {
-  'Rumah': '#2B00FF',      // bejo-500
-  'Tanah': '#1D00B3',      // bejo-700
-  'Ruko': '#0F0066',       // bejo-900
-  'Apartemen': '#6B4DFF',  // bejo-300
-  'Gudang': '#A38FFF',     // bejo-200
-  'Villa': '#C2B3FF',      // bejo-100
-  'SOHO': '#EBE6FF',       // bejo-50
-  'Pabrik': '#0A0040',     // bejo-950
-  'Perkantoran': '#050020',// bejo-1000
-  'Hotel': '#4A24FF',      // bejo-400
-  'Rumah Kos': '#DED6FF',  // bejo-150 (approx)
-  'Stand': '#F5F2FF',      // bejo-25 (approx)
-  'Toko': '#FFFFFF',       
-  'Gedung': '#030010',     
-  'Condotel': '#140080',   
-  'Lain-lain': '#6B4DFF'   
+  'Rumah': '#df7a24',      // bejo-500
+  'Tanah': '#a75526',      // bejo-700
+  'Ruko': '#6b371f',       // bejo-900
+  'Apartemen': '#f2b26e',  // bejo-300
+  'Gudang': '#f8d0a5',     // bejo-200
+  'Villa': '#fce8d4',      // bejo-100
+  'SOHO': '#fef5ed',       // bejo-50
+  'Pabrik': '#4a2414',     // bejo-950
+  'Perkantoran': '#3b1d0e',// bejo-1000
+  'Hotel': '#ea8e3e',      // bejo-400
+  'Rumah Kos': '#fbe0c3',  // bejo-150 (approx)
+  'Stand': '#fdf2e9',      // bejo-25 (approx)
+  'Toko': '#ffffff',       
+  'Gedung': '#30180b',     
+  'Condotel': '#854323',   // bejo-800
+  'Lain-lain': '#ca6d2c'   // bejo-600
 }
 
 const propertyTypes = Object.keys(typeColorMap)

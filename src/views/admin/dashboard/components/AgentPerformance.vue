@@ -18,6 +18,7 @@ interface Agent {
 
 const agents = ref<Agent[]>([])
 const isLoading = ref(true)
+const hoveredAgentId = ref<string | null>(null)
 
 const fetchAgents = async () => {
   try {
@@ -64,9 +65,11 @@ onMounted(fetchAgents)
 </script>
 
 <template>
-  <div class="card bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/50 relative overflow-hidden group/card">
-    <!-- Sophisticated Decoration -->
-    <div class="absolute -top-12 -right-12 size-48 bg-bejo-50/50 rounded-full blur-3xl pointer-events-none transition-transform duration-1000 group-hover/card:scale-150"></div>
+  <div class="card bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/50 relative group/card overflow-visible">
+    <!-- Sophisticated Decoration (Moved to a separate overflow-hidden layer to prevent popover clipping) -->
+    <div class="absolute inset-0 rounded-[2.5rem] overflow-hidden pointer-events-none">
+      <div class="absolute -top-12 -right-12 size-48 bg-bejo-50/50 rounded-full blur-3xl transition-transform duration-1000 group-hover/card:scale-150"></div>
+    </div>
 
     <div class="flex items-center justify-between mb-10 relative z-10">
       <div class="flex items-center gap-4">
@@ -92,7 +95,13 @@ onMounted(fetchAgents)
           </tr>
         </thead>
         <tbody v-if="!isLoading" class="divide-y divide-slate-50">
-          <tr v-for="agent in agents" :key="agent.No_Id" class="group relative hover:bg-slate-50/80 transition-all duration-300">
+          <tr 
+            v-for="agent in agents" 
+            :key="agent.No_Id" 
+            @mouseenter="hoveredAgentId = agent.No_Id"
+            @mouseleave="hoveredAgentId = null"
+            class="group relative hover:bg-slate-50/80 transition-all duration-300"
+          >
             <td class="relative pl-0 pr-4 py-5 transition-all">
               <!-- Row Hover Indicator (Inside TD) -->
               <div class="absolute left-[-16px] top-4 bottom-4 w-1 bg-gradient-to-b from-bejo-500 to-bejo-700 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-[0_0_10px_color-mix(in srgb,var(--color-bejo-500)_50%,transparent)]"></div>
@@ -121,7 +130,10 @@ onMounted(fetchAgents)
               </div>
 
               <!-- Absolute Hover Popup -->
-              <div class="invisible group-hover:visible absolute right-12 top-0 mt-0 z-[100] w-80 p-7 bg-white/95 backdrop-blur-xl text-slate-900 rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(15,23,42,0.2)] border border-bejo-100/50 animate-in fade-in zoom-in-95 slide-in-from-right-4 duration-300 pointer-events-none">
+              <div 
+                v-if="hoveredAgentId === agent.No_Id"
+                class="absolute right-[110%] top-1/2 -translate-y-1/2 z-[110] w-80 p-7 bg-white text-slate-900 rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(15,23,42,0.2)] border border-bejo-100/50 animate-in fade-in zoom-in-95 slide-in-from-right-4 duration-200 pointer-events-none"
+              >
                 <div class="flex items-center gap-4 mb-6">
                   <div class="size-11 rounded-2xl bg-bejo-500 flex items-center justify-center text-white shadow-lg shadow-bejo-950/20">
                     <Icon icon="lucide:user-check" class="size-5" />
