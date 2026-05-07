@@ -309,31 +309,44 @@ const refreshChatList = (data?: any, silent: boolean = false) => {
       unreadCounts.value[roomIdStr] = (unreadCounts.value[roomIdStr] || 0) + 1
     }
 
-    const updateLocalChat = (chatList: Chat[]) => {
+    const updateLocalChat = (chatList: Chat[], targetList?: Chat[], targetIds?: string[]) => {
       const index = chatList.findIndex((c) => String(c.Room_Id) === roomIdStr)
 
       if (index !== -1) {
-        // Gunakan object spreading untuk memicu reaktivitas Vue 3 pada object dalam array
         const updatedChat = {
           ...chatList[index],
           Last_Message: data.message,
           Last_Message_At: formattedDate,
-          New_Message_Count: unreadCounts.value[roomIdStr]
+          New_Message_Count: unreadCounts.value[roomIdStr],
+          Status_Bot: data.jenisPesan === 'system_keluar' ? 'aktif' : (data.jenisPesan === 'system_masuk' ? 'nonaktif' : chatList[index].Status_Bot)
         }
         
         chatList.splice(index, 1)
-        chatList.unshift(updatedChat)
         
-        // Memaksa UI refresh jika diperlukan
-        nextTick(() => {
-          // Trigger any additional UI updates
-        })
+        // Jika pesan adalah system_masuk/keluar, pindahkan ke list yang sesuai
+        if (targetList && targetIds) {
+          targetList.unshift(updatedChat)
+          if (!targetIds.includes(roomIdStr)) targetIds.push(roomIdStr)
+        } else {
+          chatList.unshift(updatedChat)
+        }
       }
     }
 
-    updateLocalChat(chatsBot.value)
-    updateLocalChat(chatsAktif.value)
-    updateLocalChat(chatsAssign.value)
+    // Tentukan target perpindahan berdasarkan jenisPesan
+    if (data.jenisPesan === 'system_masuk' || data.jenisPesan === 'system_masuk_tukar') {
+      // Pindah dari bot ke aktif
+      updateLocalChat(chatsBot.value, chatsAktif.value, roomIdsAktif.value)
+      updateLocalChat(chatsAssign.value, chatsAktif.value, roomIdsAktif.value)
+    } else if (data.jenisPesan === 'system_keluar' || data.jenisPesan === 'system_keluar_tukar') {
+      // Pindah dari aktif ke bot
+      updateLocalChat(chatsAktif.value, chatsBot.value, roomIdsBot.value)
+    } else {
+      // Update biasa di list masing-masing
+      updateLocalChat(chatsBot.value)
+      updateLocalChat(chatsAktif.value)
+      updateLocalChat(chatsAssign.value)
+    }
 
     if (roomIdStr !== String(props.activeRoomId) && !isSystemReply) {
       audio.play().catch((error) => {
@@ -341,6 +354,7 @@ const refreshChatList = (data?: any, silent: boolean = false) => {
       })
     }
   } else {
+    // Jika data tidak ditemukan di list manapun, baru fetch
     fetchData(activeTab.value, silent)
   }
 }

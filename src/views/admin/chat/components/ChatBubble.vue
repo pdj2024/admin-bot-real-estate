@@ -52,7 +52,7 @@ const bubbleStyle = computed(() => {
       return 'bubble-customer bg-bejo-50 border border-slate-100 text-slate-800 shadow-sm rounded-2xl rounded-bl-none'
     case 'admin':
     case 'cs':
-      return 'bubble-admin bg-bejo-200/30 text-slate-800 shadow-sm rounded-2xl rounded-br-none'
+      return 'bubble-admin bg-bejo-100 text-slate-800 shadow-sm rounded-2xl rounded-br-none'
     case 'ai':
       return 'bubble-ai bg-white border border-amber-200 text-amber-900 shadow-xl shadow-amber-500/10 rounded-2xl rounded-br-none ring-1 ring-amber-100'
     default:
@@ -135,7 +135,10 @@ const imageSource = computed(() => {
 })
 
 const getMediaId = (paket?: string) => {
-  return paket?.split('_').slice(2).join('_') || ''
+  if (!paket) return ''
+  const parts = paket.split('_')
+  if (parts.length <= 2) return parts[parts.length - 1]
+  return parts.slice(2).join('_')
 }
 
 const getImageUrl = async (paket?: string) => {
@@ -163,10 +166,33 @@ watch(
   },
   { immediate: true }
 )
+
+const showImagePreview = ref(false)
 </script>
 
 <template>
   <div class="flex flex-col w-full animate-fade-in-up">
+    <!-- Image Preview Modal -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition duration-300 ease-out"
+        enter-from-class="opacity-0 scale-95"
+        enter-to-class="opacity-100 scale-100"
+        leave-active-class="transition duration-200 ease-in"
+        leave-from-class="opacity-100 scale-100"
+        leave-to-class="opacity-0 scale-95"
+      >
+        <div v-if="showImagePreview" class="fixed inset-0 z-[1000] flex items-center justify-center p-4 md:p-10" @click="showImagePreview = false">
+          <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+          <div class="relative max-w-full max-h-full overflow-hidden rounded-2xl shadow-2xl animate-zoom-in" @click.stop>
+            <button @click="showImagePreview = false" class="absolute top-4 right-4 size-10 rounded-full bg-black/20 hover:bg-black/40 text-white backdrop-blur-md flex items-center justify-center transition-all z-10">
+              <Icon icon="lucide:x" class="size-6" />
+            </button>
+            <img :src="imageSource" class="max-w-full max-h-[90vh] object-contain shadow-2xl" />
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
     <div v-if="isNewDate" class="w-full my-5 flex items-center justify-center sticky top-2 z-10">
       <span class="divider-tanggal px-4 py-1.5 bg-white/70 backdrop-blur-md border border-white/50 rounded-full text-slate-500 text-[10px] font-extrabold shadow-sm uppercase tracking-widest transition-colors">
         {{ getDateChat(chat.Sent_At) }}
@@ -194,7 +220,7 @@ watch(
       <div class="flex flex-col max-w-[85%] md:max-w-[70%]" :class="isMe ? 'items-end' : 'items-start'">
         <div class="px-3 py-1.5 md:px-4 md:py-2.5 rounded-2xl text-[13px] md:text-sm relative transition-all duration-300 hover:shadow-xl" :class="[bubbleStyle, isMe ? 'hover:translate-x-1' : 'hover:-translate-x-1']">
           <div v-if="imageSource" class="mb-3 overflow-hidden rounded-xl border border-black/5 shadow-inner bg-slate-50/50">
-            <img :src="imageSource" @load="$emit('imageLoaded')" class="w-full h-auto object-cover max-h-72 hover:scale-105 transition-transform duration-500 cursor-pointer" />
+            <img :src="imageSource" @load="$emit('imageLoaded')" @click="showImagePreview = true" class="w-full h-auto object-cover max-h-72 hover:scale-105 transition-transform duration-500 cursor-pointer" />
           </div>
 
           <span v-if="chat.Message" class="block break-words leading-relaxed tracking-tight" v-html="formattedMsg"></span>

@@ -30,7 +30,6 @@ const chatContentRef = ref<any>(null)
 const chats = ref<any[]>([])
 const isLoadingChat = ref(false)
 const signalRConnection = ref<signalR.HubConnection | null>(null)
-const audio = new Audio('/sounds/Ding.mp3')
  
 const isTakenOver = computed(() => {
   if (!selectedRoomId.value) return false
@@ -104,13 +103,9 @@ onBeforeRouteLeave(() => {
 })
 
 const handleTakeOver = (status: boolean) => {
-  const targetTab = status ? 'bot' : 'chat_saya'
-  currentActiveTab.value = targetTab
-  
-  // Beri jeda sedikit agar backend selesai update sebelum fetch ulang
-  setTimeout(() => {
-    if (sidebarRef.value) sidebarRef.value.changeTab(targetTab)
-  }, 500)
+  // Pindah tab secara visual saja tanpa re-fetch data, 
+  // karena SignalR (refreshChatList) sudah menangani update last message dan perpindahan room antar list
+  currentActiveTab.value = status ? 'bot' : 'chat_saya'
   
   // Jika status true (kembali ke bot), tutup room chat dan hapus dari list aktif segera
   if (status === true) {
@@ -208,9 +203,17 @@ const startSignalR = async () => {
 
     if (sidebarRef.value) sidebarRef.value.refreshChatList(data)
 
-    if (String(data.roomId) === String(selectedRoomId.value)) {
-      const myId = localStorage.getItem('no_id') || ''
+    const myId = localStorage.getItem('no_id') || ''
+    const playDing = () => {
+      const notificationSound = new Audio('/sounds/Ding.mp3')
+      notificationSound.play().catch((error) => console.error('Gagal memutar audio:', error))
+    }
 
+    if (data.tipeUser === 'customer') {
+      playDing()
+    }
+
+    if (String(data.roomId) === String(selectedRoomId.value)) {
       if (data.senderId === myId) {
         console.log('[SignalR] Update status pesan sendiri')
         const pendingChat = chats.value.find((c) => c.Message === data.message && c.Send_Status === 'pending')
@@ -234,8 +237,6 @@ const startSignalR = async () => {
         Jenis_Pesan: data.jenisPesan,
         Send_Status: data.sendStatus || 'send'
       })
-
-      audio.play().catch((error) => console.error('Gagal memutar audio:', error))
     }
   })
 

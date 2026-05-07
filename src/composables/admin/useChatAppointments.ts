@@ -35,7 +35,7 @@ export function useChatAppointments(props: any, sendChat: any) {
 
   const handleSelectUnitForAppointment = (product: any) => {
     appointmentForm.value.properti = product.Nama_Produk
-    appointmentForm.value.lokasi = product.Alamat || '-'
+    appointmentForm.value.lokasi = (product.Alamat || '-').split('_Lat:')[0]
     appointmentForm.value.unitId = product.No_Id
     appointmentForm.value.mediaId = product.File_Image[0]
     appointmentForm.value.mediaUrl = product.MediaUrls[0].Id_Media
@@ -99,7 +99,7 @@ export function useChatAppointments(props: any, sendChat: any) {
       year: 'numeric'
     }).format(dateObj)
 
-    const msg = `Halo Kak ${f.namaLengkap}, salam kenal! 👋\n\n` +
+    const msg = `Halo Kak ${f.namaLengkap}! 👋\n\n` +
       `Jadwal kunjungannya udah kita amankan nih. Biar nggak lupa, ini ya detailnya:\n\n` +
       `🏢 *${f.properti}*\n` +
       `📍 ${f.lokasi}\n` +
@@ -127,10 +127,13 @@ export function useChatAppointments(props: any, sendChat: any) {
 
     setChatContent(msg)
     showAppointmentModal.value = false
-    const idPaket = `${f.unitId}_${f.mediaId}`
-    await sendChat('system_image_appointment', msg, undefined, undefined, idPaket, urlMedia)
+    const idPaket = `${f.unitId}_${f.mediaUrl}`
+    await sendChat('system_image_appointment', msg, undefined, f.noTelp, idPaket, urlMedia)
+    let formattedPhone = f.noTelp.replace(/\D/g, '')
+    if (formattedPhone.startsWith('0')) formattedPhone = '62' + formattedPhone.substring(1)
+
     const payload = {
-      PhoneNumber: props.phoneNumber + '@s.whatsapp.net',
+      PhoneNumber: formattedPhone + '@s.whatsapp.net',
       FileUrl: urlMedia,
       FileName: `product_${f.unitId || 'image'}.jpg`,
       MimeType: 'image/jpeg',

@@ -229,9 +229,9 @@ watch(openTukarCS, (n) => {
 })
 
 const handleOpenAppointment = () => {
-  appointmentForm.value = { namaLengkap: '', noTelp: '', lokasi: '', catatan: '', tanggal: '', waktu: '', properti: '', unitId: '', mediaId: '', mediaUrl: '' }
+  appointmentForm.value = { namaLengkap: username.value || '', noTelp: props.phoneNumber, lokasi: '', catatan: '', tanggal: '', waktu: '', properti: '', unitId: '', mediaId: '', mediaUrl: '' }
   appointmentStage.value = 1
-  showAppointmentModal.value = true
+  openAppointment.value = true
   fetchProducts()
   openMenu.value = false
 }
@@ -333,20 +333,35 @@ const sendChat = async (type: string, url?: string, targetRoomId?: string, targe
     if (chatInputRef.value) chatInputRef.value.style.height = '40px'
   }
 
-  let currentUserIds: string[] = [myId]
+  const currentUserIds: string[] = []
+  
+  // 1. Ambil ID Customer (Id Lawan)
+  if (props.idLawan) currentUserIds.push(props.idLawan)
+  
+  // 2. Ambil ID Bot (Selalu ada di room sesuai contoh user)
+  if (!currentUserIds.includes('adm_bot')) currentUserIds.push('adm_bot')
+
+  // 3. Ambil ID Admin saat ini
+  if (myId && !currentUserIds.includes(myId)) currentUserIds.push(myId)
+
+  // 4. Sinkronkan dengan User_Ids yang sudah ada di room (jika ada)
   const isCurrentActiveRoom = activeRoomId === props.roomId
   if (isCurrentActiveRoom && props.chats?.length > 0) {
     const lastChat = props.chats[props.chats.length - 1]
-    if (lastChat.User_Ids && Array.isArray(lastChat.User_Ids)) currentUserIds = [...lastChat.User_Ids]
+    if (lastChat.User_Ids && Array.isArray(lastChat.User_Ids)) {
+      lastChat.User_Ids.forEach(id => {
+        if (!currentUserIds.includes(id)) currentUserIds.push(id)
+      })
+    }
   }
-  if (myId && !currentUserIds.includes(myId)) currentUserIds.push(myId)
 
   let formattedPhone = activePhone.replace(/\D/g, '')
   if (formattedPhone.startsWith('0')) formattedPhone = '62' + formattedPhone.substring(1)
 
   let messageText = ''
-  if (type === 'system_masuk' || type === 'system_masuk_tukar') messageText = username + '_X7#mQ9!vW2_Bergabung'
-  else if (type === 'system_keluar' || type === 'system_keluar_tukar') messageText = username + '_X7#mQ9!vW2_Keluar'
+  if (type === 'system_masuk' || type === 'system_masuk_tukar') messageText = (username || 'Admin') + '_X7#mQ9!vW2_Bergabung'
+  else if (type === 'system_keluar' || type === 'system_keluar_tukar') messageText = (username || 'Admin') + '_X7#mQ9!vW2_Keluar'
+  else if (type.includes('system')) messageText = url || ''
   else messageText = sendChatContent.value
 
   const tempIndex = props.chats.length
@@ -370,8 +385,17 @@ const sendChat = async (type: string, url?: string, targetRoomId?: string, targe
   }
 
   try {
-    if (!type.includes('system')) {
-      await api.post('/api/waha/send-text', { ChatId: formattedPhone + '@s.whatsapp.net', ReplyTo: null, Text: messageText, LinkPreview: true, LinkPreviewHighQuality: false, Session: 'session_OtpWaha' }, { headers: { 'X-Jenis-User': 'admin' } })
+    // Selalu kirim ke WA Gateway (Waha) sesuai instruksi user
+    // Kecuali untuk semua tipe system karena sudah dihandle manual atau hanya untuk internal DB
+    if (messageText.trim() && !type.includes('system')) {
+      await api.post('/api/waha/send-text', { 
+        ChatId: formattedPhone + '@s.whatsapp.net', 
+        ReplyTo: null, 
+        Text: messageText.replace('_X7#mQ9!vW2_', ' '), 
+        LinkPreview: true, 
+        LinkPreviewHighQuality: false, 
+        Session: 'session_OtpWaha' 
+      }, { headers: { 'X-Jenis-User': 'admin' } })
     }
     await api.post('/api/chat/create', { Chat: { Jenis_Pesan: type.includes('system') ? type : 'text', Sent_At: sentAt, Sender_Id: myId, Tipe_User: role, Message: type.includes('system_image') ? url : messageText, Id_Paket: type == 'system_image_product' ? idPaket : null, No_Pesanan: null, No_Penawaran: type == 'system_image_appointment' ? idPaket : null, Send_Status: 'send' }, Room_Id: activeRoomId, User_Ids: currentUserIds }, { headers: { 'X-Jenis-User': 'admin' } })
     if (isCurrentActiveRoom) emit('updateChatStatus', { index: tempIndex, status: 'send' })
@@ -406,8 +430,8 @@ const takeOverChat = async (status: boolean, phoneNumber?: string, roomId?: stri
     }, { headers: { 'X-Jenis-User': 'admin' } })
     
     // Perubahan sesuai permintaan user: menggunakan _Masuk untuk ambil alih, _Keluar untuk serahkan ke bot
-    if (status == false) await sendChat('system_masuk', undefined, targetRoom, targetPhone)
-    else await sendChat('system_keluar', undefined, targetRoom, targetPhone)
+    if (status == false) sendChat('system_masuk', undefined, targetRoom, targetPhone)
+    else sendChat('system_keluar', undefined, targetRoom, targetPhone)
     emit('chatTakeOver', status)
   } catch (err: any) {
     if (err.response?.data?.Message?.includes('Percakapan ini sudah diambil alih')) fail('Percakapan ini sudah diambil alih Admin lain')
@@ -473,10 +497,13 @@ const sendImages = async () => {
   isSendingImage.value = true
   const config = { headers: { 'X-Jenis-User': 'admin' } }
   try {
+    let formattedPhone = props.phoneNumber.replace(/\D/g, '')
+    if (formattedPhone.startsWith('0')) formattedPhone = '62' + formattedPhone.substring(1)
+
     const payloads = await Promise.all(
       previewImages.value.map(async (item) => {
         const base64String = await fileToBase64(item.file)
-        return { PhoneNumber: props.phoneNumber + '@s.whatsapp.net', FileUrl: base64String, FileName: item.file.name, MimeType: item.file.type, Caption: item.caption }
+        return { PhoneNumber: formattedPhone + '@s.whatsapp.net', FileUrl: base64String, FileName: item.file.name, MimeType: item.file.type, Caption: item.caption }
       })
     )
     for (const item of payloads) {
@@ -666,7 +693,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 
           <div v-if="!isSearchingChat" class="flex items-center gap-2 sm:gap-3">
             <button @click.stop="toggleSearchChat" class="size-9 sm:size-10 rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-bejo-600 hover:border-bejo-100 hover:bg-bejo-50 hover:shadow-lg hover:shadow-bejo-500/10 transition-all duration-300 flex items-center justify-center"><Icon icon="lucide:search" class="size-4 sm:size-5"></Icon></button>
-            <button v-if="props.activeTab == 'chat_saya' && props.isTakenOver" @click="endChat" title="Akhiri Percakapan" class="h-9 sm:h-10 px-3 sm:px-4 rounded-xl bg-red-500 border border-red-100 text-white hover:bg-red-600 hover:text-white hover:shadow-lg hover:shadow-red-500/20 transition-all duration-300 flex items-center justify-center gap-2 group"><Icon icon="lucide:log-out" class="size-4"></Icon><span class="hidden sm:inline text-[10px] font-black uppercase tracking-widest">Akhiri</span></button>
+            <button v-if="props.isTakenOver" @click="endChat" title="Akhiri Percakapan" class="h-9 sm:h-10 px-3 sm:px-4 rounded-xl bg-red-500 border border-red-100 text-white hover:bg-red-600 hover:text-white hover:shadow-lg hover:shadow-red-500/20 transition-all duration-300 flex items-center justify-center gap-2 group"><Icon icon="lucide:log-out" class="size-4"></Icon><span class="hidden sm:inline text-[10px] font-black uppercase tracking-widest">Akhiri</span></button>
           </div>
         </div>
       </div>
@@ -714,12 +741,13 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 
       <div class="flex-grow min-h-0 relative overflow-hidden" :class="{ hidden: isPreviewMode }">
         <!-- Persistent Background Layer -->
-        <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-          <img :src="props.isDark ? bgChatDark : bgChat" class="w-full h-full object-cover opacity-15 grayscale-[20%] contrast-125" alt="" />
+        <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-slate-50 dark:bg-slate-950">
+          <div class="absolute inset-0 bg-slate-50/5 dark:bg-slate-900/10 backdrop-blur-none"></div>
+          <img :src="props.isDark ? bgChatDark : bgChat" class="w-full h-full object-cover opacity-[0.03] grayscale-[20%] contrast-125" alt="" />
         </div>
 
         <simplebar id="chat-scroll-container" ref="chatContainer" class="h-full w-full relative z-10 bg-transparent">
-          <div class="absolute inset-0 bg-gradient-to-b from-white/30 via-transparent to-white/10 pointer-events-none"></div>
+          <div class="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-white/5 pointer-events-none"></div>
 
           <div v-if="props.isLoadingChat" class="relative z-10 flex flex-col gap-6 px-4 py-6 sm:px-8 sm:py-10">
             <div v-for="n in 8" :key="n" class="flex w-full" :class="n % 2 === 0 ? 'justify-end' : 'justify-start'">
@@ -772,7 +800,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
           </button>
         </div>
 
-        <div v-else class="flex gap-1 md:gap-4 items-center bg-slate-50 p-1.5 md:p-2.5 pl-2 md:pl-4 rounded-xl md:rounded-[1.5rem] border border-transparent focus-within:border-bejo-500/20 focus-within:bg-white focus-within:ring-8 focus-within:ring-bejo-500/5 focus-within:shadow-xl focus-within:shadow-bejo-500/5 transition-all duration-300">
+        <div v-else class="flex gap-1 md:gap-4 items-center bg-white p-1.5 md:p-2.5 pl-2 md:pl-4 transition-all duration-300 border-t border-slate-50 focus-within:bg-slate-50/50 focus-within:rounded-[1.5rem] transition-all">
           <div class="relative" ref="dropdownRef">
             <button @click.stop="openMenu = !openMenu" class="size-9 md:size-11 rounded-xl md:rounded-2xl bg-white border border-slate-100 text-slate-400 hover:text-bejo-600 hover:border-bejo-100 hover:shadow-lg hover:shadow-bejo-500/10 transition-all duration-300 flex items-center justify-center">
               <Icon icon="lucide:plus" class="size-5 md:size-6 transition-transform duration-300" :class="{ 'rotate-45': openMenu }"></Icon>
@@ -801,7 +829,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
             </div>
           </div>
 
-          <textarea ref="chatInputRef" v-model="sendChatContent" @keydown="handleKeydown" class="flex-1 min-w-0 bg-transparent border-none focus:ring-0 text-sm font-bold text-slate-700 placeholder:text-slate-400 placeholder:font-bold px-1 md:px-2 py-[11px] resize-none overflow-y-auto custom-scrollbar transition-all duration-200" placeholder="Tulis pesan..." rows="1" style="height: 40px; min-height: 40px"></textarea>
+          <textarea ref="chatInputRef" v-model="sendChatContent" @keydown="handleKeydown" class="flex-1 min-w-0 bg-transparent border-none focus:ring-0 outline-none text-sm font-bold text-slate-700 placeholder:text-slate-400 placeholder:font-bold px-1 md:px-2 py-[11px] resize-none overflow-y-auto custom-scrollbar transition-all duration-200" placeholder="Tulis pesan..." rows="1" style="height: 40px; min-height: 40px"></textarea>
 
           <div ref="containerRef" class="flex-shrink-0 flex items-center gap-1 md:gap-3 relative">
             <div class="relative">
@@ -869,7 +897,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
         :isLoadingProducts="isLoadingProducts" 
         :filteredProducts="filteredProducts" 
         @close="closeEtalase" 
-        @selectUnit="openAppointment ? handleSelectUnitForAppointment($event) : sendProduct($event, (val) => isSendingImage = val, closeEtalase)" 
+        @selectUnit="openAppointment ? (handleSelectUnitForAppointment($event), openAppointment = false) : sendProduct($event, (val) => isSendingImage = val, closeEtalase)" 
       />
 
       <PanelAppointment 
@@ -911,9 +939,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 }
 
 .container {
-  background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), v-bind(bgLightUrl);
-  background-size: cover;
-  background-position: center;
+  background-color: transparent;
 }
 
 :deep(.simplebar-scrollbar::before) {
