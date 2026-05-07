@@ -61,7 +61,7 @@ export function useChatAppointments(props: any, sendChat: any) {
     plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin],
     initialView: 'dayGridMonth',
     locale: idLocale,
-    height: 'auto',
+    height: '100%',
     selectable: true,
     validRange: {
       start: new Date().toISOString().split('T')[0]

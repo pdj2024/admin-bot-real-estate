@@ -75,6 +75,9 @@ const handleStatusBot = (status: string) => {
 
 const handleUsernameChange = (username: string) => {
   selectedUsernameChange.value = username
+  if (sidebarRef.value) {
+    sidebarRef.value.refreshChatList(undefined, true)
+  }
 }
 
 const handleTabChange = (tab: string) => {

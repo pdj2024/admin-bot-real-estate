@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import { defineAsyncComponent } from 'vue'
+import { ref, watch } from 'vue'
+import FullCalendar from '@fullcalendar/vue3'
 
-const FullCalendar = defineAsyncComponent(() => import('@fullcalendar/vue3'))
+const fullCalendarRef = ref<InstanceType<typeof FullCalendar> | null>(null)
 
-defineProps<{
+const props = defineProps<{
   showAppointmentModal: boolean
   appointmentForm: any
   appointmentCalendarOptions: any
@@ -19,6 +20,14 @@ const emit = defineEmits<{
   (e: 'close'): void
   (e: 'save'): void
 }>()
+
+watch(() => props.showAppointmentModal, (newVal) => {
+  if (newVal) {
+    setTimeout(() => {
+      fullCalendarRef.value?.getApi().updateSize()
+    }, 300) // Delay matching the fade-in animation
+  }
+})
 </script>
 
 <template>
@@ -58,7 +67,7 @@ const emit = defineEmits<{
           </div>
 
           <div class="flex-1 bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-900/5 overflow-hidden p-2 md:p-6 transition-all hover:shadow-2xl hover:shadow-slate-900/10">
-            <FullCalendar :options="appointmentCalendarOptions" />
+            <FullCalendar ref="fullCalendarRef" :options="appointmentCalendarOptions" />
           </div>
         </div>
         <!-- Sidebar Form Left -->

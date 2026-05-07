@@ -1,7 +1,7 @@
 <template>
   <li class="menu-item" :class="{ active: isActive }">
     <RouterLink :to="item.url || ''" class="menu-link" :class="{ active: isActive }">
-      <span v-if="item.icon" class="menu-icon">
+      <span v-if="item.icon" class="menu-icon flex items-center justify-center">
         <Icon :icon="item.icon" class="size-4" />
       </span>
       <span class="menu-text">{{ item.label }}</span>

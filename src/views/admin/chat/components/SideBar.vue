@@ -102,7 +102,7 @@ const checkAndEmitActiveChat = () => {
   
   if (chat) {
     emit('idLawan', chat.Id_Lawan)
-    emit('username', chat.Username_Lawan || chat.Room_Name || '')
+    emit('username', chat.Username_Lawan )
     emit('phoneNumber', chat.Telepon_User_Lawan || '')
     emit('statusBot', chat.Status_Bot || 'nonaktif')
     
@@ -442,7 +442,7 @@ const handleViewConversation = () => {
       selectedChatGroup.value, 
       chat.Room_Id, 
       chat.Id_Lawan, 
-      chat.Username_Lawan || chat.Room_Name, 
+      chat.Username_Lawan, 
       chat.Telepon_User_Lawan, 
       chat.Status_Bot || 'nonaktif'
     )
@@ -490,7 +490,7 @@ const handleTakeOverConversation = () => {
       selectedChatGroup.value, 
       chat.Room_Id, 
       chat.Id_Lawan, 
-      chat.Username_Lawan || chat.Room_Name, 
+      chat.Username_Lawan, 
       chat.Telepon_User_Lawan, 
       chat.Status_Bot || 'nonaktif'
     )
@@ -603,7 +603,6 @@ const filterList = (list: Chat[]) => {
   const query = searchQuery.value.toLowerCase()
   return list.filter(chat => 
     (chat.Username_Lawan || '').toLowerCase().includes(query) ||
-    (chat.Room_Name || '').toLowerCase().includes(query) ||
     (chat.Telepon_User_Lawan || '').toLowerCase().includes(query)
   )
 }
@@ -716,7 +715,7 @@ defineExpose({
                       v-for="(chat, idx) in filteredChatsBot"
                       :key="chat.Room_Id"
                       v-memo="[chat.Room_Id, chat.Last_Message_At, chat.Last_Message, chat.New_Message_Count, selectedChatId === chat.Room_Id, selectedBotChats.includes(chat)]"
-                      @click="selectChat(idx, 'bot', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan || chat.Room_Name, chat.Telepon_User_Lawan, chat.Status_Bot || 'aktif')"
+                      @click="selectChat(idx, 'bot', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan, chat.Telepon_User_Lawan, chat.Status_Bot || 'aktif')"
                       @contextmenu.prevent="openContextMenu($event, chat, 'bot', idx)"
                       class="relative flex items-center gap-3 py-3 px-4 bg-white cursor-pointer border-b border-slate-50 hover:bg-slate-50/80 transition-all duration-300 group"
                       :class="{
@@ -728,7 +727,7 @@ defineExpose({
                       </div>
 
                       <div class="relative shrink-0 flex items-center justify-center font-black rounded-2xl size-10 bg-gradient-to-br from-bejo-50 to-bejo-100/50 text-bejo-600 border border-white shadow-sm group-hover:scale-105 transition-all duration-300">
-                        <span v-if="chat.Username_Lawan || chat.Room_Name" class="text-xs tracking-tighter">{{ chat.Username_Lawan?.charAt(0).toUpperCase() || chat.Room_Name?.charAt(0).toUpperCase() }}</span>
+                        <span v-if="chat.Username_Lawan" class="text-xs tracking-tighter">{{ chat.Username_Lawan?.charAt(0).toUpperCase() }}</span>
                         <Icon v-else icon="lucide:user" class="size-5 text-bejo-300" />
                         <span class="absolute -bottom-1 -right-1 size-3.5 border-2 border-white rounded-full bg-bejo-500 shadow-sm shadow-green-500/20"></span>
                       </div>
@@ -736,7 +735,7 @@ defineExpose({
                       <div class="flex-grow min-w-0">
                         <div class="flex items-center justify-between gap-2 mb-1">
                           <h6 class="text-slate-900 font-black text-sm truncate tracking-tight">
-                            {{ chat.Username_Lawan || chat.Room_Name }}
+                            {{ chat.Username_Lawan }}
                           </h6>
                           <span class="text-[9px] font-black text-slate-400 shrink-0 uppercase tracking-tighter">
                             {{ getDateChat(chat.Last_Message_At) }}
@@ -758,7 +757,7 @@ defineExpose({
                               <span class="text-[8px] font-black uppercase tracking-tighter">{{ chat.Status_Bot === 'aktif' ? 'Bot' : 'Admin' }}</span>
                             </button>
 
-                            <div v-if="chat.New_Message_Count! > 0" class="flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[9px] font-black text-white bg-red-500 rounded-full shrink-0 shadow-lg shadow-red-500/30 ring-2 ring-white animate-bounce-subtle">
+                            <div v-if="chat.New_Message_Count! > 0" class="grid place-items-center min-w-[20px] h-[20px] px-1 text-[9px] font-black text-white bg-red-500 rounded-full shrink-0 shadow-lg shadow-red-500/30 ring-2 ring-white leading-none animate-bounce-subtle">
                               {{ chat.New_Message_Count! > 99 ? '99+' : chat.New_Message_Count }}
                             </div>
                           </div>
@@ -792,7 +791,7 @@ defineExpose({
                       v-for="(chat, idx) in filteredChatsAssign.slice().reverse()"
                       :key="chat.Room_Id"
                       v-memo="[chat.Room_Id, chat.Last_Message_At, chat.Last_Message, chat.New_Message_Count, selectedChatId === chat.Room_Id, selectedAssignChats.includes(chat)]"
-                      @click="selectChat(idx, 'chat_saya', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan || chat.Room_Name, chat.Telepon_User_Lawan, chat.Status_Bot || 'nonaktif')"
+                      @click="selectChat(idx, 'chat_saya', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan, chat.Telepon_User_Lawan, chat.Status_Bot || 'nonaktif')"
                       @contextmenu.prevent="openContextMenu($event, chat, 'assign', idx)"
                       class="relative flex items-center gap-3 py-3 px-4 bg-white cursor-pointer border-b border-slate-50 hover:bg-slate-50/80 transition-all duration-300 group"
                       :class="{
@@ -812,7 +811,7 @@ defineExpose({
                       <div class="flex-grow min-w-0">
                         <div class="flex items-center justify-between gap-2 mb-1">
                           <h6 class="text-slate-900 font-black text-sm truncate tracking-tight">
-                            {{ chat.Username_Lawan || chat.Room_Name }}
+                            {{ chat.Username_Lawan }}
                           </h6>
                           <span class="text-[9px] font-black text-slate-400 shrink-0 uppercase tracking-tighter">
                             {{ getDateChat(chat.Last_Message_At) }}
@@ -834,7 +833,7 @@ defineExpose({
                               <span class="text-[8px] font-black uppercase tracking-tighter">{{ chat.Status_Bot === 'aktif' ? 'Bot' : 'Menunggu' }}</span>
                             </button>
 
-                            <div v-if="chat.New_Message_Count! > 0" class="flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[9px] font-black text-white bg-red-500 rounded-full shrink-0 shadow-lg shadow-red-500/30 ring-2 ring-white animate-bounce-subtle">
+                            <div v-if="chat.New_Message_Count! > 0" class="grid place-items-center min-w-[20px] h-[20px] px-1 text-[9px] font-black text-white bg-red-500 rounded-full shrink-0 shadow-lg shadow-red-500/30 ring-2 ring-white leading-none animate-bounce-subtle">
                               {{ chat.New_Message_Count! > 99 ? '99+' : chat.New_Message_Count }}
                             </div>
                           </div>
@@ -862,7 +861,7 @@ defineExpose({
                       v-for="(chat, idx) in filteredChatsAktif"
                       :key="chat.Room_Id"
                       v-memo="[chat.Room_Id, chat.Last_Message_At, chat.Last_Message, chat.New_Message_Count, selectedChatId === chat.Room_Id, selectedActiveChats.includes(chat)]"
-                      @click="selectChat(idx, 'chat_saya', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan || chat.Room_Name, chat.Telepon_User_Lawan, chat.Status_Bot || 'nonaktif')"
+                      @click="selectChat(idx, 'chat_saya', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan, chat.Telepon_User_Lawan, chat.Status_Bot || 'nonaktif')"
                       @contextmenu.prevent="openContextMenu($event, chat, 'aktif', idx)"
                       class="relative flex items-center gap-3 py-3 px-4 bg-white cursor-pointer border-b border-slate-50 hover:bg-slate-50/80 transition-all duration-300 group"
                       :class="{
@@ -882,7 +881,7 @@ defineExpose({
                       <div class="flex-grow min-w-0">
                         <div class="flex items-center justify-between gap-2 mb-1">
                           <h6 class="text-slate-900 font-black text-sm truncate tracking-tight">
-                            {{ chat.Username_Lawan || chat.Room_Name }}
+                            {{ chat.Username_Lawan }}
                           </h6>
                           <span class="text-[9px] font-black text-slate-400 shrink-0 uppercase tracking-tighter">
                             {{ getDateChat(chat.Last_Message_At) }}
@@ -904,7 +903,7 @@ defineExpose({
                               <span class="text-[8px] font-black uppercase tracking-tighter">{{ chat.Status_Bot === 'aktif' ? 'Bot' : 'Admin' }}</span>
                             </button>
 
-                            <div v-if="chat.New_Message_Count! > 0" class="flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[9px] font-black text-white bg-red-500 rounded-full shrink-0 shadow-lg shadow-red-500/30 ring-2 ring-white animate-bounce-subtle">
+                            <div v-if="chat.New_Message_Count! > 0" class="grid place-items-center min-w-[20px] h-[20px] px-1 text-[9px] font-black text-white bg-red-500 rounded-full shrink-0 shadow-lg shadow-red-500/30 ring-2 ring-white leading-none animate-bounce-subtle">
                               {{ chat.New_Message_Count! > 99 ? '99+' : chat.New_Message_Count }}
                             </div>
                           </div>
