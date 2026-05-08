@@ -131,6 +131,11 @@ html[data-sidenav-size='hover'] {
         .badge {
           visibility: hidden;
         }
+
+        .menu-icon {
+          @apply flex items-center justify-center;
+          margin-left: -2px !important;
+        }
       }
 
       .sub-menu {
@@ -285,12 +290,11 @@ html[data-sidenav-size='sm'] {
 
       > .menu-item {
         > .menu-link {
-          @apply flex items-center justify-center !p-0 !w-10 !h-10 mx-auto rounded-lg relative;
+          @apply flex items-center justify-center !p-0 !w-10 !h-10 rounded-lg relative;
           
           .menu-icon {
-            @apply absolute inset-0 flex items-center justify-center !m-0 !p-0;
-            width: auto !important;
-            height: auto !important;
+            @apply flex items-center justify-center w-full h-full !m-0 !p-0;
+            margin-left: -3px !important;
           }
         }
 

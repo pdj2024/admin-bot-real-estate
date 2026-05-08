@@ -315,7 +315,7 @@ defineExpose({ openAddModal })
 
 <template>
   <div class="lg:col-span-3 col-span-1">
-    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8 print:hidden border-b border-slate-50 pb-6">
+    <div class="sticky top-[72px] lg:top-20 z-40 flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8 print:hidden border-b border-slate-50 pb-6 bg-white/90 backdrop-blur-md -mx-4 px-4 py-4 rounded-b-2xl shadow-sm shadow-slate-100/50">
       <div>
         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
           Ditemukan <span class="text-bejo-600">{{ table.getFilteredRowModel().rows.length }}</span> Properti Tersedia

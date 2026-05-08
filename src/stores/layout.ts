@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { LayoutThemeType, LayoutType, SideNavType, LayoutDirectionType } from '@/types/layout'
-import { useSystemTheme } from '@/composables/useSystemTheme'
 import { toggleAttribute } from '@/helpers/layout'
 
 const INIT_STATE: LayoutType = {
@@ -16,7 +15,6 @@ const INIT_STATE: LayoutType = {
 
 export const useLayout = defineStore('layout', () => {
   const layout = ref<LayoutType>({ ...INIT_STATE })
-  const systemTheme = useSystemTheme()
 
   // --- CUSTOMIZER STATE & ACTIONS (Ditambahkan kembali) ---
   const isCustomizerOpen = ref(false)
@@ -78,8 +76,7 @@ export const useLayout = defineStore('layout', () => {
   }
 
   const setTheme = (nTheme: LayoutThemeType) => {
-    const res = nTheme === 'system' ? systemTheme.value : nTheme
-    toggleAttribute('data-theme', res)
+    toggleAttribute('data-theme', nTheme)
     layout.value.theme = nTheme
   }
 
@@ -106,11 +103,11 @@ export const useLayout = defineStore('layout', () => {
     setPosition,
     init,
     isCustomizerOpen,
-    customizer, // Di-return agar index.vue tidak error
-    reset       // Di-return agar index.vue tidak error
+    customizer,
+    reset
   }
 }, {
   persist: {
-    pick: ['layout.theme', 'layout.sidenav', 'layout.position']
+    pick: ['layout.sidenav', 'layout.position']
   }
 })

@@ -1,11 +1,11 @@
 <template>
   <div class="space-y-6">
-    <div class="flex flex-col sm:flex-row justify-between items-center bg-white p-4 mb-5 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 gap-4 mb-2">
+    <div class="sticky top-[72px] lg:top-20 z-40 flex flex-col md:flex-row justify-between items-center bg-white/90 backdrop-blur-md p-4 mb-5 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 gap-4 mb-2 flex-wrap">
       <div class="text-sm text-slate-800 font-medium px-2">
         Menampilkan Daftar <span class="text-bejo-600 font-black text-base">{{ table.getFilteredRowModel().rows.length }}</span> Properti
       </div>
 
-      <div class="grid grid-cols-2 sm:flex sm:items-center gap-3 w-full sm:w-auto relative mb-6 sm:mb-0">
+      <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center justify-center sm:justify-end gap-3 w-full sm:w-auto relative mb-2 sm:mb-0">
         <button @click="$emit('openFilter')" class="lg:hidden flex-1 flex items-center justify-center gap-2 px-4 py-2 border border-bejo-100 rounded-xl bg-bejo-50 text-sm font-bold text-bejo-700 hover:bg-bejo-100 transition-colors"><Icon icon="lucide:filter" class="size-4" /> Filter</button>
 
         <div id="transaksi-container" class="relative flex-1 sm:flex-none">
@@ -41,9 +41,7 @@
             <div v-show="isTypeOpen" class="absolute left-0 sm:right-0 top-full mt-2 z-50 min-w-[180px] max-h-60 overflow-y-auto bg-white border border-slate-200 shadow-xl shadow-slate-200/50 p-2 rounded-2xl custom-scroll">
               <button @click="handleType('Semua Tipe')" class="dropdown-item">Semua Tipe</button>
               <hr class="my-2 border-slate-100" />
-              <button v-for="t in propertyTypes" :key="t" @click="handleType(t)" class="dropdown-item flex items-center justify-between">
-                {{ t }} <Icon v-if="selectedType === t" icon="lucide:check" class="size-3 text-bejo-600" />
-              </button>
+              <button v-for="t in propertyTypes" :key="t" @click="handleType(t)" class="dropdown-item flex items-center justify-between">{{ t }} <Icon v-if="selectedType === t" icon="lucide:check" class="size-3 text-bejo-600" /></button>
             </div>
           </Transition>
         </div>
@@ -51,7 +49,7 @@
         <div id="sorting-container" class="relative flex-1 sm:flex-none">
           <button @click="isSortOpen = !isSortOpen" class="w-full flex items-center justify-between gap-3 px-4 py-2 border border-bejo-100 rounded-xl bg-white text-sm font-bold hover:bg-bejo-50 hover:border-bejo-200 transition-all text-slate-700">
             <div class="flex items-center gap-2">
-                <Icon icon="lucide:arrow-up-down" class="size-4 text-bejo-600" />
+              <Icon icon="lucide:arrow-up-down" class="size-4 text-bejo-600" />
               <span>{{ selectedSort }}</span>
             </div>
             <Icon icon="lucide:chevron-down" class="size-4 opacity-50" />
@@ -73,32 +71,19 @@
           <button @click="handlePageChange('prev')" :disabled="!table.getCanPreviousPage()" class="p-1.5 text-slate-500 hover:text-bejo-600 disabled:opacity-30 transition-colors hover:bg-bejo-50 rounded-lg">
             <Icon icon="lucide:chevron-left" class="size-4" />
           </button>
-          <div class="px-2 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">
-            {{ table.getState().pagination.pageIndex + 1 }} / {{ table.getPageCount() }}
-          </div>
+          <div class="px-2 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">{{ table.getState().pagination.pageIndex + 1 }} / {{ table.getPageCount() }}</div>
           <button @click="handlePageChange('next')" :disabled="!table.getCanNextPage()" class="p-1.5 text-slate-500 hover:text-bejo-600 disabled:opacity-30 transition-colors hover:bg-bejo-50 rounded-lg">
             <Icon icon="lucide:chevron-right" class="size-4" />
           </button>
         </div>
 
-        <button v-if="isAdmin" @click="$router.push('/admin/properti/tambah')" class="flex items-center justify-center gap-2 px-6 py-2 bg-bejo-600 text-white rounded-xl text-sm font-bold hover:bg-bejo-700 hover:shadow-lg hover:shadow-bejo-600/30 transition-all flex-1 sm:flex-none shadow-md shadow-bejo-600/10">
-          <Icon icon="lucide:plus" class="size-4" /> Tambah
-        </button>
+        <button v-if="isAdmin" @click="$router.push('/admin/properti/tambah')" class="flex items-center justify-center gap-2 px-6 py-2 bg-bejo-600 text-white rounded-xl text-sm font-bold hover:bg-bejo-700 hover:shadow-lg hover:shadow-bejo-600/30 transition-all flex-1 sm:flex-none shadow-md shadow-bejo-600/10"><Icon icon="lucide:plus" class="size-4" /> Tambah</button>
       </div>
     </div>
 
-    <!-- Floating Filter Button (Mobile Only) -->
-    <div class="lg:hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-[50] flex justify-center w-full px-4 pointer-events-none">
-      <button 
-        @click="$emit('openFilter')" 
-        class="pointer-events-auto flex items-center gap-2 px-8 py-3.5 bg-slate-900/90 backdrop-blur-xl text-white rounded-full font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-slate-900/40 active:scale-95 transition-all border border-white/10"
-      >
-        <Icon icon="lucide:filter" class="size-4" />
-        Saring Properti
-      </button>
-    </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-6">
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
       <template v-if="isLoading">
         <ProductCard v-for="i in 15" :key="i" :product="{}" is-loading />
       </template>
@@ -109,27 +94,11 @@
           </div>
           <h3 class="text-xl font-black text-slate-900 mb-2">Unit Tidak Ditemukan</h3>
           <p class="text-slate-500 text-sm max-w-sm mb-8 font-medium">Coba sesuaikan filter atau kata kunci pencarian Anda untuk menemukan unit lainnya.</p>
-          <button 
-            @click="resetFilters" 
-            class="px-10 py-3.5 bg-white border border-slate-200 text-bejo-600 rounded-2xl font-black text-[11px] uppercase tracking-[0.15em] transition-all shadow-sm hover:bg-bejo-50 hover:border-bejo-200 active:scale-95"
-          >
-            Atur Ulang Filter
-          </button>
+          <button @click="resetFilters" class="px-10 py-3.5 bg-white border border-slate-200 text-bejo-600 rounded-2xl font-black text-[11px] uppercase tracking-[0.15em] transition-all shadow-sm hover:bg-bejo-50 hover:border-bejo-200 active:scale-95">Atur Ulang Filter</button>
         </div>
       </template>
       <template v-else>
-        <ProductCard 
-          v-for="(row, idx) in table.getRowModel().rows" 
-          :key="row.id" 
-          :product="row.original" 
-          :is-admin="isAdmin"
-          :active-dropdown-id="activeDropdownId"
-          :lazy="idx >= 6"
-          @toggle-dropdown="toggleDropdown"
-          @update-status="updateStatusTransaksi"
-          @delete="deleteProduct"
-          @edit="(slug) => $router.push(`/properti/detail/${slug}`)"
-        />
+        <ProductCard v-for="(row, idx) in table.getRowModel().rows" :key="row.id" :product="row.original" :is-admin="isAdmin" :active-dropdown-id="activeDropdownId" :lazy="idx >= 6" @toggle-dropdown="toggleDropdown" @update-status="updateStatusTransaksi" @delete="deleteProduct" @edit="(slug) => $router.push(`/properti/detail/${slug}`)" />
       </template>
     </div>
 
@@ -257,7 +226,7 @@ export interface Product {
 
 const handlePageChange = async (action: 'prev' | 'next' | number) => {
   isLoading.value = true
-  await new Promise(resolve => setTimeout(resolve, 300))
+  await new Promise((resolve) => setTimeout(resolve, 300))
   if (action === 'prev') {
     table.previousPage()
   } else if (action === 'next') {
@@ -298,9 +267,13 @@ const handleType = (type: string) => {
 }
 
 // Reset ke halaman pertama saat filter atau pencarian berubah
-watch([() => props.searchQuery, () => props.transactionType, selectedType, () => props.facilities, () => props.region, () => props.priceRange], () => {
-  table.setPageIndex(0)
-}, { deep: true })
+watch(
+  [() => props.searchQuery, () => props.transactionType, selectedType, () => props.facilities, () => props.region, () => props.priceRange],
+  () => {
+    table.setPageIndex(0)
+  },
+  { deep: true }
+)
 
 const filteredProducts = usePropertyFilters(
   products,
@@ -367,14 +340,14 @@ const toggleDropdown = (id: string) => {
 const updateStatusTransaksi = async (product: any, newStatus: string) => {
   const isDisplayStatus = ['Aktif', 'Draft'].includes(newStatus)
   const statusLabel = isDisplayStatus ? 'display' : 'properti'
-  
+
   confirm(`Apakah Anda yakin ingin mengubah status ${statusLabel} menjadi ${newStatus}?`, async () => {
     try {
       if (isDisplayStatus) {
         product.Status_Display = newStatus
       } else {
         product.Status_Properti = newStatus
-        
+
         // Auto-set to Draft if Sold or Rented
         if (newStatus === 'Terjual' || newStatus === 'Tersewa') {
           product.Status_Display = 'Draft'

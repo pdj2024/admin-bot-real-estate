@@ -1,7 +1,7 @@
 <template>
   <li class="menu-item hs-accordion" :class="{ active: isOpen }">
     <button type="button" class="hs-accordion-toggle menu-link w-full" :class="{ active: isOpen }">
-      <span v-if="item.icon" class="menu-icon"><Icon :icon="item.icon"></Icon></span>
+      <span v-if="item.icon" class="menu-icon flex items-center justify-center"><Icon :icon="item.icon"></Icon></span>
       <span class="menu-text">{{ item.label }}</span>
       <span class="menu-arrow">
         <Icon icon="lucide:chevron-right" class="ms-auto transition-transform duration-200" />

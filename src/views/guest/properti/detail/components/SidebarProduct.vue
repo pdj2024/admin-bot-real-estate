@@ -38,7 +38,7 @@ const handleWhatsApp = () => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-5 sticky top-28 h-fit">
+  <div class="flex flex-col gap-5 lg:sticky lg:top-28 h-fit z-20">
     <!-- Back Button -->
     <div class="flex items-center">
       <router-link 

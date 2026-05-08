@@ -1,24 +1,11 @@
 <template>
   <div>
     <!-- Backdrop for Mobile -->
-    <Transition
-      enter-active-class="transition duration-300 ease-out"
-      enter-from-class="opacity-0"
-      enter-to-class="opacity-100"
-      leave-active-class="transition duration-200 ease-in"
-      leave-from-class="opacity-100"
-      leave-to-class="opacity-0"
-    >
+    <Transition enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0" enter-to-class="opacity-100" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0">
       <div v-if="openFilter" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[55] lg:hidden" @click="$emit('update:openFilter', false)"></div>
     </Transition>
 
-    <div 
-      ref="filterRef" 
-      :class="[
-        !openFilter ? 'translate-y-full lg:translate-y-0 hidden lg:block' : 'translate-y-0 block',
-        'fixed inset-x-0 bottom-0 z-[60] lg:static lg:w-full lg:inset-auto transition-transform duration-500 ease-out'
-      ]"
-    >
+    <div ref="filterRef" :class="[!openFilter ? 'translate-y-full lg:translate-y-0 hidden lg:block' : 'translate-y-0 block', 'fixed inset-x-0 bottom-0 z-[60] lg:static lg:w-full lg:inset-auto transition-transform duration-500 ease-out']">
       <div class="bg-white rounded-t-[2.5rem] lg:rounded-[2.5rem] shadow-2xl lg:shadow-xl shadow-slate-900/20 overflow-hidden max-h-[85vh] lg:max-h-none flex flex-col">
         <!-- Bottom Sheet Handle (Mobile Only) -->
         <div class="flex justify-center pt-4 pb-2 lg:hidden">
@@ -31,258 +18,154 @@
             <button @click="clearAll" class="text-[10px] font-black text-bejo-500 uppercase tracking-widest hover:text-red-500 transition-all underline underline-offset-4 decoration-transparent hover:decoration-red-500">Hapus Semua</button>
           </div>
 
-        <div class="space-y-5">
-          <div class="relative group">
-            <input 
-              :value="searchQuery"
-              @input="(e) => $emit('update:searchQuery', (e.target as HTMLInputElement).value)"
-              type="text" 
-              class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:border-bejo-600 focus:bg-white transition-all outline-none focus:ring-4 focus:ring-bejo-600/10" 
-              placeholder="Cari nama atau lokasi..." 
-            />
-            <Icon icon="lucide:search" class="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-bejo-600 transition-colors" />
-          </div>
-
-          <div class="hs-accordion-group space-y-4">
-
-            <div class="hs-accordion active" id="filter-transaksi">
-              <button class="hs-accordion-toggle flex items-center justify-between w-full font-semibold text-xs uppercase tracking-widest text-slate-500 pb-2 border-b border-slate-200" aria-expanded="true" aria-controls="content-transaksi">
-                Tipe Transaksi
-                <Icon icon="lucide:chevron-down" class="size-4 hs-accordion-active:rotate-180 transition-transform" />
-              </button>
-              <div id="content-transaksi" class="hs-accordion-content w-full overflow-hidden transition-[height] duration-300">
-                <div class="grid grid-cols-2 gap-2 pt-4">
-                  <button 
-                    v-for="type in ['Semua Label', 'Jual Saja', 'Sewa Saja', 'Jual & Sewa']" 
-                    :key="type"
-                    @click="$emit('update:transactionType', type)"
-                    class="px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border text-center"
-                    :class="transactionType === type 
-                      ? 'bg-bejo-600 text-white border-bejo-600 shadow-lg shadow-bejo-600/20' 
-                      : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-bejo-300 hover:bg-bejo-50 hover:text-bejo-600'"
-                  >
-                    {{ type }}
-                  </button>
-                </div>
-              </div>
+          <div class="space-y-5">
+            <div class="relative group">
+              <input :value="searchQuery" @input="(e) => $emit('update:searchQuery', (e.target as HTMLInputElement).value)" type="text" class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:border-bejo-600 focus:bg-white transition-all outline-none focus:ring-4 focus:ring-bejo-600/10" placeholder="Cari nama atau lokasi..." />
+              <Icon icon="lucide:search" class="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-bejo-600 transition-colors" />
             </div>
 
-            <div class="hs-accordion active" id="filter-regional">
-              <button class="hs-accordion-toggle flex items-center justify-between w-full font-semibold text-xs uppercase tracking-widest text-slate-500 pb-2 border-b border-slate-200" aria-expanded="true" aria-controls="content-regional">
-                Wilayah
-                <Icon icon="lucide:chevron-down" class="size-4 hs-accordion-active:rotate-180 transition-transform" />
-              </button>
-              <div id="content-regional" :class="[isProvOpen || isCityOpen ? 'overflow-visible' : 'overflow-hidden']" class="hs-accordion-content w-full transition-[height] duration-300">
-                <div class="space-y-3 pt-4">
-                  <!-- Dropdown Provinsi -->
-                  <div class="relative w-full" id="prov-dropdown">
-                    <button 
-                      @click="toggleProv"
-                      class="w-full flex items-center justify-between pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 transition-all outline-none focus:border-bejo-600 focus:bg-white focus:ring-4 focus:ring-bejo-600/10"
-                    >
-                      <div class="flex items-center gap-2 truncate">
-                        <Icon icon="lucide:map" class="size-4 text-slate-400" />
-                        <span :class="region.province ? 'text-slate-800 font-bold' : 'text-slate-400'">
-                          {{ region.province || 'Pilih Provinsi' }}
-                        </span>
-                      </div>
-                      <Icon icon="lucide:chevron-down" class="size-4 text-slate-400 transition-transform" :class="isProvOpen ? 'rotate-180' : ''" />
+            <div class="hs-accordion-group space-y-4">
+              <div class="hs-accordion active" id="filter-transaksi">
+                <button class="hs-accordion-toggle flex items-center justify-between w-full font-semibold text-xs uppercase tracking-widest text-slate-500 pb-2 border-b border-slate-200" aria-expanded="true" aria-controls="content-transaksi">
+                  Tipe Transaksi
+                  <Icon icon="lucide:chevron-down" class="size-4 hs-accordion-active:rotate-180 transition-transform" />
+                </button>
+                <div id="content-transaksi" class="hs-accordion-content w-full overflow-hidden transition-[height] duration-300">
+                  <div class="grid grid-cols-2 gap-2 pt-4">
+                    <button v-for="type in ['Semua Label', 'Jual Saja', 'Sewa Saja', 'Jual & Sewa']" :key="type" @click="$emit('update:transactionType', type)" class="px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border text-center" :class="transactionType === type ? 'bg-bejo-600 text-white border-bejo-600 shadow-lg shadow-bejo-600/20' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-bejo-300 hover:bg-bejo-50 hover:text-bejo-600'">
+                      {{ type }}
                     </button>
-
-                    <Teleport to="body">
-                      <div v-if="isProvOpen" class="fixed z-[9999] bg-white border border-slate-200 shadow-2xl rounded-2xl overflow-hidden" :style="provDropdownStyle">
-                        <div class="p-2 border-b bg-slate-50">
-                          <div class="relative">
-                            <Icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
-                            <input 
-                              v-model="searchProv" 
-                              type="text" 
-                              placeholder="Cari Provinsi..." 
-                              class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-bejo-600 transition-all" 
-                              @click.stop 
-                            />
-                          </div>
-                        </div>
-                        <div class="p-2 max-h-60 overflow-y-auto custom-scroll min-w-[200px]">
-                          <button 
-                            type="button"
-                            @click.stop="selectProvince('', '')"
-                            class="w-full text-left px-4 py-2 text-sm font-semibold text-slate-400 hover:bg-slate-50 hover:text-slate-800 rounded-xl transition-colors"
-                          >
-                            Semua Provinsi
-                          </button>
-                          <hr class="my-1 border-slate-100" />
-                          <button 
-                            v-for="prov in filteredProvinces" 
-                            :key="prov.id"
-                            type="button"
-                            @click.stop="selectProvince(prov.id, prov.name)"
-                            class="w-full text-left px-4 py-2 text-sm font-semibold rounded-xl transition-colors flex items-center justify-between"
-                            :class="region.provinceId === prov.id ? 'bg-slate-50 text-bejo-600' : 'text-slate-700 hover:bg-slate-50'"
-                          >
-                            {{ prov.name }}
-                            <Icon v-if="region.provinceId === prov.id" icon="lucide:check" class="size-3" />
-                          </button>
-                          <div v-if="filteredProvinces.length === 0" class="p-4 text-center text-xs text-slate-400 font-medium">
-                            Provinsi tidak ditemukan
-                          </div>
-                        </div>
-                      </div>
-                    </Teleport>
                   </div>
+                </div>
+              </div>
 
-                  <!-- Dropdown Kota -->
-                  <div class="relative w-full" id="city-dropdown">
-                    <button 
-                      @click="toggleCity"
-                      :disabled="!region.province && !region.provinceId"
-                      class="w-full flex items-center justify-between pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                      :class="region.province || region.provinceId ? 'focus:border-bejo-600 focus:bg-white focus:ring-4 focus:ring-bejo-600/10' : ''"
-                    >
-                      <div class="flex items-center gap-2 truncate">
-                        <Icon icon="lucide:map-pin" class="size-4 text-slate-400" />
-                        <span :class="region.city ? 'text-slate-800 font-bold' : 'text-slate-400'">
-                          {{ region.city || 'Pilih Kota/Kabupaten' }}
-                        </span>
-                      </div>
-                      <Icon icon="lucide:chevron-down" class="size-4 text-slate-400 transition-transform" :class="isCityOpen ? 'rotate-180' : ''" />
-                    </button>
+              <div class="hs-accordion active" id="filter-regional">
+                <button class="hs-accordion-toggle flex items-center justify-between w-full font-semibold text-xs uppercase tracking-widest text-slate-500 pb-2 border-b border-slate-200" aria-expanded="true" aria-controls="content-regional">
+                  Wilayah
+                  <Icon icon="lucide:chevron-down" class="size-4 hs-accordion-active:rotate-180 transition-transform" />
+                </button>
+                <div id="content-regional" :class="[isProvOpen || isCityOpen ? 'overflow-visible' : 'overflow-hidden']" class="hs-accordion-content w-full transition-[height] duration-300">
+                  <div class="space-y-3 pt-4">
+                    <!-- Dropdown Provinsi -->
+                    <div class="relative w-full" id="prov-dropdown">
+                      <button @click="toggleProv" class="w-full flex items-center justify-between pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 transition-all outline-none focus:border-bejo-600 focus:bg-white focus:ring-4 focus:ring-bejo-600/10">
+                        <div class="flex items-center gap-2 truncate">
+                          <Icon icon="lucide:map" class="size-4 text-slate-400" />
+                          <span :class="region.province ? 'text-slate-800 font-bold' : 'text-slate-400'">
+                            {{ region.province || 'Pilih Provinsi' }}
+                          </span>
+                        </div>
+                        <Icon icon="lucide:chevron-down" class="size-4 text-slate-400 transition-transform" :class="isProvOpen ? 'rotate-180' : ''" />
+                      </button>
 
-                    <Teleport to="body">
-                      <div v-if="isCityOpen && region.provinceId" class="fixed z-[9999] bg-white border border-slate-200 shadow-2xl rounded-2xl overflow-hidden" :style="cityDropdownStyle">
-                        <div class="p-2 border-b bg-slate-50">
-                          <div class="relative">
-                            <Icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
-                            <input 
-                              v-model="searchCity" 
-                              type="text" 
-                              placeholder="Cari Kota/Kabupaten..." 
-                              class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-bejo-600 transition-all font-medium" 
-                              @click.stop 
-                            />
+                      <Teleport to="body">
+                        <div v-if="isProvOpen" class="fixed z-[9999] bg-white border border-slate-200 shadow-2xl rounded-2xl overflow-hidden" :style="provDropdownStyle">
+                          <div class="p-2 border-b bg-slate-50">
+                            <div class="relative">
+                              <Icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
+                              <input v-model="searchProv" type="text" placeholder="Cari Provinsi..." class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-bejo-600 transition-all" @click.stop />
+                            </div>
+                          </div>
+                          <div class="p-2 max-h-60 overflow-y-auto custom-scroll min-w-[200px]">
+                            <button type="button" @click.stop="selectProvince('', '')" class="w-full text-left px-4 py-2 text-sm font-semibold text-slate-400 hover:bg-slate-50 hover:text-slate-800 rounded-xl transition-colors">Semua Provinsi</button>
+                            <hr class="my-1 border-slate-100" />
+                            <button v-for="prov in filteredProvinces" :key="prov.id" type="button" @click.stop="selectProvince(prov.id, prov.name)" class="w-full text-left px-4 py-2 text-sm font-semibold rounded-xl transition-colors flex items-center justify-between" :class="region.provinceId === prov.id ? 'bg-slate-50 text-bejo-600' : 'text-slate-700 hover:bg-slate-50'">
+                              {{ prov.name }}
+                              <Icon v-if="region.provinceId === prov.id" icon="lucide:check" class="size-3" />
+                            </button>
+                            <div v-if="filteredProvinces.length === 0" class="p-4 text-center text-xs text-slate-400 font-medium">Provinsi tidak ditemukan</div>
                           </div>
                         </div>
-                        <div class="p-2 max-h-60 overflow-y-auto custom-scroll min-w-[200px]">
-                          <button 
-                            type="button"
-                            @click.stop="selectCity('')"
-                            class="w-full text-left px-4 py-2 text-sm font-semibold text-slate-400 hover:bg-slate-50 hover:text-slate-800 rounded-xl transition-colors"
-                          >
-                            Semua Kota/Kabupaten
-                          </button>
-                          <hr class="my-1 border-slate-100" />
-                          <button 
-                            v-for="city in filteredCities" 
-                            :key="city.id"
-                            type="button"
-                            @click.stop="selectCity(city.name)"
-                            class="w-full text-left px-4 py-2 text-sm font-semibold rounded-xl transition-colors flex items-center justify-between"
-                            :class="region.city === city.name ? 'bg-slate-50 text-bejo-600' : 'text-slate-700 hover:bg-slate-50'"
-                          >
-                            {{ city.name }}
-                            <Icon v-if="region.city === city.name" icon="lucide:check" class="size-3" />
-                          </button>
-                          <div v-if="filteredCities.length === 0" class="p-4 text-center text-xs text-slate-400 font-medium">
-                            Kota tidak ditemukan
+                      </Teleport>
+                    </div>
+
+                    <!-- Dropdown Kota -->
+                    <div class="relative w-full" id="city-dropdown">
+                      <button @click="toggleCity" :disabled="!region.province && !region.provinceId" class="w-full flex items-center justify-between pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed" :class="region.province || region.provinceId ? 'focus:border-bejo-600 focus:bg-white focus:ring-4 focus:ring-bejo-600/10' : ''">
+                        <div class="flex items-center gap-2 truncate">
+                          <Icon icon="lucide:map-pin" class="size-4 text-slate-400" />
+                          <span :class="region.city ? 'text-slate-800 font-bold' : 'text-slate-400'">
+                            {{ region.city || 'Pilih Kota/Kabupaten' }}
+                          </span>
+                        </div>
+                        <Icon icon="lucide:chevron-down" class="size-4 text-slate-400 transition-transform" :class="isCityOpen ? 'rotate-180' : ''" />
+                      </button>
+
+                      <Teleport to="body">
+                        <div v-if="isCityOpen && region.provinceId" class="fixed z-[9999] bg-white border border-slate-200 shadow-2xl rounded-2xl overflow-hidden" :style="cityDropdownStyle">
+                          <div class="p-2 border-b bg-slate-50">
+                            <div class="relative">
+                              <Icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
+                              <input v-model="searchCity" type="text" placeholder="Cari Kota/Kabupaten..." class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-bejo-600 transition-all font-medium" @click.stop />
+                            </div>
+                          </div>
+                          <div class="p-2 max-h-60 overflow-y-auto custom-scroll min-w-[200px]">
+                            <button type="button" @click.stop="selectCity('')" class="w-full text-left px-4 py-2 text-sm font-semibold text-slate-400 hover:bg-slate-50 hover:text-slate-800 rounded-xl transition-colors">Semua Kota/Kabupaten</button>
+                            <hr class="my-1 border-slate-100" />
+                            <button v-for="city in filteredCities" :key="city.id" type="button" @click.stop="selectCity(city.name)" class="w-full text-left px-4 py-2 text-sm font-semibold rounded-xl transition-colors flex items-center justify-between" :class="region.city === city.name ? 'bg-slate-50 text-bejo-600' : 'text-slate-700 hover:bg-slate-50'">
+                              {{ city.name }}
+                              <Icon v-if="region.city === city.name" icon="lucide:check" class="size-3" />
+                            </button>
+                            <div v-if="filteredCities.length === 0" class="p-4 text-center text-xs text-slate-400 font-medium">Kota tidak ditemukan</div>
                           </div>
                         </div>
-                      </div>
-                    </Teleport>
+                      </Teleport>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="hs-accordion active" id="filter-harga">
+                <button class="hs-accordion-toggle flex items-center justify-between w-full font-semibold text-xs uppercase tracking-widest text-slate-500 pb-2 border-b border-slate-200 mt-2" aria-expanded="true" aria-controls="content-harga">
+                  Rentang Harga
+                  <Icon icon="lucide:chevron-down" class="size-4 hs-accordion-active:rotate-180 transition-transform" />
+                </button>
+                <div id="content-harga" class="hs-accordion-content w-full overflow-hidden transition-[height] duration-300">
+                  <div class="flex items-center gap-2 pt-4">
+                    <div class="relative flex-1">
+                      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-400">Rp</span>
+                      <input :value="formatDisplayName(priceRange.min)" @input="(e) => handlePriceInput('min', (e.target as HTMLInputElement).value)" type="text" class="w-full pl-8 pr-2 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-bejo-600 focus:bg-white transition-all focus:ring-4 focus:ring-bejo-600/10 placeholder:font-medium text-slate-700" placeholder="Min" />
+                    </div>
+                    <span class="text-slate-300 font-bold">-</span>
+                    <div class="relative flex-1">
+                      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-400">Rp</span>
+                      <input :value="formatDisplayName(priceRange.max)" @input="(e) => handlePriceInput('max', (e.target as HTMLInputElement).value)" type="text" class="w-full pl-8 pr-2 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-bejo-600 focus:bg-white transition-all focus:ring-4 focus:ring-bejo-600/10 placeholder:font-medium text-slate-700" placeholder="Max" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="hs-accordion active" id="filter-spek">
+                <button class="hs-accordion-toggle flex items-center justify-between w-full font-semibold text-xs uppercase tracking-widest text-slate-500 pb-2 border-b border-slate-200 mt-2" aria-expanded="true" aria-controls="content-spek">
+                  Kebutuhan Ruang
+                  <Icon icon="lucide:chevron-down" class="size-4 hs-accordion-active:rotate-180 transition-transform" />
+                </button>
+                <div id="content-spek" class="hs-accordion-content w-full overflow-hidden transition-[height] duration-300">
+                  <div class="grid grid-cols-2 gap-3 pt-4">
+                    <div class="relative">
+                      <Icon icon="lucide:bed" class="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
+                      <input :value="facilities.kamarTidur" @input="(e) => handleFacilityInput('kamarTidur', (e.target as HTMLInputElement).value)" type="number" class="w-full pl-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:border-bejo-600 focus:bg-white transition-all outline-none focus:ring-4 focus:ring-bejo-600/10" placeholder="Km. Tidur" />
+                    </div>
+                    <div class="relative">
+                      <Icon icon="lucide:bath" class="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
+                      <input :value="facilities.kamarMandi" @input="(e) => handleFacilityInput('kamarMandi', (e.target as HTMLInputElement).value)" type="number" class="w-full pl-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:border-bejo-600 focus:bg-white transition-all outline-none focus:ring-4 focus:ring-bejo-600/10" placeholder="Km. Mandi" />
+                    </div>
+                    <div class="relative">
+                      <Icon icon="lucide:car" class="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
+                      <input :value="facilities.carport" @input="(e) => handleFacilityInput('carport', (e.target as HTMLInputElement).value)" type="number" class="w-full pl-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:border-bejo-600 focus:bg-white transition-all outline-none focus:ring-4 focus:ring-bejo-600/10" placeholder="Carport" />
+                    </div>
+                    <div class="relative">
+                      <Icon icon="lucide:layers" class="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
+                      <input :value="facilities.lantai" @input="(e) => handleFacilityInput('lantai', (e.target as HTMLInputElement).value)" type="number" class="w-full pl-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:border-bejo-600 focus:bg-white transition-all outline-none focus:ring-4 focus:ring-bejo-600/10" placeholder="Lantai" />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-
-            <div class="hs-accordion active" id="filter-harga">
-              <button class="hs-accordion-toggle flex items-center justify-between w-full font-semibold text-xs uppercase tracking-widest text-slate-500 pb-2 border-b border-slate-200 mt-2" aria-expanded="true" aria-controls="content-harga">
-                Rentang Harga
-                <Icon icon="lucide:chevron-down" class="size-4 hs-accordion-active:rotate-180 transition-transform" />
-              </button>
-              <div id="content-harga" class="hs-accordion-content w-full overflow-hidden transition-[height] duration-300">
-                <div class="flex items-center gap-2 pt-4">
-                  <div class="relative flex-1">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-400">Rp</span>
-                    <input 
-                      :value="formatDisplayName(priceRange.min)"
-                      @input="(e) => handlePriceInput('min', (e.target as HTMLInputElement).value)"
-                      type="text" 
-                      class="w-full pl-8 pr-2 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-bejo-600 focus:bg-white transition-all focus:ring-4 focus:ring-bejo-600/10 placeholder:font-medium text-slate-700" 
-                      placeholder="Min" 
-                    />
-                  </div>
-                  <span class="text-slate-300 font-bold">-</span>
-                  <div class="relative flex-1">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-400">Rp</span>
-                    <input 
-                      :value="formatDisplayName(priceRange.max)"
-                      @input="(e) => handlePriceInput('max', (e.target as HTMLInputElement).value)"
-                      type="text" 
-                      class="w-full pl-8 pr-2 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-bejo-600 focus:bg-white transition-all focus:ring-4 focus:ring-bejo-600/10 placeholder:font-medium text-slate-700" 
-                      placeholder="Max" 
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="hs-accordion active" id="filter-spek">
-              <button class="hs-accordion-toggle flex items-center justify-between w-full font-semibold text-xs uppercase tracking-widest text-slate-500 pb-2 border-b border-slate-200 mt-2" aria-expanded="true" aria-controls="content-spek">
-                Kebutuhan Ruang
-                <Icon icon="lucide:chevron-down" class="size-4 hs-accordion-active:rotate-180 transition-transform" />
-              </button>
-              <div id="content-spek" class="hs-accordion-content w-full overflow-hidden transition-[height] duration-300">
-                <div class="grid grid-cols-2 gap-3 pt-4">
-                  <div class="relative">
-                    <Icon icon="lucide:bed" class="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
-                    <input 
-                      :value="facilities.kamarTidur"
-                      @input="(e) => handleFacilityInput('kamarTidur', (e.target as HTMLInputElement).value)"
-                      type="number" 
-                      class="w-full pl-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:border-bejo-600 focus:bg-white transition-all outline-none focus:ring-4 focus:ring-bejo-600/10" 
-                      placeholder="Km. Tidur" 
-                    />
-                  </div>
-                  <div class="relative">
-                    <Icon icon="lucide:bath" class="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
-                    <input 
-                      :value="facilities.kamarMandi"
-                      @input="(e) => handleFacilityInput('kamarMandi', (e.target as HTMLInputElement).value)"
-                      type="number" 
-                      class="w-full pl-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:border-bejo-600 focus:bg-white transition-all outline-none focus:ring-4 focus:ring-bejo-600/10" 
-                      placeholder="Km. Mandi" 
-                    />
-                  </div>
-                  <div class="relative">
-                    <Icon icon="lucide:car" class="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
-                    <input 
-                      :value="facilities.carport"
-                      @input="(e) => handleFacilityInput('carport', (e.target as HTMLInputElement).value)"
-                      type="number" 
-                      class="w-full pl-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:border-bejo-600 focus:bg-white transition-all outline-none focus:ring-4 focus:ring-bejo-600/10" 
-                      placeholder="Carport" 
-                    />
-                  </div>
-                  <div class="relative">
-                    <Icon icon="lucide:layers" class="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
-                    <input 
-                      :value="facilities.lantai"
-                      @input="(e) => handleFacilityInput('lantai', (e.target as HTMLInputElement).value)"
-                      type="number" 
-                      class="w-full pl-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:border-bejo-600 focus:bg-white transition-all outline-none focus:ring-4 focus:ring-bejo-600/10" 
-                      placeholder="Lantai" 
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
           </div>
-        </div>
 
           <div class="mt-8 pt-6 border-t border-slate-200 sticky bottom-0 bg-white lg:static">
-            <button @click="$emit('update:openFilter', false)" class="w-full py-4 bg-bejo-600 text-white rounded-2xl font-black hover:bg-bejo-700 transition-all uppercase tracking-widest text-xs shadow-lg shadow-bejo-600/30 active:scale-95 text-center">
-              Tampilkan Hasil
-            </button>
+            <button @click="$emit('update:openFilter', false)" class="w-full py-4 bg-bejo-600 text-white rounded-2xl font-black hover:bg-bejo-700 transition-all uppercase tracking-widest text-xs shadow-lg shadow-bejo-600/30 active:scale-95 text-center">Tampilkan Hasil</button>
           </div>
         </div>
       </div>
@@ -317,8 +200,8 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-const emit = defineEmits<{ 
-  (e: 'update:openFilter', value: boolean): void 
+const emit = defineEmits<{
+  (e: 'update:openFilter', value: boolean): void
   (e: 'update:searchQuery', value: string): void
   (e: 'update:facilities', value: Props['facilities']): void
   (e: 'update:region', value: Props['region']): void
@@ -341,16 +224,12 @@ const regencies = ref<any[]>([])
 
 const filteredProvinces = computed(() => {
   if (!searchProv.value) return props.provinces
-  return props.provinces.filter(p => 
-    p.name.toLowerCase().includes(searchProv.value.toLowerCase())
-  )
+  return props.provinces.filter((p) => p.name.toLowerCase().includes(searchProv.value.toLowerCase()))
 })
 
 const filteredCities = computed(() => {
   if (!searchCity.value) return regencies.value
-  return regencies.value.filter(c => 
-    c.name.toLowerCase().includes(searchCity.value.toLowerCase())
-  )
+  return regencies.value.filter((c) => c.name.toLowerCase().includes(searchCity.value.toLowerCase()))
 })
 
 const provDropdownStyle = ref({})
@@ -403,9 +282,13 @@ const fetchRegencies = async (id: string) => {
   }
 }
 
-watch(() => props.region.provinceId, (newId) => {
-  if (newId) fetchRegencies(newId)
-}, { immediate: true })
+watch(
+  () => props.region.provinceId,
+  (newId) => {
+    if (newId) fetchRegencies(newId)
+  },
+  { immediate: true }
+)
 
 const selectProvince = async (id: string, name: string) => {
   isProvOpen.value = false
@@ -445,13 +328,12 @@ const clearAll = () => {
   emit('update:transactionType', 'Semua Label')
 }
 
-
 const filterRef = ref<HTMLElement | null>(null)
 
 // Logika Klik Diluar Filter (Untuk mobile)
 const handleClickOutside = (event: MouseEvent) => {
   const target = event.target as HTMLElement
-  
+
   // Close region dropdowns on click outside
   if (!target.closest('#prov-dropdown')) isProvOpen.value = false
   if (!target.closest('#city-dropdown')) isCityOpen.value = false

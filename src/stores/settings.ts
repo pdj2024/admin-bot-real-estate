@@ -16,7 +16,6 @@ export interface BusinessSettings {
   tiktok: string
   mapUrl: string
   Logo?: string
-  Logo_Dark?: string
 }
 
 export interface BotSettings {
@@ -69,6 +68,8 @@ export const useSettings = defineStore('settings', () => {
 
   const isLoading = ref(false)
 
+  const isInitialized = ref(false)
+
   const fetchBusinessSettings = async () => {
     try {
       isLoading.value = true
@@ -78,7 +79,7 @@ export const useSettings = defineStore('settings', () => {
           'X-Jenis-User': 'Admin'
         }
       })
-      
+
       if (data.StatusCode === 200 && data.Data.length > 0) {
         const profile = data.Data[0]
         business.appName = profile.Nama_Toko || business.appName
@@ -88,7 +89,7 @@ export const useSettings = defineStore('settings', () => {
         business.whatsapp = profile.No_Wa_1 || business.whatsapp
         business.email = profile.Email || business.email
         business.mapUrl = profile.Gmap || business.mapUrl
-        
+
         Object.assign(business, profile)
         saveBusiness()
       }
@@ -101,11 +102,11 @@ export const useSettings = defineStore('settings', () => {
 
   const fetchDefaultSettings = async () => {
     try {
-      const { data } = await api.get('/api/nilaiDefault/getAll', {
+      const { data } = await api.get('/api/nilaiDefault/getAll?id_company=comp_0001', {
         params: { id_company: 'comp_0001' },
         headers: { 'X-Jenis-User': 'Admin' }
       })
-      
+
       if (data.StatusCode === 200 && data.Data.length > 0) {
         const defaults = data.Data[0]
         app.isMaintenance = defaults.Is_Maintenance
@@ -113,12 +114,12 @@ export const useSettings = defineStore('settings', () => {
         theme.sidebarType = defaults.Sidebar_Type || theme.sidebarType
         theme.primaryColor = (defaults.Primary_Color || theme.primaryColor).toUpperCase()
         theme.secondaryColor = (defaults.Secondary_Color || theme.secondaryColor).toUpperCase()
-        
+
         saveApp()
         saveBot()
         saveTheme()
-        
-        // Apply colors to CSS variables and generate palette
+
+        // Apply colors and sidebar size from API
         applyToDOM({
           sidenavSize: theme.sidebarType,
           colorPrimary: theme.primaryColor,
@@ -151,34 +152,36 @@ export const useSettings = defineStore('settings', () => {
   }
 
   // Initialize store
-  const init = async () => {
+  const init = async (force = false) => {
     // 1. Load from localStorage first (for instant UI)
-    const storedBusiness = localStorage.getItem('business_settings')
-    if (storedBusiness) {
-      Object.assign(business, JSON.parse(storedBusiness))
+    if (!isInitialized.value) {
+      const storedBusiness = localStorage.getItem('business_settings')
+      if (storedBusiness) {
+        Object.assign(business, JSON.parse(storedBusiness))
+      }
+
+      const storedBot = localStorage.getItem('bot_settings')
+      if (storedBot) {
+        Object.assign(bot, JSON.parse(storedBot))
+      }
+
+      const storedApp = localStorage.getItem('app_global_status')
+      if (storedApp) {
+        Object.assign(app, JSON.parse(storedApp))
+      }
+
+      const storedTheme = localStorage.getItem('theme_settings')
+      if (storedTheme) {
+        Object.assign(theme, JSON.parse(storedTheme))
+        applyThemeColors()
+      }
     }
 
-    const storedBot = localStorage.getItem('bot_settings')
-    if (storedBot) {
-      Object.assign(bot, JSON.parse(storedBot))
+    // 2. Fetch strategy: Only fetch if not initialized or forced
+    if (!isInitialized.value || force) {
+      await Promise.all([fetchBusinessSettings(), fetchDefaultSettings()])
+      isInitialized.value = true
     }
-
-    const storedApp = localStorage.getItem('app_global_status')
-    if (storedApp) {
-      Object.assign(app, JSON.parse(storedApp))
-    }
-
-    const storedTheme = localStorage.getItem('theme_settings')
-    if (storedTheme) {
-      Object.assign(theme, JSON.parse(storedTheme))
-      applyThemeColors()
-    }
-
-    // 2. Fetch strategy: Always fetch on init as requested by user
-    await Promise.all([
-      fetchBusinessSettings(),
-      fetchDefaultSettings()
-    ])
   }
 
   const saveBusiness = () => {

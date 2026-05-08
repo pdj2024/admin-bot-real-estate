@@ -29,21 +29,39 @@ const propertyPrice = computed(() => {
   return props.product.Harga_Sewa1 || 0
 })
 
-const dpPercentage = ref(0)
-const years = ref(0)
-const interestRate = ref(0)
+const dpPercentage = ref(15) // Default 15%
+const years = ref(10)        // Default 10 tahun
+const interestRate = ref(5.5) // Default 5.5%
 
 const dpValue = computed({
   get: () => {
     return Math.round(propertyPrice.value * (dpPercentage.value / 100))
   },
   set: (val) => {
-    // If user changes the exact DP absolute, update percentage
     let p = (val / propertyPrice.value) * 100
     if (p > 100) p = 100
     if (p < 0) p = 0
     dpPercentage.value = Math.round(p)
   }
+})
+
+const totalPinjaman = computed(() => propertyPrice.value - dpValue.value)
+
+const angsuran = computed(() => {
+  const p = totalPinjaman.value
+  if (p <= 0) return 0
+  const r = (interestRate.value / 100) / 12
+  const n = years.value * 12
+  
+  if (r === 0) return p / n
+  
+  const pmt = p * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1)
+  return Math.round(pmt)
+})
+
+const totalBunga = computed(() => {
+  const totalBayar = angsuran.value * (years.value * 12)
+  return Math.max(0, totalBayar - totalPinjaman.value)
 })
 
 const parseNumber = (val: string | number) => {
@@ -55,18 +73,6 @@ const setDpValueFromInput = (e: Event) => {
     const val = parseNumber((e.target as HTMLInputElement).value)
     dpValue.value = val
 }
-
-const angsuran = computed(() => {
-  const p = propertyPrice.value - dpValue.value
-  if (p <= 0) return 0
-  const r = (interestRate.value / 100) / 12
-  const n = years.value * 12
-  
-  if (r === 0) return p / n
-  
-  const pmt = p * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1)
-  return Math.round(pmt)
-})
 
 const handleKprWa = () => {
   const url = window.location.href
@@ -132,6 +138,24 @@ const handleKprWa = () => {
           <div class="relative">
             <input type="number" v-model.number="interestRate" step="0.1" class="w-full text-right bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-bejo-500 focus:border-bejo-500 pr-10 hover:border-slate-300 transition-colors" min="0" max="100" />
             <span class="absolute inset-y-0 right-4 flex items-center text-slate-400 font-bold">%</span>
+          </div>
+        </div>
+
+        <!-- Rincian Biaya Tambahan -->
+        <div class="mt-4 p-4 bg-white rounded-2xl border border-slate-100 space-y-3">
+          <div class="flex justify-between items-center text-[11px]">
+            <span class="text-slate-400 font-bold uppercase tracking-wider">Pokok Pinjaman</span>
+            <span class="text-slate-700 font-black">Rp {{ formatCurrency(totalPinjaman) }}</span>
+          </div>
+          <div class="flex justify-between items-center text-[11px]">
+            <span class="text-slate-400 font-bold uppercase tracking-wider">Estimasi Total Bunga</span>
+            <span class="text-bejo-600 font-black">+ Rp {{ formatCurrency(totalBunga) }}</span>
+          </div>
+          <div class="pt-2 border-t border-slate-50 flex items-start gap-2">
+            <Icon icon="lucide:info" class="size-3 text-slate-300 mt-0.5 shrink-0" />
+            <p class="text-[9px] text-slate-400 font-medium leading-relaxed italic">
+              *Simulasi menggunakan asumsi bunga tetap (annuitas). Suku bunga <b>Floating</b> biasanya berlaku setelah masa fixed berakhir sesuai kebijakan bank.
+            </p>
           </div>
         </div>
       </div>

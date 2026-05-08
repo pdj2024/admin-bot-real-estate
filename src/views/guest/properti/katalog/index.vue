@@ -8,16 +8,14 @@
           <div class="absolute bottom-[-20%] left-[10%] size-[500px] bg-bejo-50/50 rounded-full blur-[120px]"></div>
           <div class="absolute right-0 top-0 w-1/2 h-full bg-gradient-to-l from-bejo-50 via-bejo-50/20 to-transparent"></div>
         </div>
-        
+
         <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-12">
           <div class="max-w-3xl space-y-8">
             <h1 class="text-6xl md:text-7xl text-slate-900 tracking-tighter leading-[0.9] font-black">
               Eksplorasi Katalog <br />
               <span class="text-transparent bg-clip-text bg-gradient-to-br from-bejo-500 via-bejo-600 to-bejo-900">{{ settingsStore.business.appName }}</span>
             </h1>
-            <p class="text-slate-500 text-xl font-medium leading-relaxed max-w-xl opacity-80">
-              Temukan ribuan unit properti terbaik dengan desain yang elegan, terverifikasi, dan profesional di seluruh Indonesia.
-            </p>
+            <p class="text-slate-500 text-xl font-medium leading-relaxed max-w-xl opacity-80">Temukan ribuan unit properti terbaik dengan desain yang elegan, terverifikasi, dan profesional di seluruh Indonesia.</p>
           </div>
 
           <div class="hidden md:flex items-center justify-end gap-6 lg:gap-8 shrink-0">
@@ -26,15 +24,21 @@
               <div class="size-12 rounded-2xl bg-bejo-50 flex items-center justify-center mb-3 group-hover:bg-bejo-600 group-hover:text-white transition-all">
                 <Icon icon="lucide:home" class="size-6 text-bejo-600 group-hover:text-white" />
               </div>
-              <span class="text-[10px] font-black text-slate-700 uppercase tracking-widest text-center px-1 leading-tight">Unit <br /> Pilihan</span>
+              <span class="text-[10px] font-black text-slate-700 uppercase tracking-widest text-center px-1 leading-tight"
+                >Unit <br />
+                Pilihan</span
+              >
             </div>
-            
+
             <!-- Box 2: White glass -->
             <div class="flex flex-col items-center justify-center size-32 rounded-[2.5rem] bg-white border border-slate-100 shadow-premium hover-float group">
               <div class="size-12 rounded-2xl bg-emerald-50 flex items-center justify-center mb-3 group-hover:bg-emerald-500 group-hover:text-white transition-all">
                 <Icon icon="lucide:shield-check" class="size-6 text-emerald-500 group-hover:text-white" />
               </div>
-              <span class="text-[10px] font-black text-slate-700 uppercase tracking-widest text-center px-1 leading-tight">Aman & <br /> Legal</span>
+              <span class="text-[10px] font-black text-slate-700 uppercase tracking-widest text-center px-1 leading-tight"
+                >Aman & <br />
+                Legal</span
+              >
             </div>
 
             <!-- Box 3: Dark Gradient -->
@@ -42,40 +46,23 @@
               <div class="size-12 rounded-2xl bg-white/20 flex items-center justify-center mb-3 group-hover:bg-white group-hover:text-bejo-600 transition-all">
                 <Icon icon="lucide:gem" class="size-6 text-white group-hover:text-bejo-600" />
               </div>
-              <span class="text-[10px] font-black text-white uppercase tracking-widest text-center px-1 leading-tight">Kualitas <br /> Premium</span>
+              <span class="text-[10px] font-black text-white uppercase tracking-widest text-center px-1 leading-tight"
+                >Kualitas <br />
+                Premium</span
+              >
             </div>
           </div>
         </div>
       </div>
 
       <div class="grid lg:grid-cols-4 grid-cols-1 gap-8">
-
         <aside class="lg:col-span-1">
-          <Filter
-            v-model:openFilter="isFilterOpen"
-            v-model:searchQuery="searchQuery"
-            v-model:facilities="facilities"
-            v-model:region="region"
-            v-model:priceRange="priceRange"
-            v-model:transactionType="transactionType"
-            :provinces="provinces"
-            :isAdmin="isAdmin"
-            class="lg:sticky lg:top-24"
-          />
+          <Filter v-model:openFilter="isFilterOpen" v-model:searchQuery="searchQuery" v-model:facilities="facilities" v-model:region="region" v-model:priceRange="priceRange" v-model:transactionType="transactionType" :provinces="provinces" :isAdmin="isAdmin" class="lg:sticky lg:top-24" />
         </aside>
 
         <section class="lg:col-span-3">
-          <Rumah
-            @openFilter="toggleFilter"
-            :searchQuery="searchQuery"
-            :facilities="facilities"
-            :region="region"
-            :priceRange="priceRange"
-            v-model:transactionType="transactionType"
-            :isAdmin="isAdmin"
-          />
+          <Rumah @openFilter="toggleFilter" :searchQuery="searchQuery" :facilities="facilities" :region="region" :priceRange="priceRange" v-model:transactionType="transactionType" :isAdmin="isAdmin" />
         </section>
-
       </div>
     </div>
   </GuestLayout>
@@ -139,11 +126,11 @@ onMounted(() => {
   // Handle query params for region
   const queryProv = route.query.province as string
   const queryCity = route.query.city as string
-  
+
   let hasFilter = false
-  
+
   if (queryProv) {
-    const foundProv = PROVINCES.find(p => p.name.toLowerCase() === queryProv.toLowerCase())
+    const foundProv = PROVINCES.find((p) => p.name.toLowerCase() === queryProv.toLowerCase())
     if (foundProv) {
       region.value.province = foundProv.name
       region.value.provinceId = foundProv.id
@@ -172,7 +159,6 @@ onMounted(() => {
     router.replace({ query: {} })
   }
 })
-
 
 /**
  * Catatan:

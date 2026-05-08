@@ -35,7 +35,7 @@ const handleShare = () => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-5 sticky top-24 h-fit">
+  <div class="flex flex-col gap-5 lg:sticky lg:top-24 h-fit z-20">
     <!-- Back Button -->
     <div class="flex items-center">
       <router-link 
