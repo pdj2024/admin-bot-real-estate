@@ -71,10 +71,10 @@ onMounted(() => {
 
 <template>
   <Vertical>
-    <div class="p-0 md:p-3 md:pt-1 pb-32 space-y-6 md:space-y-8">
+    <div class="px-4 py-0 md:p-3 md:pt-1 pb-32 space-y-6 md:space-y-8">
       <!-- Main Catalog Content -->
-      <div class="grid lg:grid-cols-4 grid-cols-1 gap-6 md:gap-8">
-        <aside class="lg:col-span-1">
+      <div class="grid xl:grid-cols-4 grid-cols-1 gap-6 md:gap-8">
+        <aside class="xl:col-span-1 hidden xl:block">
           <Filter 
             v-model:openFilter="isFilterOpen" 
             v-model:searchQuery="searchQuery"
@@ -83,11 +83,11 @@ onMounted(() => {
             v-model:priceRange="priceRange"
             v-model:transactionType="transactionType"
             :provinces="provinces"
-            class="lg:sticky lg:top-24"
+            class="xl:sticky xl:top-24"
           />
         </aside>
         
-        <section class="lg:col-span-3">
+        <section class="xl:col-span-3">
           <Rumah 
             ref="rumahRef"
             v-model:searchQuery="searchQuery"

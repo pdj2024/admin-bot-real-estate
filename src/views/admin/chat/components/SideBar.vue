@@ -386,6 +386,17 @@ const formatMessage = (msg: string, maxLength: number = 50) => {
     .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
 }
 
+const cleanTooltip = (msg: string) => {
+  if (!msg) return ''
+  return msg
+    .replace('_X7#mQ9!vW2_', ' ') // System tag
+    .replace(/_data:image\/.*$/, '🖼️ Foto') // Image base64
+    .replace(/\*(.*?)\*/g, '$1') // Bold
+    .replace(/_(.*?)_/g, '$1')   // Italic
+    .replace(/~(.*?)~/g, '$1')   // Strikethrough
+    .replace(/```(.*?)```/gs, '$1') // Monospace
+}
+
 
 const updateSidebarUI = (newName: string) => {
   const updateItem = (chatList: Chat[]) => {
@@ -764,7 +775,11 @@ defineExpose({
                         </div>
 
                         <div class="flex items-center justify-between gap-2">
-                          <p class="text-[11px] font-bold truncate text-slate-500 leading-none" v-html="formatMessage(chat.Last_Message.replace('_X7#mQ9!vW2_', ' '))"></p>
+                          <p 
+                            class="text-[11px] font-bold truncate text-slate-500 leading-none" 
+                            :title="cleanTooltip(chat.Last_Message)"
+                            v-html="formatMessage(chat.Last_Message.replace('_X7#mQ9!vW2_', ' '))"
+                          ></p>
 
                           <div class="flex items-center gap-2">
                             <!-- Quick Bot Toggle -->
@@ -840,7 +855,11 @@ defineExpose({
                         </div>
 
                         <div class="flex items-center justify-between gap-2">
-                          <p class="text-[11px] font-bold truncate text-slate-500 leading-none" v-html="formatMessage(chat.Last_Message.replace('_X7#mQ9!vW2_', ' '))"></p>
+                          <p 
+                            class="text-[11px] font-bold truncate text-slate-500 leading-none" 
+                            :title="cleanTooltip(chat.Last_Message)"
+                            v-html="formatMessage(chat.Last_Message.replace('_X7#mQ9!vW2_', ' '))"
+                          ></p>
 
                           <div class="flex items-center gap-2">
                             <!-- Quick Bot Toggle -->
@@ -910,7 +929,11 @@ defineExpose({
                         </div>
 
                         <div class="flex items-center justify-between gap-2">
-                          <p class="text-[11px] font-bold truncate text-slate-500 leading-none" v-html="formatMessage(chat.Last_Message.replace('_X7#mQ9!vW2_', ' '))"></p>
+                          <p 
+                            class="text-[11px] font-bold truncate text-slate-500 leading-none" 
+                            :title="cleanTooltip(chat.Last_Message)"
+                            v-html="formatMessage(chat.Last_Message.replace('_X7#mQ9!vW2_', ' '))"
+                          ></p>
 
                           <div class="flex items-center gap-2">
                             <!-- Quick Bot Toggle -->

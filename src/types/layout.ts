@@ -1,8 +1,8 @@
-export type LayoutThemeType = 'light'
+export type LayoutThemeType = 'light' | 'dark' | 'system'
 
 export type SideNavType = {
   size: 'default' | 'hover' | 'hover-active' | 'sm' | 'md' | 'mobile' | 'hidden' | 'offcanvas'
-  color: 'light'
+  color: 'light' | 'dark'
 }
 
 export type LayoutDirectionType = 'ltr-mode' | 'rtl-mode'

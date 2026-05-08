@@ -46,7 +46,7 @@ const addAkses = () => {
   <div class="space-y-8 scale-in pb-10">
     <div class="space-y-8">
       <div class="space-y-6">
-        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+        <div class="flex items-center gap-10 pb-2 border-b border-slate-100">
           <label class="text-[10px] font-black text-slate-800 uppercase tracking-widest">Opsi Transaksi</label>
           <div class="flex gap-6">
             <label class="flex items-center gap-2 cursor-pointer group">

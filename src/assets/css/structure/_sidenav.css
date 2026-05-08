@@ -129,12 +129,12 @@ html[data-sidenav-size='hover'] {
         .menu-text,
         .menu-arrow,
         .badge {
-          visibility: hidden;
+          display: none !important;
         }
 
         .menu-icon {
           @apply flex items-center justify-center;
-          margin-left: -2px !important;
+          margin-left: -5px !important;
         }
       }
 
@@ -294,7 +294,7 @@ html[data-sidenav-size='sm'] {
           
           .menu-icon {
             @apply flex items-center justify-center w-full h-full !m-0 !p-0;
-            margin-left: -3px !important;
+            margin-left: -4px !important;
           }
         }
 

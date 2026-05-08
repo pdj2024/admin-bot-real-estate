@@ -322,78 +322,84 @@ defineExpose({ openAddModal })
         </p>
       </div>
 
-      <div class="flex flex-wrap items-center gap-2 sm:gap-3">
-        <button type="button" @click="emit('openFilter')" class="lg:hidden px-4 py-2.5 bg-bejo-600 text-white rounded-xl text-[11px] font-black uppercase tracking-wider hover:bg-bejo-700 transition-all shadow-md shadow-bejo-600/20 flex items-center gap-2 btn-trigger-filter">
-          <Icon icon="lucide:settings-2" class="size-3.5" />
-          Filter
-        </button>
-
-        <div class="relative inline-flex">
-          <button type="button" @click="isTransactionOpen = !isTransactionOpen" class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[11px] font-black text-slate-700 hover:bg-slate-50 transition-all shadow-sm uppercase tracking-wider">
-            <Icon icon="lucide:filter" class="size-3.5 me-2 inline text-bejo-600" />
-            {{ transactionFilter }}
+      <div class="flex flex-col sm:flex-row sm:flex-wrap items-center gap-3 w-full lg:w-auto">
+        <!-- Row 1: Filter, Transaction, Type -->
+        <div class="grid grid-cols-3 gap-2 w-full sm:w-auto sm:flex sm:items-center sm:gap-3">
+          <button type="button" @click="emit('openFilter')" class="xl:hidden px-2 sm:px-4 py-2.5 bg-bejo-600 text-white rounded-xl text-[10px] sm:text-[11px] font-black uppercase tracking-wider hover:bg-bejo-700 transition-all shadow-md shadow-bejo-600/20 flex items-center justify-center gap-1.5 btn-trigger-filter">
+            <Icon icon="lucide:settings-2" class="size-3.5" />
+            Filter
           </button>
-          <Transition enter-active-class="transition duration-100 ease-out" enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100" leave-active-class="transition duration-75 ease-in" leave-from-class="transform scale-100 opacity-100" leave-to-class="transform scale-95 opacity-0">
-            <div v-show="isTransactionOpen" class="absolute right-0 top-full mt-2 z-50 min-w-40 bg-white border border-slate-100 rounded-2xl shadow-2xl p-2">
-              <button @click="handleTransactionFilter('Semua')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Semua <Icon v-if="transactionFilter === 'Semua'" icon="lucide:check" class="size-3 text-bejo-600" /></button>
-              <button @click="handleTransactionFilter('Jual')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Jual Saja <Icon v-if="transactionFilter === 'Jual'" icon="lucide:check" class="size-3 text-bejo-600" /></button>
-              <button @click="handleTransactionFilter('Sewa')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Sewa Saja <Icon v-if="transactionFilter === 'Sewa'" icon="lucide:check" class="size-3 text-bejo-600" /></button>
-              <button @click="handleTransactionFilter('Jual & Sewa')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Jual & Sewa <Icon v-if="transactionFilter === 'Jual & Sewa'" icon="lucide:check" class="size-3 text-bejo-600" /></button>
-            </div>
-          </Transition>
-        </div>
 
-        <div class="relative inline-flex">
-          <button type="button" @click="isTypeOpen = !isTypeOpen" class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[11px] font-black text-slate-700 hover:bg-slate-50 transition-all shadow-sm uppercase tracking-wider">
-            <Icon icon="lucide:home" class="size-3.5 me-2 inline text-bejo-600" />
-            {{ typeFilter === 'Semua' ? 'Semua Tipe' : typeFilter }}
-          </button>
-          <Transition enter-active-class="transition duration-100 ease-out" enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100" leave-active-class="transition duration-75 ease-in" leave-from-class="transform scale-100 opacity-100" leave-to-class="transform scale-95 opacity-0">
-            <div v-show="isTypeOpen" class="absolute right-0 top-full mt-2 z-50 min-w-48 max-h-60 overflow-y-auto bg-white border border-slate-100 rounded-2xl shadow-2xl p-2 custom-scroll">
-              <button @click="handleTypeFilter('Semua')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Semua Tipe <Icon v-if="typeFilter === 'Semua'" icon="lucide:check" class="size-3 text-bejo-600" /></button>
-              <button v-for="t in propertyTypes" :key="t" @click="handleTypeFilter(t)" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">{{ t }} <Icon v-if="typeFilter === t" icon="lucide:check" class="size-3 text-bejo-600" /></button>
-            </div>
-          </Transition>
-        </div>
-
-        <div class="relative inline-flex">
-          <button type="button" @click="isSortOpen = !isSortOpen" class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[11px] font-black text-slate-700 hover:bg-slate-50 transition-all shadow-sm uppercase tracking-wider">
-            <Icon icon="lucide:arrow-up-down" class="size-3.5 me-2 inline text-bejo-600" />
-            Urutkan
-          </button>
-          <Transition enter-active-class="transition duration-100 ease-out" enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100" leave-active-class="transition duration-75 ease-in" leave-from-class="transform scale-100 opacity-100" leave-to-class="transform scale-95 opacity-0">
-            <div v-show="isSortOpen" class="absolute right-0 top-full mt-2 z-50 min-w-48 bg-white border border-slate-100 rounded-2xl shadow-2xl p-2">
-              <button @click="handleSort('Terbaru')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Terbaru <Icon v-if="selectedSort === 'Terbaru'" icon="lucide:check" class="size-3 text-bejo-600" /></button>
-              <button @click="handleSort('Harga Termurah')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Harga Termurah <Icon v-if="selectedSort === 'Harga Termurah'" icon="lucide:check" class="size-3 text-bejo-600" /></button>
-              <button @click="handleSort('Harga Termahal')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Harga Termahal <Icon v-if="selectedSort === 'Harga Termahal'" icon="lucide:check" class="size-3 text-bejo-600" /></button>
-            </div>
-          </Transition>
-        </div>
-
-        <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-sm sm:flex-none flex-1 justify-center">
-          <button @click="handlePageChange('prev')" :disabled="!table.getCanPreviousPage()" class="p-1 px-2 text-[10px] font-black text-slate-500 hover:text-bejo-600 disabled:opacity-30 transition-colors hover:bg-slate-50 rounded-lg uppercase tracking-wider">
-            Prev
-          </button>
-          <div class="px-2 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap border-x border-slate-100">
-            {{ table.getState().pagination.pageIndex + 1 }} / {{ table.getPageCount() }}
+          <div class="relative inline-flex">
+            <button type="button" @click="isTransactionOpen = !isTransactionOpen" class="w-full px-2 sm:px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[10px] sm:text-[11px] font-black text-slate-700 hover:bg-slate-50 transition-all shadow-sm uppercase tracking-wider truncate">
+              <Icon icon="lucide:filter" class="size-3.5 me-1.5 inline text-bejo-600" />
+              {{ transactionFilter }}
+            </button>
+            <Transition enter-active-class="transition duration-100 ease-out" enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100" leave-active-class="transition duration-75 ease-in" leave-from-class="transform scale-100 opacity-100" leave-to-class="transform scale-95 opacity-0">
+              <div v-show="isTransactionOpen" class="absolute right-0 top-full mt-2 z-50 min-w-40 bg-white border border-slate-100 rounded-2xl shadow-2xl p-2">
+                <button @click="handleTransactionFilter('Semua')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Semua <Icon v-if="transactionFilter === 'Semua'" icon="lucide:check" class="size-3 text-bejo-600" /></button>
+                <button @click="handleTransactionFilter('Jual')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Jual Saja <Icon v-if="transactionFilter === 'Jual'" icon="lucide:check" class="size-3 text-bejo-600" /></button>
+                <button @click="handleTransactionFilter('Sewa')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Sewa Saja <Icon v-if="transactionFilter === 'Sewa'" icon="lucide:check" class="size-3 text-bejo-600" /></button>
+                <button @click="handleTransactionFilter('Jual & Sewa')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Jual & Sewa <Icon v-if="transactionFilter === 'Jual & Sewa'" icon="lucide:check" class="size-3 text-bejo-600" /></button>
+              </div>
+            </Transition>
           </div>
-          <button @click="handlePageChange('next')" :disabled="!table.getCanNextPage()" class="p-1 px-2 text-[10px] font-black text-slate-500 hover:text-bejo-600 disabled:opacity-30 transition-colors hover:bg-slate-50 rounded-lg uppercase tracking-wider">
-            Next
-          </button>
+
+          <div class="relative inline-flex">
+            <button type="button" @click="isTypeOpen = !isTypeOpen" class="w-full px-2 sm:px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[10px] sm:text-[11px] font-black text-slate-700 hover:bg-slate-50 transition-all shadow-sm uppercase tracking-wider truncate">
+              <Icon icon="lucide:home" class="size-3.5 me-1.5 inline text-bejo-600" />
+              {{ typeFilter === 'Semua' ? 'Semua Tipe' : typeFilter }}
+            </button>
+            <Transition enter-active-class="transition duration-100 ease-out" enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100" leave-active-class="transition duration-75 ease-in" leave-from-class="transform scale-100 opacity-100" leave-to-class="transform scale-95 opacity-0">
+              <div v-show="isTypeOpen" class="absolute right-0 top-full mt-2 z-50 min-w-48 max-h-60 overflow-y-auto bg-white border border-slate-100 rounded-2xl shadow-2xl p-2 custom-scroll">
+                <button @click="handleTypeFilter('Semua')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Semua Tipe <Icon v-if="typeFilter === 'Semua'" icon="lucide:check" class="size-3 text-bejo-600" /></button>
+                <button v-for="t in propertyTypes" :key="t" @click="handleTypeFilter(t)" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">{{ t }} <Icon v-if="typeFilter === t" icon="lucide:check" class="size-3 text-bejo-600" /></button>
+              </div>
+            </Transition>
+          </div>
         </div>
 
-        <button @click="openAddModal" class="px-5 py-2.5 bg-bejo-600 text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-bejo-700 hover:shadow-lg hover:shadow-bejo-600/30 transition-all flex items-center gap-2">
-          <Icon icon="lucide:plus" class="size-3.5" />
-          Tambah Unit
-        </button>
+        <!-- Row 2: Sort, Pagination, Add Unit -->
+        <div class="grid grid-cols-3 gap-2 w-full sm:w-auto sm:flex sm:items-center sm:gap-3">
+          <div class="relative inline-flex">
+            <button type="button" @click="isSortOpen = !isSortOpen" class="w-full px-2 sm:px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[10px] sm:text-[11px] font-black text-slate-700 hover:bg-slate-50 transition-all shadow-sm uppercase tracking-wider truncate">
+              <Icon icon="lucide:arrow-up-down" class="size-3.5 me-1.5 inline text-bejo-600" />
+              Urutkan
+            </button>
+            <Transition enter-active-class="transition duration-100 ease-out" enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100" leave-active-class="transition duration-75 ease-in" leave-from-class="transform scale-100 opacity-100" leave-to-class="transform scale-95 opacity-0">
+              <div v-show="isSortOpen" class="absolute right-0 top-full mt-2 z-50 min-w-48 bg-white border border-slate-100 rounded-2xl shadow-2xl p-2">
+                <button @click="handleSort('Terbaru')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Terbaru <Icon v-if="selectedSort === 'Terbaru'" icon="lucide:check" class="size-3 text-bejo-600" /></button>
+                <button @click="handleSort('Harga Termurah')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Harga Termurah <Icon v-if="selectedSort === 'Harga Termurah'" icon="lucide:check" class="size-3 text-bejo-600" /></button>
+                <button @click="handleSort('Harga Termahal')" class="w-full text-left rounded-xl p-3 hover:bg-slate-50 text-[10px] font-black text-slate-600 uppercase tracking-widest transition-colors flex items-center justify-between">Harga Termahal <Icon v-if="selectedSort === 'Harga Termahal'" icon="lucide:check" class="size-3 text-bejo-600" /></button>
+              </div>
+            </Transition>
+          </div>
+
+          <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-sm justify-center">
+            <button @click="handlePageChange('prev')" :disabled="!table.getCanPreviousPage()" class="p-1 px-1.5 text-[9px] sm:text-[10px] font-black text-slate-500 hover:text-bejo-600 disabled:opacity-30 transition-colors hover:bg-slate-50 rounded-lg uppercase tracking-wider">
+              Prev
+            </button>
+            <div class="px-1 text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap border-x border-slate-100">
+              {{ table.getState().pagination.pageIndex + 1 }}/{{ table.getPageCount() }}
+            </div>
+            <button @click="handlePageChange('next')" :disabled="!table.getCanNextPage()" class="p-1 px-1.5 text-[9px] sm:text-[10px] font-black text-slate-500 hover:text-bejo-600 disabled:opacity-30 transition-colors hover:bg-slate-50 rounded-lg uppercase tracking-wider">
+              Next
+            </button>
+          </div>
+
+          <button @click="openAddModal" class="px-2 sm:px-5 py-2.5 bg-bejo-600 text-white rounded-xl text-[10px] sm:text-[11px] font-black uppercase tracking-widest hover:bg-bejo-700 hover:shadow-lg hover:shadow-bejo-600/30 transition-all flex items-center justify-center gap-1.5">
+            <Icon icon="lucide:plus" class="size-3.5" />
+            Properti
+          </button>
+        </div>
       </div>
     </div>
 
-    <div v-if="isLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-6">
+    <div v-if="isLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
       <ProductCard v-for="i in 15" :key="i" :product="{}" is-loading />
     </div>
 
-    <div v-else-if="table.getFilteredRowModel().rows.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-6">
+    <div v-else-if="table.getFilteredRowModel().rows.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
       <ProductCard 
         v-for="row in table.getRowModel().rows" 
         :key="row.id" 

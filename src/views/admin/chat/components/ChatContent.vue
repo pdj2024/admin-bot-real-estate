@@ -741,9 +741,8 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 
       <div class="flex-grow min-h-0 relative overflow-hidden" :class="{ hidden: isPreviewMode }">
         <!-- Persistent Background Layer -->
-        <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-slate-50 dark:bg-slate-950">
-          <div class="absolute inset-0 bg-slate-50/5 dark:bg-slate-900/10 backdrop-blur-none"></div>
-          <img :src="props.isDark ? bgChatDark : bgChat" class="w-full h-full object-cover opacity-[0.03] grayscale-[20%] contrast-125" alt="" />
+        <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-slate-100">
+          <div class="absolute inset-0 bg-slate-100 backdrop-blur-none"></div>
         </div>
 
         <simplebar id="chat-scroll-container" ref="chatContainer" class="h-full w-full relative z-10 bg-transparent">
