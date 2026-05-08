@@ -510,15 +510,19 @@ const handleTakeOverConversation = () => {
     ]
     emit('chatTakeOverBatch', dataTakeOverChat)
     
+    // Switch tab to 'chat_saya' first
+    activeTab.value = 'chat_saya'
+    emit('changeTab', 'chat_saya')
+    
     // Langsung buka chatnya agar admin tidak perlu klik dua kali
     selectChat(
       selectedChatIdx.value, 
-      selectedChatGroup.value, 
+      'chat_saya', 
       chat.Room_Id, 
       chat.Id_Lawan, 
       chat.Username_Lawan, 
       chat.Telepon_User_Lawan, 
-      chat.Status_Bot || 'nonaktif'
+      'nonaktif'
     )
   }
   closeContextMenu()

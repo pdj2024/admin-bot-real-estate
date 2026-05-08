@@ -429,9 +429,10 @@ const takeOverChat = async (status: boolean, phoneNumber?: string, roomId?: stri
       status_bot: status 
     }, { headers: { 'X-Jenis-User': 'admin' } })
     
-    // Perubahan sesuai permintaan user: menggunakan _Masuk untuk ambil alih, _Keluar untuk serahkan ke bot
-    if (status == false) sendChat('system_masuk', undefined, targetRoom, targetPhone)
-    else sendChat('system_keluar', undefined, targetRoom, targetPhone)
+    // 2. Kirim pesan sistem ke database & push ke UI lokal
+    const systemType = status === false ? 'system_masuk' : 'system_keluar'
+    await sendChat(systemType, undefined, targetRoom, targetPhone)
+    
     emit('chatTakeOver', status)
   } catch (err: any) {
     if (err.response?.data?.Message?.includes('Percakapan ini sudah diambil alih')) fail('Percakapan ini sudah diambil alih Admin lain')
@@ -748,7 +749,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
         <simplebar id="chat-scroll-container" ref="chatContainer" class="h-full w-full relative z-10 bg-transparent">
           <div class="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-white/5 pointer-events-none"></div>
 
-          <div v-if="props.isLoadingChat" class="relative z-10 flex flex-col gap-6 px-4 py-6 sm:px-8 sm:py-10">
+          <div v-if="props.isLoadingChat && props.chats.length === 0" class="relative z-10 flex flex-col gap-6 px-4 py-6 sm:px-8 sm:py-10">
             <div v-for="n in 8" :key="n" class="flex w-full" :class="n % 2 === 0 ? 'justify-end' : 'justify-start'">
               <div class="flex flex-col gap-2" :class="n % 2 === 0 ? 'items-end' : 'items-start'" style="max-width: 65%">
                 <div class="h-12 rounded-2xl bg-slate-200/60 animate-pulse border border-slate-100 shadow-sm" :style="{ width: 40 + ((n * 13) % 45) + '%', minWidth: '140px' }"></div>

@@ -220,7 +220,18 @@ const startSignalR = async () => {
         if (pendingChat) {
           pendingChat.Message_Id = data.messageId
           pendingChat.Send_Status = 'send'
+          return
         }
+      }
+
+      // Hindari duplikasi pesan sistem yang baru saja di-push secara lokal
+      const isDuplicate = chats.value.some((c) => 
+        c.Message === data.message && 
+        (c.Message_Id === data.messageId || (c.Send_Status === 'pending' && c.Sender_Id === data.senderId))
+      )
+      
+      if (isDuplicate) {
+        console.log('[SignalR] Pesan duplikat diabaikan (sudah ada di UI)')
         return
       }
 
@@ -315,10 +326,10 @@ const fetchChatContent = async (id: string) => {
 
 watch(
   selectedRoomId,
-  (newId) => {
-    // Clear previous chats immediately to avoid flash of stale content
-    chats.value = []
-    if (newId) {
+  (newId, oldId) => {
+    if (newId && newId !== oldId) {
+      // Hanya hapus jika benar-benar ganti room
+      chats.value = []
       fetchChatContent(newId)
     }
   },
