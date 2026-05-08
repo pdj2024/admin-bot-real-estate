@@ -10,7 +10,11 @@ import '@/assets/css/style.css'
 import 'preline/dist'
 
 import { createHead } from '@vueuse/head'
-import { Icon } from '@iconify/vue'
+import { Icon, addCollection } from '@iconify/vue'
+import lucideIcons from '@iconify-json/lucide/icons.json'
+
+// Pre-load Lucide icons for offline usage
+addCollection(lucideIcons)
 
 const app = createApp(App)
 app.component('Icon', Icon)
