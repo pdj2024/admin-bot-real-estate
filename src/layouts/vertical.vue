@@ -34,7 +34,7 @@ const { layout } = storeToRefs(layoutStore)
 const { setSideNavSize } = layoutStore
 
 const resize = () => {
-  if (window.innerWidth <= 768) {
+  if (window.innerWidth <= 1024) {
     setSideNavSize('offcanvas')
   } else if (layout.value.sidenav.size === 'offcanvas') {
     // If we were mobile but now desktop, restore the default sidebar type

@@ -51,6 +51,9 @@ const searchQuery = ref('')
 const selectedBotRoomIds = ref<string[]>([])
 const selectedAssignRoomIds = ref<string[]>([])
 const selectedActiveRoomIds = ref<string[]>([])
+const pressTimer = ref<any>(null)
+const isLongPress = ref(false)
+const startCoord = ref({ x: 0, y: 0 })
 
 const emit = defineEmits<{
   (e: 'selectChat', id: string): void
@@ -65,6 +68,10 @@ const emit = defineEmits<{
 }>()
 
 const selectChat = (idx: number, group: string, id: string, idLawan: string, username: string, phoneNumber: string, statusBot: string) => {
+  if (isLongPress.value) {
+    isLongPress.value = false
+    return
+  }
   emit('selectChat', id)
   emit('idLawan', idLawan)
   emit('username', username || '')
@@ -472,6 +479,42 @@ const openContextMenu = (event: MouseEvent, chat: Chat, group: string, idx: numb
   }
 }
 
+const handlePointerDown = (event: PointerEvent, chat: Chat, group: string, idx: number) => {
+  // Only handle primary button (left click / touch)
+  if (event.button !== 0) return
+  
+  isLongPress.value = false
+  startCoord.value = { x: event.clientX, y: event.clientY }
+  
+  pressTimer.value = setTimeout(() => {
+    isLongPress.value = true
+    openContextMenu(event, chat, group, idx)
+  }, 600)
+}
+
+const handlePointerUp = () => {
+  cancelPress()
+}
+
+const handlePointerMove = (event: PointerEvent) => {
+  if (pressTimer.value) {
+    const dist = Math.sqrt(
+      Math.pow(event.clientX - startCoord.value.x, 2) + 
+      Math.pow(event.clientY - startCoord.value.y, 2)
+    )
+    if (dist > 10) {
+      cancelPress()
+    }
+  }
+}
+
+const cancelPress = () => {
+  if (pressTimer.value) {
+    clearTimeout(pressTimer.value)
+    pressTimer.value = null
+  }
+}
+
 const closeContextMenu = () => {
   showContextMenu.value = false
   selectedChatForMenu.value = null
@@ -770,6 +813,10 @@ defineExpose({
                       v-memo="[chat.Room_Id, chat.Last_Message_At, chat.Last_Message, chat.New_Message_Count, selectedChatId === chat.Room_Id, selectedBotRoomIds.includes(chat.Room_Id)]"
                       @click="selectChat(idx, 'bot', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan, chat.Telepon_User_Lawan, chat.Status_Bot || 'aktif')"
                       @contextmenu.prevent="openContextMenu($event, chat, 'bot', idx)"
+                      @pointerdown="handlePointerDown($event, chat, 'bot', idx)"
+                      @pointerup="handlePointerUp"
+                      @pointermove="handlePointerMove"
+                      @pointerleave="handlePointerUp"
                       class="relative flex items-center gap-3 py-3 px-4 bg-white cursor-pointer border-b border-slate-50 hover:bg-slate-50/80 transition-all duration-300 group"
                       :class="{
                         'bg-bejo-50/30 before:absolute before:inset-y-0 before:left-0 before:w-1.5 before:bg-bejo-500 before:rounded-r-full': selectedChatId === chat.Room_Id
@@ -850,6 +897,10 @@ defineExpose({
                       v-memo="[chat.Room_Id, chat.Last_Message_At, chat.Last_Message, chat.New_Message_Count, selectedChatId === chat.Room_Id, selectedAssignRoomIds.includes(chat.Room_Id)]"
                       @click="selectChat(idx, 'chat_saya', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan, chat.Telepon_User_Lawan, chat.Status_Bot || 'nonaktif')"
                       @contextmenu.prevent="openContextMenu($event, chat, 'assign', idx)"
+                      @pointerdown="handlePointerDown($event, chat, 'assign', idx)"
+                      @pointerup="handlePointerUp"
+                      @pointermove="handlePointerMove"
+                      @pointerleave="handlePointerUp"
                       class="relative flex items-center gap-3 py-3 px-4 bg-white cursor-pointer border-b border-slate-50 hover:bg-slate-50/80 transition-all duration-300 group"
                       :class="{
                         'bg-bejo-50/30 before:absolute before:inset-y-0 before:left-0 before:w-1.5 before:bg-bejo-500 before:rounded-r-full': selectedChatId === chat.Room_Id
@@ -924,6 +975,10 @@ defineExpose({
                       v-memo="[chat.Room_Id, chat.Last_Message_At, chat.Last_Message, chat.New_Message_Count, selectedChatId === chat.Room_Id, selectedActiveRoomIds.includes(chat.Room_Id)]"
                       @click="selectChat(idx, 'chat_saya', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan, chat.Telepon_User_Lawan, chat.Status_Bot || 'nonaktif')"
                       @contextmenu.prevent="openContextMenu($event, chat, 'aktif', idx)"
+                      @pointerdown="handlePointerDown($event, chat, 'aktif', idx)"
+                      @pointerup="handlePointerUp"
+                      @pointermove="handlePointerMove"
+                      @pointerleave="handlePointerUp"
                       class="relative flex items-center gap-3 py-3 px-4 bg-white cursor-pointer border-b border-slate-50 hover:bg-slate-50/80 transition-all duration-300 group"
                       :class="{
                         'bg-bejo-50/30 before:absolute before:inset-y-0 before:left-0 before:w-1.5 before:bg-bejo-500 before:rounded-r-full': selectedChatId === chat.Room_Id

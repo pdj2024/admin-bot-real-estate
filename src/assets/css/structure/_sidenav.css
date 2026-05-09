@@ -6,7 +6,7 @@ Sidenav Menu
 /* ---------------------------------------------- */
 
 .app-menu {
-  @apply w-sidenav-width min-w-sidenav-width bg-(--sidenav-background) transition-all relative top-0 bottom-0 flex flex-col max-h-screen z-40 duration-300 border-e border-current/10;
+  @apply w-sidenav-width min-w-sidenav-width bg-(--sidenav-background) transition-all relative top-0 bottom-0 flex flex-col max-h-screen z-[999] duration-300 border-e border-current/10;
   transition-property: width, min-width, margin;
 }
 
@@ -213,7 +213,7 @@ html[data-sidenav-size='sm'] {
 
     .logo-box {
       background: var(--sidenav-background);
-      @apply z-40 !p-0 flex items-center justify-center;
+      @apply z-[999] !p-0 flex items-center justify-center;
 
       .flex.items-center.gap-2.5 {
         @apply justify-center w-full;
@@ -403,7 +403,7 @@ html[data-sidenav-size='offcanvas'] {
 
   &.sidenav-enable {
     .app-menu {
-      @apply opacity-100 z-50 ms-0;
+      @apply opacity-100 z-[999] ms-0;
     }
   }
 }
