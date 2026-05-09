@@ -253,25 +253,59 @@ const startSignalR = async () => {
 
   signalRConnection.value.on('ReceiveHandoverAlert', (payload) => {
     console.log('[Event: ReceiveHandoverAlert]', payload)
-    if (payload && payload.roomId === selectedRoomId.value) {
+    const myId = localStorage.getItem('no_id') || ''
+    
+    // Normalisasi payload (antisipasi snake_case dari server)
+    const roomId = payload.roomId || payload.room_id
+    const adminId = payload.adminId || payload.admin_id
+
+    // Jika room yang kita buka diambil alih orang lain (bukan kita), tutup room
+    if (payload && adminId !== myId && roomId === selectedRoomId.value) {
       handleClearRoom()
       handleTakeOver(true)
+    }
+
+    // Segera hapus dari sidebar jika diambil alih admin lain (bukan saya dan bukan dikembalikan ke bot)
+    if (adminId !== myId && adminId !== 'adm_bot') {
+      if (sidebarRef.value) {
+        sidebarRef.value.removeRoomFromList(roomId)
+      }
     }
   })
 
   signalRConnection.value.on('GlobalHandoverAlert', (payload) => {
     console.log('[Event: GlobalHandoverAlert]', payload)
     
-    // Selalu refresh tab aktif secara silent agar chat room bertambah/hilang secara halus
-    if (sidebarRef.value) {
-      sidebarRef.value.refreshChatList(undefined, true)
+    const myId = localStorage.getItem('no_id') || ''
+    
+    // Normalisasi payload
+    const roomId = payload.roomId || payload.room_id
+    const adminId = payload.adminId || payload.admin_id
+    
+    const isMe = adminId === myId
+    const isToBot = adminId === 'adm_bot'
+
+    // Jika diambil alih admin lain (bukan saya dan bukan dikembalikan ke bot)
+    if (!isMe && !isToBot) {
+      if (sidebarRef.value) {
+        sidebarRef.value.removeRoomFromList(roomId)
+      }
+      // Jika sedang dibuka, tutup
+      if (roomId === selectedRoomId.value) {
+        handleClearRoom()
+        handleTakeOver(true)
+      }
     }
 
     // Jika room yang sedang dibuka dikembalikan ke bot, tutup room
-    const isToBot = payload.adminId === 'adm_bot'
-    if (isToBot && payload && payload.roomId === selectedRoomId.value) {
+    if (isToBot && roomId === selectedRoomId.value) {
       handleClearRoom()
       handleTakeOver(true)
+    }
+
+    // Refresh tab aktif secara silent agar list tetap sinkron
+    if (sidebarRef.value) {
+      sidebarRef.value.refreshChatList(undefined, true)
     }
   })
 

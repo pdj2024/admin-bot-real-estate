@@ -230,6 +230,7 @@ const fetchData = async (tab: 'bot' | 'chat_saya', silent: boolean = false) => {
       const tempIdsAssign: string[] = []
 
       data.Data.forEach((item: any) => {
+        // Hanya proses room yang aktif dan memiliki data lawan lengkap
         if (item.Status !== 'aktif' || !item.Id_Lawan || !item.Telepon_User_Lawan) return
 
         if (!item.Username_Lawan || item.Username_Lawan === '') {
@@ -244,13 +245,21 @@ const fetchData = async (tab: 'bot' | 'chat_saya', silent: boolean = false) => {
           }
 
           const userIds = item.User_Ids || []
+          const isMe = userIds.includes(userId)
           
-          if (userIds.includes(userId)) {
+          if (isMe) {
+            // Room milik saya
             tempAktif.push(item)
             tempIdsAktif.push(item.Room_Id)
-          } else {
-            tempAssign.push(item)
-            tempIdsAssign.push(item.Room_Id)
+          } else if (item.Status_Bot === 'nonaktif') {
+            // Room di tab Chat Saya tapi bukan milik saya
+            // Tampilkan di 'Belum di Assign' hanya jika tidak ada admin lain selain adm_bot
+            const hasOtherAdmin = userIds.some(id => id !== userId && id !== 'adm_bot' && id.startsWith('adm_'))
+            
+            if (!hasOtherAdmin) {
+              tempAssign.push(item)
+              tempIdsAssign.push(item.Room_Id)
+            }
           }
         }
       })
@@ -334,13 +343,21 @@ const refreshChatList = (data?: any, silent: boolean = false) => {
       }
     }
 
-    // Tentukan target perpindahan berdasarkan jenisPesan
+    // Tentukan target perpindahan berdasarkan jenisPesan dan siapa yang melakukan aksi
+    const myId = localStorage.getItem('no_id') || ''
+    const isMe = String(data.senderId) === String(myId)
+
     if (data.jenisPesan === 'system_masuk' || data.jenisPesan === 'system_masuk_tukar') {
-      // Pindah dari bot ke aktif
-      updateLocalChat(chatsBot.value, chatsAktif.value, roomIdsAktif.value)
-      updateLocalChat(chatsAssign.value, chatsAktif.value, roomIdsAktif.value)
+      if (isMe) {
+        // Jika saya yang ambil alih: Pindah dari bot/assign ke aktif
+        updateLocalChat(chatsBot.value, chatsAktif.value, roomIdsAktif.value)
+        updateLocalChat(chatsAssign.value, chatsAktif.value, roomIdsAktif.value)
+      } else {
+        // Jika admin lain yang ambil alih: Hapus dari semua list kita (karena sudah bukan tugas kita)
+        removeRoomFromList(roomIdStr)
+      }
     } else if (data.jenisPesan === 'system_keluar' || data.jenisPesan === 'system_keluar_tukar') {
-      // Pindah dari aktif ke bot
+      // Pindah dari aktif ke bot (Siapapun yang melepaskan, room kembali ke bot)
       updateLocalChat(chatsAktif.value, chatsBot.value, roomIdsBot.value)
     } else {
       // Update biasa di list masing-masing
