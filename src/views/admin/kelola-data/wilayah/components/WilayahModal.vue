@@ -319,7 +319,7 @@ const handleClose = () => {
         <div class="flex flex-col border-b bg-card">
           <div class="flex justify-between items-center px-8 py-3">
             <div class="flex items-center gap-3">
-              <div class="size-10 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20">
+              <div class="size-10 rounded-2xl bg-bejo-500 text-white flex items-center justify-center shadow-lg shadow-bejo-500/20">
                 <Icon :icon="editData ? 'lucide:pencil' : 'lucide:plus'" class="size-5" />
               </div>
               <div>
@@ -351,7 +351,7 @@ const handleClose = () => {
                   <span class="truncate text-xs font-bold" :class="form.parentId ? 'text-slate-700' : 'text-slate-300'">
                     {{ parentOptions.find((opt: any) => opt.No_Id === form.parentId || opt.No_Id_Kota === form.parentId || opt.No_Id_Area === form.parentId || opt.Nama === form.parentId)?.Nama || `Pilih ${parentLabel}...` }}
                   </span>
-                  <Icon icon="lucide:chevron-down" class="size-4 text-slate-400 group-hover:text-primary transition-transform" :class="isDropdownOpen ? 'rotate-180' : ''" />
+                  <Icon icon="lucide:chevron-down" class="size-4 text-slate-400 group-hover:text-bejo-500 transition-transform" :class="isDropdownOpen ? 'rotate-180' : ''" />
                 </button>
               </div>
 
@@ -373,7 +373,7 @@ const handleClose = () => {
                         class="group flex items-center justify-between px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:bg-bejo-50 hover:text-primary"
                       >
                         {{ opt.Nama }}
-                        <Icon v-if="form.parentId === (opt.No_Id || opt.No_Id_Kota || opt.No_Id_Area)" icon="lucide:check" class="size-4 text-primary" />
+                        <Icon v-if="form.parentId === (opt.No_Id || opt.No_Id_Kota || opt.No_Id_Area)" icon="lucide:check" class="size-4 text-bejo-500" />
                       </button>
                     </template>
                     <div v-else class="flex flex-col items-center justify-center py-8 px-4 text-center">
@@ -404,7 +404,7 @@ const handleClose = () => {
             <div class="space-y-1.5">
               <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Status</label>
               <div class="relative group">
-                <Icon icon="lucide:check-circle" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-4 pointer-events-none group-focus-within:text-primary transition-colors z-10" />
+                <Icon icon="lucide:check-circle" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-4 pointer-events-none group-focus-within:text-bejo-500 transition-colors z-10" />
                 <select v-model="form.status" class="field-input h-11 !pl-11 appearance-none bg-white">
                   <option value="aktif">Aktif</option>
                   <option value="nonaktif">Non-Aktif</option>
@@ -419,7 +419,7 @@ const handleClose = () => {
             <button type="button" @click="handleClose" class="px-8 py-3 text-xs font-black text-slate-400 hover:text-slate-600 uppercase tracking-widest transition-colors">
               Batal
             </button>
-            <button type="submit" :disabled="loading" class="px-10 py-3 bg-primary text-white text-xs font-black rounded-2xl shadow-xl shadow-primary/20 transition-all hover:scale-[1.03] active:scale-95 flex items-center gap-2 disabled:opacity-70 disabled:scale-100">
+            <button type="submit" :disabled="loading" class="px-10 py-3 bg-bejo-500 text-white text-xs font-black rounded-2xl shadow-xl shadow-bejo-500/20 transition-all hover:scale-[1.03] active:scale-95 flex items-center gap-2 disabled:opacity-70 disabled:scale-100">
               <Icon v-if="loading" icon="lucide:loader-2" class="animate-spin size-4" />
               <Icon v-else icon="lucide:save" class="size-4" />
               {{ loading ? 'Memproses...' : editData ? 'Simpan Perubahan' : `Tambah ${type}` }}
@@ -435,7 +435,7 @@ const handleClose = () => {
 @reference "@/assets/css/style.css";
 
 .field-input {
-  @apply w-full border border-slate-200 rounded-xl py-2.5 px-4 text-sm bg-card focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none font-bold text-slate-700 placeholder:text-slate-300 placeholder:font-medium;
+  @apply w-full border border-slate-200 rounded-xl py-2.5 px-4 text-sm bg-card focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500 transition-all outline-none font-bold text-slate-700 placeholder:text-slate-300 placeholder:font-medium;
 }
 
 .custom-scroll {

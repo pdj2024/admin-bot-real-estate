@@ -214,31 +214,31 @@ const hierarchicalData = computed(() => {
 
 <template>
   <Vertical>
-    <div class="p-0 md:p-3 md:pt-1 pb-32 space-y-6 md:space-y-8">
-      <!-- Header Section -->
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 class="text-2xl font-black text-slate-900 tracking-tight leading-tight">Wilayah</h1>
-          <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Kelola hierarki geografis (Kota > Area > Kawasan)</p>
-        </div>
-        
-        <div class="flex items-center gap-3">
-          <div class="relative group w-64">
-            <Icon icon="lucide:search" class="absolute left-4 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
-            <input v-model="searchQuery" placeholder="CARI WILAYAH..." class="w-full h-10 pl-10 pr-4 bg-white border border-slate-100 rounded-xl text-[10px] font-black uppercase tracking-widest focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500/50 outline-none transition-all shadow-sm" />
-          </div>
-          <button @click="handleAdd('kota')" class="h-10 px-6 bg-bejo-500 hover:bg-bejo-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-bejo-500/20 transition-all flex items-center gap-2 active:scale-95">
-            <Icon icon="lucide:plus" class="size-3.5" />
-            TAMBAH KOTA
-          </button>
-        </div>
-      </div>
+    <div class="px-4 md:px-3 md:pt-1 pb-32 space-y-6 md:space-y-8">
 
-      <!-- Hierarchical List -->
+      <!-- Main Content Card -->
       <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-2xl shadow-slate-200/40 overflow-hidden">
+        <!-- Header Section -->
+        <div class="p-6 md:p-8 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <h4 class="text-xl font-black text-slate-900 tracking-tight">Wilayah</h4>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Kelola hierarki geografis (Kota > Area > Kawasan)</p>
+          </div>
+          
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <div class="relative group w-full md:w-64">
+              <Icon icon="lucide:search" class="absolute left-4 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
+              <input v-model="searchQuery" placeholder="CARI WILAYAH..." class="w-full h-11 pl-10 pr-4 bg-white border border-slate-100 rounded-xl text-[10px] font-black uppercase tracking-widest focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500/50 outline-none transition-all shadow-sm" />
+            </div>
+            <button @click="handleAdd('kota')" class="h-11 px-6 bg-bejo-500 hover:bg-bejo-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-bejo-500/20 transition-all flex items-center justify-center gap-2 active:scale-95">
+              <Icon icon="lucide:plus" class="size-3.5" />
+              TAMBAH KOTA
+            </button>
+          </div>
+        </div>
         <div class="min-w-full">
           <!-- Table Header -->
-          <div class="grid grid-cols-12 bg-slate-50/50 border-b border-slate-50 px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+          <div class="grid grid-cols-12 bg-slate-50/50 border-b border-slate-50 px-4 md:px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
             <div class="col-span-6">Nama Wilayah</div>
             <div class="col-span-3">Deskripsi</div>
             <div class="col-span-3 text-right pr-4">Aksi</div>
@@ -248,7 +248,7 @@ const hierarchicalData = computed(() => {
           <div v-if="hierarchicalData.length > 0" class="divide-y divide-slate-50">
             <div v-for="city in hierarchicalData" :key="city._id" class="flex flex-col">
               <!-- City Row -->
-              <div class="grid grid-cols-12 px-8 py-4 items-center hover:bg-slate-50/50 transition-colors group">
+              <div class="grid grid-cols-12 px-4 md:px-8 py-4 items-center hover:bg-slate-50/50 transition-colors group">
                 <div class="col-span-6 flex items-center gap-4 cursor-pointer select-none" @click="toggleCity(city._id)" :class="{ 'opacity-40 grayscale': !city._isActive }">
                   <button class="size-6 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-bejo-50 hover:text-bejo-600 transition-all pointer-events-none">
                     <Icon :icon="expandedCities.has(city._id) ? 'lucide:chevron-down' : 'lucide:chevron-right'" class="size-3.5" />

@@ -33,7 +33,7 @@ const openEditModal = (customer: any) => {
 
 <template>
   <Vertical>
-    <div class="p-0 md:p-3 md:pt-1 pb-32 space-y-6 md:space-y-8">
+    <div class="px-4 md:px-3 md:pt-1 pb-32 space-y-6 md:space-y-8">
       <!-- Main Content Card -->
       <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/30 overflow-hidden">
         <div class="p-6 md:p-8 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-6">

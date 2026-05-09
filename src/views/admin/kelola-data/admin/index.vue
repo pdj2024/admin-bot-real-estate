@@ -4,7 +4,6 @@ import Vertical from '@/layouts/vertical.vue'
 import Filter from './components/Filter.vue'
 import Table from './components/Table.vue'
 import Modal from './components/Modal.vue'
-import { Icon } from '@iconify/vue'
 
 interface Admin {
   No_Id: string
@@ -41,7 +40,7 @@ const openEditModal = (admin: any) => {
 
 <template>
   <Vertical>
-    <div class="p-0 md:p-3 md:pt-1 pb-32 space-y-6 md:space-y-8">
+    <div class="px-4 md:px-3 md:pt-1 pb-32 space-y-6 md:space-y-8">
       <!-- Main Content Card -->
       <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/30 overflow-hidden">
         <div class="p-6 md:p-8 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -52,15 +51,8 @@ const openEditModal = (admin: any) => {
             </p>
           </div>
           
-          <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <Filter @search="searchQuery = $event" @filterStatus="statusFilter = $event" />
-            <button 
-              @click="openAddModal"
-              class="px-6 h-11 bg-bejo-500 hover:bg-bejo-600 text-white rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-bejo-500/20 transition-all flex items-center gap-2 active:scale-95 whitespace-nowrap"
-            >
-              <Icon icon="lucide:user-plus" class="size-4" />
-              Tambah Admin
-            </button>
+          <div class="w-full lg:w-auto">
+            <Filter @search="searchQuery = $event" @filterStatus="statusFilter = $event" @add="openAddModal" />
           </div>
         </div>
 
