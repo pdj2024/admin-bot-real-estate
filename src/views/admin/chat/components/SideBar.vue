@@ -817,7 +817,8 @@ defineExpose({
                       @pointerup="handlePointerUp"
                       @pointermove="handlePointerMove"
                       @pointerleave="handlePointerUp"
-                      class="relative flex items-center gap-3 py-3 px-4 bg-white cursor-pointer border-b border-slate-50 hover:bg-slate-50/80 transition-all duration-300 group"
+                      class="relative flex items-center gap-3 py-3 px-4 bg-white cursor-pointer border-b border-slate-50 hover:bg-slate-50/80 transition-all duration-300 group select-none"
+                      style="-webkit-touch-callout: none;"
                       :class="{
                         'bg-bejo-50/30 before:absolute before:inset-y-0 before:left-0 before:w-1.5 before:bg-bejo-500 before:rounded-r-full': selectedChatId === chat.Room_Id
                       }"
@@ -901,7 +902,8 @@ defineExpose({
                       @pointerup="handlePointerUp"
                       @pointermove="handlePointerMove"
                       @pointerleave="handlePointerUp"
-                      class="relative flex items-center gap-3 py-3 px-4 bg-white cursor-pointer border-b border-slate-50 hover:bg-slate-50/80 transition-all duration-300 group"
+                      class="relative flex items-center gap-3 py-3 px-4 bg-white cursor-pointer border-b border-slate-50 hover:bg-slate-50/80 transition-all duration-300 group select-none"
+                      style="-webkit-touch-callout: none;"
                       :class="{
                         'bg-bejo-50/30 before:absolute before:inset-y-0 before:left-0 before:w-1.5 before:bg-bejo-500 before:rounded-r-full': selectedChatId === chat.Room_Id
                       }"
@@ -979,7 +981,8 @@ defineExpose({
                       @pointerup="handlePointerUp"
                       @pointermove="handlePointerMove"
                       @pointerleave="handlePointerUp"
-                      class="relative flex items-center gap-3 py-3 px-4 bg-white cursor-pointer border-b border-slate-50 hover:bg-slate-50/80 transition-all duration-300 group"
+                      class="relative flex items-center gap-3 py-3 px-4 bg-white cursor-pointer border-b border-slate-50 hover:bg-slate-50/80 transition-all duration-300 group select-none"
+                      style="-webkit-touch-callout: none;"
                       :class="{
                         'bg-bejo-50/30 before:absolute before:inset-y-0 before:left-0 before:w-1.5 before:bg-bejo-500 before:rounded-r-full': selectedChatId === chat.Room_Id
                       }"
