@@ -254,7 +254,7 @@ const fetchData = async (tab: 'bot' | 'chat_saya', silent: boolean = false) => {
           } else if (item.Status_Bot === 'nonaktif') {
             // Room di tab Chat Saya tapi bukan milik saya
             // Tampilkan di 'Belum di Assign' hanya jika tidak ada admin lain selain adm_bot
-            const hasOtherAdmin = userIds.some(id => id !== userId && id !== 'adm_bot' && id.startsWith('adm_'))
+            const hasOtherAdmin = userIds.some((id: string) => id !== userId && id !== 'adm_bot' && id.startsWith('adm_'))
             
             if (!hasOtherAdmin) {
               tempAssign.push(item)
