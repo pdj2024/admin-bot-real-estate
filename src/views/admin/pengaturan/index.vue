@@ -96,6 +96,18 @@ watch(settings, (newSettings) => {
 
 onMounted(async () => {
   await settingsStore.init()
+  
+  // Auto-migrate old colors to new vibrant orange
+  const oldColor = '#CA6D2C'
+  const newColor = '#EB701F'
+  
+  if (settingsStore.theme.secondaryColor === oldColor) {
+    settingsStore.theme.secondaryColor = newColor
+  }
+  if (settingsStore.theme.primaryColor === '#EA8455' || settingsStore.theme.primaryColor === oldColor) {
+     settingsStore.theme.primaryColor = newColor
+  }
+
   // Refresh settings from store
   settings.colorPrimary = settingsStore.theme.primaryColor
   settings.colorSecondary = settingsStore.theme.secondaryColor
@@ -139,8 +151,8 @@ const handleSaveAppearance = async (newData?: AppSettings) => {
 
 const handleResetAppearance = async () => {
   const defaults = {
-    colorPrimary: '#EA8455',
-    colorSecondary: '#CA6D2C',
+    colorPrimary: '#EF8C4C',
+    colorSecondary: '#EB701F',
     sidenavSize: 'hover' as const
   }
   Object.assign(settings, defaults)

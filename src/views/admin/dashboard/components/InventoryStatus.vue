@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import api from '@/services/axios'
 
@@ -12,13 +12,21 @@ interface StatDetail {
 }
 
 const stats = ref<StatDetail[]>([
-  { label: 'Tersedia', value: '0', icon: 'lucide:home', color: 'bejo-soft', breakdown: {} },
-  { label: 'Terjual', value: '0', icon: 'lucide:award', color: 'bejo', breakdown: {} },
-  { label: 'Tersewa', value: '0', icon: 'lucide:key', color: 'bejo-dark', breakdown: {} },
-  { label: 'Nonaktif', value: '0', icon: 'lucide:eye-off', color: 'slate', breakdown: {} },
+  { label: 'Tersedia', value: '0', icon: 'lucide:home', color: 'bg-bejo-500', breakdown: {} },
+  { label: 'Draft', value: '0', icon: 'lucide:file-edit', color: 'bg-bejo-500', breakdown: {} },
+  { label: 'Terjual', value: '0', icon: 'lucide:award', color: 'bg-bejo-500', breakdown: {} },
+  { label: 'Tersewa', value: '0', icon: 'lucide:key', color: 'bg-bejo-500', breakdown: {} },
+  { label: 'Nonaktif', value: '0', icon: 'lucide:eye-off', color: 'bg-bejo-500', breakdown: {} },
 ])
 
 const expandedIdx = ref<number | null>(null)
+const containerRef = ref<HTMLElement | null>(null)
+
+const handleClickOutside = (event: MouseEvent) => {
+  if (containerRef.value && !containerRef.value.contains(event.target as Node)) {
+    expandedIdx.value = null
+  }
+}
 
 const toggleDetail = (idx: number) => {
   if (expandedIdx.value === idx) expandedIdx.value = null
@@ -40,6 +48,7 @@ const fetchStats = async () => {
     
     const count: Record<string, { total: number, types: Record<string, number> }> = {
       Tersedia: { total: 0, types: {} },
+      Draft: { total: 0, types: {} },
       Terjual: { total: 0, types: {} },
       Tersewa: { total: 0, types: {} },
       Nonaktif: { total: 0, types: {} }
@@ -56,7 +65,9 @@ const fetchStats = async () => {
         bucket = 'Terjual'
       } else if (statusProp === 'Tersewa') {
         bucket = 'Tersewa'
-      } else if (statusDisp === 'Nonaktif' && statusProp === 'Tersedia') {
+      } else if (statusDisp === 'Draft') {
+        bucket = 'Draft'
+      } else if (statusDisp === 'Nonaktif') {
         bucket = 'Nonaktif'
       } else if (statusProp === 'Tersedia') {
         bucket = 'Tersedia'
@@ -68,12 +79,21 @@ const fetchStats = async () => {
       }
     })
 
-    stats.value = [
-      { label: 'Tersedia', value: String(count.Tersedia.total), icon: 'lucide:home', color: 'bejo-soft', breakdown: count.Tersedia.types },
-      { label: 'Terjual', value: String(count.Terjual.total), icon: 'lucide:award', color: 'bejo', breakdown: count.Terjual.types },
-      { label: 'Tersewa', value: String(count.Tersewa.total), icon: 'lucide:key', color: 'bejo-dark', breakdown: count.Tersewa.types },
-      { label: 'Nonaktif', value: String(count.Nonaktif.total), icon: 'lucide:eye-off', color: 'slate', breakdown: count.Nonaktif.types },
-    ]
+    stats.value[0].value = String(count.Tersedia.total)
+    stats.value[0].breakdown = count.Tersedia.types
+    
+    stats.value[1].value = String(count.Draft.total)
+    stats.value[1].breakdown = count.Draft.types
+
+    stats.value[2].value = String(count.Terjual.total)
+    stats.value[2].breakdown = count.Terjual.types
+
+    stats.value[3].value = String(count.Tersewa.total)
+    stats.value[3].breakdown = count.Tersewa.types
+
+    stats.value[4].value = String(count.Nonaktif.total)
+    stats.value[4].breakdown = count.Nonaktif.types
+
   } catch (err) {
     console.error('Fetch inventory stats error:', err)
   } finally {
@@ -83,16 +103,15 @@ const fetchStats = async () => {
 
 onMounted(() => {
   fetchStats()
+  window.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('click', handleClickOutside)
 })
 
 const getColorClass = (color: string) => {
-  const map: Record<string, string> = {
-    bejo: 'text-bejo-600 bg-bejo-500/10 border-bejo-500/20',
-    'bejo-dark': 'text-bejo-900 bg-bejo-900/10 border-bejo-900/20',
-    'bejo-soft': 'text-bejo-700 bg-bejo-100 border-bejo-200',
-    slate: 'text-slate-600 bg-slate-500/10 border-slate-500/20',
-  }
-  return map[color] || map.bejo
+  return `${color} text-white border-transparent shadow-lg shadow-bejo-500/20`
 }
 </script>
 
@@ -102,9 +121,9 @@ const getColorClass = (color: string) => {
       <h4 class="text-sm font-black text-slate-900 uppercase tracking-widest">Status Inventori Properti</h4>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div ref="containerRef" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
       <template v-if="isLoading">
-        <div v-for="i in 4" :key="i" class="flex items-center gap-4 p-5 bg-white rounded-[2rem] border border-slate-100 animate-pulse">
+        <div v-for="i in 5" :key="i" class="flex items-center gap-4 p-5 bg-white rounded-[2rem] border border-slate-100 animate-pulse">
           <div class="size-12 rounded-2xl bg-slate-100"></div>
           <div class="flex-1 space-y-2">
             <div class="h-4 w-12 bg-slate-100 rounded"></div>

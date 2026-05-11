@@ -62,6 +62,13 @@ watch(() => settingsStore.app.isMaintenance, (val) => {
   checkMaintenanceRedirect(val)
 })
 
+// Dynamic Browser Title based on App Name
+watch([() => settingsStore.business.appName, () => route.path], ([newName]) => {
+  const pageTitle = route.meta.title ? `${route.meta.title} | ` : ''
+  const appName = newName || 'Rumah Rejeki'
+  document.title = `${pageTitle}${appName}`
+}, { immediate: true })
+
 // Global Sync: Fetch latest settings on every route change as requested
 watch(() => route.path, async () => {
   await settingsStore.init()

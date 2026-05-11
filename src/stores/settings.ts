@@ -48,8 +48,8 @@ export interface ThemeSettings {
 
 const DEFAULT_THEME: ThemeSettings = {
   sidebarType: 'hover',
-  primaryColor: '#2B00FF',
-  secondaryColor: '#CA6D2C'
+  primaryColor: '#EF8C4C',
+  secondaryColor: '#EB701F'
 }
 
 export interface AppSettings {

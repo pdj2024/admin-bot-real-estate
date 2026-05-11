@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue'
 import type { PropType } from 'vue'
 import type { AppSettings } from '../index.vue'
+import { Icon } from '@iconify/vue'
 
 const props = defineProps({
   settings: {
@@ -33,58 +34,76 @@ watch(form, (newVal) => {
 
 <template>
   <div class="space-y-6">
-    <div class="card bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
-      <div class="bg-gray-50 px-6 py-4 border-b border-gray-100">
-        <h6 class="text-sm font-semibold text-gray-700 uppercase tracking-wider">Navigasi & Aksen Visual</h6>
+    <div class="card bg-white shadow-sm rounded-[2rem] border border-slate-100 overflow-hidden">
+      <div class="px-8 py-5 border-b border-slate-50 flex items-center gap-3 bg-slate-50/50">
+        <div class="size-8 rounded-lg bg-bejo-500 flex items-center justify-center text-white shadow-lg shadow-bejo-500/20">
+          <Icon icon="lucide:layout-template" class="size-4" />
+        </div>
+        <h4 class="text-xs font-black text-slate-800 uppercase tracking-widest">Navigasi & Aksen Visual</h4>
       </div>
-      <div class="p-6 space-y-6">
+      
+      <div class="p-8 space-y-8">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-3">Tipe Sidebar</label>
-          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            <label v-for="size in ['default', 'hover', 'hover-active', 'sm', 'md', 'offcanvas']" :key="size" class="relative cursor-pointer">
+          <label class="label mb-4">
+            <Icon icon="lucide:sidebar" class="size-4 text-bejo-500" />
+            Tipe Sidebar
+          </label>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <label v-for="size in ['default', 'hover', 'offcanvas']" :key="size" class="relative cursor-pointer group">
               <input type="radio" v-model="form.sidenavSize" :value="size" class="peer sr-only" />
 
               <div
-                class="p-3 text-center rounded-lg text-sm font-medium transition-all"
-                :class="form.sidenavSize === size ? 'shadow-lg text-white' : 'border border-gray-200 text-gray-600 hover:bg-gray-50'"
+                class="p-4 text-center rounded-2xl text-xs font-black uppercase tracking-[0.2em] transition-all border-2"
+                :class="form.sidenavSize === size 
+                  ? 'border-bejo-500 text-white shadow-xl shadow-bejo-500/20' 
+                  : 'border-slate-100 text-slate-400 bg-slate-50 hover:border-bejo-500/50 group-hover:bg-white'"
                 :style="
                   form.sidenavSize === size
                     ? {
                         background: `linear-gradient(135deg, ${form.colorPrimary} 0%, ${form.colorSecondary} 100%)`,
-                        backgroundColor: 'transparent'
+                        borderColor: 'transparent'
                       }
                     : {}
                 "
               >
                 <span>{{ size.replace('-', ' ') }}</span>
               </div>
+              <div v-if="form.sidenavSize === size" class="absolute -top-1.5 -right-1.5 size-5 bg-white rounded-full flex items-center justify-center shadow-md border border-bejo-500 z-10">
+                <Icon icon="lucide:check" class="size-3 text-bejo-500" />
+              </div>
             </label>
           </div>
         </div>
 
-        <hr class="border-gray-100" />
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div class="pt-8 border-t border-slate-50 grid grid-cols-1 sm:grid-cols-2 gap-8">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Warna Primary</label>
+            <label class="label mb-4">
+              <Icon icon="lucide:palette" class="size-4 text-bejo-500" />
+              Warna Primary
+            </label>
             <div class="flex items-center gap-4">
-              <div class="relative h-12 w-12 rounded-full shadow-inner border border-gray-200 overflow-hidden shrink-0" :style="{ backgroundColor: form.colorPrimary }">
-                <input v-model="form.colorPrimary" type="color" class="absolute -top-2 -left-2 h-16 w-16 opacity-0 cursor-pointer" />
+              <div class="relative h-14 w-14 rounded-2xl shadow-lg border-2 border-white ring-1 ring-slate-100 overflow-hidden shrink-0" :style="{ backgroundColor: form.colorPrimary }">
+                <input v-model="form.colorPrimary" type="color" class="absolute -top-2 -left-2 h-20 w-20 opacity-0 cursor-pointer" />
               </div>
-              <div class="text-sm font-mono text-gray-600 bg-gray-50 px-3 py-1.5 border rounded-md uppercase">
-                {{ form.colorPrimary }}
+              <div class="flex-1">
+                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">Hex Code</div>
+                <input v-model="form.colorPrimary" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-base font-black text-slate-700 uppercase tracking-widest focus:ring-4 focus:ring-green-500/5 focus:border-green-500 outline-none transition-all" />
               </div>
             </div>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Warna Secondary</label>
+            <label class="label mb-4">
+              <Icon icon="lucide:swatch-book" class="size-4 text-bejo-500" />
+              Warna Secondary
+            </label>
             <div class="flex items-center gap-4">
-              <div class="relative h-12 w-12 rounded-full shadow-inner border border-gray-200 overflow-hidden shrink-0" :style="{ backgroundColor: form.colorSecondary }">
-                <input v-model="form.colorSecondary" type="color" class="absolute -top-2 -left-2 h-16 w-16 opacity-0 cursor-pointer" />
+              <div class="relative h-14 w-14 rounded-2xl shadow-lg border-2 border-white ring-1 ring-slate-100 overflow-hidden shrink-0" :style="{ backgroundColor: form.colorSecondary }">
+                <input v-model="form.colorSecondary" type="color" class="absolute -top-2 -left-2 h-20 w-20 opacity-0 cursor-pointer" />
               </div>
-              <div class="text-sm font-mono text-gray-600 bg-gray-50 px-3 py-1.5 border rounded-md uppercase">
-                {{ form.colorSecondary }}
+              <div class="flex-1">
+                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">Hex Code</div>
+                <input v-model="form.colorSecondary" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-base font-black text-slate-700 uppercase tracking-widest focus:ring-4 focus:ring-green-500/5 focus:border-green-500 outline-none transition-all" />
               </div>
             </div>
           </div>
@@ -92,12 +111,35 @@ watch(form, (newVal) => {
       </div>
     </div>
 
-    <div class="flex items-center gap-4 pt-2">
-      <button @click="handleSave" class="bg-primary px-6 py-2.5 text-white font-medium rounded-lg">Simpan Pengaturan</button>
-      <button @click="emit('reset')" class="px-5 py-2.5 text-gray-600 bg-white border border-gray-300 font-medium rounded-lg hover:bg-gray-50 transition-colors">Reset</button>
+    <div class="flex items-center gap-3 pt-4">
+      <button 
+        @click="handleSave" 
+        class="bg-green-500 hover:bg-green-600 px-8 py-4 text-white font-black text-sm rounded-2xl shadow-xl shadow-green-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2"
+      >
+        <Icon icon="lucide:save" class="size-4" />
+        Simpan Pengaturan
+      </button>
+      <button 
+        @click="emit('reset')" 
+        class="px-6 py-4 text-slate-500 hover:text-slate-800 text-[10px] font-black uppercase tracking-widest transition-colors"
+      >
+        Reset Default
+      </button>
     </div>
   </div>
 </template>
+
+<style scoped>
+@reference "@/assets/css/style.css";
+
+.label {
+  @apply flex items-center gap-2 text-xs font-black text-slate-400 uppercase tracking-widest;
+}
+
+input {
+  transition: all 0.2s ease-in-out;
+}
+</style>
 
 <style scoped>
 input,

@@ -27,7 +27,6 @@ const handleUpdatePassword = async () => {
     isLoading.value = true
     try {
       const email = localStorage.getItem('email')
-      console.log(email)
       if (!email) {
         fail('Sesi email tidak ditemukan. Harap login kembali.')
         return
@@ -62,49 +61,82 @@ const handleUpdatePassword = async () => {
 <template>
   <div class="space-y-6">
     <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
-      <div class="px-8 py-5 border-b border-slate-50 bg-slate-50/50">
-        <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest">Keamanan Akun Admin</h4>
+      <div class="px-8 py-5 border-b border-slate-50 bg-slate-50/50 flex items-center gap-3">
+        <div class="size-8 rounded-lg bg-bejo-500 flex items-center justify-center text-white shadow-lg shadow-bejo-500/20">
+          <Icon icon="lucide:shield-check" class="size-4" />
+        </div>
+        <h4 class="text-xs font-black text-slate-800 uppercase tracking-widest">Keamanan Akun Admin</h4>
       </div>
 
-      <div class="p-8 space-y-6">
-        <div class="bg-bejo-50 p-6 rounded-2xl border border-red-100 flex gap-4">
-          <Icon icon="lucide:shield-alert" class="size-5 text-slate-600 shrink-0 mt-0.5" />
-          <p class="text-xs text-red-800 font-medium leading-relaxed">Pastikan kata sandi baru Anda terdiri dari minimal 8 karakter dengan kombinasi angka dan simbol untuk keamanan maksimal.</p>
+      <div class="p-8 space-y-8">
+        <div class="bg-bejo-50 p-6 rounded-2xl border border-bejo-100 flex gap-4">
+          <Icon icon="lucide:shield-alert" class="size-5 text-bejo-600 shrink-0 mt-0.5" />
+          <p class="text-[11px] text-bejo-900 font-bold leading-relaxed uppercase tracking-wide">Pastikan kata sandi baru Anda terdiri dari minimal 8 karakter dengan kombinasi angka dan simbol untuk keamanan maksimal.</p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div class="md:col-span-2">
-            <label class="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">Kata Sandi Saat Ini</label>
-            <div class="relative">
-              <Icon icon="lucide:lock" class="absolute left-5 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
-              <input v-model="form.currentPassword" type="password" class="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-5 py-4 text-sm font-medium focus:border-bejo-600 outline-none" placeholder="••••••••" />
+            <label class="label">
+              <Icon icon="lucide:lock" class="size-4 text-bejo-500" />
+              Kata Sandi Saat Ini
+            </label>
+            <div class="relative group">
+              <Icon icon="lucide:key" class="absolute left-5 top-1/2 -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-bejo-600 transition-colors" />
+              <input v-model="form.currentPassword" type="password" class="field-input !pl-12" placeholder="••••••••" />
             </div>
           </div>
 
           <div>
-            <label class="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">Kata Sandi Baru</label>
-            <div class="relative">
-              <Icon icon="lucide:key-round" class="absolute left-5 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
-              <input v-model="form.newPassword" type="password" class="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-5 py-4 text-sm font-medium focus:border-bejo-600 outline-none" placeholder="••••••••" />
+            <label class="label">
+              <Icon icon="lucide:key-round" class="size-4 text-bejo-600" />
+              Kata Sandi Baru
+            </label>
+            <div class="relative group">
+              <Icon icon="lucide:shield" class="absolute left-5 top-1/2 -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-bejo-600 transition-colors" />
+              <input v-model="form.newPassword" type="password" class="field-input !pl-12" placeholder="••••••••" />
             </div>
           </div>
 
           <div>
-            <label class="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">Konfirmasi Kata Sandi</label>
-            <div class="relative">
-              <Icon icon="lucide:check-circle" class="absolute left-5 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
-              <input v-model="form.confirmPassword" type="password" class="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-5 py-4 text-sm font-medium focus:border-bejo-600 outline-none" placeholder="••••••••" />
+            <label class="label">
+              <Icon icon="lucide:check-circle" class="size-4 text-bejo-600" />
+              Konfirmasi Kata Sandi
+            </label>
+            <div class="relative group">
+              <Icon icon="lucide:shield-check" class="absolute left-5 top-1/2 -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-bejo-600 transition-colors" />
+              <input v-model="form.confirmPassword" type="password" class="field-input !pl-12" placeholder="••••••••" />
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="flex items-center justify-end gap-3 pt-6">
-      <button :disabled="isLoading" @click="handleUpdatePassword" class="px-10 py-3.5 bg-bejo-500 text-white rounded-2xl font-black text-sm shadow-xl shadow-red-600/20 hover:scale-[1.02] transition-all disabled:opacity-50">
-        <span v-if="isLoading">Memproses...</span>
-        <span v-else>Perbarui Kata Sandi</span>
+    <div class="flex items-center justify-end gap-3 pt-4">
+      <button 
+        :disabled="isLoading" 
+        @click="handleUpdatePassword" 
+        class="px-10 py-4 bg-green-500 hover:bg-green-600 text-white rounded-2xl font-black text-sm shadow-xl shadow-green-500/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
+      >
+        <Icon v-if="isLoading" icon="lucide:loader-2" class="size-4 animate-spin" />
+        <Icon v-else icon="lucide:refresh-cw" class="size-4" />
+        {{ isLoading ? 'Memproses...' : 'Perbarui Kata Sandi' }}
       </button>
     </div>
   </div>
 </template>
+
+<style scoped>
+@reference "@/assets/css/style.css";
+
+.label {
+  @apply flex items-center gap-2 text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1;
+}
+
+.field-input {
+  @apply w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-base font-bold text-slate-700 focus:ring-4 focus:ring-green-500/5 focus:border-green-500 outline-none transition-all;
+}
+
+.field-input:focus {
+  @apply bg-white;
+}
+</style>

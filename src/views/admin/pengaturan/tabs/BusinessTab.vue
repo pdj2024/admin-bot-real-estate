@@ -331,7 +331,7 @@ onMounted(() => {
       <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
         <div class="px-8 py-5 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
           <div class="flex items-center gap-3">
-            <div class="size-8 rounded-lg bg-bejo-600 flex items-center justify-center text-white shadow-lg shadow-bejo-600/20">
+            <div class="size-8 rounded-lg bg-bejo-500 flex items-center justify-center text-white shadow-lg shadow-bejo-500/20">
               <Icon icon="lucide:building-2" class="size-4" />
             </div>
             <h4 class="text-xs font-black text-slate-800 uppercase tracking-widest">Identitas Dasar</h4>
@@ -342,28 +342,28 @@ onMounted(() => {
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="md:col-span-2">
               <label class="label">
-                <Icon icon="lucide:id-card" class="size-4 text-bejo-600" />
+                <Icon icon="lucide:id-card" class="size-4 text-bejo-500" />
                 Nama Bisnis
               </label>
               <input v-model="form.Nama_Toko" type="text" class="field-input" placeholder="Masukkan nama bisnis..." />
             </div>
             <div>
               <label class="label">
-                <Icon icon="lucide:mail" class="size-4 text-bejo-600" />
+                <Icon icon="lucide:mail" class="size-4 text-bejo-500" />
                 Email Resmi
               </label>
               <input v-model="form.Email" type="email" class="field-input" placeholder="email@perusahaan.com" />
             </div>
             <div>
               <label class="label">
-                <Icon icon="lucide:phone" class="size-4 text-bejo-600" />
+                <Icon icon="lucide:phone" class="size-4 text-bejo-500" />
                 Telepon Kantor
               </label>
               <input v-model="form.No_Telp" type="text" class="field-input" placeholder="021-XXXXX" />
             </div>
             <div>
               <label class="label">
-                <Icon icon="lucide:message-circle" class="size-4 text-bejo-600" />
+                <Icon icon="lucide:message-circle" class="size-4 text-bejo-500" />
                 WhatsApp Utama
               </label>
               <input v-model="form.No_Wa_1" type="text" class="field-input" placeholder="628XXXXXXXXX" />
@@ -379,10 +379,10 @@ onMounted(() => {
 
           <div class="pt-6 border-t border-slate-50">
             <label class="label mb-3">
-              <Icon icon="lucide:text-quote" class="size-4 text-bejo-600" />
+              <Icon icon="lucide:text-quote" class="size-4 text-bejo-500" />
               Tentang Bisnis
             </label>
-            <textarea v-model="form.About" rows="4" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 text-sm font-medium focus:outline-none focus:ring-4 focus:ring-bejo-600/5 focus:border-bejo-600 transition-all resize-none leading-relaxed" placeholder="Tuliskan detail visi, misi, atau profil singkat bisnis Anda..."></textarea>
+            <textarea v-model="form.About" rows="4" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 text-base font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-green-500/5 focus:border-green-500 transition-all resize-none leading-relaxed" placeholder="Tuliskan detail visi, misi, atau profil singkat bisnis Anda..."></textarea>
           </div>
         </div>
       </div>
@@ -390,7 +390,7 @@ onMounted(() => {
       <!-- Lokasi & Operasional -->
       <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
         <div class="px-8 py-5 border-b border-slate-50 bg-slate-50/50 flex items-center gap-3">
-          <div class="size-8 rounded-lg bg-bejo-500 flex items-center justify-center text-white shadow-lg shadow-bejo-950/20">
+          <div class="size-8 rounded-lg bg-bejo-500 flex items-center justify-center text-white shadow-lg shadow-bejo-500/20">
             <Icon icon="lucide:map-pin" class="size-4" />
           </div>
           <h4 class="text-xs font-black text-slate-800 uppercase tracking-widest">Lokasi & Jam Operasional</h4>
@@ -400,14 +400,14 @@ onMounted(() => {
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="md:col-span-2">
               <label class="label">
-                <Icon icon="lucide:map" class="size-4 text-bejo-600" />
+                <Icon icon="lucide:map" class="size-4 text-bejo-500" />
                 Alamat Lengkap
               </label>
               <input v-model="form.Alamat_Toko" type="text" class="field-input" placeholder="Jalan raya..." />
             </div>
             <div>
               <label class="label">
-                <Icon icon="lucide:map-pinned" class="size-4 text-bejo-600" />
+                <Icon icon="lucide:map-pinned" class="size-4 text-bejo-500" />
                 Kode Pos
               </label>
               <input v-model="form.Kode_Pos" type="text" class="field-input" placeholder="12345" />
@@ -418,7 +418,7 @@ onMounted(() => {
           <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div class="space-y-4">
               <label class="label">
-                <Icon icon="lucide:calendar-days" class="size-4 text-bejo-600" />
+                <Icon icon="lucide:calendar-days" class="size-4 text-bejo-500" />
                 Hari Operasional
               </label>
               <div class="flex items-center gap-3">
@@ -438,7 +438,7 @@ onMounted(() => {
 
             <div class="space-y-4">
               <label class="label">
-                <Icon icon="lucide:clock" class="size-4 text-bejo-600" />
+                <Icon icon="lucide:clock" class="size-4 text-bejo-500" />
                 Jam Operasional
               </label>
               <div class="flex items-center gap-3">
@@ -459,7 +459,7 @@ onMounted(() => {
           <div class="space-y-4 pt-4 border-t border-slate-50">
             <div class="flex items-center justify-between">
               <label class="label !mb-0">
-                <Icon icon="lucide:navigation" class="size-4 text-bejo-600" />
+                <Icon icon="lucide:navigation" class="size-4 text-bejo-500" />
                 Koordinat Lokasi (Peta)
               </label>
               <div class="text-[10px] font-bold text-slate-400 bg-slate-50 px-3 py-1 rounded-full border border-slate-100 font-mono">
@@ -479,7 +479,7 @@ onMounted(() => {
                 <div class="max-h-60 overflow-y-auto p-2 flex flex-col">
                   <button v-for="p in predictions" :key="p.placeId" @mousedown="selectPrediction(p)" type="button" class="w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors rounded-xl group">
                     <div class="flex items-start gap-3">
-                      <Icon icon="lucide:map-pin" class="size-4 mt-0.5 text-slate-400 group-hover:text-bejo-600" />
+                      <Icon icon="lucide:map-pin" class="size-4 mt-0.5 text-slate-400 group-hover:text-bejo-500" />
                       <div class="flex-1">
                         <span class="text-xs font-black text-slate-700 block leading-tight">{{ p.mainText }}</span>
                         <span class="text-[10px] font-bold text-slate-400 block mt-0.5" v-if="p.secondaryText">{{ p.secondaryText }}</span>
@@ -496,13 +496,13 @@ onMounted(() => {
 
               <!-- Loading Overlay -->
               <div v-if="!isMapLoaded" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-50/80 backdrop-blur-sm z-10">
-                <Icon icon="lucide:loader-2" class="size-10 animate-spin text-bejo-600/40" />
+                <Icon icon="lucide:loader-2" class="size-10 animate-spin text-bejo-500/40" />
                 <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-4">Memuat Peta...</span>
               </div>
 
               <!-- Geolocation Button -->
               <button @click="getCurrentLocation" type="button" class="absolute bottom-6 right-6 p-3 bg-white hover:bg-slate-50 text-slate-700 rounded-2xl shadow-xl border border-slate-100 transition-all active:scale-90 flex items-center gap-2 group z-20" :disabled="isLocating">
-                <Icon :icon="isLocating ? 'lucide:loader-2' : 'lucide:locate-fixed'" class="size-5" :class="isLocating ? 'animate-spin text-bejo-600' : 'text-slate-400 group-hover:text-bejo-600'" />
+                <Icon :icon="isLocating ? 'lucide:loader-2' : 'lucide:locate-fixed'" class="size-5" :class="isLocating ? 'animate-spin text-bejo-500' : 'text-slate-400 group-hover:text-bejo-500'" />
                 <span class="text-[10px] font-black uppercase tracking-widest">{{ isLocating ? 'Mencari...' : 'Gunakan Lokasi Saat Ini' }}</span>
               </button>
             </div>
@@ -510,12 +510,15 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Actions -->
-      <div class="flex items-center justify-end gap-3 pt-6">
-        <button @click="fetchProfile" class="px-6 py-3 text-sm font-black text-slate-500 hover:text-slate-800 transition-colors uppercase tracking-widest">Batalkan</button>
-        <button @click="handleSave" :disabled="isSaving" class="flex items-center gap-3 px-10 py-4 bg-bejo-600 text-white rounded-[1.5rem] font-black text-sm shadow-xl shadow-bejo-600/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-          <Icon v-if="isSaving" icon="lucide:loader-2" class="size-5 animate-spin" />
-          {{ isSaving ? 'Menyimpan...' : 'Simpan Profil Perusahaan' }}
+      <div class="flex items-center gap-3 pt-4">
+        <button 
+          :disabled="isSaving" 
+          @click="handleSave" 
+          class="px-10 py-4 bg-green-500 hover:bg-green-600 text-white rounded-2xl font-black text-sm shadow-xl shadow-green-500/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
+        >
+          <Icon v-if="isSaving" icon="lucide:loader-2" class="size-4 animate-spin" />
+          <Icon v-else icon="lucide:save" class="size-4" />
+          {{ isSaving ? 'Memproses...' : 'Simpan Pengaturan Bisnis' }}
         </button>
       </div>
     </template>
@@ -526,10 +529,10 @@ onMounted(() => {
 @reference "@/assets/css/style.css";
 
 .label {
-  @apply flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1;
+  @apply flex items-center gap-2 text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1;
 }
 .field-input {
-  @apply w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3.5 text-sm font-bold focus:ring-4 focus:ring-bejo-600/5 focus:border-bejo-600 outline-none transition-all;
+  @apply w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3.5 text-base font-bold text-slate-700 focus:ring-4 focus:ring-green-500/5 focus:border-green-500 outline-none transition-all;
 }
 .field-input:focus {
   @apply bg-white;

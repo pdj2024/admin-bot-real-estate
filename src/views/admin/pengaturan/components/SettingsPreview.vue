@@ -51,19 +51,19 @@ const showBurger = computed(() => {
 const sidebarWidth = computed(() => {
   const size = effectiveSize.value
 
-  if (size === 'hidden') return isToggledOpen.value ? 'var(--spacing-sidenav-width)' : '0px'
-  if (size === 'offcanvas') return isToggledOpen.value ? 'var(--spacing-sidenav-width)' : '0px'
-  if (size === 'hover') return isHovered.value ? 'var(--spacing-sidenav-width)' : 'var(--spacing-sidenav-width-sm)'
-  if (size === 'hover-active') return 'var(--spacing-sidenav-width)'
-  if (size === 'sm') return `var(--spacing-sidenav-width-${size})`
+  if (size === 'hidden') return isToggledOpen.value ? '60px' : '0px'
+  if (size === 'offcanvas') return isToggledOpen.value ? '60px' : '0px'
+  if (size === 'hover') return isHovered.value ? '60px' : '20px'
+  if (size === 'hover-active') return '60px'
+  if (size === 'sm') return `30px`
 
-  return isToggledOpen.value ? 'var(--spacing-sidenav-width)' : '0px'
+  return isToggledOpen.value ? '60px' : '0px'
 })
 
 // 4. Kelas Posisi Sidebar (Relative atau Absolute/Menumpuk)
 const sidebarPositionClass = computed(() => {
   const size = effectiveSize.value
-  if (size === 'hover' && isHovered.value) return 'absolute inset-y-0 left-0 z-40 shadow-[4px_0_24px_rgba(0,0,0,0.06)]'
+  if (size === 'hover' && isHovered.value) return 'absolute inset-y-0 left-0 z-40 shadow-2xl'
   if (size === 'offcanvas' && isToggledOpen.value) return 'absolute inset-y-0 left-0 z-40 shadow-2xl'
 
   return 'relative z-20'
@@ -77,105 +77,99 @@ const toggleBurger = () => {
   isToggledOpen.value = !isToggledOpen.value
 }
 
-const togglePin = () => {
-  if (['hover', 'hover-active'].includes(props.settings.sidenavSize)) {
-    isPinned.value = !isPinned.value
-  }
-}
-
 const gradientStyle = computed(() => {
   return `linear-gradient(135deg, ${props.settings.colorPrimary} 0%, ${props.settings.colorSecondary} 100%)`
 })
 </script>
 
 <template>
-  <div class="sticky top-6">
-    <div class="border border-gray-200 rounded-xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-colors duration-300 flex flex-col h-[500px] bg-[#f8f9fa]">
-      <div class="bg-gray-100 px-4 py-3 flex items-center gap-2 border-b border-gray-200">
-        <div class="w-3 h-3 rounded-full bg-[#ff5f56]"></div>
-        <div class="w-3 h-3 rounded-full bg-[#ffbd2e]"></div>
-        <div class="w-3 h-3 rounded-full bg-[#27c93f]"></div>
+  <div>
+    <div class="border border-slate-100 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-slate-200/50 transition-all duration-500 flex flex-col h-[520px] bg-slate-50">
+      <!-- Browser Header -->
+      <div class="bg-white px-5 py-4 flex items-center gap-2 border-b border-slate-50">
+        <div class="flex gap-1.5">
+          <div class="w-2.5 h-2.5 rounded-full bg-red-400"></div>
+          <div class="w-2.5 h-2.5 rounded-full bg-amber-400"></div>
+          <div class="w-2.5 h-2.5 rounded-full bg-emerald-400"></div>
+        </div>
+        <div class="mx-auto bg-slate-50 rounded-lg px-4 py-1 text-[8px] font-black text-slate-300 uppercase tracking-widest border border-slate-100/50 flex items-center gap-2">
+          <Icon icon="lucide:lock" class="size-2 text-slate-300" />
+          {{ settingsStore.business.appName || 'Admin Panel' }}
+        </div>
       </div>
 
       <div class="flex flex-1 overflow-hidden relative">
+        <!-- Sidebar Backdrop -->
         <transition enter-active-class="transition-opacity duration-300" leave-active-class="transition-opacity duration-300" enter-from-class="opacity-0" leave-to-class="opacity-0">
-          <div v-if="showBackdrop" @click="toggleBurger" class="absolute inset-0 bg-slate-900/40 z-30 backdrop-blur-[2px] cursor-pointer"></div>
+          <div v-if="showBackdrop" @click="toggleBurger" class="absolute inset-0 bg-slate-900/60 z-30 backdrop-blur-[2px] cursor-pointer"></div>
         </transition>
 
-        <div v-show="sidebarPositionClass.includes('absolute')" class="shrink-0 transition-all duration-300 hidden md:block" :style="{ width: effectiveSize === 'hover' ? 'var(--spacing-sidenav-width-sm)' : '0px' }"></div>
-
+        <!-- Sidebar Simulator -->
         <div
           @mouseenter="isHovered = true"
           @mouseleave="isHovered = false"
-          class="h-full border-r flex flex-col py-4 overflow-hidden transition-all duration-300 ease-in-out shrink-0 border-gray-200"
+          class="h-full border-r flex flex-col py-6 overflow-hidden transition-all duration-300 ease-in-out shrink-0 border-slate-100"
           :class="[sidebarPositionClass]"
           :style="{
             width: sidebarWidth,
             backgroundColor: '#ffffff'
           }"
         >
-          <div class="px-4 mb-6 flex items-center justify-between whitespace-nowrap overflow-hidden">
+          <div class="px-4 mb-8 flex items-center justify-between whitespace-nowrap overflow-hidden">
             <div class="flex items-center gap-3">
-              <div class="w-7 h-7 rounded shrink-0 shadow-sm" :style="{ background: gradientStyle }"></div>
-              <span class="font-bold text-[15px] truncate transition-opacity duration-200 text-gray-800" :class="[sidebarWidth === 'var(--spacing-sidenav-width-sm)' || sidebarWidth === 'var(--spacing-sidenav-width-md)' ? 'opacity-0' : 'opacity-100']">
-                {{ settingsStore.business.appName || 'Nama Aplikasi' }}
+              <div class="size-7 rounded-xl shrink-0 shadow-lg" :style="{ background: gradientStyle }"></div>
+              <span class="font-black text-[12px] truncate transition-opacity duration-200 text-slate-800 uppercase tracking-widest" :class="sidebarWidth === '20px' ? 'opacity-0' : 'opacity-100'">
+                Bejo
               </span>
             </div>
-
-            <button v-if="['hover', 'hover-active'].includes(props.settings.sidenavSize)" @click="togglePin" class="w-6 h-6 rounded-full flex items-center justify-center shrink-0 border transition-all" :class="isPinned ? 'border-orange-500 bg-orange-50' : 'border-gray-300 hover:border-orange-400'" :style="isPinned ? { borderColor: settings.colorPrimary } : {}">
-              <div class="w-2.5 h-2.5 rounded-full transition-colors" :style="isPinned ? { backgroundColor: settings.colorPrimary } : { backgroundColor: 'transparent', border: '2px solid #cbd5e1' }"></div>
-            </button>
           </div>
 
-          <div class="space-y-2 px-3">
-            <div class="h-9 rounded-lg flex items-center px-3 gap-3" :style="{ backgroundColor: `${settings.colorPrimary}15`, color: settings.colorPrimary }">
-              <div class="w-4 h-4 rounded-sm shrink-0 bg-current opacity-80"></div>
-              <div class="h-2 w-20 rounded bg-current opacity-80 whitespace-nowrap" :class="sidebarWidth === 'var(--spacing-sidenav-width-sm)' ? 'opacity-0' : 'opacity-100'"></div>
+          <div class="space-y-3 px-3">
+            <div class="h-10 rounded-2xl flex items-center px-4 gap-3 shadow-md shadow-bejo-500/10" :style="{ backgroundColor: `${settings.colorPrimary}15`, color: settings.colorPrimary }">
+              <div class="w-4 h-4 rounded-lg shrink-0 bg-current opacity-80"></div>
+              <div class="h-1.5 w-20 rounded bg-current opacity-40" v-if="sidebarWidth !== '20px'"></div>
             </div>
-            <div class="h-9 rounded-lg flex items-center px-3 gap-3 hover:bg-gray-50">
-              <div class="w-4 h-4 rounded-sm shrink-0 bg-gray-300"></div>
-              <div class="h-2 w-24 rounded bg-gray-300 transition-opacity" :class="[sidebarWidth === 'var(--spacing-sidenav-width-sm)' ? 'opacity-0' : 'opacity-100']"></div>
+            <div v-for="i in 3" :key="i" class="h-10 rounded-2xl flex items-center px-4 gap-3 hover:bg-slate-50 transition-colors">
+              <div class="w-4 h-4 rounded-lg shrink-0 bg-slate-200"></div>
+              <div class="h-1 w-24 rounded bg-slate-100" v-if="sidebarWidth !== '20px'"></div>
             </div>
           </div>
         </div>
 
-        <div class="flex-1 flex flex-col min-w-0 bg-[#f8f9fa] relative z-10">
-          <header class="h-14 border-b flex items-center px-4 justify-between shrink-0 transition-colors border-gray-200" style="background-color: #ffffff">
-            <button v-if="showBurger" @click="toggleBurger" class="p-1.5 rounded-md hover:bg-gray-100 transition-colors text-gray-600">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="4" x2="20" y1="12" y2="12" />
-                <line x1="4" x2="20" y1="6" y2="6" />
-                <line x1="4" x2="20" y1="18" y2="18" />
-              </svg>
-            </button>
-            <div v-else class="w-8"></div>
+        <!-- Content Simulator -->
+        <div class="flex-1 flex flex-col min-w-0 bg-slate-50 relative z-10">
+          <header class="h-16 border-b flex items-center px-6 justify-between shrink-0 bg-white border-slate-50 shadow-sm shadow-slate-200/20">
+            <div class="flex items-center gap-4">
+               <div v-if="showBurger" class="size-8 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400">
+                <Icon icon="lucide:menu" class="size-4" />
+               </div>
+               <div class="h-2 w-32 bg-slate-50 rounded-full border border-slate-100"></div>
+            </div>
             <div class="flex items-center gap-3">
-              <div class="w-20 h-6 rounded bg-gray-100"></div>
-              <div class="w-7 h-7 rounded-full bg-gray-100"></div>
+              <div class="w-12 h-4 rounded bg-slate-50 border border-slate-100"></div>
+              <div class="w-8 h-8 rounded-2xl bg-slate-100 shadow-inner"></div>
             </div>
           </header>
 
-          <div class="p-6 flex flex-col gap-5 overflow-y-auto">
+          <div class="p-8 flex flex-col gap-6 overflow-y-auto">
             <div class="grid grid-cols-2 gap-4">
-              <div class="h-24 rounded-xl border p-4 flex flex-col justify-between border-gray-100 shadow-sm bg-white">
-                <div class="h-2 w-1/2 bg-gray-100 rounded"></div>
-                <div class="h-5 w-3/4 rounded shadow-sm" :style="{ background: gradientStyle }"></div>
+              <div class="h-28 rounded-[1.5rem] border p-6 flex flex-col justify-between border-slate-100 shadow-sm bg-white hover:-translate-y-1 transition-transform">
+                <div class="h-1.5 w-1/2 bg-slate-50 rounded-full"></div>
+                <div class="h-6 w-3/4 rounded-xl shadow-lg shadow-bejo-500/10" :style="{ background: gradientStyle }"></div>
               </div>
 
-              <div class="h-24 rounded-xl border p-4 flex flex-col justify-between border-gray-100 shadow-sm bg-white">
-                <div class="h-2 w-1/2 bg-gray-100 rounded"></div>
-                <div class="h-5 w-1/2 bg-gray-100 rounded"></div>
+              <div class="h-28 rounded-[1.5rem] border p-6 flex flex-col justify-between border-slate-100 shadow-sm bg-white opacity-60">
+                <div class="h-1.5 w-1/2 bg-slate-50 rounded-full"></div>
+                <div class="h-6 w-1/2 bg-slate-50 rounded-xl"></div>
               </div>
             </div>
 
-            <div class="flex-1 min-h-[120px] rounded-xl border p-5 flex flex-col gap-3 border-gray-100 shadow-sm bg-white">
-              <div class="h-3 w-1/4 bg-gray-100 rounded mb-3"></div>
-              <div class="h-2 w-full bg-gray-100 rounded"></div>
-              <div class="h-2 w-full bg-gray-100 rounded"></div>
-              <div class="h-2 w-3/4 bg-gray-100 rounded"></div>
+            <div class="flex-1 min-h-[140px] rounded-[1.5rem] border p-8 flex flex-col gap-4 border-slate-100 shadow-sm bg-white relative">
+              <div class="h-3 w-1/4 bg-slate-50 rounded-full mb-2"></div>
+              <div v-for="i in 3" :key="i" class="h-1.5 w-full bg-slate-50/50 rounded-full" :style="{ width: i === 3 ? '70%' : '100%' }"></div>
 
-              <div class="mt-auto pt-4 flex justify-end">
-                <div class="h-8 w-24 rounded shadow-sm" :style="{ background: gradientStyle }"></div>
+              <div class="mt-auto pt-6 flex justify-end">
+                <div class="h-10 w-28 rounded-2xl shadow-xl shadow-bejo-500/10" :style="{ background: gradientStyle }"></div>
               </div>
             </div>
           </div>
@@ -184,3 +178,7 @@ const gradientStyle = computed(() => {
     </div>
   </div>
 </template>
+
+<style scoped>
+@reference "@/assets/css/style.css";
+</style>

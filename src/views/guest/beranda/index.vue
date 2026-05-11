@@ -22,7 +22,7 @@
                   <span class="relative z-10 text-transparent bg-clip-text bg-gradient-to-br from-bejo-500 via-bejo-600 to-bejo-900 animate-gradient-x">Rumah Impian</span>
                   <div class="absolute bottom-4 left-0 right-0 h-6 bg-bejo-100/40 -z-0 rounded-full blur-md"></div>
                 </span>
-                Anda.
+                Anda
               </h1>
 
               <p class="text-base md:text-2xl text-slate-500 font-medium max-w-3xl mx-auto leading-relaxed opacity-80">
@@ -72,21 +72,21 @@
                 <div class="text-bejo-600 mb-2 opacity-0 group-hover:opacity-100 transition-all duration-700 translate-y-3 group-hover:translate-y-0 scale-150">
                   <Icon icon="lucide:building-2" class="size-6 mx-auto" />
                 </div>
-                <h4 class="text-6xl lg:text-7xl font-black text-slate-900 mb-2 tracking-tighter">1,2k<span class="text-bejo-600">.</span></h4>
+                <h4 class="text-6xl lg:text-7xl font-black text-slate-900 mb-2 tracking-tighter">1,2 rb</h4>
                 <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Unit Eksklusif</p>
               </div>
               <div class="text-center px-6 group hover-float">
                 <div class="text-bejo-600 mb-2 opacity-0 group-hover:opacity-100 transition-all duration-700 translate-y-3 group-hover:translate-y-0 scale-150">
                   <Icon icon="lucide:shield-check" class="size-6 mx-auto" />
                 </div>
-                <h4 class="text-6xl lg:text-7xl font-black text-slate-900 mb-2 tracking-tighter">100<span class="text-bejo-600">%</span></h4>
+                <h4 class="text-6xl lg:text-7xl font-black text-slate-900 mb-2 tracking-tighter">100 %</h4>
                 <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Pemilik Langsung</p>
               </div>
               <div class="text-center px-6 group hover-float">
                 <div class="text-bejo-600 mb-2 opacity-0 group-hover:opacity-100 transition-all duration-700 translate-y-3 group-hover:translate-y-0 scale-150">
                   <Icon icon="lucide:map-pin" class="size-6 mx-auto" />
                 </div>
-                <h4 class="text-6xl lg:text-7xl font-black text-slate-900 mb-2 tracking-tighter">15<span class="text-bejo-600">.</span></h4>
+                <h4 class="text-6xl lg:text-7xl font-black text-slate-900 mb-2 tracking-tighter">15</h4>
                 <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Area Strategis</p>
               </div>
             </div>
@@ -236,7 +236,7 @@
             <div class="absolute -top-8 -left-8 size-40 bg-slate-900/5 rounded-full -z-0"></div>
 
             <!-- Floating Property Info -->
-            <div v-if="randomProduct" class="absolute -bottom-6 -left-6 md:-left-12 w-72 md:w-80 glass backdrop-blur-3xl rounded-[2.5rem] z-20 p-8 flex flex-col gap-6 shadow-premium border border-white/60 transform hover:-translate-y-3 transition-all duration-700">
+            <div v-if="randomProduct" class="absolute -bottom-6 -left-6 md:-left-12 w-72 md:w-80 bg-white rounded-[2.5rem] z-20 p-8 flex flex-col gap-6 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.12)] border border-slate-100 transform hover:-translate-y-3 transition-all duration-700">
               <div class="flex items-center gap-5">
                 <div class="size-14 rounded-2xl bg-bejo-600 text-white flex items-center justify-center shadow-bejo-premium">
                   <Icon icon="lucide:home" class="size-7" />

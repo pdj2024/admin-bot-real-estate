@@ -1,15 +1,23 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const isLoading = ref(true)
 
 const recentVisits = [
-  { agent: 'Budi Pratama', email: 'budi@rumahbejo.com', unit: 'Griya Asri Cluster A-12', time: 'Besok, 10:00 AM', status: 'Dikonfirmasi', statusClass: 'bg-bejo-500/10 text-bejo-600 border-bejo-500/20' },
-  { agent: 'Siti Aminah', email: 'siti@rumahbejo.com', unit: 'Apartemen Skyview B-05', time: '12 Apr, 14:30 PM', status: 'Menunggu', statusClass: 'bg-stone-500/10 text-stone-600 border-stone-500/20' },
-  { agent: 'Andi Wijaya', email: 'andi@rumahbejo.com', unit: 'Ruko Central Park No. 8', time: '13 Apr, 09:00 AM', status: 'Dikonfirmasi', statusClass: 'bg-bejo-500/10 text-bejo-600 border-bejo-500/20' },
-  { agent: 'Dewi Lestari', email: 'dewi@rumahbejo.com', unit: 'Griya Asri Cluster C-02', time: '14 Apr, 16:00 PM', status: 'Dibatalkan', statusClass: 'bg-slate-500/10 text-slate-600 border-slate-500/20' },
+  { id: 1, agent: 'Budi Pratama', email: 'budi@rumahbejo.com', unit: 'Griya Asri Cluster A-12', time: 'Besok, 10:00 AM', status: 'Dikonfirmasi', statusClass: 'bg-bejo-500/10 text-bejo-600 border-bejo-500/20' },
+  { id: 2, agent: 'Siti Aminah', email: 'siti@rumahbejo.com', unit: 'Apartemen Skyview B-05', time: '12 Apr, 14:30 PM', status: 'Menunggu', statusClass: 'bg-stone-500/10 text-stone-600 border-stone-500/20' },
+  { id: 3, agent: 'Andi Wijaya', email: 'andi@rumahbejo.com', unit: 'Ruko Central Park No. 8', time: '13 Apr, 09:00 AM', status: 'Dikonfirmasi', statusClass: 'bg-bejo-500/10 text-bejo-600 border-bejo-500/20' },
+  { id: 4, agent: 'Dewi Lestari', email: 'dewi@rumahbejo.com', unit: 'Griya Asri Cluster C-02', time: '14 Apr, 16:00 PM', status: 'Dibatalkan', statusClass: 'bg-slate-500/10 text-slate-600 border-slate-500/20' },
 ]
+
+const handleRowClick = (id: number) => {
+  // Simulate navigation to detail
+  console.log('Navigating to appointment detail:', id)
+  router.push(`/janji-temu?id=${id}`)
+}
 
 onMounted(() => {
   setTimeout(() => {
@@ -25,9 +33,12 @@ onMounted(() => {
         <h4 class="text-lg font-black text-slate-900 leading-tight">Jadwal Kunjungan Lokasi</h4>
         <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Agenda Site Visit Mendatang</p>
       </div>
-      <button class="px-5 py-2.5 bg-slate-50 hover:bg-bejo-50 text-slate-600 hover:text-bejo-600 text-xs font-black uppercase tracking-widest rounded-xl transition-all border border-slate-100 hover:border-bejo-200">
+      <RouterLink 
+        to="/janji-temu"
+        class="px-5 py-2.5 bg-slate-50 hover:bg-bejo-50 text-slate-600 hover:text-bejo-600 text-xs font-black uppercase tracking-widest rounded-xl transition-all border border-slate-100 hover:border-bejo-200"
+      >
         Lihat Semua
-      </button>
+      </RouterLink>
     </div>
     
     <div class="overflow-x-auto">
@@ -70,7 +81,12 @@ onMounted(() => {
           </tr>
         </tbody>
         <tbody v-else class="divide-y divide-slate-50">
-          <tr v-for="(visit, idx) in recentVisits" :key="idx" class="group hover:bg-slate-50/50 transition-all cursor-pointer">
+          <tr 
+            v-for="(visit, idx) in recentVisits" 
+            :key="idx" 
+            @click="handleRowClick(visit.id)"
+            class="group hover:bg-slate-50/50 transition-all cursor-pointer"
+          >
             <td class="px-8 py-6">
               <div class="flex items-center gap-4">
                 <div class="size-10 rounded-2xl bg-gradient-to-br from-bejo-400 to-bejo-600 flex items-center justify-center font-black text-white text-sm shadow-lg shadow-bejo-500/20">

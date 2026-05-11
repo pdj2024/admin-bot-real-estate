@@ -8,8 +8,8 @@
 
   --color-card: var(--color-white);
 
-  --color-primary: var(--color-bejo-500, #2b00ff);
-  --color-secondary: var(--color-bejo-300, #ca6d2c);
+  --color-primary: var(--color-bejo-500, #EF8C4C);
+  --color-secondary: var(--color-bejo-600, #EB701F);
   --color-success: var(--color-green-500);
   --color-info: var(--color-sky-500);
   --color-warning: var(--color-amber-500);
@@ -28,33 +28,33 @@
   --color-default-900: var(--color-zinc-900);
   --color-default-950: var(--color-zinc-950);
 
-  --background-image-primary-gradient: linear-gradient(135deg, #ea9455 0%, #ca6d2c 100%);
+  --background-image-primary-gradient: linear-gradient(135deg, #f3a978 0%, #eb701f 100%);
 
-  --color-bejo-50: #fef5ed;
-  --color-bejo-100: #fce8d4;
-  --color-bejo-200: #f8d0a5;
-  --color-bejo-300: #f2b26e;
-  --color-bejo-400: #ea8e3e;
-  --color-bejo-500: #df7a24;
-  --color-bejo-600: #ca6d2c;
-  --color-bejo-700: #a75526;
-  --color-bejo-800: #854323;
-  --color-bejo-900: #6b371f;
-  --color-bejo-950: #4a2414;
-  --color-bejo-1000: #3b1d0e;
+  --color-bejo-50: #fef8f4;
+  --color-bejo-100: #fdf1e8;
+  --color-bejo-200: #fbe2d2;
+  --color-bejo-300: #f7c5a5;
+  --color-bejo-400: #f3a978;
+  --color-bejo-500: #ef8c4c;
+  --color-bejo-600: #eb701f;
+  --color-bejo-700: #c95d18;
+  --color-bejo-800: #a74b12;
+  --color-bejo-900: #853a0d;
+  --color-bejo-950: #5c2707;
+  --color-bejo-1000: #3b1804;
 
-  --text-bejo-50: #fef5ed;
-  --text-bejo-100: #fce8d4;
-  --text-bejo-200: #f8d0a5;
-  --text-bejo-300: #f2b26e;
-  --text-bejo-400: #ea8e3e;
-  --text-bejo-500: #df7a24;
-  --text-bejo-600: #ca6d2c;
-  --text-bejo-700: #a75526;
-  --text-bejo-800: #854323;
-  --text-bejo-900: #6b371f;
-  --text-bejo-950: #4a2414;
-  --text-bejo-1000: #3b1d0e;
+  --text-bejo-50: #fef8f4;
+  --text-bejo-100: #fdf1e8;
+  --text-bejo-200: #fbe2d2;
+  --text-bejo-300: #f7c5a5;
+  --text-bejo-400: #f3a978;
+  --text-bejo-500: #ef8c4c;
+  --text-bejo-600: #eb701f;
+  --text-bejo-700: #c95d18;
+  --text-bejo-800: #a74b12;
+  --text-bejo-900: #853a0d;
+  --text-bejo-950: #5c2707;
+  --text-bejo-1000: #3b1804;
 
   --text-base--line-height: 1.1;
   --text-xl--line-height: 1.1;

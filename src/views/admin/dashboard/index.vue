@@ -12,7 +12,7 @@ import { Icon } from '@iconify/vue'
 
 const showSettings = ref(false)
 const sections = ref({
-  greetings: true,
+  greetings: false,
   operationalSummary: true,
   inventoryStatus: true,
   analytics: true,
@@ -67,14 +67,14 @@ watch(sections, (newVal) => {
       <!-- Layout Settings Button (Floating) -->
       <button 
         @click="showSettings = true"
-        class="fixed bottom-10 left-10 z-[100] size-12 bg-white border border-slate-200 rounded-full shadow-2xl flex items-center justify-center text-slate-600 hover:text-bejo-600 hover:border-bejo-200 transition-all group"
+        class="fixed bottom-10 right-10 z-[100] size-14 bg-white border border-slate-200 rounded-full shadow-2xl flex items-center justify-center text-slate-600 hover:text-bejo-600 hover:border-bejo-200 transition-all group"
       >
-        <Icon icon="lucide:settings-2" class="size-5 transition-transform group-hover:rotate-90" />
+        <Icon icon="lucide:settings-2" class="size-6 transition-transform group-hover:rotate-90" />
       </button>
 
       <!-- Settings Modal -->
-      <div v-if="showSettings" class="fixed inset-0 z-[200] flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="showSettings = false"></div>
+      <div v-if="showSettings" class="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-md" @click="showSettings = false"></div>
         <div class="relative w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
           <div class="p-8 border-b border-slate-100 flex items-center justify-between">
             <div>
