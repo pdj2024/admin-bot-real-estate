@@ -31,7 +31,7 @@
             <div class="mb-6">
               <div class="inline-flex items-center gap-2 px-4 py-2 bg-bejo-50 rounded-full text-bejo-600 text-xs font-black uppercase tracking-widest mb-4">
                 <Icon icon="lucide:calculator" class="size-4" />
-                Calculator
+                Kalkulator
               </div>
               <h2 class="text-3xl font-black text-slate-900 mb-2">Detail Pinjaman</h2>
               <p class="text-slate-500 font-medium text-sm leading-relaxed">Atur parameter di bawah ini untuk melihat simulasi pembiayaan properti Anda secara akurat.</p>
@@ -61,7 +61,13 @@
                   </div>
                 </div>
                 <div class="relative pt-1 px-1">
-                  <input type="range" v-model.number="dpPercentage" min="0" max="100" step="1" class="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-bejo-600" />
+                  <input 
+                    type="range" 
+                    v-model.number="dpPercentage" 
+                    min="0" max="100" step="1" 
+                    class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-bejo-600"
+                    :style="{ background: `linear-gradient(to right, #f47b20 ${dpPercentage}%, #f1f5f9 ${dpPercentage}%)` }"
+                  />
                   <div class="flex justify-between mt-3 text-[9px] font-black text-slate-300 uppercase tracking-widest">
                     <span>0%</span>
                     <span>25%</span>
@@ -83,7 +89,13 @@
                     </div>
                   </div>
                   <div class="relative pt-1 px-1">
-                    <input type="range" v-model.number="years" min="1" max="35" step="1" class="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-bejo-600" />
+                    <input 
+                      type="range" 
+                      v-model.number="years" 
+                      min="1" max="35" step="1" 
+                      class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-bejo-600"
+                      :style="{ background: `linear-gradient(to right, #f47b20 ${((years - 1) / (35 - 1)) * 100}%, #f1f5f9 ${((years - 1) / (35 - 1)) * 100}%)` }"
+                    />
                     <div class="flex justify-between mt-3 text-[9px] font-black text-slate-300 uppercase tracking-widest">
                       <span>1 Thn</span>
                       <span>15 Thn</span>
@@ -98,7 +110,12 @@
                 <div class="space-y-4">
                   <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Suku Bunga Fixed</label>
                   <div class="relative flex items-center">
-                    <input type="number" v-model.number="interestRate" step="0.1" min="0" max="100" class="w-full bg-slate-50 border border-slate-100 rounded-xl px-5 py-3 pr-12 text-lg font-black text-slate-900 focus:outline-none focus:ring-4 focus:ring-bejo-500/10 focus:bg-white transition-all" />
+                    <input 
+                      type="text" 
+                      :value="interestRateDisplay"
+                      @input="handleInterestRateInput"
+                      class="w-full bg-slate-50 border border-slate-100 rounded-xl px-5 py-3 pr-12 text-lg font-black text-slate-900 focus:outline-none focus:ring-4 focus:ring-bejo-500/10 focus:bg-white transition-all" 
+                    />
                     <span class="absolute right-4 text-slate-400 font-black">%</span>
                   </div>
                   <div class="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-xl border border-slate-100">
@@ -115,7 +132,7 @@
             <div class="mb-6">
               <div class="inline-flex items-center gap-2 px-4 py-2 bg-bejo-50 rounded-full text-bejo-600 text-xs font-black uppercase tracking-widest mb-4">
                 <Icon icon="lucide:trending-up" class="size-4" />
-                Result
+                Ringkasan
               </div>
               <h2 class="text-3xl font-black text-slate-900 mb-2">Estimasi Angsuran</h2>
               <p class="text-bejo-600/60 text-xs font-black uppercase tracking-widest">Ringkasan Pembiayaan</p>
@@ -134,7 +151,7 @@
                   <div class="text-4xl sm:text-5xl font-black text-slate-900 tracking-tighter mb-3"><span class="text-bejo-600 text-2xl mr-1">Rp</span>{{ formatCurrency(Math.round(angsuran)) }}</div>
                   <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-bejo-50 rounded-full border border-bejo-100 text-[10px] font-black text-bejo-700">
                     <Icon icon="lucide:calendar" class="size-3" />
-                    Bunga Fixed {{ interestRate }}% Selama Tenor
+                    Bunga Fixed {{ interestRateDisplay }}% Selama Tenor
                   </div>
                 </div>
 
@@ -282,10 +299,25 @@ const parseNumber = (val: string | number) => {
 }
 
 // Simulasi KPR State
-const propertyPrice = ref<number>(0)
+const propertyPrice = ref<number>(1000000000)
 const dpPercentage = ref<number>(10)
 const years = ref<number>(15)
 const interestRate = ref<number>(5.5)
+
+// Formatting untuk Suku Bunga (Dot to Comma)
+const interestRateDisplay = computed(() => {
+  return String(interestRate.value).replace('.', ',')
+})
+
+const handleInterestRateInput = (e: Event) => {
+  const val = (e.target as HTMLInputElement).value.replace(',', '.')
+  const num = parseFloat(val)
+  if (!isNaN(num)) {
+    interestRate.value = num
+  } else if (val === '') {
+    interestRate.value = 0
+  }
+}
 
 const totalPinjaman = computed(() => {
   return Math.max(0, propertyPrice.value - dpValue.value)
@@ -380,7 +412,7 @@ const chartOptions = computed(() => ({
 
 const handleKprWa = () => {
   const defaultGreeting = `Halo Admin ${settingsStore.business.appName}, saya baru saja melakukan simulasi KPR di situs dan ingin berkonsultasi lebih lanjut.`
-  const message = `${defaultGreeting}\n\nBerikut simulasi anggaran saya:\n- Harga Properti: Rp ${formatCurrency(propertyPrice.value)}\n- DP / Uang Muka (${dpPercentage.value}%): Rp ${formatCurrency(dpValue.value)}\n- Pinjaman Bank: Rp ${formatCurrency(totalPinjaman.value)}\n- Suku Bunga: ${interestRate.value}%\n- Tenor Waktu: ${years.value} thn\n\n*Estimasi Angsuran:* Rp ${formatCurrency(Math.round(angsuran.value))}/bln\n\nApakah pihak agen bisa membantu merekomendasikan properti yang sesuai dengan anggaran saya?`
+  const message = `${defaultGreeting}\n\nBerikut simulasi anggaran saya:\n- Harga Properti: Rp ${formatCurrency(propertyPrice.value)}\n- DP / Uang Muka (${dpPercentage.value}%): Rp ${formatCurrency(dpValue.value)}\n- Pinjaman Bank: Rp ${formatCurrency(totalPinjaman.value)}\n- Suku Bunga: ${interestRateDisplay.value}%\n- Tenor Waktu: ${years.value} thn\n\n*Estimasi Angsuran:* Rp ${formatCurrency(Math.round(angsuran.value))}/bln\n\nApakah pihak agen bisa membantu merekomendasikan properti yang sesuai dengan anggaran saya?`
   const targetNumber = settingsStore.business.whatsapp || '6287700083370'
 
   window.open(`https://wa.me/${targetNumber}?text=${encodeURIComponent(message)}`, '_blank')

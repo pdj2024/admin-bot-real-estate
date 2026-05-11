@@ -210,11 +210,11 @@ const formatCurrency = (val: number) => {
 </script>
 
 <template>
-  <div class="relative w-full overflow-hidden bg-white pt-8 pb-12 sm:pt-12 sm:pb-24 border-y border-slate-100">
+  <div class="relative w-full overflow-hidden bg-white pt-4 pb-8 sm:pt-6 sm:pb-12 border-y border-slate-100">
     <div class="max-w-7xl mx-auto px-4 relative z-10">
-      <div class="text-center mb-16 space-y-4">
+      <div class="text-center mb-8 space-y-4">
         <h2 class="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">
-          Properti <span class="text-bejo-500">{{ settingsStore.business.appName }}</span> di Indonesia
+          Properti <span class="text-bejo-600">{{ settingsStore.business.appName }}</span> di Indonesia
         </h2>
         <p class="text-slate-500 font-medium max-w-2xl mx-auto">
           Lihat persebaran unit hunian kami secara real-time. Zoom untuk melihat lokasi lebih detail dan akurat.

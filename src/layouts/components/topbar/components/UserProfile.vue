@@ -28,7 +28,7 @@ const handleLogout = () => {
       <Icon icon="lucide:chevron-down" class="size-4 text-default-400 group-hover:text-default-900 transition-colors ml-1" />
     </button>
 
-    <div class="hs-dropdown-menu transition-[opacity,margin] duration hs-dropdown-open:opacity-100 opacity-0 hidden min-w-64 bg-white shadow-2xl rounded-2xl p-2 border border-default-100 mt-2 z-50 overflow-hidden" aria-labelledby="hs-dropdown-with-icons">
+    <div class="hs-dropdown-menu transition-[opacity,margin] duration hs-dropdown-open:opacity-100 opacity-0 hidden min-w-64 bg-white shadow-2xl rounded-2xl p-2 border border-default-100 mt-2 z-[1000] overflow-hidden" aria-labelledby="hs-dropdown-with-icons">
       <!-- Profile Header -->
       <div class="px-4 py-4 mb-2 bg-bejo-50/50 rounded-xl border border-bejo-100/50">
         <p class="text-[10px] font-black text-bejo-600 uppercase tracking-widest mb-3">Akun Administrator</p>

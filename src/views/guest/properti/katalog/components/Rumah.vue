@@ -84,10 +84,13 @@
 
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-      <template v-if="isLoading">
-        <ProductCard v-for="i in 15" :key="i" :product="{}" is-loading />
+      <!-- Show Skeletons while fetching initial data -->
+      <template v-if="isLoading && table.getRowModel().rows.length === 0">
+        <ProductCard v-for="i in 15" :key="'skeleton-' + i" :product="{}" is-loading />
       </template>
-      <template v-else-if="table.getRowModel().rows.length === 0">
+
+      <!-- Empty State -->
+      <template v-else-if="!isLoading && table.getRowModel().rows.length === 0">
         <div class="col-span-full py-20 flex flex-col items-center justify-center text-center bg-slate-50/50 rounded-[3rem] border border-dashed border-slate-200">
           <div class="size-24 bg-white rounded-full flex items-center justify-center mb-6 shadow-sm border border-slate-100">
             <Icon icon="lucide:search-x" class="size-12 text-slate-300" />
@@ -97,8 +100,22 @@
           <button @click="resetFilters" class="px-10 py-3.5 bg-white border border-slate-200 text-bejo-600 rounded-2xl font-black text-[11px] uppercase tracking-[0.15em] transition-all shadow-sm hover:bg-bejo-50 hover:border-bejo-200 active:scale-95">Atur Ulang Filter</button>
         </div>
       </template>
+
+      <!-- Actual Product List -->
       <template v-else>
-        <ProductCard v-for="(row, idx) in table.getRowModel().rows" :key="row.id" :product="row.original" :is-admin="isAdmin" :active-dropdown-id="activeDropdownId" :lazy="idx >= 6" @toggle-dropdown="toggleDropdown" @update-status="updateStatusTransaksi" @delete="deleteProduct" @edit="(slug) => $router.push(`/properti/detail/${slug}`)" />
+        <ProductCard 
+          v-for="(row, idx) in table.getRowModel().rows" 
+          :key="row.id || row.original.No_Id" 
+          :product="row.original" 
+          :is-admin="isAdmin" 
+          :active-dropdown-id="activeDropdownId" 
+          :is-loading="isLoading"
+          :lazy="idx >= 6" 
+          @toggle-dropdown="toggleDropdown" 
+          @update-status="updateStatusTransaksi" 
+          @delete="deleteProduct" 
+          @edit="(slug) => $router.push(`/properti/detail/${slug}`)" 
+        />
       </template>
     </div>
 

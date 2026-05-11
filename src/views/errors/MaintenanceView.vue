@@ -15,51 +15,49 @@ const handleWaContact = () => {
 <template>
   <GuestLayout hideHeader hideFooter main-class="!py-0">
     <div class="h-screen sm:h-[100dvh] flex items-center justify-center p-6 sm:p-12 overflow-hidden relative bg-white">
-      <!-- Background Clutter -->
-      <div class="absolute inset-0 z-0 opacity-[0.03] pointer-events-none select-none overflow-hidden">
-         <div class="absolute top-0 right-0 text-[15rem] font-black leading-none translate-x-1/4 -translate-y-1/4 uppercase">Repair</div>
-         <div class="absolute bottom-0 left-0 text-[10rem] font-black leading-none -translate-x-1/4 translate-y-1/4 uppercase">Maintenance</div>
+      <!-- Mesh Gradient Background (Identical to Hero) -->
+      <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        <div class="absolute -top-[20%] -right-[10%] size-[800px] bg-bejo-100/50 rounded-full blur-[120px] animate-pulse"></div>
+        <div class="absolute top-[10%] -left-[15%] size-[600px] bg-bejo-200/30 rounded-full blur-[100px]"></div>
+        <div class="absolute bottom-[-10%] left-[20%] size-[700px] bg-bejo-50/60 rounded-full blur-[140px]"></div>
       </div>
 
-      <div class="relative z-10 w-full max-w-4xl">
-        <div class="flex flex-col items-center text-center">
-          <!-- Massive Warning Icon -->
-          <div class="mb-8 relative">
-             <div class="absolute inset-0 bg-bejo-500 blur-3xl opacity-20 animate-pulse"></div>
-             <div class="size-20 sm:size-28 bg-slate-900 text-bejo-500 rounded-[2rem] flex items-center justify-center relative z-10 border border-slate-800 shadow-2xl rotate-3">
-                <Icon icon="lucide:hammer" class="size-10 sm:size-14 animate-bounce" />
-             </div>
+      <!-- Massive Background Text -->
+      <div class="absolute inset-0 flex items-center justify-center select-none pointer-events-none opacity-[0.03]">
+         <div class="text-[20vw] font-black text-slate-900 leading-none uppercase tracking-tighter">REPAIR</div>
+      </div>
+
+      <div class="relative z-10 w-full max-w-7xl mx-auto">
+        <div class="flex flex-col items-center text-center space-y-12">
+          <!-- Title Section -->
+          <div class="space-y-6">
+            <h1 class="text-6xl md:text-8xl lg:text-[10rem] font-black text-slate-900 tracking-tighter leading-[0.85] drop-shadow-sm uppercase italic">
+              SEDANG <br class="hidden sm:block" /> 
+              <span class="relative inline-block py-2">
+                <span class="relative z-10 text-transparent bg-clip-text bg-gradient-to-br from-bejo-400 via-bejo-600 to-bejo-700 animate-gradient-x">BERBENAH</span>
+                <div class="absolute bottom-4 left-0 right-0 h-6 bg-bejo-100/40 -z-0 rounded-full blur-md"></div>
+              </span>
+            </h1>
           </div>
-
-          <!-- Brutalist Typography -->
-          <h1 class="text-5xl sm:text-7xl lg:text-[8rem] font-black text-slate-900 tracking-tighter leading-[0.8] mb-6 uppercase italic">
-            DALAM <br /> 
-            <span class="text-bejo-600">PERBAIKAN</span>
-          </h1>
           
-          <div class="h-2 w-full max-w-xs bg-slate-900 mb-6"></div>
-
-          <p class="text-slate-500 font-bold text-base sm:text-lg max-w-lg mx-auto leading-relaxed">
-            Mohon maaf atas ketidaknyamanannya. Saat ini sistem kami sedang dalam tahap peningkatan kualitas layanan. Kami akan segera kembali!
+          <p class="text-base md:text-2xl text-slate-500 font-medium max-w-3xl mx-auto leading-relaxed opacity-80">
+            Kami sedang berbenah untuk meningkatkan kualitas layanan dan memberikan kepuasan yang lebih tinggi bagi Anda. <br /> 
+            <span class="text-slate-900 font-black border-b-2 border-bejo-200">Mohon tunggu sebentar ya!</span>
           </p>
 
           <!-- Interaction -->
-          <div class="pt-10 flex flex-col sm:flex-row items-center justify-center gap-6">
+          <div class="flex flex-col sm:flex-row items-center justify-center gap-6 pt-4">
             <button 
               @click="handleWaContact"
-              class="group relative px-8 py-4 bg-white text-slate-900 rounded-none font-black text-base uppercase tracking-widest hover:text-white transition-all flex items-center gap-4 shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] active:translate-x-1 active:translate-y-1 active:shadow-none border-2 border-slate-900"
+              class="w-full md:w-auto px-10 py-5 bg-bejo-600 hover:bg-bejo-700 text-white rounded-[1.8rem] font-black text-sm uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-xl shadow-bejo-600/20 flex items-center justify-center gap-3"
             >
-              <div class="absolute inset-0 bg-slate-900 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-              <span class="relative z-10 flex items-center gap-3">
-                <Icon icon="logos:whatsapp-icon" class="size-6" />
-                 Hubungi Kami via WhatsApp
-              </span>
+              <Icon icon="logos:whatsapp-icon" class="size-5" />
+              Tanya Admin via WhatsApp
             </button>
             
-            <div class="flex items-center gap-3 text-slate-400 font-black uppercase tracking-[0.2em] text-xs">
-               <div class="size-2 bg-bejo-500 rounded-full animate-ping"></div>
-               Status: Dikerjakan
-            </div>
+            <RouterLink to="/" class="text-slate-400 hover:text-bejo-600 font-black uppercase tracking-[0.2em] text-[10px] transition-colors bg-white px-8 py-5 border border-bejo-100 rounded-[1.8rem] hover:bg-bejo-50">
+               Kembali Nanti
+            </RouterLink>
           </div>
         </div>
       </div>
@@ -69,8 +67,4 @@ const handleWaContact = () => {
 
 <style scoped>
 @reference "@/assets/css/style.css";
-
-h1 {
-  text-shadow: 4px 4px 0px #F1F5F9;
-}
 </style>

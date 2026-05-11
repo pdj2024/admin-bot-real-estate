@@ -12,14 +12,10 @@ interface StatCard {
 }
 
 const stats = ref<StatCard[]>([
-  { label: 'Total Admin', value: 0, subLabel: 'Admin Nonaktif', subValue: 0, icon: 'lucide:headset' },
-  { label: 'Total Pelanggan', value: 0, subLabel: 'User Nonaktif', subValue: 0, icon: 'lucide:user' },
-  { label: 'Properti Aktif', value: 0, subLabel: 'Draft / Nonaktif', subValue: 0, icon: 'lucide:home' },
-  { label: 'Tipe Properti', value: 0, subLabel: 'Kategori Jenis', subValue: 'Varian', icon: 'lucide:layers' },
-  { label: 'Wilayah (Kota)', value: 0, subLabel: 'Cakupan Kota', subValue: 'Kota', icon: 'lucide:map-pin' },
-  { label: 'Area / Lokasi', value: 0, subLabel: 'Titik Lokasi', subValue: 'Area', icon: 'lucide:map' },
-  { label: 'FAQ Bot', value: 0, subLabel: 'Bantuan Bot', subValue: 'Konten', icon: 'lucide:help-circle' },
-  { label: 'Bot Prompt', value: 0, subLabel: 'Instruksi AI', subValue: 'Prompt', icon: 'lucide:bot' },
+  { label: 'Total Admin', value: 0, subLabel: 'Aktif / Nonaktif', subValue: '0 / 0', icon: 'lucide:headset' },
+  { label: 'Total Pelanggan', value: 0, subLabel: 'Aktif / Nonaktif', subValue: '0 / 0', icon: 'lucide:user' },
+  { label: 'Total Chat', value: 0, subLabel: 'Bot / Chat Saya', subValue: '0 / 0', icon: 'lucide:message-square' },
+  { label: 'Total Wilayah', value: 0, subLabel: 'Cakupan Wilayah', subValue: 'Kota', icon: 'lucide:map-pin' },
 ])
 
 const isLoading = ref(true)
@@ -27,36 +23,37 @@ const isLoading = ref(true)
 const fetchData = async () => {
   try {
     isLoading.value = true
-    const [resAdmin, resCust, resProp, resKota, resArea, resFaq, resPrompt] = await Promise.all([
+    const [resAdmin, resCust, resChatBot, resChatSaya, resKota] = await Promise.all([
       api.get('/api/admin/getAll', { headers: { 'X-Jenis-User': 'Admin', 'Api-Key': 'realestate_key_2024' } }).catch(() => ({ data: { Data: [] } })),
       api.get('/api/customer/getAll', { headers: { 'X-Jenis-User': 'Admin', 'Api-Key': 'realestate_key_2024' } }).catch(() => ({ data: { Data: [] } })),
-      api.get('/api/realEstate/getAll', { headers: { 'X-Jenis-User': 'Admin', 'Api-Key': 'realestate_key_2024' } }).catch(() => ({ data: { Data: [] } })),
+      api.get('/api/chat/getRoomsGlobal?status_bot=aktif', { headers: { 'X-Jenis-User': 'admin' } }).catch(() => ({ data: { Data: [] } })),
+      api.get('/api/chat/getRoomsGlobal?status_bot=nonaktif', { headers: { 'X-Jenis-User': 'admin' } }).catch(() => ({ data: { Data: [] } })),
       api.get('/api/kota/getAll').catch(() => ({ data: { Data: [] } })),
-      api.get('/api/area/getAll').catch(() => ({ data: { Data: [] } })),
-      api.get('/api/faq/getAll').catch(() => ({ data: { Data: [] } })),
-      api.get('/api/botPrompt/getAll', { headers: { 'X-Jenis-User': 'Admin', 'Api-Key': 'realestate_key_2024' } }).catch(() => ({ data: { Data: [] } })),
     ])
 
     const admins = resAdmin.data.Data || []
     const customers = resCust.data.Data || []
-    const properties = resProp.data.Data || []
-    const categories = [...new Set(properties.map((p: any) => p.Tipe))].filter(Boolean)
+    const chatBot = resChatBot.data.Data || []
+    const chatSaya = resChatSaya.data.Data || []
 
-    // Assign Values
+    // 1. Admin Stats
     stats.value[0].value = admins.length
-    stats.value[0].subValue = admins.filter((a: any) => a.Status_User === 'Nonaktif').length
+    const adminAktif = admins.filter((a: any) => a.Status_User === 'Aktif').length
+    const adminNon = admins.length - adminAktif
+    stats.value[0].subValue = `${adminAktif} / ${adminNon}`
     
+    // 2. Customer Stats
     stats.value[1].value = customers.length
-    stats.value[1].subValue = customers.filter((c: any) => c.Status_User === 'Nonaktif').length
+    const custAktif = customers.filter((c: any) => c.Status_User === 'Aktif').length
+    const custNon = customers.length - custAktif
+    stats.value[1].subValue = `${custAktif} / ${custNon}`
 
-    stats.value[2].value = properties.filter((p: any) => p.Status_Display === 'Aktif').length
-    stats.value[2].subValue = properties.filter((p: any) => p.Status_Display === 'Draft' || p.Status_Display === 'Nonaktif').length
+    // 3. Chat Stats
+    stats.value[2].value = chatBot.length + chatSaya.length
+    stats.value[2].subValue = `${chatBot.length} / ${chatSaya.length}`
 
-    stats.value[3].value = categories.length
-    stats.value[4].value = (resKota.data.Data || []).length
-    stats.value[5].value = (resArea.data.Data || []).length
-    stats.value[6].value = (resFaq.data.Data || []).length
-    stats.value[7].value = (resPrompt.data.Data || []).length
+    // 4. Wilayah Stats
+    stats.value[3].value = (resKota.data.Data || []).length
   } catch (err) {
     console.error('Operational Summary Error:', err)
   } finally {
@@ -84,7 +81,7 @@ const emit = defineEmits(['open-settings'])
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <template v-if="isLoading">
-        <div v-for="i in 8" :key="i" class="bg-white rounded-[2rem] p-6 border border-slate-50 animate-pulse h-32"></div>
+        <div v-for="i in 4" :key="i" class="bg-white rounded-[2rem] p-6 border border-slate-50 animate-pulse h-32"></div>
       </template>
 
       <div 

@@ -1,9 +1,9 @@
 <template>
   <GuestLayout main-class="!max-w-none !mx-0 !px-0">
     <!-- Hero Section Beranda -->
-    <section class="relative pt-10 pb-10 bg-white">
+    <section class="relative pt-6 pb-6 bg-white">
       <div class="w-full !px-4 sm:!px-8 lg:!px-10">
-        <div class="relative overflow-hidden rounded-[3.5rem] bg-white border border-bejo-100 shadow-premium px-8 pt-8 pb-16 md:px-24 md:pt-24 md:pb-24 lg:px-32 lg:pt-32 lg:pb-32 flex flex-col justify-center items-center min-h-[90vh]">
+        <div class="relative overflow-hidden rounded-[3.5rem] bg-white border border-bejo-100 shadow-premium px-8 pt-8 pb-12 md:px-24 md:pt-16 md:pb-16 lg:px-32 lg:pt-20 lg:pb-20 flex flex-col justify-center items-center min-h-[75vh]">
           <!-- Mesh Gradient Background -->
           <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <div class="absolute -top-[20%] -right-[10%] size-[800px] bg-bejo-100/50 rounded-full blur-[120px] animate-pulse"></div>
@@ -57,7 +57,7 @@
               </div>
             </div>
 
-            <div class="flex flex-col sm:flex-row items-center justify-center gap-6 pt-6 hidden md:flex">
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-6 pt-8 hidden md:flex">
               <RouterLink to="/katalog" class="flex items-center gap-3 text-slate-400 hover:text-bejo-600 font-black text-sm uppercase tracking-[0.2em] transition-all group">
                 Atau lihat koleksi lengkap
                 <Icon icon="lucide:arrow-right" class="size-4 group-hover:translate-x-1 transition-transform" />
@@ -65,29 +65,44 @@
             </div>
           </div>
 
-          <!-- Stats Section (Wrapped inside Hero Card) -->
-          <div class="relative z-20 w-full max-w-6xl mt-20">
-            <div class="w-full mx-auto glass backdrop-blur-3xl rounded-[4rem] p-10 md:p-14 shadow-premium border border-white/60 grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-4 divide-y md:divide-y-0 md:divide-x divide-slate-100/50">
-              <div class="text-center px-6 group hover-float">
-                <div class="text-bejo-600 mb-2 opacity-0 group-hover:opacity-100 transition-all duration-700 translate-y-3 group-hover:translate-y-0 scale-150">
-                  <Icon icon="lucide:building-2" class="size-6 mx-auto" />
+          <!-- Stats Section (Premium Redesign) -->
+          <div class="relative z-20 w-full max-w-6xl mt-20 px-4 md:px-0">
+            <div class="w-full mx-auto bg-white/60 backdrop-blur-3xl rounded-[3.5rem] p-10 md:p-14 shadow-premium border border-white grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 relative overflow-hidden">
+              <!-- Glow Effect inside Stats -->
+              <div class="absolute -top-24 -left-24 size-48 bg-bejo-100 rounded-full blur-[80px] opacity-40"></div>
+              <div class="absolute -bottom-24 -right-24 size-48 bg-bejo-200 rounded-full blur-[80px] opacity-30"></div>
+
+              <div class="text-center px-6 group relative z-10">
+                <div class="size-16 rounded-2xl bg-bejo-50 text-bejo-600 flex items-center justify-center mx-auto mb-6 group-hover:bg-bejo-600 group-hover:text-white transition-all duration-500 shadow-sm border border-bejo-100/50 group-hover:rotate-6 group-hover:scale-110">
+                  <Icon icon="lucide:building-2" class="size-7" />
                 </div>
-                <h4 class="text-6xl lg:text-7xl font-black text-slate-900 mb-2 tracking-tighter">1,2 rb</h4>
-                <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Unit Eksklusif</p>
+                <div class="space-y-1">
+                  <h4 class="text-5xl lg:text-6xl font-black text-slate-900 tracking-tighter">1,2 rb</h4>
+                  <p class="text-[10px] font-black text-bejo-600/80 uppercase tracking-[0.25em]">Unit Eksklusif</p>
+                  <div class="h-1 w-8 bg-bejo-100 mx-auto rounded-full mt-2 group-hover:w-16 transition-all duration-500"></div>
+                </div>
               </div>
-              <div class="text-center px-6 group hover-float">
-                <div class="text-bejo-600 mb-2 opacity-0 group-hover:opacity-100 transition-all duration-700 translate-y-3 group-hover:translate-y-0 scale-150">
-                  <Icon icon="lucide:shield-check" class="size-6 mx-auto" />
+
+              <div class="text-center px-6 group relative z-10 border-y md:border-y-0 md:border-x border-slate-100/80 py-12 md:py-0">
+                <div class="size-16 rounded-2xl bg-bejo-50 text-bejo-600 flex items-center justify-center mx-auto mb-6 group-hover:bg-bejo-600 group-hover:text-white transition-all duration-500 shadow-sm border border-bejo-100/50 group-hover:-rotate-6 group-hover:scale-110">
+                  <Icon icon="lucide:shield-check" class="size-7" />
                 </div>
-                <h4 class="text-6xl lg:text-7xl font-black text-slate-900 mb-2 tracking-tighter">100 %</h4>
-                <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Pemilik Langsung</p>
+                <div class="space-y-1">
+                  <h4 class="text-5xl lg:text-6xl font-black text-slate-900 tracking-tighter">100 %</h4>
+                  <p class="text-[10px] font-black text-bejo-600/80 uppercase tracking-[0.25em]">Pemilik Langsung</p>
+                  <div class="h-1 w-8 bg-bejo-100 mx-auto rounded-full mt-2 group-hover:w-16 transition-all duration-500"></div>
+                </div>
               </div>
-              <div class="text-center px-6 group hover-float">
-                <div class="text-bejo-600 mb-2 opacity-0 group-hover:opacity-100 transition-all duration-700 translate-y-3 group-hover:translate-y-0 scale-150">
-                  <Icon icon="lucide:map-pin" class="size-6 mx-auto" />
+
+              <div class="text-center px-6 group relative z-10">
+                <div class="size-16 rounded-2xl bg-bejo-50 text-bejo-600 flex items-center justify-center mx-auto mb-6 group-hover:bg-bejo-600 group-hover:text-white transition-all duration-500 shadow-sm border border-bejo-100/50 group-hover:rotate-6 group-hover:scale-110">
+                  <Icon icon="lucide:map-pin" class="size-7" />
                 </div>
-                <h4 class="text-6xl lg:text-7xl font-black text-slate-900 mb-2 tracking-tighter">15</h4>
-                <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Area Strategis</p>
+                <div class="space-y-1">
+                  <h4 class="text-5xl lg:text-6xl font-black text-slate-900 tracking-tighter">15</h4>
+                  <p class="text-[10px] font-black text-bejo-600/80 uppercase tracking-[0.25em]">Area Strategis</p>
+                  <div class="h-1 w-8 bg-bejo-100 mx-auto rounded-full mt-2 group-hover:w-16 transition-all duration-500"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -97,12 +112,14 @@
     </section>
 
     <!-- Highlight Properti Terbaru Section -->
-    <section class="pt-32 pb-5 sm:pt-40 sm:pb-10 px-4 bg-[#f7f9fb] relative overflow-hidden">
-      <!-- Decor -->
-      <div class="absolute -right-40 top-20 size-96 bg-bejo-200/30 rounded-full blur-3xl pointer-events-none"></div>
+    <section class="pt-12 pb-6 sm:pt-16 sm:pb-10 px-4 bg-[#f7f9fb] relative overflow-hidden">
+      <!-- Premium Decor -->
+      <div class="absolute -right-40 top-20 size-[600px] bg-bejo-200/20 rounded-full blur-[120px] pointer-events-none animate-pulse"></div>
+      <div class="absolute -left-20 bottom-0 size-[400px] bg-bejo-100/30 rounded-full blur-[100px] pointer-events-none"></div>
+      <div class="absolute inset-0 opacity-[0.01] pointer-events-none" style="background-image: url('https://www.transparenttextures.com/patterns/white-diamond.png')"></div>
 
-      <div class="w-full !px-2.5 sm:!px-8 lg:!px-12">
-        <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-8 relative z-10">
+      <div class="w-full !px-2.5 sm:!px-8 lg:!px-12 relative z-10">
+        <div class="flex flex-col md:flex-row justify-between items-end mb-8 gap-8">
           <div class="max-w-2xl space-y-4">
             <span class="text-bejo-600 font-black uppercase tracking-[0.3em] text-[10px] flex items-center gap-2">
               <div class="w-8 h-[2px] bg-bejo-500"></div>
@@ -111,51 +128,64 @@
             <h2 class="text-5xl md:text-6xl font-black text-slate-900 tracking-tight leading-[1.1]">Unit Pilihan <br />Siap <span class="text-bejo-500">Huni.</span></h2>
           </div>
 
-          <RouterLink to="/katalog" class="group flex items-center gap-3 px-8 py-4 bg-bejo-50 hover:bg-bejo-600 hover:text-white rounded-2xl font-black text-xs uppercase tracking-widest text-bejo-700 transition-all shadow-sm shrink-0 active:scale-95 border border-bejo-100">
+          <RouterLink to="/katalog" class="group flex items-center gap-3 px-8 py-4 bg-white hover:bg-bejo-600 hover:text-white rounded-2xl font-black text-xs uppercase tracking-widest text-bejo-700 transition-all shadow-sm shrink-0 active:scale-95 border border-bejo-100">
             Lihat Semua
             <Icon icon="lucide:arrow-right" class="size-4 group-hover:translate-x-1 transition-transform" />
           </RouterLink>
         </div>
 
-        <!-- Skeleton Form saat Fetching -->
-        <div v-if="isLoading" class="flex overflow-x-auto snap-x snap-mandatory gap-8 pb-12 custom-scroll scroll-smooth">
-          <ProductCard v-for="i in 4" :key="i" :product="{}" is-loading class="snap-center shrink-0 w-[85vw] md:w-[45vw] lg:w-[calc((100%-96px)/4)]" />
-        </div>
-
         <!-- Carousel Container -->
-        <div v-else class="relative group/carousel">
-          <!-- Gradient Overlays for Edge Fading -->
-          <div class="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#f7f9fb] to-transparent z-10 pointer-events-none opacity-0 group-hover/carousel:opacity-100 transition-opacity duration-700"></div>
-          <div class="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#f7f9fb] to-transparent z-10 pointer-events-none opacity-0 group-hover/carousel:opacity-100 transition-opacity duration-700"></div>
-
+        <div class="relative group/carousel">
           <!-- Navigation Controls -->
-          <div class="absolute -left-4 top-1/2 -translate-y-1/2 z-20 opacity-0 group-hover/carousel:opacity-100 transition-all duration-500 -translate-x-4 group-hover/carousel:translate-x-0 hidden lg:block">
-            <button @click="scroll('left')" class="size-14 rounded-full bg-white/90 backdrop-blur-md border border-slate-100 shadow-2xl flex items-center justify-center text-slate-800 hover:bg-bejo-600 hover:text-white transition-all active:scale-90 shadow-bejo-600/5">
+          <div class="absolute -left-6 top-1/2 -translate-y-1/2 z-20 opacity-0 group-hover/carousel:opacity-100 transition-all duration-500 -translate-x-4 group-hover/carousel:translate-x-0 hidden lg:block">
+            <button @click="scroll('left')" class="size-14 rounded-full bg-white border border-slate-100 shadow-xl flex items-center justify-center text-slate-800 hover:bg-bejo-600 hover:text-white transition-all active:scale-90">
               <Icon icon="lucide:chevron-left" class="size-6" />
             </button>
           </div>
-          <div class="absolute -right-4 top-1/2 -translate-y-1/2 z-20 opacity-0 group-hover/carousel:opacity-100 transition-all duration-500 translate-x-4 group-hover/carousel:translate-x-0 hidden lg:block">
-            <button @click="scroll('right')" class="size-14 rounded-full bg-white/90 backdrop-blur-md border border-slate-100 shadow-2xl flex items-center justify-center text-slate-800 hover:bg-bejo-600 hover:text-white transition-all active:scale-90 shadow-bejo-600/5">
+          <div class="absolute -right-6 top-1/2 -translate-y-1/2 z-20 opacity-0 group-hover/carousel:opacity-100 transition-all duration-500 translate-x-4 group-hover/carousel:translate-x-0 hidden lg:block">
+            <button @click="scroll('right')" class="size-14 rounded-full bg-white border border-slate-100 shadow-xl flex items-center justify-center text-slate-800 hover:bg-bejo-600 hover:text-white transition-all active:scale-90">
               <Icon icon="lucide:chevron-right" class="size-6" />
             </button>
           </div>
 
-          <div ref="scrollContainer" class="flex overflow-x-auto snap-x snap-mandatory gap-8 pb-12 px-4 md:px-0 custom-scroll scroll-smooth no-scrollbar">
-            <ProductCard 
-              v-for="row in displayedProducts" 
-              :key="row.id || row.No_Id" 
-              :product="row" 
-              @select="(product: any) => $router.push(`/detail/${product.Slug}`)"
-              class="snap-center shrink-0 w-[85vw] md:w-[45vw] lg:w-[calc((100%-96px)/4)] hover:-translate-y-4 transition-all duration-700"
-            />
+          <div ref="scrollContainer" class="flex overflow-x-auto snap-x snap-mandatory gap-8 pb-12 px-6 sm:px-12 md:px-20 custom-scroll scroll-smooth no-scrollbar scroll-pl-6 sm:scroll-pl-12 md:scroll-pl-20">
+            <!-- Show Skeletons while loading data -->
+            <template v-if="isLoading && displayedProducts.length === 0">
+              <ProductCard 
+                v-for="i in 4" 
+                :key="'skeleton-' + i" 
+                :product="{}" 
+                is-loading 
+                class="snap-start shrink-0 w-[80vw] md:w-[45vw] lg:w-[calc((100%-96px)/4)]" 
+              />
+            </template>
+            
+            <!-- Show Actual Cards (Each handles its own shimmer for image loading) -->
+            <template v-else>
+              <ProductCard 
+                v-for="row in displayedProducts" 
+                :key="row.id || row.No_Id" 
+                :product="row" 
+                @select="(product: any) => $router.push(`/detail/${product.Slug}`)"
+                class="snap-start shrink-0 w-[80vw] md:w-[40vw] lg:w-[calc((100%-96px)/4)] hover:-translate-y-4 transition-all duration-700"
+              />
+            </template>
+          </div>
+
+          <!-- Pagination Indicator (Desktop Only) -->
+          <div class="hidden lg:flex justify-center gap-2 mt-4">
+            <div v-for="i in Math.ceil(displayedProducts.length / 1)" :key="i" class="h-1.5 rounded-full bg-slate-200 transition-all duration-300" :class="i === 1 ? 'w-8 bg-bejo-500' : 'w-2'"></div>
           </div>
 
           <!-- Hint for scrolling (Mobile Only) -->
-          <div class="mt-4 flex justify-center items-center gap-2 lg:hidden">
-            <div class="w-12 h-1 bg-slate-100 rounded-full overflow-hidden">
-              <div class="h-full bg-bejo-500 w-1/3 animate-scroll-hint"></div>
+          <div class="mt-8 flex flex-col items-center gap-3 lg:hidden">
+            <div class="flex items-center gap-2">
+               <div v-for="i in 3" :key="i" class="size-1.5 rounded-full bg-slate-200" :class="i === 1 ? 'bg-bejo-500 w-4' : ''"></div>
             </div>
-            <span class="text-[8px] font-black text-slate-300 uppercase tracking-widest">Geser untuk melihat lainnya</span>
+            <div class="flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-slate-100 shadow-sm">
+              <Icon icon="lucide:mouse-pointer-2" class="size-3 text-bejo-500 animate-bounce" />
+              <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Geser untuk eksplorasi unit</span>
+            </div>
           </div>
         </div>
       </div>
@@ -165,12 +195,12 @@
     <IndonesiaMap :properties="allProducts" />
 
     <!-- Layanan Kami Section -->
-    <section class="px-4 py-20 bg-slate-50/30 relative overflow-hidden">
+    <section class="px-4 py-6 bg-slate-50/30 relative overflow-hidden">
       <div class="w-full !px-2.5 sm:!px-8 lg:!px-12">
-        <div class="text-center mb-20 space-y-4">
+        <div class="text-center mb-12 space-y-4">
           <span class="text-bejo-600 font-black uppercase tracking-[0.3em] text-[10px]">Layanan Ekosistem</span>
-          <h2 class="text-5xl md:text-6xl font-black text-slate-900 tracking-tight leading-tight">Solusi Properti <span class="text-transparent bg-clip-text bg-gradient-to-r from-bejo-500 to-bejo-700">End-to-End</span></h2>
-          <p class="text-slate-500 text-lg font-medium max-w-2xl mx-auto opacity-80 leading-relaxed">Kami tidak hanya menjual rumah, kami menciptakan jalan mulus menuju hunian impian Anda dengan layanan lengkap.</p>
+          <h2 class="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight">Solusi Properti <span class="text-transparent bg-clip-text bg-bejo-600">End-to-End</span></h2>
+          <p class="text-slate-500 text-base font-medium max-w-2xl mx-auto opacity-80 leading-relaxed">Kami tidak hanya menjual rumah, kami menciptakan jalan mulus menuju hunian impian Anda dengan layanan lengkap.</p>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -219,59 +249,80 @@
     </section>
 
     <!-- Why Us Section -->
-    <section class="py-20 sm:py-32 bg-white relative overflow-hidden">
+    <section class="py-10 sm:py-16 bg-white relative overflow-hidden">
       <!-- Decor -->
       <div class="absolute -top-40 -left-40 size-[600px] bg-bejo-50/50 rounded-full blur-[120px] pointer-events-none"></div>
 
       <div class="w-full px-4 sm:px-8 lg:px-12 relative z-10">
-        <div class="grid lg:grid-cols-2 gap-20 lg:gap-32 items-center">
+        <div class="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div class="relative group">
-            <div class="aspect-square rounded-[4rem] overflow-hidden shadow-[0_40px_80px_-20px_rgba(0,0,0,0.15)] relative z-10 border-[16px] border-white transition-transform duration-700 group-hover:scale-[1.02]">
-              <img :src="randomProduct?.MediaUrls?.[0]?.Id_Media || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80'" alt="Properties" class="w-full h-full object-cover" />
+            <div class="aspect-square rounded-[3.5rem] overflow-hidden shadow-[0_40px_80px_-20px_rgba(0,0,0,0.15)] relative z-10 border-[12px] border-white transition-transform duration-700 group-hover:scale-[1.02]">
+              <img :src="randomProduct?.MediaUrls?.[0]?.Url || randomProduct?.MediaUrls?.[0]?.Id_Media || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80'" alt="Properties" class="w-full h-full object-cover" />
               <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             </div>
 
             <!-- Decorative elements -->
-            <div class="absolute -bottom-12 -right-12 w-64 aspect-square bg-bejo-500 rounded-[3rem] -z-0 opacity-10 animate-pulse"></div>
-            <div class="absolute -top-8 -left-8 size-40 bg-slate-900/5 rounded-full -z-0"></div>
+            <div class="absolute -bottom-8 -right-8 size-48 bg-bejo-500 rounded-[2.5rem] -z-0 opacity-10 animate-pulse"></div>
+            <div class="absolute -top-6 -left-6 size-32 bg-slate-900/5 rounded-full -z-0"></div>
 
-            <!-- Floating Property Info -->
-            <div v-if="randomProduct" class="absolute -bottom-6 -left-6 md:-left-12 w-72 md:w-80 bg-white rounded-[2.5rem] z-20 p-8 flex flex-col gap-6 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.12)] border border-slate-100 transform hover:-translate-y-3 transition-all duration-700">
+            <!-- Floating Property Info (Decoupled Loading) -->
+            <div v-if="randomProduct" class="absolute -bottom-6 -left-6 md:-left-12 w-72 md:w-80 bg-white rounded-[2.5rem] z-20 p-6 flex flex-col gap-4 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.12)] border border-slate-100 transform hover:-translate-y-3 transition-all duration-700">
               <div class="flex items-center gap-5">
-                <div class="size-14 rounded-2xl bg-bejo-600 text-white flex items-center justify-center shadow-bejo-premium">
-                  <Icon icon="lucide:home" class="size-7" />
+                <!-- Thumbnail with Shimmer -->
+                <div class="size-14 rounded-2xl relative overflow-hidden bg-slate-100 shrink-0 shadow-sm">
+                  <div v-if="isLoading || !isRandomProductImageLoaded" class="absolute inset-0 bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer z-10"></div>
+                  <img 
+                    v-if="randomProduct.MediaUrls?.[0]"
+                    :src="randomProduct?.MediaUrls?.[0]?.Url || randomProduct?.MediaUrls?.[0]?.Id_Media" 
+                    class="size-full object-cover transition-opacity duration-500"
+                    :class="isRandomProductImageLoaded ? 'opacity-100' : 'opacity-0'"
+                    @load="isRandomProductImageLoaded = true"
+                    @error="isRandomProductImageLoaded = true"
+                  />
+                  <div v-else class="size-full flex items-center justify-center bg-bejo-600 text-white" @vue:mounted="isRandomProductImageLoaded = true">
+                    <Icon icon="lucide:home" class="size-7" />
+                  </div>
                 </div>
-                <div class="min-w-0">
-                  <span class="block text-base font-black text-slate-900 truncate tracking-tight">{{ randomProduct.Nama_Produk }}</span>
-                  <span class="text-[10px] font-black text-bejo-600 uppercase tracking-[0.25em]">{{ randomProduct.Tipe }}</span>
+
+                <div class="min-w-0 flex-1">
+                  <div v-if="isLoading" class="h-5 w-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer rounded-lg mb-1"></div>
+                  <span v-else class="block text-base font-black text-slate-900 truncate tracking-tight">{{ randomProduct.Nama_Produk }}</span>
+                  
+                  <div v-if="isLoading" class="h-3 w-1/2 bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer rounded mb-0.5"></div>
+                  <span v-else class="text-[10px] font-black text-bejo-600 uppercase tracking-[0.25em]">{{ randomProduct.Tipe }}</span>
                 </div>
               </div>
               <div class="space-y-4 pt-4 border-t border-slate-100/50">
                 <div class="flex items-start gap-3">
-                  <Icon icon="lucide:map-pin" class="size-4 text-slate-400 mt-1" />
-                  <span class="text-[11px] font-bold text-slate-500 leading-relaxed line-clamp-2">{{ randomProduct.Alamat.split('Lat:')[0].trim() }}</span>
-                </div>
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100">
-                    <Icon icon="lucide:map" class="size-3.5 text-slate-400" />
-                    <span class="text-[10px] font-black text-slate-700 uppercase tracking-widest">{{ randomProduct.Nama_Kota || 'Lokasi Terjamin' }}</span>
+                  <div v-if="isLoading" class="size-4 bg-slate-100 rounded-full animate-pulse mt-1"></div>
+                  <Icon v-else icon="lucide:map-pin" class="size-4 text-slate-400 mt-1 shrink-0" />
+                  
+                  <div v-if="isLoading" class="space-y-1 flex-1">
+                    <div class="h-3 w-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer rounded"></div>
+                    <div class="h-3 w-3/4 bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer rounded"></div>
                   </div>
-                  <RouterLink :to="`/detail/${randomProduct.Slug}`" class="text-[10px] font-black text-bejo-600 uppercase tracking-widest hover:text-bejo-800 flex items-center gap-2 group/link">
-                    Detail
-                    <Icon icon="lucide:chevron-right" class="size-4 group-hover/link:translate-x-1 transition-transform" />
-                  </RouterLink>
+                  <span v-else class="text-[11px] font-bold text-slate-500 leading-relaxed line-clamp-2">
+                    {{ randomProduct.Alamat ? randomProduct.Alamat.split('_Lat')[0].split('Lat:')[0].trim() : '' }} 
+                    <span v-if="randomProduct.Nama_Kota" class="text-bejo-600 font-black ml-1">• {{ randomProduct.Nama_Kota }}</span>
+                  </span>
                 </div>
+
+                <div v-if="isLoading" class="h-10 w-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer rounded-2xl"></div>
+                <button v-else @click="$router.push(`/detail/${randomProduct.Slug}`)" class="w-full py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-bejo-600 transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2 group/btn">
+                  Lihat Detail Unit
+                  <Icon icon="lucide:arrow-right" class="size-4 group-hover/btn:translate-x-1 transition-transform" />
+                </button>
               </div>
             </div>
           </div>
 
-          <div class="space-y-12">
-            <div class="space-y-6">
+          <div class="space-y-8">
+            <div class="space-y-4">
               <span class="text-bejo-600 font-black uppercase tracking-[0.3em] text-[10px] flex items-center gap-3">
                 <div class="w-10 h-[2px] bg-bejo-500"></div>
                 Kenapa Kami?
               </span>
-              <h2 class="text-5xl md:text-6xl font-black text-slate-900 tracking-tight leading-[1.1]">
+              <h2 class="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-[1.1]">
                 Mengapa Anda Merasa <br /><span class="relative">
                   <span class="relative z-10 italic">Beruntung</span>
                   <div class="absolute bottom-1 left-0 right-0 h-4 bg-bejo-100 -z-0"></div>
@@ -280,32 +331,32 @@
               </h2>
             </div>
 
-            <div class="space-y-12">
-              <div class="flex gap-10 group hover-float">
-                <div class="size-24 rounded-[2rem] bg-white border border-slate-100 shadow-premium flex items-center justify-center shrink-0 group-hover:bg-bejo-600 group-hover:text-white transition-all duration-700">
-                  <Icon icon="lucide:verified" class="size-12 text-bejo-600 group-hover:text-white" />
+            <div class="space-y-6">
+              <div class="flex gap-6 group hover-float p-4 rounded-[2rem] hover:bg-slate-50 transition-all duration-500">
+                <div class="size-16 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center shrink-0 group-hover:bg-bejo-600 group-hover:text-white transition-all duration-700">
+                  <Icon icon="lucide:verified" class="size-8 text-bejo-600 group-hover:text-white" />
                 </div>
-                <div class="space-y-4 pt-3">
-                  <h4 class="text-3xl font-black text-slate-900 tracking-tight">100% Data Tervalidasi</h4>
-                  <p class="text-base font-medium text-slate-500 leading-relaxed opacity-80">Semua unit melalui verifikasi lapangan oleh tim {{ settingsStore.business.appName }} untuk menjamin akurasi info 1:1.</p>
-                </div>
-              </div>
-              <div class="flex gap-10 group hover-float">
-                <div class="size-24 rounded-[2rem] bg-white border border-slate-100 shadow-premium flex items-center justify-center shrink-0 group-hover:bg-bejo-600 group-hover:text-white transition-all duration-700">
-                  <Icon icon="lucide:user-check-2" class="size-12 text-bejo-600 group-hover:text-white" />
-                </div>
-                <div class="space-y-4 pt-3">
-                  <h4 class="text-3xl font-black text-slate-900 tracking-tight">Personal Agent Dedicated</h4>
-                  <p class="text-base font-medium text-slate-500 leading-relaxed opacity-80">Dapatkan asisten pribadi yang siap menemani proses survei unit hingga tanda tangan akad di hadapan Notaris.</p>
+                <div class="space-y-2 pt-1">
+                  <h4 class="text-2xl font-black text-slate-900 tracking-tight">100% Data Tervalidasi</h4>
+                  <p class="text-sm font-medium text-slate-500 leading-relaxed opacity-80">Semua unit melalui verifikasi lapangan oleh tim {{ settingsStore.business.appName }} untuk menjamin akurasi info 1:1.</p>
                 </div>
               </div>
-              <div class="flex gap-10 group hover-float">
-                <div class="size-24 rounded-[2rem] bg-white border border-slate-100 shadow-premium flex items-center justify-center shrink-0 group-hover:bg-bejo-600 group-hover:text-white transition-all duration-700">
-                  <Icon icon="lucide:banknote" class="size-12 text-bejo-600 group-hover:text-white" />
+              <div class="flex gap-6 group hover-float p-4 rounded-[2rem] hover:bg-slate-50 transition-all duration-500">
+                <div class="size-16 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center shrink-0 group-hover:bg-bejo-600 group-hover:text-white transition-all duration-700">
+                  <Icon icon="lucide:user-check-2" class="size-8 text-bejo-600 group-hover:text-white" />
                 </div>
-                <div class="space-y-4 pt-3">
-                  <h4 class="text-3xl font-black text-slate-900 tracking-tight">Investasi Aman & Terjamin</h4>
-                  <p class="text-base font-medium text-slate-500 leading-relaxed opacity-80">Sistem transaksi legal yang diawasi oleh Notaris berpengalaman untuk menjamin keamanan aset dan dana Anda.</p>
+                <div class="space-y-2 pt-1">
+                  <h4 class="text-2xl font-black text-slate-900 tracking-tight">Personal Agent Dedicated</h4>
+                  <p class="text-sm font-medium text-slate-500 leading-relaxed opacity-80">Dapatkan asisten pribadi yang siap menemani proses survei unit hingga tanda tangan akad di hadapan Notaris.</p>
+                </div>
+              </div>
+              <div class="flex gap-6 group hover-float p-4 rounded-[2rem] hover:bg-slate-50 transition-all duration-500">
+                <div class="size-16 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center shrink-0 group-hover:bg-bejo-600 group-hover:text-white transition-all duration-700">
+                  <Icon icon="lucide:banknote" class="size-8 text-bejo-600 group-hover:text-white" />
+                </div>
+                <div class="space-y-2 pt-1">
+                  <h4 class="text-2xl font-black text-slate-900 tracking-tight">Investasi Aman & Terjamin</h4>
+                  <p class="text-sm font-medium text-slate-500 leading-relaxed opacity-80">Sistem transaksi legal yang diawasi oleh Notaris berpengalaman untuk menjamin keamanan aset dan dana Anda.</p>
                 </div>
               </div>
             </div>
@@ -331,24 +382,24 @@ const scrollContainer = ref<HTMLElement | null>(null)
 const scroll = (direction: 'left' | 'right') => {
   if (!scrollContainer.value) return
   const container = scrollContainer.value
-  const cardWidth = container.querySelector('.shrink-0')?.clientWidth || 300
-  const gap = 32 // gap-8
+  const card = container.querySelector('.shrink-0')
+  if (!card) return
+
+  const cardWidth = card.clientWidth
+  const gap = 32 // gap-8 sesuai class Tailwind
   const scrollAmount = cardWidth + gap
 
-  const currentScroll = container.scrollLeft
-  const maxScroll = container.scrollWidth - container.clientWidth
-
   if (direction === 'right') {
-    // If we are at the end, jump back to start
-    if (Math.ceil(currentScroll + container.clientWidth) >= container.scrollWidth - 10) {
+    const isAtEnd = Math.ceil(container.scrollLeft + container.clientWidth) >= container.scrollWidth - 10
+    if (isAtEnd) {
       container.scrollTo({ left: 0, behavior: 'smooth' })
     } else {
       container.scrollBy({ left: scrollAmount, behavior: 'smooth' })
     }
   } else {
-    // If we are at the start, jump to end
-    if (currentScroll <= 10) {
-      container.scrollTo({ left: maxScroll, behavior: 'smooth' })
+    const isAtStart = container.scrollLeft <= 10
+    if (isAtStart) {
+      container.scrollTo({ left: container.scrollWidth, behavior: 'smooth' })
     } else {
       container.scrollBy({ left: -scrollAmount, behavior: 'smooth' })
     }
@@ -375,7 +426,7 @@ interface ProductPreview {
   Harga_Sewa1: number
   Nama_Kota?: string
   Hide_alamat: boolean
-  MediaUrls: { Id_Media: string }[]
+  MediaUrls: { Id_Media: string; Url?: string }[]
 }
 
 const settingsStore = useSettings()
@@ -383,6 +434,7 @@ const router = useRouter()
 const isLoading = ref(true)
 const displayedProducts = ref<ProductPreview[]>([])
 const allProducts = ref<ProductPreview[]>([])
+const isRandomProductImageLoaded = ref(false)
 
 const heroSearch = ref('')
 
@@ -407,10 +459,14 @@ const quickSearch = (tag: string) => {
 // Logic for random product in Why Us section
 const randomProduct = computed(() => {
   if (allProducts.value.length === 0) return null
-  return allProducts.value[Math.floor(Math.random() * allProducts.value.length)]
+  // Gunakan jam sekarang untuk mendapatkan index acak yang stabil per jam
+  const hour = new Date().getHours()
+  return allProducts.value[hour % allProducts.value.length]
 })
 
+
 const fetchData = async () => {
+  isLoading.value = true
   try {
     const { data } = await api.get('/api/realEstate/getAll', {
       headers: {

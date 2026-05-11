@@ -287,7 +287,7 @@ onUnmounted(() => {
           <div class="flex gap-5">
             <div 
               class="size-14 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transition-transform duration-500"
-              :class="settingsStore.bot.isActive ? 'bg-bejo-500 text-white shadow-bejo-500/20' : 'bg-white text-slate-400 border border-slate-100'"
+              :class="settingsStore.bot.isActive ? 'bg-emerald-500 text-white shadow-bejo-500/20' : 'bg-white text-slate-400 border border-slate-100'"
             >
               <Icon :icon="settingsStore.bot.isActive ? 'lucide:bot' : 'lucide:message-square-off'" class="size-7" />
             </div>

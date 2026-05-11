@@ -1,8 +1,10 @@
 <template>
   <div v-if="isLoading || isAdmin || (product.Status_Display == 'Aktif' && product.Status_Properti == 'Tersedia')" class="group flex flex-col h-full rounded-[2.5rem] border transition-all duration-700 relative bg-white border-slate-100 shadow-premium" :class="!isLoading ? (showSelectButton ? '' : 'hover:-translate-y-3 hover:shadow-bejo-premium hover:border-bejo-200 cursor-pointer') : ''" @click="showSelectButton ? null : handleClick" @contextmenu="isAdmin && !isLoading ? ($event.preventDefault(), $emit('toggleDropdown', product.No_Id)) : null">
     <!-- Card Image Header -->
-    <div class="relative h-60 overflow-hidden rounded-t-[2.5rem]" :class="isLoading ? 'bg-slate-100 animate-pulse' : 'bg-white p-3 pb-0'">
-      <div v-if="isLoading" class="absolute inset-0 bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer"></div>
+    <div class="relative h-60 overflow-hidden rounded-t-[2.5rem]" :class="isLoading || !isImageLoaded ? 'bg-slate-100' : 'bg-white p-3 pb-0'">
+      <!-- Shimmer effect stays until image is loaded -->
+      <div v-if="isLoading || !isImageLoaded" class="absolute inset-0 bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer z-10"></div>
+      
       <div v-if="!isLoading" class="w-full h-full rounded-[2rem] overflow-hidden relative">
         <!-- Overlay for Non-Active -->
         <div v-if="product.Status_Display != 'Aktif' || product.Status_Properti != 'Tersedia'" class="absolute inset-0 bg-black/40 backdrop-grayscale-[60%] z-[20] pointer-events-none transition-all duration-500"></div>
@@ -26,6 +28,7 @@
                  muted 
                  playsinline
                  @loadeddata="isImageLoaded = true"
+                 @error="isImageLoaded = true"
                ></video>
                <div class="absolute inset-0 flex items-center justify-center bg-black/10">
                   <Icon icon="lucide:play" class="size-10 text-white fill-white/20 drop-shadow-lg" />
@@ -39,15 +42,11 @@
             :class="isImageLoaded ? 'opacity-100' : 'opacity-0'"
             :loading="lazy ? 'lazy' : 'eager'"
             @load="isImageLoaded = true"
+            @error="isImageLoaded = true"
           />
-          
-          <!-- Loading State for Image/Video -->
-          <div v-if="!isImageLoaded" class="absolute inset-0 bg-white animate-pulse flex items-center justify-center">
-             <Icon icon="lucide:loader-2" class="size-8 text-bejo-200 animate-spin" />
-          </div>
         </div>
 
-        <div v-else class="absolute inset-0 bg-slate-200 flex flex-col items-center justify-center">
+        <div v-else class="absolute inset-0 bg-slate-200 flex flex-col items-center justify-center" @vue:mounted="isImageLoaded = true">
           <Icon icon="lucide:image" class="size-16 text-slate-400" />
         </div>
 
@@ -87,37 +86,43 @@
     <!-- Card Body -->
     <div class="p-6 flex flex-col flex-1">
       <!-- Location -->
-      <div class="flex items-start gap-1.5 text-bejo-600 mb-3" :class="isLoading ? 'opacity-50 grayscale' : ''">
+      <div class="flex items-start gap-1.5 text-bejo-600 mb-3">
         <Icon icon="lucide:map-pin" class="size-4 mt-0.5" />
-        <div class="flex flex-col">
-          <span class="text-[10px] font-black uppercase tracking-[0.15em]" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-24 mb-1' : 'text-bejo-600'">
-            {{ isLoading ? '.' : product.Nama_Kota ? product.Nama_Kota : 'Lokasi Tidak Tersedia' }}
+        <div class="flex flex-col flex-1">
+          <div v-if="isLoading" class="h-3 w-24 bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer rounded mb-1"></div>
+          <span v-else class="text-[10px] font-black uppercase tracking-[0.15em] text-bejo-600">
+            {{ product.Nama_Kota ? product.Nama_Kota : 'Lokasi Tidak Tersedia' }}
           </span>
-          <p class="text-[11px] font-bold text-slate-500 leading-tight" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-48' : ''">
-            <span v-if="!isLoading && !product.Hide_alamat">{{ product.Alamat ? product.Alamat.split('_Lat:')[0] : '' }}</span>
-            <span v-else-if="!isLoading && product.Hide_alamat" class="italic opacity-60">Alamat disembunyikan</span>
-            <span v-if="!isLoading && product.Nama_Kota && !product.Hide_alamat" class="block mt-0.5 font-black text-slate-400 uppercase tracking-widest text-[9px]">Area: {{ product.Nama_Area }}</span>
-            <span v-if="isLoading" class="block h-3 w-32 bg-slate-100 rounded animate-pulse"></span>
+          
+          <div v-if="isLoading" class="h-3 w-48 bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer rounded"></div>
+          <p v-else class="text-[11px] font-bold text-slate-500 leading-tight">
+            <span v-if="!product.Hide_alamat">
+              {{ product.Alamat ? product.Alamat.split('_Lat')[0].split('Lat:')[0].trim() : '' }}
+              <span v-if="product.Nama_Kota" class="text-bejo-600 font-black ml-1">• {{ product.Nama_Kota }}</span>
+            </span>
+            <span v-else class="italic opacity-60">Alamat disembunyikan</span>
+            <span v-if="product.Nama_Area && !product.Hide_alamat" class="block mt-0.5 font-black text-slate-400 uppercase tracking-widest text-[9px]">Area: {{ product.Nama_Area }}</span>
           </p>
         </div>
       </div>
 
       <!-- Title -->
-      <h6 class="text-xl md:text-2xl text-slate-900 font-black tracking-tighter transition-colors mb-3 leading-[1.1] line-clamp-2 [text-wrap:pretty]" :class="[isLoading ? 'text-transparent bg-slate-200 animate-pulse rounded-xl w-full' : '', !showSelectButton ? 'group-hover:text-bejo-600' : '']">
-        <RouterLink v-if="!isLoading && !disableRouting" :to="targetUrl" class="before:absolute before:inset-0">{{ product.Nama_Produk }}</RouterLink>
-        <div v-else-if="!isLoading && disableRouting" class="before:absolute before:inset-0">{{ product.Nama_Produk }}</div>
-        <span v-else>.</span>
+      <div v-if="isLoading" class="h-8 w-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer rounded-xl mb-3"></div>
+      <h6 v-else class="text-xl md:text-2xl text-slate-900 font-black tracking-tighter transition-colors mb-3 leading-[1.1] line-clamp-2 [text-wrap:pretty]" :class="!showSelectButton ? 'group-hover:text-bejo-600' : ''">
+        <RouterLink v-if="!disableRouting" :to="targetUrl" class="before:absolute before:inset-0">{{ product.Nama_Produk }}</RouterLink>
+        <div v-else class="before:absolute before:inset-0">{{ product.Nama_Produk }}</div>
       </h6>
 
       <!-- Type & Size Info -->
-      <p class="text-xs font-semibold text-slate-400 mb-6" :class="isLoading ? 'text-transparent bg-slate-200 animate-pulse rounded w-32' : ''">
-        <span v-if="!isLoading">{{ product.Tipe }} &bull; Tipe {{ product.Luas_Bangunan }}</span>
-        <span v-else>...</span>
+      <div v-if="isLoading" class="h-4 w-32 bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer rounded mb-6"></div>
+      <p v-else class="text-xs font-semibold text-slate-400 mb-6">
+        {{ product.Tipe }} &bull; Tipe {{ product.Luas_Bangunan }}
       </p>
 
       <!-- Specs Details -->
       <div v-if="!props.hideSpecs" class="mb-4 relative">
-        <button v-if="collapsibleDetails" type="button" @click.stop="emit('toggleExpand', product.No_Id)" class="flex items-center justify-between w-full px-4 py-2.5 bg-bejo-50/50 hover:bg-bejo-100 rounded-xl border border-bejo-100 transition-all group/expand cursor-pointer relative z-30">
+        <div v-if="isLoading" class="h-10 w-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer rounded-xl"></div>
+        <button v-else-if="collapsibleDetails" type="button" @click.stop="emit('toggleExpand', product.No_Id)" class="flex items-center justify-between w-full px-4 py-2.5 bg-bejo-50/50 hover:bg-bejo-100 rounded-xl border border-bejo-100 transition-all group/expand cursor-pointer relative z-30">
           <span class="text-[10px] font-black uppercase tracking-[0.2em] text-bejo-700 pointer-events-none">Detail Unit</span>
           <Icon :icon="props.isExpanded ? 'lucide:chevron-up' : 'lucide:chevron-down'" class="size-4 text-bejo-400 group-hover/expand:text-bejo-600 transition-transform pointer-events-none" />
         </button>
@@ -135,42 +140,47 @@
                :class="collapsibleDetails ? 'absolute top-full left-0 right-0 z-[100] mt-2 bg-white/95 backdrop-blur-xl border border-slate-100 shadow-2xl rounded-3xl' : 'bg-slate-50/50 border border-slate-100 rounded-2xl'"
                @click.stop>
             <div class="grid grid-cols-2 gap-3 p-3 shadow-inner" :class="collapsibleDetails ? 'p-4' : 'p-3'">
-              <div v-if="product.Luas_Tanah != 0" class="flex items-center gap-2">
-                <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0" :class="isLoading ? 'opacity-50 grayscale' : ''">
-                  <Icon icon="lucide:land-plot" class="size-3.5 text-bejo-600" />
+              <template v-if="isLoading">
+                <div v-for="i in 4" :key="i" class="h-8 w-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer rounded-lg"></div>
+              </template>
+              <template v-else>
+                <div v-if="product.Luas_Tanah != 0" class="flex items-center gap-2">
+                  <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0">
+                    <Icon icon="lucide:land-plot" class="size-3.5 text-bejo-600" />
+                  </div>
+                  <span class="text-xs font-bold text-slate-700">LT {{ product.Luas_Tanah || 0 }} m²</span>
                 </div>
-                <span class="text-xs font-bold" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-12' : 'text-slate-700'">LT {{ isLoading ? 0 : product.Luas_Tanah || 0 }} m²</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0" :class="isLoading ? 'opacity-50 grayscale' : ''">
-                  <Icon icon="lucide:home" class="size-3.5 text-bejo-600" />
+                <div class="flex items-center gap-2">
+                  <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0">
+                    <Icon icon="lucide:home" class="size-3.5 text-bejo-600" />
+                  </div>
+                  <span class="text-xs font-bold text-slate-700">LB {{ product.Luas_Bangunan || 0 }} m²</span>
                 </div>
-                <span class="text-xs font-bold" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-12' : 'text-slate-700'">LB {{ isLoading ? 0 : product.Luas_Bangunan || 0 }} m²</span>
-              </div>
-              <div class="flex items-center gap-2" v-if="!isLoading">
-                <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0">
-                  <Icon icon="lucide:layers" class="size-3.5 text-bejo-600" />
+                <div class="flex items-center gap-2">
+                  <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0">
+                    <Icon icon="lucide:layers" class="size-3.5 text-bejo-600" />
+                  </div>
+                  <span class="text-xs font-bold text-slate-700">{{ product.Jumlah_Lantai || 0 }} Lt</span>
                 </div>
-                <span class="text-xs font-bold text-slate-700 font-bold text-slate-700">{{ product.Jumlah_Lantai || 0 }} Lt</span>
-              </div>
-              <div class="flex items-center gap-2" v-if="!isLoading">
-                <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0">
-                  <Icon icon="lucide:car" class="size-3.5 text-bejo-600" />
+                <div class="flex items-center gap-2">
+                  <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0">
+                    <Icon icon="lucide:car" class="size-3.5 text-bejo-600" />
+                  </div>
+                  <span class="text-xs font-bold text-slate-700">{{ product.Jumlah_Carpot || 0 }} Mobil</span>
                 </div>
-                <span class="text-xs font-bold text-slate-700 font-bold text-slate-700">{{ product.Jumlah_Carpot || 0 }} Mobil</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0" :class="isLoading ? 'opacity-50 grayscale' : ''">
-                  <Icon icon="lucide:bed" class="size-3.5 text-bejo-600" />
+                <div class="flex items-center gap-2">
+                  <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0">
+                    <Icon icon="lucide:bed" class="size-3.5 text-bejo-600" />
+                  </div>
+                  <span class="text-xs font-bold text-slate-700">{{ product.Jumlah_Kamar_Tidur || 0 }} KT</span>
                 </div>
-                <span class="text-xs font-bold" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-8' : 'text-slate-700'">{{ isLoading ? 0 : product.Jumlah_Kamar_Tidur || 0 }} KT</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0" :class="isLoading ? 'opacity-50 grayscale' : ''">
-                  <Icon icon="lucide:bath" class="size-3.5 text-bejo-600" />
+                <div class="flex items-center gap-2">
+                  <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0">
+                    <Icon icon="lucide:bath" class="size-3.5 text-bejo-600" />
+                  </div>
+                  <span class="text-xs font-bold text-slate-700">{{ product.Jumlah_Kamar_Mandi || 0 }} KM</span>
                 </div>
-                <span class="text-xs font-bold" :class="isLoading ? 'bg-slate-200 text-transparent animate-pulse rounded w-8' : 'text-slate-700'">{{ isLoading ? 0 : product.Jumlah_Kamar_Mandi || 0 }} KM</span>
-              </div>
+              </template>
             </div>
           </div>
         </Transition>
@@ -181,8 +191,8 @@
         <!-- Rental Price -->
         <div v-if="isLoading || (product.Harga_Sewa1 > 0)" class="flex flex-col">
           <div v-if="isLoading" class="space-y-2">
-            <div class="h-2.5 w-16 bg-slate-100 rounded animate-pulse"></div>
-            <div class="h-6 w-32 bg-slate-100 rounded-lg animate-pulse"></div>
+            <div class="h-2.5 w-16 bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer rounded"></div>
+            <div class="h-6 w-32 bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer rounded-lg"></div>
           </div>
           <template v-else>
             <span class="text-[10px] font-black uppercase tracking-widest mb-0.5 text-slate-400">
@@ -254,9 +264,17 @@
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 
 const isImageLoaded = ref(false)
+
+onMounted(() => {
+  // Fallback: Jika dalam 10 detik gambar belum load (gagal/lelet), 
+  // paksa tutup shimmer agar user tetap bisa melihat konten teks.
+  setTimeout(() => {
+    isImageLoaded.value = true
+  }, 10000)
+})
 
 const props = withDefaults(
   defineProps<{
@@ -284,6 +302,16 @@ const props = withDefaults(
   }
 )
 
+const hasMedia = computed(() => props.product?.MediaUrls && props.product.MediaUrls.length > 0)
+
+// Gabungkan status loading data dan loading gambar
+const effectivelyLoading = computed(() => {
+  if (props.isLoading) return true
+  // Jika ada media tapi belum load, tetap anggap loading
+  if (hasMedia.value && !isImageLoaded.value) return true
+  return false
+})
+
 const emit = defineEmits(['toggleDropdown', 'updateStatus', 'delete', 'edit', 'select', 'toggleExpand'])
 
 const targetUrl = computed(() => {
@@ -299,7 +327,7 @@ const formatCurrency = (value: number) => {
 }
 
 const handleClick = () => {
-  if (!props.isLoading) {
+  if (!effectivelyLoading.value) {
     emit('select', props.product)
   }
 }

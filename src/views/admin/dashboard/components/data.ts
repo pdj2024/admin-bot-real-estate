@@ -29,7 +29,7 @@ export const prospectOptions: ApexOptions = {
       stops: [20, 100]
     }
   },
-  colors: ['var(--color-bejo-500)', 'var(--color-bejo-700)'],
+  colors: ['var(--color-bejo-400)', 'var(--color-bejo-600)'],
   dataLabels: { enabled: false },
   grid: {
     borderColor: '#f1f5f9',

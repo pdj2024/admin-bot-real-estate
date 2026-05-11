@@ -1,5 +1,5 @@
 <template>
-  <div class="app-header min-h-topbar-height flex items-center sticky top-0 z-30 bg-(--topbar-background) border-b border-default-200">
+  <div class="app-header min-h-topbar-height flex items-center sticky top-0 z-50 bg-(--topbar-background) border-b border-default-200">
     <div class="w-full flex items-center justify-between px-6">
       <div class="flex items-center gap-5">
         <button id="button-toggle-menu" class="hs-overlay btn btn-icon size-8 hover:bg-default-150 rounded" @click="toggleSideNav">
