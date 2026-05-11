@@ -90,9 +90,19 @@
         <Icon icon="lucide:map-pin" class="size-4 mt-0.5" />
         <div class="flex flex-col flex-1">
           <div v-if="isLoading" class="h-3 w-24 bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer rounded mb-1"></div>
-          <span v-else class="text-[10px] font-black uppercase tracking-[0.15em] text-bejo-600">
-            {{ product.Nama_Kota ? product.Nama_Kota : 'Lokasi Tidak Tersedia' }}
-          </span>
+          <div v-else class="flex items-center justify-between gap-2">
+            <span class="text-[10px] font-black uppercase tracking-[0.15em] text-bejo-600 truncate">
+              {{ product.Nama_Kota ? product.Nama_Kota : 'Lokasi Tidak Tersedia' }}
+            </span>
+            <button 
+              v-if="product.Nama_Kota"
+              @click.stop="goToCatalogByArea"
+              class="flex items-center gap-1 text-bejo-500 hover:text-bejo-700 transition-colors group/area shrink-0"
+            >
+              <span class="text-[8px] font-black uppercase tracking-widest border-b border-bejo-200 group-hover/area:border-bejo-600 transition-all">Lihat Area</span>
+              <Icon icon="lucide:arrow-right" class="size-2.5 group-hover/area:translate-x-0.5 transition-transform" />
+            </button>
+          </div>
           
           <div v-if="isLoading" class="h-3 w-48 bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer rounded"></div>
           <p v-else class="text-[11px] font-bold text-slate-500 leading-tight">
@@ -265,7 +275,9 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
 import { computed, ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const isImageLoaded = ref(false)
 
 onMounted(() => {
@@ -301,6 +313,27 @@ const props = withDefaults(
     lazy: true
   }
 )
+
+const goToCatalogByArea = () => {
+  if (!props.product) return
+  
+  let cityName = props.product.Nama_Kota || ''
+  let provinceName = (props.product as any).Nama_Provinsi || (props.product as any).Provinsi || ''
+
+  if (cityName.includes(',')) {
+    const parts = cityName.split(',')
+    cityName = parts[0].trim()
+    if (!provinceName) provinceName = parts[1].trim()
+  }
+
+  router.push({
+    path: props.isAdmin ? '/properti/katalog' : '/katalog',
+    query: {
+      province: provinceName,
+      city: cityName
+    }
+  })
+}
 
 const hasMedia = computed(() => props.product?.MediaUrls && props.product.MediaUrls.length > 0)
 

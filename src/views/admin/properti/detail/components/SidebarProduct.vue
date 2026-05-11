@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import type { Product } from '../index.vue'
 
+const router = useRouter()
 const props = defineProps<{
   product: Product | null
 }>()
@@ -20,6 +22,40 @@ const media = computed(() => {
 
 const currentMedia = computed(() => media.value[activeMediaIndex.value] || null)
 
+const goToCatalogByArea = () => {
+  if (!props.product) return
+  
+  let cityName = props.product.Nama_Kota || ''
+  let provinceName = (props.product as any).Nama_Provinsi || (props.product as any).Provinsi || ''
+
+  if (cityName.includes(',')) {
+    const parts = cityName.split(',')
+    cityName = parts[0].trim()
+    if (!provinceName) provinceName = parts[1].trim()
+  }
+
+  router.push({
+    path: '/properti/katalog',
+    query: {
+      province: provinceName,
+      city: cityName
+    }
+  })
+}
+
+const displayArea = computed(() => {
+  if (!props.product) return ''
+  let cityName = props.product.Nama_Kota || ''
+  let provinceName = (props.product as any).Nama_Provinsi || (props.product as any).Provinsi || ''
+  
+  if (cityName.includes(',')) {
+    const parts = cityName.split(',')
+    cityName = parts[0].trim()
+    if (!provinceName) provinceName = parts[1].trim()
+  }
+  
+  return provinceName ? `${cityName}, ${provinceName}` : cityName
+})
 
 const emit = defineEmits<{
   (e: 'edit'): void
@@ -162,8 +198,27 @@ const handleShare = () => {
     </div>
 
     <!-- Admin Actions -->
-    <div class="card bg-white rounded-3xl p-6 shadow-premium border-none">
-       <h6 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+    <div class="card bg-white rounded-3xl p-6 shadow-premium border-none space-y-6">
+       <!-- Area Context -->
+       <div v-if="product?.Nama_Kota" class="flex items-center justify-between gap-4 p-4 bg-bejo-50/50 rounded-2xl border border-bejo-100 group/area hover:bg-bejo-50 transition-all duration-300">
+          <div class="flex flex-col gap-1 min-w-0">
+             <div class="flex items-center gap-2">
+                <div class="size-2 rounded-full bg-bejo-500 animate-pulse"></div>
+                <span class="text-[10px] font-black uppercase tracking-[0.15em] text-bejo-700 truncate">
+                  Area {{ displayArea }}
+                </span>
+             </div>
+          </div>
+          <button 
+            @click="goToCatalogByArea"
+            class="flex items-center gap-2 text-bejo-600 hover:text-bejo-700 transition-colors group/btn shrink-0"
+          >
+            <span class="text-[9px] font-black uppercase tracking-[0.2em] border-b-2 border-bejo-200 group-hover/btn:border-bejo-600 transition-all">Lihat Area</span>
+            <Icon icon="lucide:arrow-right" class="size-3 group-hover/btn:translate-x-1 transition-transform" />
+          </button>
+       </div>
+
+       <h6 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
           <Icon icon="lucide:lock" class="size-3" />
           Kontrol Admin
        </h6>

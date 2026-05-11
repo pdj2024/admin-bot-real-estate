@@ -12,10 +12,29 @@ import GoogleMapsViewer from '@/components/common/GoogleMapsViewer.vue'
 import CompareModal from '@/components/common/CompareModal.vue'
 
 const showCompareModal = ref(false)
+const showLightbox = ref(false)
+const lightboxIndex = ref(0)
+const showStickyCTA = ref(false)
 
 const route = useRoute()
 
+const handleScroll = () => {
+  // Show sticky CTA after scrolling 400px
+  showStickyCTA.value = window.scrollY > 400
+}
+
+const handleWhatsApp = () => {
+  if (!product.value) return
+  const message = `Halo, saya tertarik dengan properti "${product.value.Nama_Produk}" yang saya lihat di website. Bisa minta info lebih lanjut?%0A%0AUrl: ${window.location.origin}/properti/detail/${product.value.Slug}`
+  window.open(`https://wa.me/6281234567890?text=${message}`, '_blank')
+}
+
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
+}
+
 const mapCoords = computed(() => {
+// ... existing mapCoords code ...
   if (!product.value?.Alamat) return null
   console.log('Processing map coordinates from address:', product.value.Alamat)
   
@@ -85,6 +104,7 @@ export interface Product {
   Nama_Area?: string
   Kelurahan?: string
   Kecamatan?: string
+  Nama_Provinsi?: string
 }
 
 const product = ref<Product | null>(null)
@@ -161,9 +181,17 @@ watch(() => route.params.slug, async (newSlug) => {
 
 onMounted(async () => {
   await fetchData(route.params.slug as string)
+  window.addEventListener('scroll', handleScroll)
   nextTick(() => {
-    window.HSStaticMethods?.autoInit()
+    if (window.HSStaticMethods?.autoInit) {
+      window.HSStaticMethods.autoInit()
+    }
   })
+})
+
+import { onUnmounted } from 'vue'
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
 })
 </script>
 
@@ -186,7 +214,13 @@ onMounted(async () => {
       </div>
       
       <div v-else-if="product" class="grid lg:grid-cols-12 grid-cols-1 gap-5">
-        <SidebarProduct :product="product" :isAdmin="isAdmin" @openCompare="showCompareModal = true" class="lg:col-span-4" />
+        <SidebarProduct 
+          :product="product" 
+          :isAdmin="isAdmin" 
+          @openCompare="showCompareModal = true" 
+          @openLightbox="(idx) => { lightboxIndex = idx; showLightbox = true }"
+          class="lg:col-span-4" 
+        />
         <div class="lg:col-span-8 col-span-1 flex flex-col gap-5">
           <ProductDetails :product="product" :isAdmin="isAdmin" class="!col-span-1" />
           
@@ -211,6 +245,79 @@ onMounted(async () => {
         </div>
         
         <CompareModal :show="showCompareModal" :currentProduct="product" @close="showCompareModal = false" />
+
+        <!-- Sticky Mobile CTA -->
+        <Transition name="slide-up">
+          <div v-if="showStickyCTA && product && product.Status_Properti === 'Tersedia'" class="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t border-slate-100 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] p-4 z-[90] flex items-center justify-between gap-4">
+            <div class="min-w-0 flex-1">
+              <h4 class="text-sm font-black text-slate-900 truncate uppercase tracking-tight">{{ product.Nama_Produk }}</h4>
+              <p class="text-bejo-600 font-black text-base tracking-tighter">
+                {{ product.Harga_Jual2 != 0 ? formatCurrency(product.Harga_Jual2) : (product.Harga_Sewa2 != 0 ? formatCurrency(product.Harga_Sewa2) : formatCurrency(product.Harga_Jual1 || product.Harga_Sewa1)) }}
+              </p>
+            </div>
+            <button @click="handleWhatsApp" class="bg-green-500 text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-green-500/20 active:scale-95 transition-all shrink-0">
+              <Icon icon="ic:baseline-whatsapp" class="size-5" />
+              Hubungi
+            </button>
+          </div>
+        </Transition>
+
+        <!-- Lightbox Modal -->
+        <Transition name="fade">
+          <div v-if="showLightbox && product" class="fixed inset-0 z-[2000] bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-4 md:p-10">
+            <button @click="showLightbox = false" class="absolute top-6 right-6 size-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-all">
+              <Icon icon="lucide:x" class="size-6" />
+            </button>
+            
+            <div class="relative w-full max-w-6xl aspect-[4/3] md:aspect-video flex items-center justify-center group">
+              <!-- Navigation -->
+              <button 
+                v-if="product.MediaUrls.length > 1"
+                @click="lightboxIndex = (lightboxIndex - 1 + product.MediaUrls.length) % product.MediaUrls.length"
+                class="absolute left-4 top-1/2 -translate-y-1/2 size-12 bg-white/10 hover:bg-white text-white hover:text-bejo-600 rounded-full flex items-center justify-center transition-all z-10 opacity-0 group-hover:opacity-100"
+              >
+                <Icon icon="lucide:chevron-left" class="size-6" />
+              </button>
+              <button 
+                v-if="product.MediaUrls.length > 1"
+                @click="lightboxIndex = (lightboxIndex + 1) % product.MediaUrls.length"
+                class="absolute right-4 top-1/2 -translate-y-1/2 size-12 bg-white/10 hover:bg-white text-white hover:text-bejo-600 rounded-full flex items-center justify-center transition-all z-10 opacity-0 group-hover:opacity-100"
+              >
+                <Icon icon="lucide:chevron-right" class="size-6" />
+              </button>
+
+              <Transition name="fade" mode="out-in">
+                <div :key="lightboxIndex" class="size-full flex items-center justify-center">
+                  <img 
+                    v-if="!product.MediaUrls[lightboxIndex].ContentType?.startsWith('video/')"
+                    :src="product.MediaUrls[lightboxIndex].Url || product.MediaUrls[lightboxIndex].Id_Media" 
+                    class="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
+                  />
+                  <video 
+                    v-else
+                    :src="product.MediaUrls[lightboxIndex].Url || product.MediaUrls[lightboxIndex].Id_Media"
+                    class="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
+                    controls
+                    autoplay
+                  ></video>
+                </div>
+              </Transition>
+            </div>
+
+            <!-- Thumbnail Strip -->
+            <div class="mt-8 flex gap-2 overflow-x-auto max-w-full pb-4 px-4 no-scrollbar">
+              <button 
+                v-for="(m, i) in product.MediaUrls" 
+                :key="i"
+                @click="lightboxIndex = i"
+                class="size-16 rounded-xl overflow-hidden border-2 transition-all shrink-0"
+                :class="lightboxIndex === i ? 'border-bejo-500 scale-110 shadow-lg' : 'border-transparent opacity-50 hover:opacity-100'"
+              >
+                <img :src="m.ThumbUrl || m.Url || m.Id_Media" class="size-full object-cover" />
+              </button>
+            </div>
+          </div>
+        </Transition>
       </div>
 
       <div v-else class="flex flex-col items-center justify-center py-20 text-center">
@@ -228,3 +335,36 @@ onMounted(async () => {
     </div>
   </Guest>
 </template>
+
+<style scoped>
+@reference "@/assets/css/style.css";
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+}
+
+.slide-up-enter-from,
+.slide-up-leave-to {
+  transform: translateY(100%);
+  opacity: 0;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+</style>

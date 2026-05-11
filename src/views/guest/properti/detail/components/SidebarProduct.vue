@@ -1,14 +1,54 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import type { Product } from '../index.vue'
 
+const router = useRouter()
 const props = defineProps<{
   product: Product | null
   isAdmin?: boolean
 }>()
 
-defineEmits(['openCompare'])
+const goToCatalogByArea = () => {
+  if (!props.product) return
+  
+  let cityName = props.product.Nama_Kota || ''
+  let provinceName = (props.product as any).Nama_Provinsi || (props.product as any).Provinsi || ''
+
+  // Logic: If city contains a comma (e.g., "Surabaya, Jawa Timur"), split it
+  if (cityName.includes(',')) {
+    const parts = cityName.split(',')
+    cityName = parts[0].trim()
+    if (!provinceName) {
+      provinceName = parts[1].trim()
+    }
+  }
+
+  router.push({
+    path: '/katalog',
+    query: {
+      province: provinceName,
+      city: cityName
+    }
+  })
+}
+
+const displayArea = computed(() => {
+  if (!props.product) return ''
+  let cityName = props.product.Nama_Kota || ''
+  let provinceName = (props.product as any).Nama_Provinsi || (props.product as any).Provinsi || ''
+  
+  if (cityName.includes(',')) {
+    const parts = cityName.split(',')
+    cityName = parts[0].trim()
+    if (!provinceName) provinceName = parts[1].trim()
+  }
+  
+  return provinceName ? `${cityName}, ${provinceName}` : cityName
+})
+
+defineEmits(['openCompare', 'openLightbox'])
 
 const activeMediaIndex = ref(0)
 
@@ -62,18 +102,20 @@ const handleWhatsApp = () => {
             <template v-else-if="currentMedia?.type === 'video'">
               <video 
                 :src="currentMedia.url!" 
-                class="size-full object-cover" 
+                class="size-full object-cover cursor-pointer" 
                 controls 
                 autoplay 
                 muted 
                 loop
+                @click="$emit('openLightbox', activeMediaIndex)"
               ></video>
             </template>
             <template v-else-if="currentMedia?.type === 'image'">
               <img 
                 :src="currentMedia.url!" 
-                class="size-full object-cover transition-transform duration-700 group-hover/main:scale-110" 
+                class="size-full object-cover transition-transform duration-700 group-hover/main:scale-110 cursor-pointer" 
                 :alt="product?.Nama_Produk" 
+                @click="$emit('openLightbox', activeMediaIndex)"
               />
             </template>
             <template v-else>
@@ -152,7 +194,26 @@ const handleWhatsApp = () => {
     </div>
 
     <!-- Actions -->
-    <div class="card bg-white rounded-3xl p-6 shadow-premium border-none">
+    <div class="card bg-white rounded-3xl p-6 shadow-premium border-none space-y-6">
+       <!-- Area Context -->
+       <div v-if="product?.Nama_Kota" class="flex items-center justify-between gap-4 p-4 bg-bejo-50/50 rounded-2xl border border-bejo-100 group hover:bg-bejo-50 transition-all duration-300">
+          <div class="flex flex-col gap-1 min-w-0">
+             <div class="flex items-center gap-2">
+                <div class="size-2 rounded-full bg-bejo-500 animate-pulse"></div>
+                <span class="text-[10px] font-black uppercase tracking-[0.15em] text-bejo-700 truncate">
+                  Area {{ displayArea }}
+                </span>
+             </div>
+          </div>
+          <button 
+            @click="goToCatalogByArea"
+            class="flex items-center gap-2 text-bejo-600 hover:text-bejo-700 transition-colors group/btn shrink-0"
+          >
+            <span class="text-[9px] font-black uppercase tracking-[0.2em] border-b-2 border-bejo-200 group-hover/btn:border-bejo-600 transition-all">Lihat Area</span>
+            <Icon icon="lucide:arrow-right" class="size-3 group-hover/btn:translate-x-1 transition-transform" />
+          </button>
+       </div>
+
        <div class="grid grid-cols-1 gap-3">
           <!-- Contact Button - Hidden if already Sold/Rented -->
           <button v-if="product?.Status_Properti === 'Tersedia'" @click="handleWhatsApp" class="w-full h-14 bg-green-500 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-green-500/20 hover:bg-green-600 transition-all active:scale-95 flex items-center justify-center gap-3">

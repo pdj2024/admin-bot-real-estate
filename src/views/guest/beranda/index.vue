@@ -32,20 +32,35 @@
             </div>
 
             <!-- Global Search Bar -->
-            <div class="max-w-5xl mx-auto w-full relative z-20 px-4 md:px-0">
-              <div class="bg-white/80 backdrop-blur-2xl p-2 md:p-4 rounded-[2.5rem] border border-bejo-100 shadow-2xl shadow-bejo-600/10 flex flex-col md:flex-row items-center gap-4">
+            <div class="max-w-6xl mx-auto w-full relative z-20 px-4 md:px-0">
+              <div class="bg-white/80 backdrop-blur-2xl p-2 md:p-3 rounded-[2.5rem] border border-bejo-100 shadow-2xl shadow-bejo-600/10 flex flex-col md:flex-row items-center gap-2">
                 <div class="flex-1 flex items-center gap-4 px-6 w-full">
                   <Icon icon="lucide:search" class="size-6 text-bejo-600 shrink-0" />
                   <input 
                     type="text" 
                     v-model="heroSearch" 
                     @keyup.enter="handleHeroSearch"
-                    placeholder="Cari lokasi atau nama properti..." 
-                    class="w-full bg-transparent border-none focus:ring-0 text-slate-800 font-bold placeholder:text-slate-400 text-lg md:text-xl py-3"
+                    placeholder="Cari nama properti atau area..." 
+                    class="w-full bg-transparent border-none focus:ring-0 text-slate-800 font-bold placeholder:text-slate-400 text-lg py-3"
                   />
                 </div>
-                <button @click="handleHeroSearch" class="w-full md:w-auto px-10 py-4 md:py-5 bg-bejo-600 hover:bg-bejo-700 text-white rounded-[1.8rem] font-black text-sm uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-xl shadow-bejo-600/20 flex items-center justify-center gap-3">
-                  <Icon icon="lucide:search" class="size-5" />
+                
+                <div class="h-10 w-px bg-slate-100 hidden md:block"></div>
+
+                <!-- City Filter -->
+                <div class="w-full md:w-60 px-6 py-2 flex items-center gap-3 group/select relative">
+                  <Icon icon="lucide:map-pin" class="size-5 text-slate-400 group-hover/select:text-bejo-600 transition-colors" />
+                  <select 
+                    v-model="selectedCity"
+                    class="w-full bg-transparent border-none focus:ring-0 text-slate-800 font-bold text-sm cursor-pointer py-2 appearance-none pr-8"
+                  >
+                    <option value="">Semua Kota</option>
+                    <option v-for="city in uniqueCities" :key="city" :value="city">{{ city }}</option>
+                  </select>
+                  <Icon icon="lucide:chevron-down" class="absolute right-6 size-4 text-slate-400 pointer-events-none" />
+                </div>
+
+                <button @click="handleHeroSearch" class="w-full md:w-auto px-10 py-4 md:py-4.5 bg-bejo-600 hover:bg-bejo-700 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-bejo-600/20 flex items-center justify-center gap-3">
                   Cari Unit
                 </button>
               </div>
@@ -77,7 +92,7 @@
                   <Icon icon="lucide:building-2" class="size-7" />
                 </div>
                 <div class="space-y-1">
-                  <h4 class="text-5xl lg:text-6xl font-black text-slate-900 tracking-tighter">1,2 rb</h4>
+                  <h4 class="text-5xl lg:text-6xl font-black text-slate-900 tracking-tighter">{{ allProducts.length > 0 ? allProducts.length : '...' }}</h4>
                   <p class="text-[10px] font-black text-bejo-600/80 uppercase tracking-[0.25em]">Unit Eksklusif</p>
                   <div class="h-1 w-8 bg-bejo-100 mx-auto rounded-full mt-2 group-hover:w-16 transition-all duration-500"></div>
                 </div>
@@ -89,7 +104,7 @@
                 </div>
                 <div class="space-y-1">
                   <h4 class="text-5xl lg:text-6xl font-black text-slate-900 tracking-tighter">100 %</h4>
-                  <p class="text-[10px] font-black text-bejo-600/80 uppercase tracking-[0.25em]">Pemilik Langsung</p>
+                  <p class="text-[10px] font-black text-bejo-600/80 uppercase tracking-[0.25em]">Data Tervalidasi</p>
                   <div class="h-1 w-8 bg-bejo-100 mx-auto rounded-full mt-2 group-hover:w-16 transition-all duration-500"></div>
                 </div>
               </div>
@@ -99,7 +114,7 @@
                   <Icon icon="lucide:map-pin" class="size-7" />
                 </div>
                 <div class="space-y-1">
-                  <h4 class="text-5xl lg:text-6xl font-black text-slate-900 tracking-tighter">15</h4>
+                  <h4 class="text-5xl lg:text-6xl font-black text-slate-900 tracking-tighter">{{ totalAreas }}</h4>
                   <p class="text-[10px] font-black text-bejo-600/80 uppercase tracking-[0.25em]">Area Strategis</p>
                   <div class="h-1 w-8 bg-bejo-100 mx-auto rounded-full mt-2 group-hover:w-16 transition-all duration-500"></div>
                 </div>
@@ -434,19 +449,28 @@ const router = useRouter()
 const isLoading = ref(true)
 const displayedProducts = ref<ProductPreview[]>([])
 const allProducts = ref<ProductPreview[]>([])
+const totalAreas = computed(() => {
+  const cities = allProducts.value.map(p => p.Nama_Kota).filter(Boolean)
+  return new Set(cities).size || 0
+})
 const isRandomProductImageLoaded = ref(false)
 
 const heroSearch = ref('')
+const selectedCity = ref('')
+const uniqueCities = computed(() => {
+  const cities = allProducts.value.map(p => p.Nama_Kota).filter(Boolean)
+  return Array.from(new Set(cities)).sort()
+})
 
 const handleHeroSearch = () => {
-  if (heroSearch.value.trim()) {
-    router.push({
-      path: '/katalog',
-      query: { search: heroSearch.value.trim() }
-    })
-  } else {
-    router.push('/katalog')
-  }
+  const query: any = {}
+  if (heroSearch.value.trim()) query.search = heroSearch.value.trim()
+  if (selectedCity.value) query.city = selectedCity.value
+  
+  router.push({
+    path: '/katalog',
+    query: query
+  })
 }
 
 const quickSearch = (tag: string) => {

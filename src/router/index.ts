@@ -39,7 +39,7 @@ const router = createRouter({
       path: '/detail/:slug',
       name: 'Detail properti',
       meta: {
-        title: 'Detail properti',
+        title: 'Detail Properti',
         requiresAuth: false
       },
       component: () => import('@/views/guest/properti/detail/index.vue')
