@@ -156,7 +156,7 @@ onMounted(async () => {
           <ProductDetails :product="product" :isAdmin="true" class="!col-span-1" />
           
           <!-- Map Section -->
-          <div v-if="mapCoords" class="w-full">
+          <div v-if="mapCoords && product && !product.Hide_alamat" class="w-full">
             <div class="flex items-center gap-2 mb-4">
               <div class="size-8 bg-bejo-50 rounded-lg flex items-center justify-center border border-bejo-100">
                 <Icon icon="lucide:map" class="size-4 text-bejo-600" />

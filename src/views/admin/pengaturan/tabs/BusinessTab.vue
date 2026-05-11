@@ -19,10 +19,15 @@ interface CompanyProfile {
   Kode_Pos: string
   About: string
   Gmap: string
+  Logo_Company?: string | null
+  Id_Logo_Company?: string | null
 }
 
 const isLoading = ref(true)
 const isSaving = ref(false)
+const isUploadingLogo = ref(false)
+const logoPreview = ref<string | null>(null)
+const logoFile = ref<File | null>(null)
 
 // Operating Days & Hours State
 const hariDari = ref('Senin')
@@ -60,7 +65,9 @@ const form = reactive<CompanyProfile>({
   Jam_Buka: '',
   Kode_Pos: '',
   About: '',
-  Gmap: ''
+  Gmap: '',
+  Logo_Company: null,
+  Id_Logo_Company: null
 })
 
 const fetchProfile = async () => {
@@ -83,8 +90,14 @@ const fetchProfile = async () => {
       Jam_Buka: (profile as any).Jam_Buka || '',
       Kode_Pos: (profile as any).Kode_Pos || '',
       About: profile.description,
-      Gmap: profile.mapUrl
+      Gmap: profile.mapUrl,
+      Logo_Company: profile.Logo_Company || null,
+      Id_Logo_Company: profile.Id_Logo_Company || null
     })
+
+    if (form.Logo_Company) {
+      logoPreview.value = form.Logo_Company
+    }
 
     // Parse Hari_Buka (e.g. "Senin-Jumat")
     if (form.Hari_Buka && form.Hari_Buka.includes('-')) {
@@ -128,20 +141,21 @@ const handleSave = async () => {
 
     // Construct joined values
     const joinedHari = `${hariDari.value}-${hariSampai.value}`
-    const joinedJam = `${jamDari.value}-${jamSampai.value}`
+    const joinedJam = `${jamDari.value.replace(':', '.')}-${jamSampai.value.replace(':', '.')}`
 
     const payload = {
       Nama_Toko: form.Nama_Toko,
       Email: form.Email,
-      No_Telp: form.No_Telp || '',
+      No_Telp: form.No_Telp || null,
       No_Wa_1: form.No_Wa_1,
-      No_Wa_2: form.No_Wa_2 || '',
+      No_Wa_2: form.No_Wa_2 || null,
       Alamat_Toko: form.Alamat_Toko,
       Hari_Buka: joinedHari,
       Jam_Buka: joinedJam,
       Kode_Pos: form.Kode_Pos,
-      About: form.About || '',
-      Gmap: form.Gmap || ''
+      About: form.About || null,
+      Gmap: form.Gmap || null,
+      Logo_Company: form.Id_Logo_Company
     }
 
     const { data } = await api.put('/api/company/update', payload, {
@@ -160,6 +174,89 @@ const handleSave = async () => {
     fail('Terjadi kesalahan saat menghubungi server')
   } finally {
     isSaving.value = false
+  }
+}
+
+const triggerLogoUpload = () => {
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = 'image/*'
+  input.onchange = (e: any) => {
+    const file = e.target.files[0]
+    if (file) {
+      logoFile.value = file
+      logoPreview.value = URL.createObjectURL(file)
+      handleLogoUpload(file)
+    }
+  }
+  input.click()
+}
+
+const handleLogoUpload = async (file: File) => {
+  const oldMediaId = form.Id_Logo_Company
+  try {
+    isUploadingLogo.value = true
+    
+    // 1. Get Signed URL
+    const extension = file.name.split('.').pop()?.toLowerCase() || ''
+    const { data: reqData } = await api.post('/api/mediacloud/req-upload-url-batch', {
+      uploader_id: localStorage.getItem('no_id') || 'adm_1',
+      extensions: [extension]
+    }, {
+      headers: { 'X-Jenis-User': 'Admin' }
+    })
+
+    const uploadInfo = reqData[0]
+    
+    // 2. Upload Binary to GCS
+    await fetch(uploadInfo.UploadUrl, {
+      method: 'PUT',
+      body: file,
+      headers: { 'Content-Type': file.type }
+    })
+
+    // 3. Confirm Upload
+    const { data: confirmData } = await api.post('/api/mediacloud/confirm-upload-batch', {
+      files: [{
+        uploader_id: localStorage.getItem('no_id') || 'adm_1',
+        fileName: file.name,
+        objectName: uploadInfo.ObjectName,
+        original_size: file.size,
+        content_type: file.type
+      }]
+    }, {
+      headers: { 'X-Jenis-User': 'Admin' }
+    })
+
+    const mediaId = confirmData.MediaIds[0]
+
+    // 4. Save to Profile
+    const payload = {
+      Logo_Company: mediaId
+    }
+
+    await api.put('/api/company/update', payload, {
+      params: { no_id: 'comp_0001' },
+      headers: { 'X-Jenis-User': 'Admin' }
+    })
+
+    form.Id_Logo_Company = mediaId
+    success('Logo perusahaan berhasil diperbarui')
+    
+    // Cleanup: Delete old logo from cloud
+    if (oldMediaId) {
+      api.delete('/api/mediacloud/delete-batch', {
+        data: { ids: [oldMediaId] },
+        headers: { 'X-Jenis-User': 'Admin' }
+      }).catch(e => console.error('Error deleting old logo:', e))
+    }
+
+    await fetchProfile()
+  } catch (err) {
+    console.error('Logo upload error:', err)
+    fail('Gagal mengunggah logo')
+  } finally {
+    isUploadingLogo.value = false
   }
 }
 
@@ -338,7 +435,38 @@ onMounted(() => {
           </div>
         </div>
 
-        <div class="p-8 space-y-6">
+        <div class="p-8 space-y-8">
+          <!-- Logo Upload -->
+          <div class="flex flex-col md:flex-row items-center gap-8 pb-8 border-b border-slate-50">
+            <div class="relative group cursor-pointer" @click="triggerLogoUpload">
+              <div class="size-32 rounded-[2.5rem] bg-slate-50 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center overflow-hidden transition-all group-hover:border-bejo-500 group-hover:bg-bejo-50/30">
+                <template v-if="logoPreview">
+                  <img :src="logoPreview" class="size-full object-contain p-2" />
+                  <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                    <Icon icon="lucide:camera" class="size-6" />
+                  </div>
+                </template>
+                <template v-else>
+                  <Icon icon="lucide:image-plus" class="size-8 text-slate-300 mb-2 group-hover:text-bejo-500" />
+                  <span class="text-[8px] font-black uppercase tracking-widest text-slate-400 group-hover:text-bejo-600">Logo Perusahaan</span>
+                </template>
+              </div>
+              <div v-if="isUploadingLogo" class="absolute inset-0 bg-white/80 backdrop-blur-sm rounded-[2.5rem] flex items-center justify-center z-10">
+                <Icon icon="lucide:loader-2" class="size-6 animate-spin text-bejo-500" />
+              </div>
+            </div>
+            
+            <div class="flex-1 space-y-2 text-center md:text-left">
+              <h5 class="text-base font-black text-slate-900">Logo</h5>
+              <p class="text-xs text-slate-500 font-medium leading-relaxed max-w-sm">
+                Gunakan logo berformat PNG atau JPG dengan latar belakang transparan/putih untuk hasil terbaik di seluruh platform.
+              </p>
+              <button @click="triggerLogoUpload" class="text-[10px] font-black text-bejo-600 uppercase tracking-widest hover:text-bejo-700 flex items-center gap-2 mx-auto md:mx-0">
+                Ganti Logo
+                <Icon icon="lucide:arrow-right" class="size-3" />
+              </button>
+            </div>
+          </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="md:col-span-2">
               <label class="label">

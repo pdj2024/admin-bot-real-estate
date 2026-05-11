@@ -110,7 +110,9 @@
               {{ product.Alamat ? product.Alamat.split('_Lat')[0].split('Lat:')[0].trim() : '' }}
               <span v-if="product.Nama_Kota" class="text-bejo-600 font-black ml-1">• {{ product.Nama_Kota }}</span>
             </span>
-            <span v-else class="italic opacity-60">Alamat disembunyikan</span>
+            <span v-else class="text-slate-500 font-bold">
+              {{ product.Nama_Kota }}{{ product.Nama_Area ? ` (${product.Nama_Area})` : '' }}
+            </span>
             <span v-if="product.Nama_Area && !product.Hide_alamat" class="block mt-0.5 font-black text-slate-400 uppercase tracking-widest text-[9px]">Area: {{ product.Nama_Area }}</span>
           </p>
         </div>
@@ -212,7 +214,7 @@
               <span class="text-2xl font-black tracking-tight text-bejo-600">
                 {{ formatCurrency(product.Harga_Sewa2 > 0 ? product.Harga_Sewa2 : product.Harga_Sewa1) }}
               </span>
-              <div v-if="product.Harga_Sewa2 > 0" class="flex items-center gap-2">
+              <div v-if="product.Harga_Sewa2 > 0 && app.viewDiscount" class="flex items-center gap-2">
                 <span class="relative text-xs text-slate-400 font-bold px-1 line-through decoration-slate-300">
                   {{ formatCurrency(product.Harga_Sewa1) }}
                 </span>
@@ -229,7 +231,7 @@
             <span class="text-3xl font-black text-slate-900 tracking-tighter">
               {{ formatCurrency(product.Harga_Jual2 > 0 ? product.Harga_Jual2 : product.Harga_Jual1) }}
             </span>
-            <div v-if="product.Harga_Jual2 > 0" class="flex items-center gap-2">
+            <div v-if="product.Harga_Jual2 > 0 && app.viewDiscount" class="flex items-center gap-2">
               <span class="relative text-xs text-slate-400 font-bold px-1 line-through decoration-slate-300">
                 {{ formatCurrency(product.Harga_Jual1) }}
               </span>
@@ -274,10 +276,14 @@
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import { computed, ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useSettings } from '@/stores/settings'
+import { storeToRefs } from 'pinia'
 
 const router = useRouter()
+const settingsStore = useSettings()
+const { app } = storeToRefs(settingsStore)
 const isImageLoaded = ref(false)
 
 onMounted(() => {

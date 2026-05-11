@@ -62,11 +62,19 @@ watch(() => settingsStore.app.isMaintenance, (val) => {
   checkMaintenanceRedirect(val)
 })
 
-// Dynamic Browser Title based on App Name
+// Dynamic Browser Title & Favicon
 watch([() => settingsStore.business.appName, () => route.path], ([newName]) => {
   const pageTitle = route.meta.title ? `${route.meta.title} | ` : ''
   const appName = newName || 'Rumah Rejeki'
   document.title = `${pageTitle}${appName}`
+}, { immediate: true })
+
+watch(() => settingsStore.business.Logo_Company, (newLogo) => {
+  const link: HTMLLinkElement = document.querySelector("link[rel*='icon']") || document.createElement('link')
+  link.type = 'image/x-icon'
+  link.rel = 'icon'
+  link.href = newLogo || '/favicon.ico'
+  document.getElementsByTagName('head')[0].appendChild(link)
 }, { immediate: true })
 
 // Global Sync: Fetch latest settings on every route change as requested

@@ -13,7 +13,7 @@
         :class="layout.isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'"
       >
         <div class="p-6 pb-4 border-b border-slate-100 flex justify-between items-center">
-            <img :src="settingsStore.business.Logo || logo" alt="Logo" class="h-8 w-auto" />
+            <img :src="settingsStore.business.Logo_Company || settingsStore.business.Logo || logo" alt="Logo" class="h-8 w-auto" />
             <button @click="layoutStore.toggleMobileMenu()" class="p-1.5 text-bejo-600 hover:text-bejo-700 bg-bejo-50 hover:bg-bejo-100 rounded-lg transition-colors border border-bejo-100">
               <Icon icon="lucide:x" class="size-4" />
             </button>
@@ -52,7 +52,7 @@
           
           <div class="flex items-center gap-3 sm:gap-10">
             <RouterLink to="/" class="shrink-0 group flex items-center gap-2">
-              <img :src="settingsStore.business.Logo || logo" alt="Logo" class="h-9 md:h-11 w-auto transition-transform group-hover:scale-105" />
+              <img :src="settingsStore.business.Logo_Company || settingsStore.business.Logo || logo" alt="Logo" class="h-9 md:h-11 w-auto transition-transform group-hover:scale-105" />
               <span class="text-lg sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight block">{{ settingsStore.business.appName }}</span>
             </RouterLink>
 
@@ -152,7 +152,7 @@
             
             <!-- Company Info -->
             <div class="lg:col-span-4 space-y-6">
-              <img :src="settingsStore.business.Logo || logo" alt="Logo" class="h-10 md:h-12 w-auto brightness-0 invert opacity-100 mb-6" />
+              <img :src="settingsStore.business.Logo_Company || settingsStore.business.Logo || logo" alt="Logo" class="h-10 md:h-12 w-auto brightness-0 invert opacity-100 mb-6" />
               <p class="text-sm leading-relaxed max-w-sm text-slate-400 font-medium">
                 {{ settingsStore.business.description }}
               </p>

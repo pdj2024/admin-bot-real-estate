@@ -75,6 +75,22 @@ const handleToggleMaintenance = async () => {
   }
 }
 
+const handleToggleDiscount = async () => {
+  try {
+    isProcessing.value = true
+    await settingsStore.updateDefaultSettings({ 
+      View_Nilai_Diskon: settingsStore.app.viewDiscount 
+    })
+    settingsStore.saveApp()
+    success(`Tampilan harga diskon berhasil ${settingsStore.app.viewDiscount ? 'diaktifkan' : 'dinonaktifkan'}`)
+  } catch {
+    settingsStore.app.viewDiscount = !settingsStore.app.viewDiscount
+    fail('Gagal memperbarui pengaturan harga diskon')
+  } finally {
+    isProcessing.value = false
+  }
+}
+
 const handleToggleBot = async () => {
   const targetState = settingsStore.bot.isActive
   try {
@@ -350,6 +366,39 @@ onUnmounted(() => {
             <span class="text-xs font-black text-bejo-900 uppercase tracking-wider">Akses Pengunjung Dinonaktifkan Secara Global</span>
           </div>
         </Transition>
+      </div>
+
+      <!-- Discount Price Card -->
+      <div 
+        class="p-6 rounded-[2rem] border-2 transition-all duration-500"
+        :class="settingsStore.app.viewDiscount ? 'bg-bejo-50 border-bejo-200' : 'bg-slate-50 border-slate-100'"
+      >
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div class="flex gap-5">
+            <div 
+              class="size-14 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transition-transform duration-500"
+              :class="settingsStore.app.viewDiscount ? 'bg-bejo-500 text-white shadow-bejo-500/20' : 'bg-white text-slate-400 border border-slate-100'"
+            >
+              <Icon icon="lucide:tag" class="size-7" />
+            </div>
+            <div>
+              <h5 class="text-lg font-black text-slate-900 mb-1">Tampilkan Harga Sebelum Diskon</h5>
+              <p class="text-sm text-slate-500 font-medium leading-relaxed max-w-md">
+                Jika diaktifkan, sistem akan menampilkan harga asli yang dicoret di samping harga promo.
+              </p>
+            </div>
+          </div>
+          
+          <label class="relative inline-flex items-center cursor-pointer group" :class="{ 'opacity-50 pointer-events-none': isProcessing }">
+            <input 
+              type="checkbox" 
+              v-model="settingsStore.app.viewDiscount" 
+              @change="handleToggleDiscount"
+              class="sr-only peer" 
+            />
+            <div class="w-20 h-10 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:start-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-8 after:w-9 after:transition-all peer-checked:bg-green-500 shadow-inner group-hover:scale-105 transition-transform"></div>
+          </label>
+        </div>
       </div>
 
       <div class="bg-bejo-50/50 p-6 rounded-[2rem] border border-bejo-100 flex gap-5">

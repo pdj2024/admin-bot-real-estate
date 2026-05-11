@@ -13,6 +13,7 @@ interface Customer {
   Telepon: number
   Kota: string
   Status: string
+  Status_Broadcast?: string
   Pernah_Order?: boolean
   Saves?: string[]
   Likes?: string[]
@@ -35,6 +36,7 @@ const columns = [
   { accessorKey: 'Email', header: 'Kontak' },
   { accessorKey: 'Kota', header: 'Lokasi' },
   { accessorKey: 'Status', header: 'Status' },
+  { accessorKey: 'Status_Broadcast', header: 'Broadcast' },
   { id: 'aksi', header: 'Action', enableSorting: false }
 ]
 
@@ -76,6 +78,28 @@ const toggleStatus = async (item: Customer) => {
     emit('success')
   } catch (err) {
     fail(`Gagal mengubah status ${item.Nama_Display}`)
+    console.log(err)
+  }
+}
+
+const toggleBroadcast = async (item: Customer) => {
+  const newStatus = item.Status_Broadcast === 'aktif' ? 'non aktif' : 'aktif'
+  
+  try {
+    await api.put(
+      '/api/Customer/update?no_id=' + item.No_Id,
+      {
+        ...item,
+        Status_Broadcast: newStatus,
+        Id_Media: item.Id_Media || null
+      },
+      { headers: { 'X-Jenis-User': 'Customer' } }
+    )
+    item.Status_Broadcast = newStatus
+    success(`Berhasil mengubah status broadcast ${item.Nama_Display}`)
+    emit('success')
+  } catch (err) {
+    fail(`Gagal mengubah status broadcast ${item.Nama_Display}`)
     console.log(err)
   }
 }
@@ -144,7 +168,7 @@ onBeforeUnmount(() => {
 
         <tbody class="divide-y divide-slate-50">
           <tr v-if="isLoading">
-            <td colspan="5" class="py-24 text-center">
+            <td colspan="6" class="py-24 text-center">
               <div class="flex flex-col items-center gap-3">
                 <div class="size-12 rounded-2xl bg-bejo-50 flex items-center justify-center">
                   <Icon icon="lucide:loader-2" class="animate-spin size-6 text-bejo-500" />
@@ -155,7 +179,7 @@ onBeforeUnmount(() => {
           </tr>
 
           <tr v-else-if="table.getRowModel().rows.length === 0">
-            <td colspan="5" class="py-20 text-center">
+            <td colspan="6" class="py-20 text-center">
               <div class="flex flex-col items-center gap-3 opacity-40">
                 <Icon icon="lucide:users" class="size-12 text-slate-300" />
                 <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Tidak ada customer ditemukan</span>
@@ -163,7 +187,7 @@ onBeforeUnmount(() => {
             </td>
           </tr>
 
-          <tr v-for="row in table.getRowModel().rows" :key="row.id" class="hover:bg-slate-50/50 transition-all duration-300 group">
+          <tr v-else v-for="row in table.getRowModel().rows" :key="row.id" class="hover:bg-slate-50/50 transition-all duration-300 group">
             <td class="px-6 py-5">
               <div class="flex items-center gap-4">
                 <div class="size-12 rounded-2xl bg-gradient-to-br from-bejo-500 to-bejo-600 text-white flex items-center justify-center font-black text-lg shadow-lg shadow-bejo-500/20 group-hover:scale-110 transition-transform duration-500">
@@ -209,6 +233,21 @@ onBeforeUnmount(() => {
                   :class="row.original.Status === 'aktif' ? 'bg-bejo-500' : 'bg-slate-200'"
                 >
                   <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out" :class="row.original.Status === 'aktif' ? 'translate-x-5' : 'translate-x-0'"></span>
+                </button>
+              </div>
+            </td>
+
+            <td class="px-6 py-5">
+              <div class="flex items-center gap-4">
+                <span class="text-[10px] uppercase font-black tracking-[0.1em] transition-all min-w-[60px]" :class="row.original.Status_Broadcast === 'aktif' ? 'text-bejo-500' : 'text-slate-300'">
+                  {{ row.original.Status_Broadcast === 'aktif' ? 'Aktif' : 'Non-Aktif' }}
+                </span>
+                <button 
+                  @click="toggleBroadcast(row.original)"
+                  class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-bejo-500/20"
+                  :class="row.original.Status_Broadcast === 'aktif' ? 'bg-bejo-500' : 'bg-slate-200'"
+                >
+                  <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out" :class="row.original.Status_Broadcast === 'aktif' ? 'translate-x-5' : 'translate-x-0'"></span>
                 </button>
               </div>
             </td>

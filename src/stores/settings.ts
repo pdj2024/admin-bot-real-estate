@@ -16,6 +16,8 @@ export interface BusinessSettings {
   tiktok: string
   mapUrl: string
   Logo?: string
+  Logo_Company?: string
+  Id_Logo_Company?: string
 }
 
 export interface BotSettings {
@@ -54,10 +56,12 @@ const DEFAULT_THEME: ThemeSettings = {
 
 export interface AppSettings {
   isMaintenance: boolean
+  viewDiscount: boolean
 }
 
 const DEFAULT_APP: AppSettings = {
-  isMaintenance: false
+  isMaintenance: false,
+  viewDiscount: true
 }
 
 export const useSettings = defineStore('settings', () => {
@@ -89,6 +93,8 @@ export const useSettings = defineStore('settings', () => {
         business.whatsapp = profile.No_Wa_1 || business.whatsapp
         business.email = profile.Email || business.email
         business.mapUrl = profile.Gmap || business.mapUrl
+        business.Logo_Company = profile.Logo_Company || null
+        business.Id_Logo_Company = profile.Id_Logo_Company || null
 
         Object.assign(business, profile)
         saveBusiness()
@@ -110,6 +116,7 @@ export const useSettings = defineStore('settings', () => {
       if (data.StatusCode === 200 && data.Data.length > 0) {
         const defaults = data.Data[0]
         app.isMaintenance = defaults.Is_Maintenance
+        app.viewDiscount = defaults.View_Nilai_Diskon ?? true
         bot.isActive = defaults.Bot_Active
         theme.sidebarType = defaults.Sidebar_Type || theme.sidebarType
         theme.primaryColor = (defaults.Primary_Color || theme.primaryColor).toUpperCase()
