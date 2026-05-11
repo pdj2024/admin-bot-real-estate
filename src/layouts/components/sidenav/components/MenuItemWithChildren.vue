@@ -1,6 +1,6 @@
 <template>
-  <li class="menu-item hs-accordion" :class="{ active: isOpen }">
-    <button type="button" class="hs-accordion-toggle menu-link w-full" :class="{ active: isOpen }">
+  <li class="menu-item hs-accordion">
+    <button type="button" class="hs-accordion-toggle menu-link w-full">
       <span v-if="item.icon" class="menu-icon flex items-center justify-center"><Icon :icon="item.icon"></Icon></span>
       <span class="menu-text">{{ item.label }}</span>
       <span class="menu-arrow">
