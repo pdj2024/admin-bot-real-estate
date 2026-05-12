@@ -13,6 +13,37 @@ const selectedItem = ref<any>(null)
 const loading = ref(false)
 const searchQuery = ref('')
 const selectedIds = ref<Record<string, { type: string, item: any }>>({})
+const isAllSelected = computed(() => {
+  const totalItems = dataWilayah.value.kota.length + dataWilayah.value.area.length + dataWilayah.value.prioritas.length
+  if (totalItems === 0) return false
+  return Object.keys(selectedIds.value).length === totalItems
+})
+
+const isSomeSelected = computed(() => {
+  const selectedCount = Object.keys(selectedIds.value).length
+  return selectedCount > 0 && !isAllSelected.value
+})
+
+const toggleAll = () => {
+  if (isAllSelected.value) {
+    selectedIds.value = {}
+  } else {
+    const newSelected: Record<string, any> = {}
+    dataWilayah.value.kota.forEach((item: any) => {
+      const id = item.No_Id || item.No_Id_Kota
+      newSelected[`kota:${id}`] = { type: 'kota', item }
+    })
+    dataWilayah.value.area.forEach((item: any) => {
+      const id = item.No_Id || item.No_Id_Area
+      newSelected[`area:${id}`] = { type: 'area', item }
+    })
+    dataWilayah.value.prioritas.forEach((item: any) => {
+      const id = item.No_Id || item.No_Id_Prioritas
+      newSelected[`prioritas:${id}`] = { type: 'prioritas', item }
+    })
+    selectedIds.value = newSelected
+  }
+}
 
 // Expansion state
 const expandedCities = ref<Set<string>>(new Set())
@@ -386,33 +417,41 @@ const setPageSize = (size: number) => {
           
           <div class="max-h-[600px] overflow-auto">
             <!-- Table Header -->
-            <div class="grid grid-cols-12 bg-white/80 backdrop-blur-md sticky top-0 z-30 border-b border-slate-100 px-4 md:px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] shadow-sm">
-              <div class="col-span-6 flex items-center gap-14 pl-4">
-                <span>#</span>
+            <div class="grid bg-white/80 backdrop-blur-md sticky top-0 z-30 border-b border-slate-100 px-4 md:px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] shadow-sm" style="grid-template-columns: 40px 1fr 1fr 200px;">
+              <div class="flex justify-center">
+                <input 
+                  type="checkbox" 
+                  :checked="isAllSelected" 
+                  :indeterminate="isSomeSelected"
+                  @change="toggleAll"
+                  class="size-4 rounded border-slate-300 text-bejo-600 focus:ring-bejo-500/20 transition-all cursor-pointer" 
+                />
+              </div>
+              <div class="flex items-center pl-2">
                 <span>Nama Wilayah</span>
               </div>
-              <div class="col-span-3">Deskripsi</div>
-              <div class="col-span-3 text-right pr-4">Aksi</div>
+              <div>Deskripsi</div>
+              <div class="text-right pr-4">Aksi</div>
             </div>
 
             <!-- City List (Level 1) -->
             <div v-if="paginatedData.length > 0" class="divide-y divide-slate-50 border-separate border-spacing-0">
             <div v-for="city in paginatedData" :key="city._id" class="flex flex-col">
               <!-- City Row -->
-              <div class="grid grid-cols-12 px-4 md:px-8 py-4 items-center hover:bg-slate-50/50 transition-colors group">
-                <div class="col-span-6 flex items-center gap-10 pl-4">
+              <div class="grid px-4 md:px-8 py-4 items-center hover:bg-slate-50/50 transition-colors group" style="grid-template-columns: 40px 1fr 1fr 200px;">
+                <div class="flex justify-center">
                   <input type="checkbox" :checked="isSelected('kota', city)" @change="toggleSelection('kota', city)" class="size-4 rounded border-slate-300 text-bejo-600 focus:ring-bejo-500/20 transition-all cursor-pointer" />
-                  
-                  <div class="flex items-center gap-4 cursor-pointer select-none" @click="toggleCity(city._id)" :class="{ 'opacity-40 grayscale': !city._isActive }">
-                    <button class="size-6 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-bejo-50 hover:text-bejo-600 transition-all pointer-events-none">
-                      <Icon :icon="expandedCities.has(city._id) ? 'lucide:chevron-down' : 'lucide:chevron-right'" class="size-3.5" />
-                    </button>
-                    <div class="size-8 rounded-xl bg-bejo-50 flex items-center justify-center text-bejo-500 font-black text-xs">K</div>
-                    <span class="text-sm font-black text-slate-900 hover:text-bejo-600 transition-colors" :class="{ 'bg-yellow-100 px-1.5 py-0.5 rounded-md text-yellow-900': isMatchingQuery(city.Nama) }">{{ city.Nama }}</span>
-                  </div>
                 </div>
-                <div class="col-span-3 text-[11px] font-medium text-slate-400 truncate pr-4" :class="{ 'opacity-40 grayscale': !city._isActive }">{{ city.Deskripsi || '-' }}</div>
-                <div class="col-span-3 flex justify-end items-center gap-2 pr-4">
+                
+                <div class="flex items-center gap-3 pl-2 cursor-pointer select-none" @click="toggleCity(city._id)" :class="{ 'opacity-40 grayscale': !city._isActive }">
+                  <button class="size-6 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-bejo-50 hover:text-bejo-600 transition-all pointer-events-none">
+                    <Icon :icon="expandedCities.has(city._id) ? 'lucide:chevron-down' : 'lucide:chevron-right'" class="size-3.5" />
+                  </button>
+                  <div class="size-8 rounded-xl bg-bejo-50 flex items-center justify-center text-bejo-500 font-black text-xs">K</div>
+                  <span class="text-sm font-black text-slate-900 hover:text-bejo-600 transition-colors" :class="{ 'bg-yellow-100 px-1.5 py-0.5 rounded-md text-yellow-900': isMatchingQuery(city.Nama) }">{{ city.Nama }}</span>
+                </div>
+                <div class="text-[11px] font-medium text-slate-400 truncate pr-4" :class="{ 'opacity-40 grayscale': !city._isActive }">{{ city.Deskripsi || '-' }}</div>
+                <div class="flex justify-end items-center gap-2 pr-4">
                   <!-- Toggle Kota Status -->
                   <button 
                     @click.stop="toggleStatus('kota', city)"
@@ -443,23 +482,23 @@ const setPageSize = (size: number) => {
               <div v-if="expandedCities.has(city._id)" class="bg-slate-50/30 divide-y divide-slate-100">
                 <div v-for="area in city._areas" :key="area._id" class="flex flex-col">
                   <!-- Area Row -->
-                  <div class="grid grid-cols-12 pl-20 pr-8 py-3 items-center hover:bg-white transition-colors group">
-                    <div class="col-span-6 flex items-center gap-8">
+                  <div class="grid pl-4 md:pl-8 pr-8 py-3 items-center hover:bg-white transition-colors group" style="grid-template-columns: 40px 1fr 1fr 200px;">
+                    <div class="flex justify-center">
                       <input type="checkbox" :checked="isSelected('area', area)" @change="toggleSelection('area', area)" class="size-3.5 rounded border-slate-300 text-bejo-600 focus:ring-bejo-500/20 transition-all cursor-pointer" />
-                      
-                      <div class="flex items-center gap-3 cursor-pointer select-none" @click="toggleArea(area._id)" :class="{ 'opacity-40 grayscale': !area._isActive }">
-                        <button class="size-5 rounded-md bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-bejo-600 transition-all pointer-events-none">
-                          <Icon :icon="expandedAreas.has(area._id) ? 'lucide:chevron-down' : 'lucide:chevron-right'" class="size-3" />
-                        </button>
-                        <div class="size-7 rounded-lg bg-amber-50 flex items-center justify-center text-amber-500 font-black text-[10px]">A</div>
-                        <span class="text-xs font-bold text-slate-700 hover:text-bejo-600 transition-colors" :class="{ 'bg-yellow-100 px-1.5 py-0.5 rounded-md text-yellow-900': isMatchingQuery(area.Nama) }">{{ area.Nama }}</span>
-                      </div>
                     </div>
                     
-                    <div class="col-span-3 flex items-center gap-3" :class="{ 'opacity-40 grayscale': !area._isActive }">
+                    <div class="flex items-center gap-3 pl-8 cursor-pointer select-none" @click="toggleArea(area._id)" :class="{ 'opacity-40 grayscale': !area._isActive }">
+                      <button class="size-5 rounded-md bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-bejo-600 transition-all pointer-events-none">
+                        <Icon :icon="expandedAreas.has(area._id) ? 'lucide:chevron-down' : 'lucide:chevron-right'" class="size-3" />
+                      </button>
+                      <div class="size-7 rounded-lg bg-amber-50 flex items-center justify-center text-amber-500 font-black text-[10px]">A</div>
+                      <span class="text-xs font-bold text-slate-700 hover:text-bejo-600 transition-colors" :class="{ 'bg-yellow-100 px-1.5 py-0.5 rounded-md text-yellow-900': isMatchingQuery(area.Nama) }">{{ area.Nama }}</span>
+                    </div>
+                    
+                    <div class="flex items-center gap-3" :class="{ 'opacity-40 grayscale': !area._isActive }">
                       <div class="text-[10px] font-medium text-slate-400 truncate max-w-[120px]">{{ area.Deskripsi || '-' }}</div>
                     </div>
-                    <div class="col-span-3 flex justify-end items-center gap-1.5 pr-4">
+                    <div class="flex justify-end items-center gap-1.5 pr-4">
                       <!-- Toggle Area Status -->
                       <button 
                         @click.stop="toggleStatus('area', area)"
@@ -488,17 +527,17 @@ const setPageSize = (size: number) => {
 
                   <!-- Priority List (Level 3) -->
                   <div v-if="expandedAreas.has(area._id)" class="bg-white divide-y divide-slate-50">
-                    <div v-for="prio in area._priorities" :key="prio.No_Id || prio.No_Id_Prioritas" class="grid grid-cols-12 pl-32 pr-8 py-2.5 items-center hover:bg-slate-50/30 transition-colors group">
-                      <div class="col-span-6 flex items-center gap-8">
+                    <div v-for="prio in area._priorities" :key="prio.No_Id || prio.No_Id_Prioritas" class="grid pl-4 md:pl-8 pr-8 py-2.5 items-center hover:bg-slate-50/30 transition-colors group" style="grid-template-columns: 40px 1fr 1fr 200px;">
+                      <div class="flex justify-center">
                         <input type="checkbox" :checked="isSelected('prioritas', prio)" @change="toggleSelection('prioritas', prio)" class="size-3 rounded border-slate-300 text-bejo-600 focus:ring-bejo-500/20 transition-all cursor-pointer" />
-                        
-                        <div class="flex items-center gap-3" :class="{ 'opacity-40 grayscale': !prio._isActive }">
-                          <div class="size-6 rounded-md bg-rose-50 flex items-center justify-center text-rose-500 font-black text-[9px]">P</div>
-                          <span class="text-[11px] font-semibold text-slate-600" :class="{ 'bg-yellow-100 px-1.5 py-0.5 rounded-md text-yellow-900': isMatchingQuery(prio.Nama) }">{{ prio.Nama }}</span>
-                        </div>
                       </div>
-                      <div class="col-span-3 text-[9px] font-medium text-slate-400 truncate pr-4" :class="{ 'opacity-40 grayscale': !prio._isActive }">{{ prio.Deskripsi || '-' }}</div>
-                      <div class="col-span-3 flex justify-end items-center gap-1.5 pr-4">
+                      
+                      <div class="flex items-center gap-3 pl-16" :class="{ 'opacity-40 grayscale': !prio._isActive }">
+                        <div class="size-6 rounded-md bg-rose-50 flex items-center justify-center text-rose-500 font-black text-[9px]">P</div>
+                        <span class="text-[11px] font-semibold text-slate-600" :class="{ 'bg-yellow-100 px-1.5 py-0.5 rounded-md text-yellow-900': isMatchingQuery(prio.Nama) }">{{ prio.Nama }}</span>
+                      </div>
+                      <div class="text-[9px] font-medium text-slate-400 truncate pr-4" :class="{ 'opacity-40 grayscale': !prio._isActive }">{{ prio.Deskripsi || '-' }}</div>
+                      <div class="flex justify-end items-center gap-1.5 pr-4">
                         <!-- Toggle Prioritas Status -->
                         <button 
                           @click.stop="toggleStatus('prioritas', prio)"

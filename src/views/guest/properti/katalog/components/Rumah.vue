@@ -338,10 +338,42 @@ const table = useVueTable({
   }
 })
 
+// Helper to build query parameters
+const buildParams = () => {
+  const p = new URLSearchParams()
+  
+  // Mandatory Guest Filters
+  p.append('status_display', 'Aktif')
+  p.append('status_properti', 'Tersedia')
+  p.append('orderby', 'no_id')
+  p.append('orderdir', 'asc')
+
+  // Dynamic Filters from Props/State
+  if (props.searchQuery) p.append('nama_produk', props.searchQuery)
+  if (selectedType.value && selectedType.value !== 'Semua Tipe') p.append('tipe', selectedType.value)
+  
+  // Transaction Type Mapping
+  if (props.transactionType === 'Jual Saja') {
+    p.append('status_transaksi', '["Jual"]')
+  } else if (props.transactionType === 'Sewa Saja') {
+    p.append('status_transaksi', '["Sewa"]')
+  } else if (props.transactionType === 'Jual & Sewa') {
+    p.append('status_transaksi', '["Jual","Sewa"]')
+  }
+
+  // Region & Price
+  if (props.region.city) p.append('kota', props.region.city)
+  if (props.priceRange.min) p.append('harga_min', props.priceRange.min)
+  if (props.priceRange.max) p.append('harga_max', props.priceRange.max)
+
+  return p.toString()
+}
+
 const fetchData = async (backgroundRefetch = false) => {
   if (!backgroundRefetch) isLoading.value = true
   try {
-    const { data } = await api.get('/api/realEstate/getAll?status_display=aktif&status_properti=Tersedia&orderby=no_id&orderdir=asc', {
+    const query = buildParams()
+    const { data } = await api.get(`/api/realEstate/getAll?${query}`, {
       headers: { 'X-Jenis-User': 'Admin' }
     })
     products.value = data.Data
@@ -351,6 +383,20 @@ const fetchData = async (backgroundRefetch = false) => {
     if (!backgroundRefetch) isLoading.value = false
   }
 }
+
+// Watch for filter changes to refetch data
+let fetchTimeout: any = null
+watch(
+  [() => props.searchQuery, () => props.transactionType, selectedType, () => props.region.city, () => props.priceRange],
+  () => {
+    if (fetchTimeout) clearTimeout(fetchTimeout)
+    fetchTimeout = setTimeout(() => {
+      fetchData()
+      table.setPageIndex(0)
+    }, 500) // 500ms debounce
+  },
+  { deep: true }
+)
 
 const toggleDropdown = (id: string) => {
   activeDropdownId.value = activeDropdownId.value === id ? null : id

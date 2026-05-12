@@ -173,10 +173,40 @@ watch([() => props.searchQuery, transactionFilter, typeFilter, () => props.facil
   table.setPageIndex(0)
 }, { deep: true })
 
+// Helper to build query parameters
+const buildParams = () => {
+  const p = new URLSearchParams()
+  
+  // Default sorting for admin
+  p.append('orderby', 'no_id')
+  p.append('orderdir', 'asc')
+
+  // Dynamic Filters from Props/State
+  if (props.searchQuery) p.append('nama_produk', props.searchQuery)
+  if (typeFilter.value && typeFilter.value !== 'Semua') p.append('tipe', typeFilter.value)
+  
+  // Transaction Type Mapping
+  if (transactionFilter.value === 'Jual') {
+    p.append('status_transaksi', '["Jual"]')
+  } else if (transactionFilter.value === 'Sewa') {
+    p.append('status_transaksi', '["Sewa"]')
+  } else if (transactionFilter.value === 'Jual & Sewa') {
+    p.append('status_transaksi', '["Jual","Sewa"]')
+  }
+
+  // Region & Price
+  if (props.region.city) p.append('kota', props.region.city)
+  if (props.priceRange.min) p.append('harga_min', props.priceRange.min)
+  if (props.priceRange.max) p.append('harga_max', props.priceRange.max)
+
+  return p.toString()
+}
+
 const fetchData = async (backgroundRefetch = false) => {
   if (!backgroundRefetch) isLoading.value = true
   try {
-    const { data } = await api.get('/api/realEstate/getAll', {
+    const query = buildParams()
+    const { data } = await api.get(`/api/realEstate/getAll?${query}`, {
       headers: { 'X-Jenis-User': 'admin' }
     })
     products.value = data.Data || []
@@ -192,6 +222,20 @@ const fetchData = async (backgroundRefetch = false) => {
     if (!backgroundRefetch) isLoading.value = false
   }
 }
+
+// Watch for filter changes to refetch data
+let fetchTimeout: any = null
+watch(
+  [() => props.searchQuery, transactionFilter, typeFilter, () => props.region.city, () => props.priceRange],
+  () => {
+    if (fetchTimeout) clearTimeout(fetchTimeout)
+    fetchTimeout = setTimeout(() => {
+      fetchData()
+      table.setPageIndex(0)
+    }, 500) // 500ms debounce
+  },
+  { deep: true }
+)
 
 const updateStatusTransaksi = async (product: any, newStatus: string) => {
   const isDisplayStatus = ['Aktif', 'Draft'].includes(newStatus)

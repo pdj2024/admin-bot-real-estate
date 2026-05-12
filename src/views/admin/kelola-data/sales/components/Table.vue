@@ -348,8 +348,8 @@ onBeforeUnmount(() => {
         <thead class="sticky top-0 z-[100] bg-white/95 backdrop-blur-md shadow-sm">
           <tr v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id" class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
             <th v-for="header in headerGroup.headers.filter(h => !(h.column.columnDef.meta as any)?.isVirtual)" :key="header.id" 
-                class="px-6 py-5 text-start"
-                :class="{ 'w-10': header.id === 'select' }">
+                class="px-4 py-5 text-start"
+                :class="{ 'w-8': header.id === 'select' }">
               <FlexRender v-if="!header.isPlaceholder" :render="header.column.columnDef.header" :props="header.getContext()" />
             </th>
           </tr>
@@ -357,7 +357,7 @@ onBeforeUnmount(() => {
 
         <tbody class="divide-y divide-slate-50">
           <tr v-for="row in table.getRowModel().rows" :key="row.id" class="hover:bg-slate-50/50 transition-all duration-300 group">
-            <td v-if="table.getColumn('select')" class="px-6 py-5">
+            <td v-if="table.getColumn('select')" class="px-4 py-5">
               <FlexRender :render="table.getColumn('select')!.columnDef.cell" :props="row.getVisibleCells().find(c => c.column.id === 'select')?.getContext()" />
             </td>
             <td v-if="table.getColumn('name')?.getIsVisible()" class="px-6 py-5">

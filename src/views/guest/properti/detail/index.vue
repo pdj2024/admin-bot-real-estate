@@ -122,28 +122,39 @@ const isLoading = ref(true)
 const fetchData = async (currentSlug: string) => {
   isLoading.value = true
   try {
-    // Fetch a larger set to ensure we have enough active suggestions
-    const { data } = await api.get('/api/realEstate/getAll?status_display=aktif&status_properti=Tersedia&orderby=no_id&orderdir=asc', {
+    // 1. Fetch the specific product by slug (remove status filters to allow Sold items via slug)
+    const { data: exactData } = await api.get('/api/realEstate/getAll?slug=' + currentSlug, {
+      headers: { 'X-Jenis-User': 'Admin' }
+    })
+    
+    const mainProduct = exactData.Data[0]
+    
+    // 2. Fetch suggestions (keep catalog-ready filters)
+    const { data: suggestionData } = await api.get('/api/realEstate/getAll?status_display=aktif&status_properti=Tersedia&orderby=no_id&orderdir=asc', {
       headers: { 'X-Jenis-User': 'Admin' }
     })
 
-    // 1. Find the main product
-    let mainProduct = data.Data.find((p: Product) => p.Slug === currentSlug)
-    
-    // If not found in the latest 20, fetch specifically by slug
-    if (!mainProduct) {
-      const { data: exactData } = await api.get('/api/realEstate/getAll?status_display=aktif&status_properti=Tersedia&slug=' + currentSlug, {
-        headers: { 'X-Jenis-User': 'Admin' }
-      })
-      mainProduct = exactData.Data[0]
-    }
-    
     product.value = mainProduct
 
-    // 1.5 Visibility Check for Guest
+    // 3. Visibility Check for Guest
     const userRole = localStorage.getItem('role_user')
     if (product.value && userRole !== 'admin') {
-      if (product.value.Status_Display !== 'Aktif' || product.value.Status_Properti !== 'Tersedia') {
+      const isDraft = product.value.Status_Display === 'Draft'
+      const isAvailable = product.value.Status_Properti === 'Tersedia'
+      const isSold = ['Terjual', 'Tersewa'].includes(product.value.Status_Properti)
+
+      // Rule: Draft + Tersedia is BLOCKED
+      if (isDraft && isAvailable) {
+        product.value = null
+        isLoading.value = false
+        return
+      }
+
+      // Rule: Terjual/Tersewa or (Tersedia and Aktif) is ALLOWED
+      if (isSold || (isAvailable && !isDraft)) {
+        // Allowed
+      } else {
+        // Block others
         product.value = null
         isLoading.value = false
         return
@@ -153,9 +164,10 @@ const fetchData = async (currentSlug: string) => {
     const isJual = product.value?.Status_Transaksi?.includes('Jual')
     const isSewa = product.value?.Status_Transaksi?.includes('Sewa')
 
-    suggestions.value = data.Data
+    suggestions.value = suggestionData.Data
       .filter((p: Product) => {
         if (p.Slug === currentSlug) return false
+        // Already filtered by API for suggestions, but keep safety check
         if (p.Status_Display !== 'Aktif' || p.Status_Properti !== 'Tersedia') return false
         
         if (isJual && !isSewa) {
