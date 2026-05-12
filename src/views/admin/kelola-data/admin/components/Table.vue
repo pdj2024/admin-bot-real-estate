@@ -485,7 +485,7 @@ onBeforeUnmount(() => {
           <!-- Data Rows -->
           <tr v-else v-for="row in table.getRowModel().rows" :key="row.id" class="hover:bg-slate-50/50 transition-all duration-300 group" :class="{ 'bg-bejo-50/30': row.getIsSelected() }">
             <td class="pl-6 pr-0 py-5">
-              <FlexRender :render="table.getColumn('select').columnDef.cell" :props="row.getVisibleCells().find(c => c.column.id === 'select')?.getContext()" />
+              <FlexRender v-if="table.getColumn('select')" :render="table.getColumn('select')!.columnDef.cell" :props="row.getVisibleCells().find(c => c.column.id === 'select')?.getContext()" />
             </td>
 
             <td class="pl-3 pr-6 py-5">
@@ -496,8 +496,8 @@ onBeforeUnmount(() => {
                 <div class="flex flex-col gap-0.5">
                   <span class="font-black text-slate-900 tracking-tight group-hover:text-bejo-600 transition-colors">{{ row.original.Nama_User }}</span>
                   <div class="flex items-center gap-2">
-                    <span v-if="table.getColumn('No_Id').getIsVisible()" class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-black uppercase tracking-wider">ID: {{ row.original.No_Id }}</span>
-                    <span v-if="row.original.Max_Janji_Per_Hari && table.getColumn('Max_Janji_Per_Hari').getIsVisible()" class="text-[10px] bg-bejo-50 text-bejo-600 px-1.5 py-0.5 rounded font-black uppercase tracking-wider border border-bejo-100">
+                    <span v-if="table.getColumn('No_Id')?.getIsVisible()" class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-black uppercase tracking-wider">ID: {{ row.original.No_Id }}</span>
+                    <span v-if="row.original.Max_Janji_Per_Hari && table.getColumn('Max_Janji_Per_Hari')?.getIsVisible()" class="text-[10px] bg-bejo-50 text-bejo-600 px-1.5 py-0.5 rounded font-black uppercase tracking-wider border border-bejo-100">
                       MAX: {{ row.original.Max_Janji_Per_Hari }}/HARI
                     </span>
                   </div>
@@ -511,7 +511,7 @@ onBeforeUnmount(() => {
                   <Icon icon="lucide:mail" class="size-4 text-slate-400" />
                   {{ row.original.Email }}
                 </div>
-                <div v-if="row.original.Telepon && table.getColumn('Telepon').getIsVisible()" class="flex items-center gap-2 text-slate-500 font-bold text-[11px]">
+                <div v-if="row.original.Telepon && table.getColumn('Telepon')?.getIsVisible()" class="flex items-center gap-2 text-slate-500 font-bold text-[11px]">
                   <Icon icon="lucide:phone" class="size-3.5 text-slate-300" />
                   {{ row.original.Telepon }}
                 </div>

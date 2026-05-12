@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, h, computed } from 'vue'
 import { Icon } from '@iconify/vue'
-import { useVueTable, FlexRender, getCoreRowModel, getPaginationRowModel, getSortedRowModel, getFilteredRowModel } from '@tanstack/vue-table'
+import { useVueTable, FlexRender, getCoreRowModel, getPaginationRowModel, getSortedRowModel, getFilteredRowModel, type VisibilityState } from '@tanstack/vue-table'
 import { confirm, success, fail } from '@/utils/sweet-alert'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
@@ -22,7 +22,8 @@ interface Sales {
 
 const emit = defineEmits(['edit', 'success'])
 const rowSelection = ref<Record<string, boolean>>({})
-const columnVisibility = ref({})
+const columnVisibility = ref<VisibilityState>({})
+const showSettings = ref(false)
 
 const props = defineProps({
   searchQuery: {
@@ -357,7 +358,7 @@ onBeforeUnmount(() => {
         <tbody class="divide-y divide-slate-50">
           <tr v-for="row in table.getRowModel().rows" :key="row.id" class="hover:bg-slate-50/50 transition-all duration-300 group">
             <td v-if="table.getColumn('select')" class="px-6 py-5">
-              <FlexRender :render="table.getColumn('select').columnDef.cell" :props="row.getVisibleCells().find(c => c.column.id === 'select')?.getContext()" />
+              <FlexRender :render="table.getColumn('select')!.columnDef.cell" :props="row.getVisibleCells().find(c => c.column.id === 'select')?.getContext()" />
             </td>
             <td v-if="table.getColumn('name')?.getIsVisible()" class="px-6 py-5">
               <div class="flex items-center gap-4">
@@ -367,7 +368,7 @@ onBeforeUnmount(() => {
                 <div class="flex flex-col gap-0.5">
                   <span class="font-black text-slate-900 tracking-tight group-hover:text-bejo-600 transition-colors">{{ row.original.name }}</span>
                   <div class="flex items-center gap-2">
-                    <span v-if="table.getColumn('id').getIsVisible()" class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-black uppercase tracking-wider">ID: {{ row.original.id }}</span>
+                    <span v-if="table.getColumn('id')?.getIsVisible()" class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-black uppercase tracking-wider">ID: {{ row.original.id }}</span>
                     <span class="text-[10px] bg-bejo-50 text-bejo-600 px-1.5 py-0.5 rounded font-black uppercase tracking-wider border border-bejo-100">@{{ row.original.username }}</span>
                   </div>
                 </div>
@@ -387,7 +388,7 @@ onBeforeUnmount(() => {
                   <Icon icon="lucide:mail" class="size-3.5 text-slate-400" />
                   {{ row.original.email }}
                 </div>
-                <div v-if="row.original.phone && table.getColumn('phone').getIsVisible()" class="flex items-center gap-2 text-slate-500 font-bold text-[11px]">
+                <div v-if="row.original.phone && table.getColumn('phone')?.getIsVisible()" class="flex items-center gap-2 text-slate-500 font-bold text-[11px]">
                   <Icon icon="lucide:phone" class="size-3.5 text-slate-300" />
                   {{ row.original.phone }}
                 </div>
