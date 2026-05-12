@@ -407,7 +407,7 @@ const handleClose = () => {
                 <Icon icon="lucide:check-circle" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-4 pointer-events-none group-focus-within:text-bejo-500 transition-colors z-10" />
                 <select v-model="form.status" class="field-input h-11 !pl-11 appearance-none bg-white">
                   <option value="aktif">Aktif</option>
-                  <option value="nonaktif">Non-Aktif</option>
+                  <option value="nonaktif">Nonaktif</option>
                 </select>
                 <Icon icon="lucide:chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 size-4 pointer-events-none" />
               </div>

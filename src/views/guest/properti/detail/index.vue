@@ -34,24 +34,30 @@ const formatCurrency = (value: number) => {
 }
 
 const mapCoords = computed(() => {
-// ... existing mapCoords code ...
-  if (!product.value?.Alamat) return null
-  console.log('Processing map coordinates from address:', product.value.Alamat)
+  if (!product.value) return null
+  
+  // Prioritize explicit Latitude and Longitude fields
+  if (product.value.Latitude && product.value.Longitude) {
+    const lat = parseFloat(product.value.Latitude)
+    const lng = parseFloat(product.value.Longitude)
+    if (!isNaN(lat) && !isNaN(lng)) {
+      return { lat, lng }
+    }
+  }
+
+  // Fallback to legacy address parsing
+  if (!product.value.Alamat) return null
   
   // Support both "Lat:" and "Latitude:", and "Long:", "Lng:", or "Longitude:"
   const latMatch = product.value.Alamat.match(/(?:Lat|Latitude):\s*([-+]?\d+\.?\d*)/i)
   const lngMatch = product.value.Alamat.match(/(?:Long|Lng|Longitude):\s*([-+]?\d+\.?\d*)/i)
   
   if (latMatch && lngMatch) {
-    const coords = {
+    return {
       lat: parseFloat(latMatch[1]),
-      lng: parseFloat(lngMatch[1]) // Fix: Use index 1 for the first capturing group
+      lng: parseFloat(lngMatch[1])
     }
-    console.log('Successfully parsed coordinates:', coords)
-    return coords
   }
-  
-  console.warn('Failed to parse coordinates from address string')
   return null
 })
 
@@ -92,6 +98,8 @@ export interface Product {
   Harga_Sewa3: number
   Keterangan: string
   Slug: string
+  Latitude: string
+  Longitude: string
   Flag_Sewa: string
   Satuan_Minimal_Sewa: string
   Minimal_Sewa?: string
@@ -115,7 +123,7 @@ const fetchData = async (currentSlug: string) => {
   isLoading.value = true
   try {
     // Fetch a larger set to ensure we have enough active suggestions
-    const { data } = await api.get('/api/realEstate/getAll?limit=20&sort=desc', {
+    const { data } = await api.get('/api/realEstate/getAll?status_display=aktif&status_properti=Tersedia&orderby=no_id&orderdir=asc', {
       headers: { 'X-Jenis-User': 'Admin' }
     })
 
@@ -124,7 +132,7 @@ const fetchData = async (currentSlug: string) => {
     
     // If not found in the latest 20, fetch specifically by slug
     if (!mainProduct) {
-      const { data: exactData } = await api.get('/api/realEstate/getAll?slug=' + currentSlug, {
+      const { data: exactData } = await api.get('/api/realEstate/getAll?status_display=aktif&status_properti=Tersedia&slug=' + currentSlug, {
         headers: { 'X-Jenis-User': 'Admin' }
       })
       mainProduct = exactData.Data[0]

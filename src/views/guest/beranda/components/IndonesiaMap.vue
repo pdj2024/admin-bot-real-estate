@@ -10,6 +10,8 @@ interface Property {
   No_Id: string;
   Nama_Produk: string;
   Alamat: string;
+  Latitude?: string | number;
+  Longitude?: string | number;
   Nama_Kota?: string;
   [key: string]: any;
 }
@@ -26,11 +28,22 @@ let markerClusterer: any = null;
 const hoveredProperty = ref<any>(null);
 const tooltipPosition = ref({ x: 0, y: 0 });
 
-// Helper to extract coordinates from address string
-const extractCoords = (address: string) => {
+// Helper to extract coordinates from property object
+const extractCoords = (property: Property) => {
+  // 1. Prioritize explicit Latitude and Longitude fields
+  if (property.Latitude && property.Longitude) {
+    const lat = typeof property.Latitude === 'string' ? parseFloat(property.Latitude) : property.Latitude;
+    const lng = typeof property.Longitude === 'string' ? parseFloat(property.Longitude) : property.Longitude;
+    if (!isNaN(lat) && !isNaN(lng)) {
+      return { lat, lng };
+    }
+  }
+
+  // 2. Fallback to legacy address string parsing
+  const address = property.Alamat;
   if (!address) return null;
-  const latMatch = address.match(/Lat:\s*(-?\d+\.\d+)/i);
-  const lngMatch = address.match(/Long:\s*(-?\d+\.\d+)/i);
+  const latMatch = address.match(/(?:Lat|Latitude):\s*([-+]?\d+\.?\d*)/i);
+  const lngMatch = address.match(/(?:Long|Lng|Longitude):\s*([-+]?\d+\.?\d*)/i);
   if (latMatch && lngMatch) {
     return {
       lat: parseFloat(latMatch[1]),
@@ -97,7 +110,7 @@ const updateMarkers = async () => {
   const bejoColor = getBejoColor();
 
   const validProperties = props.properties
-    .map(p => ({ ...p, coords: extractCoords(p.Alamat) }))
+    .map(p => ({ ...p, coords: extractCoords(p) }))
     .filter(p => p.coords !== null);
 
   validProperties.forEach(property => {

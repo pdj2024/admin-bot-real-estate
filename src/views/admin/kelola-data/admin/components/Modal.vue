@@ -16,7 +16,9 @@ const form = reactive({
   No_Id: '',
   Nama_User: '',
   Email: '',
+  Telepon: '',
   Keterangan: '',
+  Max_Janji_Per_Hari: 3,
   Role_User: 'admin',
   Status: 'aktif',
   Id_Media: null,
@@ -28,7 +30,9 @@ const resetForm = () => {
     No_Id: '',
     Nama_User: '',
     Email: '',
+    Telepon: '',
     Keterangan: '',
+    Max_Janji_Per_Hari: 3,
     Role_User: 'admin',
     Status: 'aktif',
     Id_Media: null,
@@ -58,7 +62,14 @@ const handleSubmit = async () => {
       const url = isEdit ? `/api/admin/update?no_id=${form.No_Id}` : '/api/admin/create'
       const method = isEdit ? 'put' : 'post'
 
-      await api[method](url, form, {
+      // Prepare payload
+      const payload = { ...form }
+      if (isEdit) {
+        delete (payload as any).Password
+        delete (payload as any).No_Id
+      }
+
+      await api[method](url, payload, {
         headers: { 'X-Jenis-User': 'Admin' }
       })
 
@@ -124,19 +135,39 @@ const handleClose = () => {
             <input v-model="form.Nama_User" type="text" required class="form-input-premium" placeholder="Misal: Ahmad Syahroni" />
           </div>
 
-          <div class="space-y-1.5">
-            <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Alamat Email</label>
-            <div class="relative group">
-              <Icon icon="lucide:mail" class="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-bejo-500 transition-colors" />
-              <input v-model="form.Email" type="email" required class="form-input-premium !ps-11" placeholder="admin@rumahbejo.com" />
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-1.5">
+              <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Alamat Email</label>
+              <div class="relative group">
+                <Icon icon="lucide:mail" class="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-bejo-500 transition-colors" />
+                <input v-model="form.Email" type="email" required class="form-input-premium !ps-11" placeholder="admin@rumahbejo.com" />
+              </div>
+            </div>
+            
+            <div class="space-y-1.5">
+              <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Nomor Telepon</label>
+              <div class="relative group">
+                <Icon icon="lucide:phone" class="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-bejo-500 transition-colors" />
+                <input v-model="form.Telepon" type="tel" required class="form-input-premium !ps-11" placeholder="62812..." />
+              </div>
             </div>
           </div>
           
-          <div class="space-y-1.5">
-            <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Password</label>
-            <div class="relative group">
-              <Icon icon="lucide:lock" class="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-bejo-500 transition-colors" />
-              <input v-model="form.Password" type="password" :required="!editData" class="form-input-premium !ps-11" placeholder="••••••••" />
+          <div class="grid grid-cols-1" :class="!editData ? 'md:grid-cols-2 gap-4' : ''">
+            <div v-if="!editData" class="space-y-1.5">
+              <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Password</label>
+              <div class="relative group">
+                <Icon icon="lucide:lock" class="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-bejo-500 transition-colors" />
+                <input v-model="form.Password" type="password" required class="form-input-premium !ps-11" placeholder="••••••••" />
+              </div>
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Max Janji / Hari</label>
+              <div class="relative group">
+                <Icon icon="lucide:calendar-check" class="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-bejo-500 transition-colors" />
+                <input v-model="form.Max_Janji_Per_Hari" type="number" required min="1" class="form-input-premium !ps-11" placeholder="Misal: 3" />
+              </div>
             </div>
           </div>
 

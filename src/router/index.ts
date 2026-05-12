@@ -101,6 +101,15 @@ const router = createRouter({
       component: () => import('@/views/admin/chat/index.vue')
     },
     {
+      path: '/broadcast',
+      name: 'Broadcast',
+      meta: {
+        title: 'Broadcast',
+        requiresAuth: true
+      },
+      component: () => import('@/views/admin/broadcast/index.vue')
+    },
+    {
       path: '/janji-temu',
       name: 'janji-temu',
       meta: {

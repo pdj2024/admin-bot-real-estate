@@ -317,7 +317,7 @@
                     <div class="h-3 w-3/4 bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer rounded"></div>
                   </div>
                   <span v-else class="text-[11px] font-bold text-slate-500 leading-relaxed line-clamp-2">
-                    {{ randomProduct.Alamat ? randomProduct.Alamat.split('_Lat')[0].split('Lat:')[0].trim() : '' }} 
+                    {{ randomProduct.Alamat }} 
                     <span v-if="randomProduct.Nama_Kota" class="text-bejo-600 font-black ml-1">• {{ randomProduct.Nama_Kota }}</span>
                   </span>
                 </div>

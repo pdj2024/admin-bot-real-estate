@@ -20,7 +20,19 @@ const isModalOpen = ref(false)
 const selectedItem = ref<Product | null>(null)
 
 const mapCoords = computed(() => {
-  if (!product.value?.Alamat) return null
+  if (!product.value) return null
+  
+  // Prioritize explicit Latitude and Longitude fields
+  if (product.value.Latitude && product.value.Longitude) {
+    const lat = parseFloat(product.value.Latitude)
+    const lng = parseFloat(product.value.Longitude)
+    if (!isNaN(lat) && !isNaN(lng)) {
+      return { lat, lng }
+    }
+  }
+
+  // Fallback to legacy address parsing
+  if (!product.value.Alamat) return null
   const latMatch = product.value.Alamat.match(/(?:Lat|Latitude):\s*([-+]?\d+\.?\d*)/i)
   const lngMatch = product.value.Alamat.match(/(?:Long|Lng|Longitude):\s*([-+]?\d+\.?\d*)/i)
   
@@ -70,6 +82,8 @@ export interface Product {
   Harga_Sewa3: number
   Keterangan: string
   Slug: string
+  Latitude: string
+  Longitude: string
   Flag_Sewa: string
   Satuan_Minimal_Sewa: string
   Nama_Kota?: string

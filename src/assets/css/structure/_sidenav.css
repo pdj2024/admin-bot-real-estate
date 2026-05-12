@@ -6,7 +6,7 @@ Sidenav Menu
 /* ---------------------------------------------- */
 
 .app-menu {
-  @apply w-sidenav-width min-w-sidenav-width bg-(--sidenav-background) transition-all relative top-0 bottom-0 flex flex-col max-h-screen z-[999] duration-300 border-e border-current/10;
+  @apply w-sidenav-width min-w-sidenav-width bg-(--sidenav-background) transition-all relative top-0 bottom-0 flex flex-col max-h-screen z-[60] duration-300 border-e border-current/10;
   transition-property: width, min-width, margin;
 }
 
@@ -52,9 +52,23 @@ Sidenav Menu
         background-color: var(--sidenav-item-hover-bg);
       }
 
-      &:is(.open, .active, :active) {
+      &:is(.active) {
         color: var(--sidenav-item-active-color);
         background: var(--sidenav-item-active-bg);
+      }
+
+      /* Parent items (accordions) active state */
+      &.hs-accordion-toggle.active {
+        /* Default: no highlight when expanded */
+        background: none !important;
+        color: var(--sidenav-item-color) !important;
+      }
+
+      /* Highlight parent ONLY when sidebar is minimized */
+      :where(html[data-sidenav-size='sm'], html[data-sidenav-size='condensed']) .menu-item.active > &.hs-accordion-toggle,
+      html[data-sidenav-size='hover'] .app-menu:not(:hover) .menu-item.active > &.hs-accordion-toggle {
+        color: var(--sidenav-item-active-color) !important;
+        background: var(--sidenav-item-active-bg) !important;
       }
 
       &:active {
@@ -76,7 +90,7 @@ Sidenav Menu
       /* Background states handled above for better consistency */
     }
 
-    &.active > .menu-link {
+    &.active:not(.hs-accordion) > .menu-link {
       background: var(--sidenav-item-active-bg);
       color: var(--sidenav-item-active-color);
     }
@@ -403,7 +417,7 @@ html[data-sidenav-size='offcanvas'] {
 
   &.sidenav-enable {
     .app-menu {
-      @apply opacity-100 z-[999] ms-0;
+      @apply opacity-100 z-[60] ms-0;
     }
   }
 }

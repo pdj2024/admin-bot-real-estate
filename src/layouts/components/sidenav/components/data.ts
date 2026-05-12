@@ -25,6 +25,12 @@ export const menuItems: MenuItemType[] = [
     url: '/chat'
   },
   {
+    key: 'broadcast',
+    label: 'Broadcast',
+    icon: 'lucide:megaphone',
+    url: '/broadcast'
+  },
+  {
     key: 'janji-temu',
     label: 'Janji Temu',
     icon: 'lucide:calendar-days',

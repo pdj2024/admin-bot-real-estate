@@ -6,22 +6,22 @@ import VueApexCharts from 'vue3-apexcharts'
 import { distributionOptions as baseOptions } from './data'
 
 const typeColorMap: Record<string, string> = {
-  'Rumah': '#df7a24',      // bejo-500
-  'Tanah': '#a75526',      // bejo-700
-  'Ruko': '#6b371f',       // bejo-900
-  'Apartemen': '#f2b26e',  // bejo-300
-  'Gudang': '#f8d0a5',     // bejo-200
-  'Villa': '#fce8d4',      // bejo-100
-  'SOHO': '#fef5ed',       // bejo-50
-  'Pabrik': '#4a2414',     // bejo-950
-  'Perkantoran': '#3b1d0e',// bejo-1000
-  'Hotel': '#ea8e3e',      // bejo-400
-  'Rumah Kos': '#fbe0c3',  // bejo-150 (approx)
-  'Stand': '#fdf2e9',      // bejo-25 (approx)
-  'Toko': '#ffffff',       
-  'Gedung': '#30180b',     
-  'Condotel': '#854323',   // bejo-800
-  'Lain-lain': '#ca6d2c'   // bejo-600
+  'Rumah': 'var(--color-bejo-500)',      // bejo-500
+  'Tanah': 'var(--color-bejo-700)',      // bejo-700
+  'Ruko': 'var(--color-bejo-900)',       // bejo-900
+  'Apartemen': 'var(--color-bejo-300)',  // bejo-300
+  'Gudang': 'var(--color-bejo-200)',     // bejo-200
+  'Villa': 'var(--color-bejo-100)',      // bejo-100
+  'SOHO': 'var(--color-bejo-50)',        // bejo-50
+  'Pabrik': 'var(--color-bejo-950)',     // bejo-950
+  'Perkantoran': 'var(--color-bejo-1000)',// bejo-1000
+  'Hotel': 'var(--color-bejo-400)',      // bejo-400
+  'Rumah Kos': 'var(--color-bejo-200)',  
+  'Stand': 'var(--color-bejo-50)',      
+  'Toko': 'var(--color-bejo-50)',       
+  'Gedung': 'var(--color-bejo-1000)',     
+  'Condotel': 'var(--color-bejo-800)',   // bejo-800
+  'Lain-lain': 'var(--color-bejo-600)'   // bejo-600
 }
 
 const propertyTypes = Object.keys(typeColorMap)

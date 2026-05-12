@@ -85,6 +85,8 @@ export interface Product {
   Harga_Sewa3: number
   Keterangan: string
   Slug: string
+  Latitude: string
+  Longitude: string
   Flag_Sewa: string
   Minimal_Sewa: number | null
   Satuan_Minimal_Sewa: string

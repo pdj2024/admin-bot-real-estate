@@ -66,13 +66,7 @@ const closeAppointment = () => {
 <template>
   <Vertical>
     <div class="p-0 md:p-3 md:pt-1 pb-24 space-y-4">
-      <!-- Minimalist Header -->
-      <div class="flex items-center justify-between border-b border-slate-50 pb-2">
-        <div>
-          <h1 class="text-lg font-black text-slate-900 tracking-tight leading-tight">Janji Temu</h1>
-          <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Manajemen Jadwal & Konsultasi</p>
-        </div>
-      </div>
+      <!-- Title Section Removed -->
 
       <!-- Stats Overview -->
       <AppointmentStats />
@@ -103,7 +97,7 @@ const closeAppointment = () => {
 
       <!-- Mobile & Tablet Modal Detail -->
       <Transition name="fade">
-        <div v-if="openAppointment && showAsPopup" class="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-10">
+        <div v-if="openAppointment && showAsPopup" class="fixed inset-0 z-[1050] flex items-center justify-center p-4 md:p-10">
           <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm shadow-2xl" @click="closeAppointment"></div>
           <div class="relative w-full max-w-lg h-[85vh] animate-in zoom-in-95 duration-300">
             <Event 

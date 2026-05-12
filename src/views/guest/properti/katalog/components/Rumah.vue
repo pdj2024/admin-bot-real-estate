@@ -230,6 +230,8 @@ export interface Product {
   Harga_Sewa3: number
   Keterangan: string
   Slug: string
+  Latitude: string
+  Longitude: string
   Flag_Sewa: string
   Minimal_Sewa: number | null
   Satuan_Minimal_Sewa: string
@@ -339,7 +341,7 @@ const table = useVueTable({
 const fetchData = async (backgroundRefetch = false) => {
   if (!backgroundRefetch) isLoading.value = true
   try {
-    const { data } = await api.get('/api/realEstate/getAll?limit=100&sort=desc', {
+    const { data } = await api.get('/api/realEstate/getAll?status_display=aktif&status_properti=Tersedia&orderby=no_id&orderdir=asc', {
       headers: { 'X-Jenis-User': 'Admin' }
     })
     products.value = data.Data

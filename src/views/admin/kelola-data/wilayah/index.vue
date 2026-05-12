@@ -12,6 +12,7 @@ const modalParentId = ref<string | null>(null)
 const selectedItem = ref<any>(null)
 const loading = ref(false)
 const searchQuery = ref('')
+const selectedIds = ref<Record<string, { type: string, item: any }>>({})
 
 // Expansion state
 const expandedCities = ref<Set<string>>(new Set())
@@ -169,6 +170,96 @@ const toggleStatus = async (type: 'kota' | 'area' | 'prioritas', item: any, forc
   }
 }
 
+const toggleSelection = (type: string, item: any) => {
+  const id = item.No_Id || item.No_Id_Kota || item.No_Id_Area || item.No_Id_Prioritas
+  const key = `${type}:${id}`
+  const isCurrentlySelected = !!selectedIds.value[key]
+  const select = !isCurrentlySelected
+
+  const updateItem = (t: string, itm: any, s: boolean) => {
+    const itmId = itm.No_Id || itm.No_Id_Kota || itm.No_Id_Area || itm.No_Id_Prioritas
+    const itmKey = `${t}:${itmId}`
+    if (s) {
+      selectedIds.value[itmKey] = { type: t, item: itm }
+    } else {
+      delete selectedIds.value[itmKey]
+    }
+  }
+
+  updateItem(type, item, select)
+
+  // Children logic
+  if (type === 'kota') {
+    const cityAreas = dataWilayah.value.area.filter((a: any) => a.Id_Kota === id)
+    cityAreas.forEach((a: any) => {
+      const areaId = a.No_Id || a.No_Id_Area
+      updateItem('area', a, select)
+      const areaPriorities = dataWilayah.value.prioritas.filter((p: any) => p.Id_Area === areaId)
+      areaPriorities.forEach((p: any) => updateItem('prioritas', p, select))
+    })
+  } else if (type === 'area') {
+    const areaPriorities = dataWilayah.value.prioritas.filter((p: any) => p.Id_Area === id)
+    areaPriorities.forEach((p: any) => updateItem('prioritas', p, select))
+  }
+}
+
+const isSelected = (type: string, item: any) => {
+  const id = item.No_Id || item.No_Id_Kota || item.No_Id_Area || item.No_Id_Prioritas
+  return !!selectedIds.value[`${type}:${id}`]
+}
+
+const showBatchActivate = computed(() => Object.values(selectedIds.value).some(x => x.item.Status !== 'aktif'))
+const showBatchDeactivate = computed(() => Object.values(selectedIds.value).some(x => x.item.Status === 'aktif'))
+
+const handleBatchUpdate = async (value: 'aktif' | 'nonaktif') => {
+  const items = Object.values(selectedIds.value)
+  if (items.length === 0) return
+
+  confirmAlert(`Apakah Anda yakin ingin mengubah status ${items.length} wilayah terpilih menjadi ${value === 'aktif' ? 'Aktif' : 'Nonaktif'}?`, async () => {
+    // Sort to handle parent levels first to optimize cascading (though toggleStatus handles it)
+    const sorted = [...items].sort((a, b) => {
+      const levels: any = { kota: 0, area: 1, prioritas: 2 }
+      return levels[a.type] - levels[b.type]
+    })
+
+    for (const { type, item } of sorted) {
+      await toggleStatus(type as any, item, value)
+    }
+    
+    selectedIds.value = {}
+    successAlert('Berhasil memperbarui status wilayah')
+  })
+}
+
+const handleBatchDelete = async () => {
+  const items = Object.values(selectedIds.value)
+  if (items.length === 0) return
+
+  confirmAlert(`Apakah Anda yakin ingin menghapus ${items.length} wilayah terpilih? Tindakan ini tidak dapat dibatalkan.`, async () => {
+    loading.value = true
+    try {
+      // Sort in reverse order (prioritas -> area -> kota)
+      const sorted = [...items].sort((a, b) => {
+        const levels: any = { kota: 0, area: 1, prioritas: 2 }
+        return levels[b.type] - levels[a.type]
+      })
+
+      for (const { type, item } of sorted) {
+        const id = item.No_Id || item.No_Id_Kota || item.No_Id_Area || item.No_Id_Prioritas
+        await api.delete(`/api/${type}/delete?no_id=${id}`)
+      }
+      
+      selectedIds.value = {}
+      successAlert('Berhasil menghapus wilayah terpilih')
+      fetchAll()
+    } catch (err: any) {
+      failAlert(err.response?.data?.Message || 'Terjadi kesalahan saat menghapus data')
+    } finally {
+      loading.value = false
+    }
+  })
+}
+
 // Nested structure for rendering
 const hierarchicalData = computed(() => {
   let cities = [...dataWilayah.value.kota]
@@ -210,6 +301,22 @@ const hierarchicalData = computed(() => {
     }
   })
 })
+
+const currentPage = ref(0)
+const pageSize = ref(10)
+
+const paginatedData = computed(() => {
+  const start = currentPage.value * pageSize.value
+  const end = start + pageSize.value
+  return hierarchicalData.value.slice(start, end)
+})
+
+const pageCount = computed(() => Math.ceil(hierarchicalData.value.length / pageSize.value))
+
+const setPageSize = (size: number) => {
+  pageSize.value = size
+  currentPage.value = 0
+}
 </script>
 
 <template>
@@ -217,7 +324,39 @@ const hierarchicalData = computed(() => {
     <div class="px-4 md:px-3 md:pt-1 pb-32 space-y-6 md:space-y-8">
 
       <!-- Main Content Card -->
-      <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-2xl shadow-slate-200/40 overflow-hidden">
+      <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-2xl shadow-slate-200/40 overflow-hidden relative">
+        <!-- Batch Action Bar -->
+        <Transition name="slide-up">
+          <div v-if="Object.keys(selectedIds).length > 0" class="absolute top-6 left-1/2 -translate-x-1/2 z-[100] px-6 py-4 bg-white/80 backdrop-blur-md border border-bejo-100 rounded-3xl shadow-2xl shadow-bejo-500/10 flex items-center gap-4 animate-in fade-in slide-in-from-top-4">
+            <div class="flex items-center gap-3 pr-4 border-r border-slate-100">
+              <div class="size-10 rounded-xl bg-bejo-500 text-white flex items-center justify-center font-black text-sm shadow-lg shadow-bejo-500/20">
+                {{ Object.keys(selectedIds).length }}
+              </div>
+              <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Item Terpilih</span>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-2">
+              <button v-if="showBatchActivate" @click="handleBatchUpdate('aktif')" class="btn-batch bg-bejo-50 text-bejo-600 hover:bg-bejo-500 hover:text-white border-bejo-100">
+                <Icon icon="lucide:check-circle" class="size-3.5" />
+                Aktifkan Status
+              </button>
+              <button v-if="showBatchDeactivate" @click="handleBatchUpdate('nonaktif')" class="btn-batch bg-slate-50 text-slate-500 hover:bg-slate-900 hover:text-white border-slate-100">
+                <Icon icon="lucide:x-circle" class="size-3.5" />
+                Nonaktifkan Status
+              </button>
+              <button @click="handleBatchDelete" class="btn-batch bg-red-50 text-red-500 hover:bg-red-500 hover:text-white border-red-100">
+                <Icon icon="lucide:trash-2" class="size-3.5" />
+                Hapus Data
+              </button>
+            </div>
+
+            <button @click="selectedIds = {}" class="ml-auto flex items-center gap-2 px-4 py-2 text-[10px] font-black text-slate-400 hover:text-red-500 uppercase tracking-widest transition-all">
+              <Icon icon="lucide:rotate-ccw" class="size-3.5" />
+              Batal
+            </button>
+          </div>
+        </Transition>
+
         <!-- Header Section -->
         <div class="p-6 md:p-8 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
@@ -236,25 +375,41 @@ const hierarchicalData = computed(() => {
             </button>
           </div>
         </div>
-        <div class="min-w-full">
-          <!-- Table Header -->
-          <div class="grid grid-cols-12 bg-slate-50/50 border-b border-slate-50 px-4 md:px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-            <div class="col-span-6">Nama Wilayah</div>
-            <div class="col-span-3">Deskripsi</div>
-            <div class="col-span-3 text-right pr-4">Aksi</div>
+        <div class="lg:overflow-visible relative">
+          <!-- Background Loading Indicator (No Flicker) -->
+          <div v-if="loading && dataWilayah.kota.length > 0" class="absolute inset-0 z-10 bg-white/40 backdrop-blur-[1px] flex items-start justify-center pt-20 transition-all duration-300">
+            <div class="bg-white px-4 py-2 rounded-2xl shadow-xl border border-bejo-100 flex items-center gap-3 animate-in fade-in zoom-in-95">
+              <Icon icon="lucide:loader-2" class="animate-spin size-4 text-bejo-500" />
+              <span class="text-[10px] font-black text-slate-600 uppercase tracking-widest">Sinkronisasi...</span>
+            </div>
           </div>
+          
+          <div class="max-h-[600px] overflow-auto">
+            <!-- Table Header -->
+            <div class="grid grid-cols-12 bg-white/80 backdrop-blur-md sticky top-0 z-30 border-b border-slate-100 px-4 md:px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] shadow-sm">
+              <div class="col-span-6 flex items-center gap-14 pl-4">
+                <span>#</span>
+                <span>Nama Wilayah</span>
+              </div>
+              <div class="col-span-3">Deskripsi</div>
+              <div class="col-span-3 text-right pr-4">Aksi</div>
+            </div>
 
-          <!-- City List (Level 1) -->
-          <div v-if="hierarchicalData.length > 0" class="divide-y divide-slate-50">
-            <div v-for="city in hierarchicalData" :key="city._id" class="flex flex-col">
+            <!-- City List (Level 1) -->
+            <div v-if="paginatedData.length > 0" class="divide-y divide-slate-50 border-separate border-spacing-0">
+            <div v-for="city in paginatedData" :key="city._id" class="flex flex-col">
               <!-- City Row -->
               <div class="grid grid-cols-12 px-4 md:px-8 py-4 items-center hover:bg-slate-50/50 transition-colors group">
-                <div class="col-span-6 flex items-center gap-4 cursor-pointer select-none" @click="toggleCity(city._id)" :class="{ 'opacity-40 grayscale': !city._isActive }">
-                  <button class="size-6 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-bejo-50 hover:text-bejo-600 transition-all pointer-events-none">
-                    <Icon :icon="expandedCities.has(city._id) ? 'lucide:chevron-down' : 'lucide:chevron-right'" class="size-3.5" />
-                  </button>
-                  <div class="size-8 rounded-xl bg-bejo-50 flex items-center justify-center text-bejo-500 font-black text-xs">K</div>
-                  <span class="text-sm font-black text-slate-900 hover:text-bejo-600 transition-colors" :class="{ 'bg-yellow-100 px-1.5 py-0.5 rounded-md text-yellow-900': isMatchingQuery(city.Nama) }">{{ city.Nama }}</span>
+                <div class="col-span-6 flex items-center gap-10 pl-4">
+                  <input type="checkbox" :checked="isSelected('kota', city)" @change="toggleSelection('kota', city)" class="size-4 rounded border-slate-300 text-bejo-600 focus:ring-bejo-500/20 transition-all cursor-pointer" />
+                  
+                  <div class="flex items-center gap-4 cursor-pointer select-none" @click="toggleCity(city._id)" :class="{ 'opacity-40 grayscale': !city._isActive }">
+                    <button class="size-6 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-bejo-50 hover:text-bejo-600 transition-all pointer-events-none">
+                      <Icon :icon="expandedCities.has(city._id) ? 'lucide:chevron-down' : 'lucide:chevron-right'" class="size-3.5" />
+                    </button>
+                    <div class="size-8 rounded-xl bg-bejo-50 flex items-center justify-center text-bejo-500 font-black text-xs">K</div>
+                    <span class="text-sm font-black text-slate-900 hover:text-bejo-600 transition-colors" :class="{ 'bg-yellow-100 px-1.5 py-0.5 rounded-md text-yellow-900': isMatchingQuery(city.Nama) }">{{ city.Nama }}</span>
+                  </div>
                 </div>
                 <div class="col-span-3 text-[11px] font-medium text-slate-400 truncate pr-4" :class="{ 'opacity-40 grayscale': !city._isActive }">{{ city.Deskripsi || '-' }}</div>
                 <div class="col-span-3 flex justify-end items-center gap-2 pr-4">
@@ -289,12 +444,16 @@ const hierarchicalData = computed(() => {
                 <div v-for="area in city._areas" :key="area._id" class="flex flex-col">
                   <!-- Area Row -->
                   <div class="grid grid-cols-12 pl-20 pr-8 py-3 items-center hover:bg-white transition-colors group">
-                    <div class="col-span-6 flex items-center gap-3 cursor-pointer select-none" @click="toggleArea(area._id)" :class="{ 'opacity-40 grayscale': !area._isActive }">
-                      <button class="size-5 rounded-md bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-bejo-600 transition-all pointer-events-none">
-                        <Icon :icon="expandedAreas.has(area._id) ? 'lucide:chevron-down' : 'lucide:chevron-right'" class="size-3" />
-                      </button>
-                      <div class="size-7 rounded-lg bg-amber-50 flex items-center justify-center text-amber-500 font-black text-[10px]">A</div>
-                      <span class="text-xs font-bold text-slate-700 hover:text-bejo-600 transition-colors" :class="{ 'bg-yellow-100 px-1.5 py-0.5 rounded-md text-yellow-900': isMatchingQuery(area.Nama) }">{{ area.Nama }}</span>
+                    <div class="col-span-6 flex items-center gap-8">
+                      <input type="checkbox" :checked="isSelected('area', area)" @change="toggleSelection('area', area)" class="size-3.5 rounded border-slate-300 text-bejo-600 focus:ring-bejo-500/20 transition-all cursor-pointer" />
+                      
+                      <div class="flex items-center gap-3 cursor-pointer select-none" @click="toggleArea(area._id)" :class="{ 'opacity-40 grayscale': !area._isActive }">
+                        <button class="size-5 rounded-md bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-bejo-600 transition-all pointer-events-none">
+                          <Icon :icon="expandedAreas.has(area._id) ? 'lucide:chevron-down' : 'lucide:chevron-right'" class="size-3" />
+                        </button>
+                        <div class="size-7 rounded-lg bg-amber-50 flex items-center justify-center text-amber-500 font-black text-[10px]">A</div>
+                        <span class="text-xs font-bold text-slate-700 hover:text-bejo-600 transition-colors" :class="{ 'bg-yellow-100 px-1.5 py-0.5 rounded-md text-yellow-900': isMatchingQuery(area.Nama) }">{{ area.Nama }}</span>
+                      </div>
                     </div>
                     
                     <div class="col-span-3 flex items-center gap-3" :class="{ 'opacity-40 grayscale': !area._isActive }">
@@ -330,9 +489,13 @@ const hierarchicalData = computed(() => {
                   <!-- Priority List (Level 3) -->
                   <div v-if="expandedAreas.has(area._id)" class="bg-white divide-y divide-slate-50">
                     <div v-for="prio in area._priorities" :key="prio.No_Id || prio.No_Id_Prioritas" class="grid grid-cols-12 pl-32 pr-8 py-2.5 items-center hover:bg-slate-50/30 transition-colors group">
-                      <div class="col-span-6 flex items-center gap-3" :class="{ 'opacity-40 grayscale': !prio._isActive }">
-                        <div class="size-6 rounded-md bg-rose-50 flex items-center justify-center text-rose-500 font-black text-[9px]">P</div>
-                        <span class="text-[11px] font-semibold text-slate-600" :class="{ 'bg-yellow-100 px-1.5 py-0.5 rounded-md text-yellow-900': isMatchingQuery(prio.Nama) }">{{ prio.Nama }}</span>
+                      <div class="col-span-6 flex items-center gap-8">
+                        <input type="checkbox" :checked="isSelected('prioritas', prio)" @change="toggleSelection('prioritas', prio)" class="size-3 rounded border-slate-300 text-bejo-600 focus:ring-bejo-500/20 transition-all cursor-pointer" />
+                        
+                        <div class="flex items-center gap-3" :class="{ 'opacity-40 grayscale': !prio._isActive }">
+                          <div class="size-6 rounded-md bg-rose-50 flex items-center justify-center text-rose-500 font-black text-[9px]">P</div>
+                          <span class="text-[11px] font-semibold text-slate-600" :class="{ 'bg-yellow-100 px-1.5 py-0.5 rounded-md text-yellow-900': isMatchingQuery(prio.Nama) }">{{ prio.Nama }}</span>
+                        </div>
                       </div>
                       <div class="col-span-3 text-[9px] font-medium text-slate-400 truncate pr-4" :class="{ 'opacity-40 grayscale': !prio._isActive }">{{ prio.Deskripsi || '-' }}</div>
                       <div class="col-span-3 flex justify-end items-center gap-1.5 pr-4">
@@ -376,10 +539,53 @@ const hierarchicalData = computed(() => {
             <p class="text-sm font-black text-slate-400 uppercase tracking-widest">Wilayah tidak ditemukan</p>
           </div>
 
-          <!-- Loading State -->
-          <div v-if="loading" class="flex flex-col items-center justify-center py-20 text-center">
+          <!-- Full Page Loading (Initial only) -->
+          <div v-if="loading && dataWilayah.kota.length === 0" class="flex flex-col items-center justify-center py-20 text-center">
              <Icon icon="lucide:loader-2" class="size-8 text-bejo-500 animate-spin mb-4" />
              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Memuat data wilayah...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+        <div v-if="hierarchicalData.length > 0" class="px-6 py-5 border-t border-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="flex items-center gap-6">
+            <div class="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              Menampilkan 
+              <span class="text-slate-900 font-black">{{ paginatedData.length }}</span> 
+              dari 
+              <span class="text-slate-900 font-black">{{ hierarchicalData.length }}</span> 
+              Kota
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Menampilkan:</span>
+              <select 
+                :value="pageSize" 
+                @change="e => setPageSize((e.target as HTMLSelectElement).value === 'all' ? hierarchicalData.length : Number((e.target as HTMLSelectElement).value))"
+                class="h-8 min-w-[70px] px-2.5 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-lg outline-none cursor-pointer hover:border-bejo-500 transition-all shadow-sm"
+              >
+                <option v-for="size in [10, 25, 50, 100]" :key="size" :value="size">{{ size }}</option>
+                <option value="all">Semua</option>
+              </select>
+              <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Data</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button @click="currentPage--" :disabled="currentPage === 0" class="btn-pagination">
+              <Icon icon="lucide:chevron-left" class="size-4" />
+            </button>
+
+            <div class="flex items-center gap-1">
+              <button v-for="n in pageCount" :key="n" @click="currentPage = n - 1" class="btn-pagination-num" :class="currentPage === n - 1 ? 'active' : ''">
+                {{ n }}
+              </button>
+            </div>
+
+            <button @click="currentPage++" :disabled="currentPage >= pageCount - 1" class="btn-pagination">
+              <Icon icon="lucide:chevron-right" class="size-4" />
+            </button>
           </div>
         </div>
       </div>
@@ -401,4 +607,31 @@ const hierarchicalData = computed(() => {
 <style scoped>
 .scale-in { animation: scale-in 0.2s ease-out; }
 @keyframes scale-in { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+
+@reference "@/assets/css/style.css";
+
+.btn-pagination {
+  @apply size-9 flex items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-400
+         transition-all hover:bg-slate-50 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed;
+}
+
+.btn-pagination-num {
+  @apply size-9 flex items-center justify-center rounded-xl text-xs font-black text-slate-400 hover:bg-slate-50 transition-all;
+}
+
+.btn-pagination-num.active {
+  @apply bg-bejo-500 text-white shadow-lg shadow-bejo-500/20;
+}
+
+.btn-batch {
+  @apply flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-2xl border transition-all;
+}
+
+.slide-up-enter-active, .slide-up-leave-active {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+.slide-up-enter-from, .slide-up-leave-to {
+  transform: translateY(20px);
+  opacity: 0;
+}
 </style>

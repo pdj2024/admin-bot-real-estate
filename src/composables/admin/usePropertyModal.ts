@@ -44,8 +44,8 @@ export interface RealEstateForm {
   Harga_Sewa2: number
   Keterangan: string
   Slug: string
-  Latitude?: string
-  Longitude?: string
+  Latitude: string
+  Longitude: string
   Link_Maps?: string
   Area: string[]
   Akses_Jalan: string[]
@@ -259,6 +259,8 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
     Harga_Sewa2: 0,
     Keterangan: '',
     Slug: '',
+    Latitude: '',
+    Longitude: '',
     Area: ['', '', ''],
     Akses_Jalan: [],
     File_Image: [],
@@ -331,23 +333,28 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
     if (itemData) {
       form.value = JSON.parse(JSON.stringify(itemData))
       
-      // 1. Detect location before stripping the address for UI display
-      const coordsFromAlamat = itemData.Alamat ? itemData.Alamat.match(/(?:Lat|Latitude):\s*([-+]?\d+\.?\d*)/i) : null
-      const lngMatch = itemData.Alamat ? itemData.Alamat.match(/(?:Long|Lng|Longitude):\s*([-+]?\d+\.?\d*)/i) : null
-      
-      if (coordsFromAlamat && lngMatch) {
+      // 1. Detect location prioritizing Latitude and Longitude fields
+      if (itemData.Latitude && itemData.Longitude) {
         location.isLocationSelected.value = true
-        location.currentCoords.lat = parseFloat(coordsFromAlamat[1])
-        location.currentCoords.lng = parseFloat(lngMatch[1])
-      }
-
-      // 2. Check Area[2] as secondary source
-      if (form.value.Area && form.value.Area[2] && form.value.Area[2].includes(',')) {
-        const [lat, lng] = form.value.Area[2].split(',').map(Number)
-        if (!isNaN(lat) && !isNaN(lng)) {
+        location.currentCoords.lat = parseFloat(itemData.Latitude)
+        location.currentCoords.lng = parseFloat(itemData.Longitude)
+      } else {
+        // Fallback to legacy address parsing
+        const latMatch = itemData.Alamat ? itemData.Alamat.match(/(?:Lat|Latitude):\s*([-+]?\d+\.?\d*)/i) : null
+        const lngMatch = itemData.Alamat ? itemData.Alamat.match(/(?:Long|Lng|Longitude):\s*([-+]?\d+\.?\d*)/i) : null
+        
+        if (latMatch && lngMatch) {
           location.isLocationSelected.value = true
-          location.currentCoords.lat = lat
-          location.currentCoords.lng = lng
+          location.currentCoords.lat = parseFloat(latMatch[1])
+          location.currentCoords.lng = parseFloat(lngMatch[1])
+        } else if (form.value.Area && form.value.Area[2] && form.value.Area[2].includes(',')) {
+          // 2. Check Area[2] as tertiary source
+          const [lat, lng] = form.value.Area[2].split(',').map(Number)
+          if (!isNaN(lat) && !isNaN(lng)) {
+            location.isLocationSelected.value = true
+            location.currentCoords.lat = lat
+            location.currentCoords.lng = lng
+          }
         }
       }
 
@@ -390,6 +397,10 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
         location.currentCoords.lat = lat
         location.currentCoords.lng = lng
       }
+    } else if (form.value.Latitude && form.value.Longitude) {
+      location.isLocationSelected.value = true
+      location.currentCoords.lat = parseFloat(form.value.Latitude)
+      location.currentCoords.lng = parseFloat(form.value.Longitude)
     } else if (form.value.Alamat) {
       const latMatch = form.value.Alamat.match(/(?:Lat|Latitude):\s*([-+]?\d+\.?\d*)/i)
       const lngMatch = form.value.Alamat.match(/(?:Long|Lng|Longitude):\s*([-+]?\d+\.?\d*)/i)
@@ -478,21 +489,16 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
           form.value.Id_Prioritas = finalPrioId
         }
       }
-      // 4. Append Lat/Long to Address for storage
-      let finalAlamat = form.value.Alamat || ''
-      
-      // Clean existing Lat/Long patterns to avoid duplicates or old formats
-      finalAlamat = finalAlamat.split(', Lat:')[0].split('_Lat:')[0].trim()
-
-      if (form.value.Area[2] && form.value.Area[2].includes(',')) {
-        const [lat, lng] = form.value.Area[2].split(',')
-        finalAlamat = `${finalAlamat}_Lat: ${lat.trim()} Long: ${lng.trim()}`
-      }
+      // 4. Final coordinates handling
+      const currentLat = location.isLocationSelected.value ? String(location.currentCoords.lat) : ''
+      const currentLng = location.isLocationSelected.value ? String(location.currentCoords.lng) : ''
 
       const payload = { 
         ...form.value, 
         Status_Display: targetStatus,
-        Alamat: finalAlamat,
+        Alamat: form.value.Alamat.split(', Lat:')[0].split('_Lat:')[0].trim(),
+        Latitude: currentLat,
+        Longitude: currentLng,
         Id_Area: finalAreaId,
         Id_Prioritas: finalPrioId,
         Luas_Tanah: String(form.value.Luas_Tanah || '0'),

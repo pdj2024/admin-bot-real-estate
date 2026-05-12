@@ -195,17 +195,31 @@ export function usePropertyLocation(form: any, deps?: { cities: any, createCity:
       ]) as any[]
       gGeocoder = new google.maps.Geocoder()
       let initialPos = { ...currentCoords }
-      const coordsFromAlamat = extractCoordsFromAddress(form.value.Alamat)
       
-      if (form.value.Area[2] && form.value.Area[2].includes(',')) {
+      // 1. Prioritize explicit Latitude and Longitude
+      if (form.value.Latitude && form.value.Longitude) {
+        const lat = parseFloat(form.value.Latitude)
+        const lng = parseFloat(form.value.Longitude)
+        if (!isNaN(lat) && !isNaN(lng)) {
+          initialPos = { lat, lng }
+          isLocationSelected.value = true
+        }
+      } 
+      // 2. Secondary: Area[2]
+      else if (form.value.Area[2] && form.value.Area[2].includes(',')) {
         const [lat, lng] = form.value.Area[2].split(',').map(Number)
         if (!isNaN(lat) && !isNaN(lng)) {
           initialPos = { lat, lng }
           isLocationSelected.value = true
         }
-      } else if (coordsFromAlamat) {
-        initialPos = coordsFromAlamat
-        isLocationSelected.value = true
+      } 
+      // 3. Tertiary: Legacy Alamat parsing
+      else {
+        const coordsFromAlamat = extractCoordsFromAddress(form.value.Alamat)
+        if (coordsFromAlamat) {
+          initialPos = coordsFromAlamat
+          isLocationSelected.value = true
+        }
       }
       gMap = markRaw(new libraryMap.Map(mapContainer.value, { 
         center: initialPos, 
@@ -242,17 +256,35 @@ export function usePropertyLocation(form: any, deps?: { cities: any, createCity:
 
   const geocodeExistingAddress = () => {
     if (!gGeocoder) return
-    const coordsFromAlamat = extractCoordsFromAddress(form.value.Alamat)
+    
+    // 1. Prioritize explicit Latitude and Longitude
+    if (form.value.Latitude && form.value.Longitude) {
+      const lat = parseFloat(form.value.Latitude)
+      const lng = parseFloat(form.value.Longitude)
+      if (!isNaN(lat) && !isNaN(lng)) {
+        currentCoords.lat = lat; currentCoords.lng = lng
+        if (gMap) gMap.setCenter({ lat, lng })
+        if (gMarker) gMarker.position = { lat, lng }
+        isLocationSelected.value = true
+        return
+      }
+    }
 
+    // 2. Secondary: Area[2]
     if (form.value.Area[2] && form.value.Area[2].includes(',')) {
       const [lat, lng] = form.value.Area[2].split(',').map(Number)
       if (!isNaN(lat) && !isNaN(lng)) {
         currentCoords.lat = lat; currentCoords.lng = lng
         if (gMap) gMap.setCenter({ lat, lng })
         if (gMarker) gMarker.position = { lat, lng }
+        isLocationSelected.value = true
         return
       }
-    } else if (coordsFromAlamat) {
+    } 
+
+    // 3. Tertiary: Legacy Alamat parsing
+    const coordsFromAlamat = extractCoordsFromAddress(form.value.Alamat)
+    if (coordsFromAlamat) {
       const { lat, lng } = coordsFromAlamat
       currentCoords.lat = lat; currentCoords.lng = lng
       if (gMap) gMap.setCenter({ lat, lng })
