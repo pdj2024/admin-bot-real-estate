@@ -22,7 +22,7 @@ const productData = ref<any>(null)
 const isLoadingProduct = ref(false)
 const isSendingBrochure = ref(false)
 
-const getBase64ImageFromUrl = async (imageUrl: string, maxWidth = 1024): Promise<string | null> => {
+const getBase64ImageFromUrl = async (imageUrl: string, maxWidth = 1024, format = 'image/jpeg'): Promise<string | null> => {
   try {
     const res = await fetch(imageUrl)
     const blob = await res.blob()
@@ -43,9 +43,9 @@ const getBase64ImageFromUrl = async (imageUrl: string, maxWidth = 1024): Promise
     if (!ctx) return null
     
     ctx.drawImage(bitmap, 0, 0, width, height)
-    return canvas.toDataURL('image/jpeg', 0.8)
+    return canvas.toDataURL(format, format === 'image/jpeg' ? 0.8 : undefined)
   } catch (error) {
-    console.error('Gagal mengambil/mengoptimasi gambar:', error)
+    console.error('Error fetching image:', error)
     return null
   }
 }
@@ -65,6 +65,7 @@ const sendBrochure = async () => {
     const height = 210
     
     const primaryColor = '#EB701F'
+    const darkOrange = '#c2410c'
     const slateColor = '#0f172a'
     const lightSlate = '#f8fafc'
 
@@ -84,7 +85,7 @@ const sendBrochure = async () => {
 
     let logoBase64 = null
     if (settingsStore.business.Logo_Company || settingsStore.business.Id_Logo_Company) {
-      logoBase64 = await getBase64ImageFromUrl((settingsStore.business.Logo_Company || settingsStore.business.Id_Logo_Company) as string)
+      logoBase64 = await getBase64ImageFromUrl((settingsStore.business.Logo_Company || settingsStore.business.Id_Logo_Company) as string, 1024, 'image/png')
     }
 
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`http://localhost:5000/properti/${productData.value.Slug}`)}`
@@ -107,7 +108,11 @@ const sendBrochure = async () => {
     // --- COLUMN 1 ---
     doc.setFillColor(primaryColor)
     doc.roundedRect(-10, -10, 50, 50, 10, 10, 'F')
-    if (logoBase64) doc.addImage(logoBase64 as string, 'PNG', 5, 5, 25, 25)
+    if (logoBase64) {
+      doc.setFillColor(255, 255, 255)
+      doc.roundedRect(3, 3, 29, 29, 4, 4, 'F')
+      doc.addImage(logoBase64 as string, 'PNG', 5, 5, 25, 25)
+    }
 
     doc.setTextColor(slateColor)
     doc.setFont('helvetica', 'bold')
@@ -119,8 +124,8 @@ const sendBrochure = async () => {
     doc.setTextColor(primaryColor)
     doc.text(`Tawaran Eksklusif dari ${settingsStore.business.appName}`, col1X, 65 + (tLines.length * 10))
 
-    const spY = 100
-    doc.setFillColor(slateColor)
+    const spY = 95
+    doc.setFillColor(darkOrange)
     doc.roundedRect(col1X, spY, 65, 10, 3, 3, 'F')
     doc.setTextColor(255, 255, 255)
     doc.setFontSize(8.5)
@@ -129,7 +134,7 @@ const sendBrochure = async () => {
     doc.setTextColor(slateColor)
     doc.setFontSize(9.5)
     doc.setFont('helvetica', 'normal')
-    let aY = spY + 20
+    let aY = spY + 16
     const pts = productData.value.Akses_Jalan || ['Lokasi strategis Surabaya', 'Desain arsitektur modern', 'Fasilitas premium lengkap', 'Nilai investasi tinggi']
     pts.slice(0, 4).forEach((p: string) => {
       doc.setDrawColor(primaryColor)
@@ -138,7 +143,7 @@ const sendBrochure = async () => {
       doc.line(col1X + 3, aY - 1.5, col1X + 3.8, aY - 0.5)
       doc.line(col1X + 3.8, aY - 0.5, col1X + 5.5, aY - 2.5)
       doc.text(p, col1X + 12, aY, { maxWidth: 75 })
-      aY += 12
+      aY += 10
     })
 
     if (images[0]) {
@@ -150,10 +155,10 @@ const sendBrochure = async () => {
 
     // --- COLUMN 2 ---
     const centerX = col2X + 35
-    const centerY = 70
+    const centerY = 58
     const rad = 35
     
-    drawDots(col2X + 15, 20, 5, 8)
+    drawDots(col2X + 15, 12, 5, 8)
 
     if (images[1]) {
       // Donut Masking Trick for perfect JS PDF circle crop
@@ -170,7 +175,7 @@ const sendBrochure = async () => {
       doc.circle(centerX, centerY, rad + 5, 'S')
     }
 
-    const fY = 130
+    const fY = 115
     doc.setFillColor(primaryColor)
     doc.roundedRect(col2X + 5, fY, 60, 10, 3, 3, 'F')
     doc.setTextColor(255, 255, 255)
@@ -184,8 +189,8 @@ const sendBrochure = async () => {
     let sY = fY + 20
     const sps = [
       `Tipe: ${productData.value.Tipe || '-'}`,
-      `KT: ${productData.value.Jumlah_Kamar_Tidur || '-'}`,
-      `KM: ${productData.value.Jumlah_Kamar_Mandi || '-'}`,
+      `Kamar Tidur: ${productData.value.Jumlah_Kamar_Tidur || '-'}`,
+      `Kamar Mandi: ${productData.value.Jumlah_Kamar_Mandi || '-'}`,
       `Carport: ${productData.value.Jumlah_Carpot || '-'}`,
       `Listrik: ${productData.value.Daya_Listrik || '-'} VA`
     ]
@@ -206,7 +211,7 @@ const sendBrochure = async () => {
     doc.text(productData.value.Keterangan || 'Unit premium dengan privasi maksimal sekaligus pemandangan kota terbaik.', col2X, 192, { maxWidth: 70, align: 'justify' })
 
     // --- COLUMN 3 ---
-    doc.setFillColor(slateColor)
+    doc.setFillColor(darkOrange)
     doc.roundedRect(col3X + 10, 30, 45, 9, 2, 2, 'F')
     doc.setTextColor(255, 255, 255)
     doc.setFont('helvetica', 'bold')
@@ -215,19 +220,21 @@ const sendBrochure = async () => {
 
     let pY = 60
     if (settingsStore.app.viewDiscount && productData.value.Harga_Jual1) {
-      doc.setTextColor(148, 163, 184)
-      doc.setFontSize(10)
-      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(239, 68, 68)
+      doc.setFontSize(11)
+      doc.setFont('helvetica', 'bold')
       const op = `Rp ${formatPrice(productData.value.Harga_Jual1)}`
       doc.text(op, col3X, pY)
-      doc.setDrawColor(primaryColor)
-      doc.setLineWidth(0.5)
-      doc.line(col3X, pY - 1.2, col3X + doc.getTextWidth(op), pY - 1.2)
+      doc.setDrawColor(239, 68, 68)
+      doc.setLineWidth(0.6)
+      doc.line(col3X - 1, pY - 1.5, col3X + doc.getTextWidth(op) + 1, pY - 1.5)
       pY += 12
     }
 
     doc.setTextColor(148, 163, 184)
-    doc.text('HARGA MULAI', col3X, pY)
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    doc.text('DENGAN HANYA', col3X, pY)
     doc.setFontSize(26)
     doc.setTextColor(primaryColor)
     doc.setFont('helvetica', 'bold')
