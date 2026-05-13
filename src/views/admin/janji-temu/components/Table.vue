@@ -2,25 +2,44 @@
 import { ref } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useVueTable, FlexRender, getCoreRowModel, getPaginationRowModel } from '@tanstack/vue-table'
+import { confirm, success, fail } from '@/utils/sweet-alert'
+import api from '@/services/axios'
 
-// Mock Data for Appointments Request
-const appointmentRequests = ref([
-  { id: '1', customer: 'Lina Marlina', email: 'lina@gmail.com', phone: '08123456789', property: 'Griya Asri Cluster A-12', date: '2026-04-12', time: '10:00', status: 'pending', salesName: 'Andi Pratama', adminName: 'Admin Bejo' },
-  { id: '2', customer: 'Budi Santoso', email: 'budi@yahoo.com', phone: '08778899001', property: 'Apartemen Skyview B-05', date: '2026-04-12', time: '14:30', status: 'confirmed', salesName: 'Andi Pratama', adminName: 'Admin Bejo' },
-  { id: '3', customer: 'Siti Aminah', email: 'siti@gmail.com', phone: '08212233441', property: 'Ruko Central Park No. 8', date: '2026-04-13', time: '09:00', status: 'pending', salesName: 'Bima Kurniawan', adminName: 'Admin Bejo' },
-  { id: '4', customer: 'Andi Wijaya', email: 'andi@outlook.com', phone: '08112233445', property: 'Griya Asri Cluster C-02', date: '2026-04-14', time: '16:00', status: 'cancelled', salesName: 'Yeni Anggraeni', adminName: 'Admin Bejo' },
-])
+const props = defineProps<{
+  appointments: any[]
+  isLoading: boolean
+}>()
+
+const emit = defineEmits(['refresh'])
+
+const handleUpdateStatus = async (item: any, newStatus: string) => {
+  confirm(`Ubah status progress menjadi ${newStatus}?`, async () => {
+    try {
+      const payload = { ...item, Status_Progress: newStatus }
+      await api.put(`/api/janjiTemu/update?no_id=${item.No_Id}`, payload, {
+        headers: { 'X-Jenis-User': 'admin' }
+      })
+      success('Status berhasil diperbarui')
+      emit('refresh')
+    } catch {
+      fail('Gagal memperbarui status')
+    }
+  })
+}
 
 const columns = [
-  { accessorKey: 'customer', header: 'Calon Pembeli' },
-  { accessorKey: 'property', header: 'Unit Properti' },
-  { accessorKey: 'date', header: 'Rencana Kunjungan' },
-  { accessorKey: 'status', header: 'Status' },
+  { accessorKey: 'No_Tracking', header: 'No. Tracking' },
+  { accessorKey: 'Id_Customer', header: 'Calon Pembeli' },
+  { accessorKey: 'Id_Produk', header: 'Produk' },
+  { accessorKey: 'Tanggal_Janji', header: 'Rencana Kunjungan' },
+  { accessorKey: 'Status_Progress', header: 'Status' },
   { id: 'aksi', header: 'Aksi' }
 ]
 
 const table = useVueTable({
-  data: appointmentRequests.value,
+  get data() {
+    return props.appointments
+  },
   columns,
   getCoreRowModel: getCoreRowModel(),
   getPaginationRowModel: getPaginationRowModel(),
@@ -32,17 +51,17 @@ const isExportOpen = ref(false)
 const exportToExcel = async () => {
   const { utils, writeFile } = await import('xlsx')
   
-  const dataToExport = appointmentRequests.value.map(item => ({
-    'ID': item.id,
-    'Calon Pembeli': item.customer,
-    'Email': item.email,
-    'Telepon': item.phone,
-    'Unit Properti': item.property,
-    'Tanggal': item.date,
-    'Waktu': item.time,
-    'Status': item.status,
-    'Sales': item.salesName,
-    'Admin': item.adminName
+  const dataToExport = props.appointments.map(item => ({
+    'ID': item.No_Id,
+    'Tracking': item.No_Tracking,
+    'Customer': item.Id_Customer,
+    'Admin': item.Id_Admin,
+    'Produk': item.Id_Produk,
+    'Tipe': item.Tipe_Pertemuan,
+    'Tanggal': item.Tanggal_Janji,
+    'Waktu': item.Waktu_Janji,
+    'Lokasi': item.Lokasi_Pertemuan,
+    'Status': item.Status_Progress
   }))
 
   const worksheet = utils.json_to_sheet(dataToExport)
@@ -65,19 +84,17 @@ const exportToPDF = async () => {
   doc.setTextColor(100)
   doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 14, 30)
 
-  const tableData = appointmentRequests.value.map(item => [
-    item.id,
-    item.customer,
-    item.property,
-    `${item.date} ${item.time}`,
-    item.status,
-    item.salesName
+  const tableData = props.appointments.map(item => [
+    item.No_Id,
+    item.Id_Customer,
+    item.Id_Produk,
+    `${item.Tanggal_Janji.split('T')[0]} ${item.Waktu_Janji}`,
+    item.Status_Progress,
+    item.Tipe_Pertemuan
   ])
 
-  // Get Primary Color from CSS Variable
   const primaryColorHex = getComputedStyle(document.documentElement).getPropertyValue('--color-bejo-500').trim() || '#ca6d2c'
   
-  // Convert Hex to RGB
   const hexToRgb = (hex: string): [number, number, number] => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
     return result ? [
@@ -89,7 +106,7 @@ const exportToPDF = async () => {
 
   autoTable(doc, {
     startY: 35,
-    head: [['ID', 'Customer', 'Property', 'Schedule', 'Status', 'Sales']],
+    head: [['ID', 'Customer', 'Product', 'Schedule', 'Status', 'Type']],
     body: tableData,
     headStyles: { fillColor: hexToRgb(primaryColorHex) }, 
     theme: 'grid'
@@ -99,7 +116,6 @@ const exportToPDF = async () => {
   isExportOpen.value = false
 }
 
-// Close dropdown on click outside
 if (typeof window !== 'undefined') {
   window.addEventListener('click', (e) => {
     const target = e.target as HTMLElement
@@ -160,7 +176,12 @@ if (typeof window !== 'undefined') {
        </div>
     </div>
 
-    <div class="overflow-x-auto">
+    <div v-if="props.isLoading" class="p-20 flex flex-col items-center justify-center gap-4 text-slate-400">
+       <Icon icon="lucide:loader-2" class="size-10 animate-spin" />
+       <p class="text-xs font-black uppercase tracking-widest">Memuat Data...</p>
+    </div>
+
+    <div v-else class="overflow-x-auto">
       <table class="w-full border-collapse">
         <thead class="bg-slate-50/50">
           <tr v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
@@ -172,34 +193,39 @@ if (typeof window !== 'undefined') {
 
         <tbody class="divide-y divide-slate-50">
           <tr v-for="row in table.getRowModel().rows" :key="row.id" class="hover:bg-slate-50/30 transition-colors group">
+            <!-- Tracking -->
+            <td class="px-8 py-6">
+              <span class="text-[10px] font-black text-slate-900 bg-slate-100 px-2 py-1 rounded-lg">#{{ row.original.No_Tracking }}</span>
+            </td>
+
             <!-- Customer -->
             <td class="px-8 py-6">
               <div class="flex items-center gap-4">
                 <div class="size-10 rounded-xl bg-slate-900 flex items-center justify-center text-white font-black text-xs shadow-lg">
-                  {{ row.original.customer.charAt(0) }}
+                  {{ row.original.Id_Customer.charAt(0) }}
                 </div>
                 <div>
-                  <div class="text-sm font-black text-slate-900">{{ row.original.customer }}</div>
-                  <div class="text-[10px] font-bold text-slate-500">{{ row.original.phone }}</div>
+                  <div class="text-sm font-black text-slate-900">{{ row.original.Id_Customer }}</div>
+                  <div class="text-[10px] font-bold text-slate-500">ID Customer</div>
                 </div>
               </div>
             </td>
 
-            <!-- Property -->
+            <!-- Product -->
             <td class="px-8 py-6">
-               <div class="text-sm font-black text-slate-700">{{ row.original.property }}</div>
-               <span class="px-2 py-0.5 bg-slate-100 text-[9px] font-black text-slate-500 rounded uppercase tracking-tighter">Residensial</span>
+               <div class="text-sm font-black text-slate-700">{{ row.original.Id_Produk }}</div>
+               <span class="px-2 py-0.5 bg-bejo-50 text-[9px] font-black text-bejo-600 rounded uppercase tracking-tighter capitalize">{{ row.original.Tipe_Pertemuan }}</span>
             </td>
 
             <!-- Date/Time -->
             <td class="px-8 py-6">
                <div class="flex items-center gap-2 text-slate-900">
                   <Icon icon="lucide:calendar" class="size-4 text-bejo-500" />
-                  <span class="text-sm font-bold">{{ row.original.date }}</span>
+                  <span class="text-sm font-bold">{{ row.original.Tanggal_Janji.split('T')[0] }}</span>
                </div>
                <div class="flex items-center gap-2 text-slate-400 mt-1">
                   <Icon icon="lucide:clock" class="size-3.5" />
-                  <span class="text-xs font-medium">{{ row.original.time }} WIB</span>
+                  <span class="text-xs font-medium">{{ row.original.Waktu_Janji }} WIB</span>
                </div>
             </td>
 
@@ -208,29 +234,36 @@ if (typeof window !== 'undefined') {
                <span 
                 class="px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest inline-flex items-center gap-1.5"
                 :class="{
-                  'bg-bejo-50 text-bejo-700': row.original.status === 'pending',
-                  'bg-emerald-100 text-emerald-700': row.original.status === 'confirmed',
-                  'bg-red-100 text-red-700': row.original.status === 'cancelled',
+                  'bg-bejo-50 text-bejo-700': row.original.Status_Progress === 'baru',
+                  'bg-emerald-100 text-emerald-700': row.original.Status_Progress === 'selesai',
+                  'bg-red-100 text-red-700': row.original.Status_Progress === 'batal',
+                  'bg-blue-100 text-blue-700': row.original.Status_Progress === 'proses',
+                  'bg-violet-100 text-violet-700': row.original.Status_Progress === 'dikonfirmasi',
                 }"
                >
                   <div class="size-1.5 rounded-full" :class="{
-                    'bg-bejo-500': row.original.status === 'pending',
-                    'bg-emerald-500': row.original.status === 'confirmed',
-                    'bg-red-500': row.original.status === 'cancelled',
+                    'bg-bejo-500': row.original.Status_Progress === 'baru',
+                    'bg-emerald-500': row.original.Status_Progress === 'selesai',
+                    'bg-red-500': row.original.Status_Progress === 'batal',
+                    'bg-blue-500': row.original.Status_Progress === 'proses',
+                    'bg-violet-500': row.original.Status_Progress === 'dikonfirmasi',
                   }"></div>
-                  {{ row.original.status }}
+                  {{ row.original.Status_Progress }}
                </span>
             </td>
 
             <!-- Aksi -->
             <td class="px-8 py-6">
-               <div class="flex items-center gap-2">
-                  <button class="size-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-bejo-500 hover:border-bejo-200 transition-all group-hover:bg-white shadow-sm">
+               <div v-if="row.original.Status_Progress === 'baru'" class="flex items-center gap-2">
+                  <button @click="handleUpdateStatus(row.original, 'dikonfirmasi')" class="size-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-emerald-500 hover:border-emerald-200 transition-all group-hover:bg-white shadow-sm">
                      <Icon icon="lucide:check-circle" class="size-5" />
                   </button>
-                  <button class="size-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-red-500 hover:border-red-200 transition-all group-hover:bg-white shadow-sm">
+                  <button @click="handleUpdateStatus(row.original, 'batal')" class="size-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-red-500 hover:border-red-200 transition-all group-hover:bg-white shadow-sm">
                      <Icon icon="lucide:x-circle" class="size-5" />
                   </button>
+               </div>
+               <div v-else class="text-[10px] font-black text-slate-300 uppercase tracking-widest italic">
+                  No Actions
                </div>
             </td>
           </tr>
@@ -240,13 +273,15 @@ if (typeof window !== 'undefined') {
 
     <!-- Pagination -->
     <div class="px-8 py-6 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
-       <span class="text-xs font-bold text-slate-400">Menampilkan <span class="text-slate-900">4</span> Permintaan Teratas</span>
+       <span class="text-xs font-bold text-slate-400">Total <span class="text-slate-900">{{ props.appointments.length }}</span> Janji Temu</span>
        <div class="flex items-center gap-2">
-          <button class="size-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all disabled:opacity-50" disabled>
+          <button @click="table.previousPage()" :disabled="!table.getCanPreviousPage()" class="size-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all disabled:opacity-50">
              <Icon icon="lucide:chevron-left" class="size-4" />
           </button>
-          <button class="size-9 rounded-xl bg-bejo-500 text-white flex items-center justify-center font-black text-xs shadow-lg shadow-bejo-500/20">1</button>
-          <button class="size-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all">
+          <div class="px-4 text-xs font-black text-slate-900">
+            {{ table.getState().pagination.pageIndex + 1 }} / {{ table.getPageCount() }}
+          </div>
+          <button @click="table.nextPage()" :disabled="!table.getCanNextPage()" class="size-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all disabled:opacity-50">
              <Icon icon="lucide:chevron-right" class="size-4" />
           </button>
        </div>

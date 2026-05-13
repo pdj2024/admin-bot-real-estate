@@ -6,6 +6,7 @@ import Calendar from './components/Calendar.vue'
 import Event from './components/Event.vue'
 import Table from './components/Table.vue'
 import ChatWidget from '@/components/ChatWidget.vue'
+import api from '@/services/axios'
 
 const calendarRef = ref<InstanceType<typeof Calendar> | null>(null)
 const chatWidgetRef = ref<any>(null)
@@ -13,6 +14,8 @@ const openAppointment = ref(false)
 const isShrinkCalendar = ref(false)
 const selectedEvent = ref<any>(null)
 const appointmentData = ref<any>(null)
+const appointments = ref<any[]>([])
+const isLoading = ref(true)
 
 // Responsive Detection
 const showAsPopup = ref(false)
@@ -20,9 +23,24 @@ const updateView = () => {
   showAsPopup.value = window.innerWidth < 1280 // Tablets and Mobile are below XL
 }
 
+const fetchAppointments = async () => {
+  isLoading.value = true
+  try {
+    const { data } = await api.get('/api/janjiTemu/getAll?orderby=no_id&orderdir=asc', {
+      headers: { 'X-Jenis-User': 'admin' }
+    })
+    appointments.value = data.Data || []
+  } catch (error) {
+    console.error('Gagal mengambil data janji temu:', error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
 onMounted(() => {
   updateView()
   window.addEventListener('resize', updateView)
+  fetchAppointments()
 })
 
 onBeforeUnmount(() => {
@@ -46,20 +64,22 @@ const openAppointmentHandler = (data: any) => {
 }
 
 const closeAppointment = () => {
-  // 1. Tutup detail janji dahulu (Fade Out)
   openAppointment.value = false
-  
-  // 2. Barulah div calendar stretch full wide setelah fade out selesai
   setTimeout(() => {
     isShrinkCalendar.value = false
     nextTick(() => {
       calendarRef.value?.refreshCalendar()
     })
-  }, 400) // Delay sedikit lebih lama dari durasi slide-fade-leave (300ms)
+  }, 400)
 
   setTimeout(() => {
     selectedEvent.value = null
   }, 500)
+}
+
+const handleRefresh = () => {
+  fetchAppointments()
+  closeAppointment()
 }
 </script>
 
@@ -69,13 +89,14 @@ const closeAppointment = () => {
       <!-- Title Section Removed -->
 
       <!-- Stats Overview -->
-      <AppointmentStats />
+      <AppointmentStats :appointments="appointments" />
       
       <!-- Calendar & Detail Section -->
       <div class="grid grid-cols-1 xl:grid-cols-4 gap-10 items-stretch">
         <!-- Main Calendar -->
         <Calendar 
           ref="calendarRef" 
+          :appointments="appointments"
           :appointmentOpen="isShrinkCalendar && !showAsPopup" 
           @openAppointment="openAppointmentHandler" 
         />
@@ -89,6 +110,7 @@ const closeAppointment = () => {
                :appointment="appointmentData" 
                class="h-full"
                @close="closeAppointment" 
+               @refresh="handleRefresh"
                @openChat="handleOpenChat"
              />
           </Transition>
@@ -105,6 +127,7 @@ const closeAppointment = () => {
               :appointment="appointmentData" 
               class="h-full"
               @close="closeAppointment" 
+              @refresh="handleRefresh"
               @openChat="handleOpenChat"
             />
           </div>
@@ -113,7 +136,7 @@ const closeAppointment = () => {
 
       <!-- Request Table Section -->
       <div class="pt-10">
-        <Table />
+        <Table :appointments="appointments" :isLoading="isLoading" @refresh="handleRefresh" />
       </div>
     </div>
     <ChatWidget ref="chatWidgetRef" />

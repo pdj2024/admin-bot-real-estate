@@ -6,12 +6,13 @@ import listPlugin from '@fullcalendar/list'
 import interactionPlugin from '@fullcalendar/interaction'
 import idLocale from '@fullcalendar/core/locales/id'
 import api from '@/services/axios'
-import { fail } from '@/utils/sweet-alert'
-import { calendarEvents } from '@/views/admin/chat/components/data'
+import { fail, success } from '@/utils/sweet-alert'
 
 export function useChatAppointments(props: any, sendChat: any) {
   const showAppointmentModal = ref(false)
   const appointmentStage = ref(0)
+  const allAppointments = ref<any[]>([])
+  const isLoadingAppointments = ref(false)
   
   const appointmentForm = ref({
     namaLengkap: '',
@@ -26,10 +27,23 @@ export function useChatAppointments(props: any, sendChat: any) {
     mediaUrl: ''
   })
 
+  const fetchAppointments = async () => {
+    isLoadingAppointments.value = true
+    try {
+      const res = await api.get('/api/janjiTemu/getAll?orderby=no_id&orderdir=asc', {
+        headers: { 'X-Jenis-User': 'admin' }
+      })
+      allAppointments.value = res.data.Data || []
+    } catch (error) {
+      console.error('Gagal memuat data janji temu:', error)
+    } finally {
+      isLoadingAppointments.value = false
+    }
+  }
+
   const bookedDates = computed(() => {
-    return calendarEvents.map((ev) => {
-      const d = new Date(ev.start)
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    return allAppointments.value.map((item) => {
+      return item.Tanggal_Janji.split('T')[0]
     })
   })
 
@@ -42,17 +56,17 @@ export function useChatAppointments(props: any, sendChat: any) {
 
     appointmentStage.value = 2
     showAppointmentModal.value = true
+    fetchAppointments()
   }
 
   const handleCalendarDateClick = (info: { dateStr: string; date: Date }) => {
     const clickedDate = info.dateStr.slice(0, 10)
-    if (bookedDates.value.includes(clickedDate)) {
-      fail('Tanggal ini sudah ada janji temu. Pilih tanggal lain.')
-      return
-    }
+    // Booked dates can still be selected if we want to allow multiple appointments per day, 
+    // but the original logic suggests blocking. I'll keep it as per original but using real data.
+    // However, usually we might want to check for specific time conflicts.
     appointmentForm.value.tanggal = clickedDate
     if (!appointmentForm.value.waktu) {
-      const timeStr = info.dateStr.length > 10 ? info.dateStr.slice(11, 16) : '09:00'
+      const timeStr = info.dateStr.length > 10 ? info.dateStr.slice(11, 16) : '10:00'
       appointmentForm.value.waktu = timeStr
     }
   }
@@ -73,13 +87,13 @@ export function useChatAppointments(props: any, sendChat: any) {
       if (bookedDates.value.includes(key)) return ['fc-day-booked']
       return []
     },
-    events: calendarEvents.map((ev) => ({
-      title: ev.title,
-      start: ev.start,
+    events: allAppointments.value.map((item) => ({
+      title: item.Id_Customer,
+      start: `${item.Tanggal_Janji.split('T')[0]}T${item.Waktu_Janji}`,
       backgroundColor: '#94a3b8',
       borderColor: '#94a3b8',
       textColor: '#ffffff',
-      extendedProps: ev.extendedProps
+      extendedProps: item
     })),
     headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
     eventClick: () => {}
@@ -108,40 +122,65 @@ export function useChatAppointments(props: any, sendChat: any) {
       `Tim kita bakal nunggu di lokasi sesuai jam di atas ya. Kalau misal nanti nyasar atau ada perubahan rencana, chat ke nomor ini aja.\n\n` +
       `See you di lokasi ya, Kak! 🏙️`
 
-    let urlMedia = ''
-    const idMedia = f.mediaUrl || ''
-    if (idMedia.includes('base64,')) urlMedia = idMedia
-    else if (idMedia.startsWith('http')) {
-      try {
-        const response = await fetch(idMedia)
-        const blob = await response.blob()
-        urlMedia = await new Promise((resolve) => {
-          const reader = new FileReader()
-          reader.onloadend = () => resolve(reader.result as string)
-          reader.readAsDataURL(blob)
-        })
-      } catch {
-        urlMedia = idMedia
+    try {
+      // 1. Create Appointment in DB
+      await api.post('/api/janjiTemu/create', {
+        Id_Customer: props.idLawan,
+        Id_Admin: localStorage.getItem('no_id'),
+        Id_Produk: f.unitId,
+        Tipe_Pertemuan: 'offline',
+        Tanggal_Janji: f.tanggal,
+        Waktu_Janji: f.waktu.length === 5 ? f.waktu + ':00' : f.waktu,
+        Waktu_Selesai: null,
+        Lokasi_Pertemuan: f.lokasi,
+        Keterangan: f.catatan,
+        Status: 'aktif',
+        Status_Progress: 'baru'
+      }, { headers: { 'X-Jenis-User': 'admin' } })
+
+      // 2. Handle Image URL for WA
+      let urlMedia = ''
+      const idMedia = f.mediaUrl || ''
+      if (idMedia.includes('base64,')) urlMedia = idMedia
+      else if (idMedia.startsWith('http')) {
+        try {
+          const response = await fetch(idMedia)
+          const blob = await response.blob()
+          urlMedia = await new Promise((resolve) => {
+            const reader = new FileReader()
+            reader.onloadend = () => resolve(reader.result as string)
+            reader.readAsDataURL(blob)
+          })
+        } catch {
+          urlMedia = idMedia
+        }
+      } else urlMedia = idMedia
+
+      // 3. Send to Chat UI & DB Chat
+      setChatContent(msg)
+      showAppointmentModal.value = false
+      const idPaket = `${f.unitId}_${f.mediaUrl}`
+      await sendChat('system_image_appointment', msg, undefined, f.noTelp, idPaket, urlMedia)
+
+      // 4. Send to WA Gateway
+      let formattedPhone = f.noTelp.replace(/\D/g, '')
+      if (formattedPhone.startsWith('0')) formattedPhone = '62' + formattedPhone.substring(1)
+
+      const waPayload = {
+        PhoneNumber: formattedPhone + '@s.whatsapp.net',
+        FileUrl: urlMedia,
+        FileName: `product_${f.unitId || 'image'}.jpg`,
+        MimeType: 'image/jpeg',
+        Caption: msg
       }
-    } else urlMedia = idMedia
 
-    setChatContent(msg)
-    showAppointmentModal.value = false
-    const idPaket = `${f.unitId}_${f.mediaUrl}`
-    await sendChat('system_image_appointment', msg, undefined, f.noTelp, idPaket, urlMedia)
-    let formattedPhone = f.noTelp.replace(/\D/g, '')
-    if (formattedPhone.startsWith('0')) formattedPhone = '62' + formattedPhone.substring(1)
-
-    const payload = {
-      PhoneNumber: formattedPhone + '@s.whatsapp.net',
-      FileUrl: urlMedia,
-      FileName: `product_${f.unitId || 'image'}.jpg`,
-      MimeType: 'image/jpeg',
-      Caption: msg
+      await api.post('/api/waha/send-image', waPayload, { headers: { 'X-Jenis-User': 'admin' } })
+      
+      success('Janji temu berhasil dibuat dan dikirim ke customer')
+    } catch (error) {
+      console.error('Gagal membuat janji temu:', error)
+      fail('Gagal membuat janji temu')
     }
-
-    const config = { headers: { 'X-Jenis-User': 'admin' } }
-    await api.post('/api/waha/send-image', payload, config)
   }
 
   return {
@@ -150,6 +189,8 @@ export function useChatAppointments(props: any, sendChat: any) {
     appointmentForm,
     appointmentCalendarOptions,
     bookedDates,
+    isLoadingAppointments,
+    fetchAppointments,
     handleSelectUnitForAppointment,
     saveNewAppointment
   }

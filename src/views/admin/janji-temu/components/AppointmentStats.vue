@@ -1,11 +1,24 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { Icon } from '@iconify/vue'
 
-const stats = [
-  { label: 'Janji Temu Hari Ini', value: '06', icon: 'lucide:calendar-check', color: 'bejo' },
-  { label: 'Menunggu Konfirmasi', value: '08', icon: 'lucide:clock', color: 'bejo' },
-  { label: 'Total Janji Temu (Bulan Ini)', value: '124', icon: 'lucide:users', color: 'bejo' },
-]
+const props = defineProps<{
+  appointments: any[]
+}>()
+
+const stats = computed(() => {
+  const today = new Date().toISOString().split('T')[0]
+  
+  const todayCount = props.appointments.filter(a => a.Tanggal_Janji.split('T')[0] === today).length
+  const pendingCount = props.appointments.filter(a => a.Status_Progress === 'baru').length
+  const totalCount = props.appointments.length
+
+  return [
+    { label: 'Janji Temu Hari Ini', value: todayCount.toString().padStart(2, '0'), icon: 'lucide:calendar-check', color: 'bejo' },
+    { label: 'Menunggu Konfirmasi', value: pendingCount.toString().padStart(2, '0'), icon: 'lucide:clock', color: 'bejo' },
+    { label: 'Total Janji Temu', value: totalCount.toString().padStart(2, '0'), icon: 'lucide:users', color: 'bejo' },
+  ]
+})
 
 const getIconBg = (color: string) => {
   const map: Record<string, string> = {

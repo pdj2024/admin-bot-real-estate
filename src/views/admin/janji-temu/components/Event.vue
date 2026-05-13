@@ -1,16 +1,17 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { Icon } from '@iconify/vue'
-import { confirmCancel, confirm, success } from '@/utils/sweet-alert'
+import { confirm, success, fail } from '@/utils/sweet-alert'
 import FullCalendar from '@fullcalendar/vue3'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import idLocale from '@fullcalendar/core/locales/id'
 import type { CalendarOptions } from '@fullcalendar/core'
+import api from '@/services/axios'
 
 const props = defineProps<{ openAppointment: boolean; appointment: any }>()
-const emit = defineEmits(['close', 'update', 'openChat'])
+const emit = defineEmits(['close', 'refresh', 'openChat'])
 
 const openReschedule = ref(false)
 const openRescheduleForm = ref(false)
@@ -29,20 +30,54 @@ const calendarOptions = computed<CalendarOptions>(() => ({
   }
 }))
 
-const saveReschedule = () => {
-  confirm(`Konfirmasi perubahan jadwal ke ${selectedDate.value}?`, () => {
-    success('Jadwal berhasil diperbarui')
-    openRescheduleForm.value = false
-    openReschedule.value = false
-    emit('close')
+const saveReschedule = async () => {
+  confirm(`Konfirmasi perubahan jadwal ke ${selectedDate.value} pukul ${startTime.value}?`, async () => {
+    try {
+      await api.put(`/api/janjiTemu/reschedule?no_id=${props.appointment.No_Id}`, {
+        Tanggal_Janji: selectedDate.value,
+        Waktu_Janji: startTime.value,
+        Waktu_Selesai: null,
+        Alasan_Batal: 'reschedule by admin'
+      }, {
+        headers: { 'X-Jenis-User': 'admin' }
+      })
+      success('Jadwal berhasil diperbarui')
+      openRescheduleForm.value = false
+      openReschedule.value = false
+      emit('refresh')
+    } catch {
+      fail('Gagal memperbarui jadwal')
+    }
   })
 }
 
-const closeModal = () => {
-  confirmCancel('Batalkan janji temu ini?', () => {
-    emit('close')
-    success('Janji temu dibatalkan')
-  }, () => {})
+const handleUpdateStatus = async (newStatus: string) => {
+  confirm(`Ubah status progress menjadi ${newStatus}?`, async () => {
+    try {
+      const payload = { ...props.appointment, Status_Progress: newStatus }
+      await api.put(`/api/janjiTemu/update?no_id=${props.appointment.No_Id}`, payload, {
+        headers: { 'X-Jenis-User': 'admin' }
+      })
+      success('Status berhasil diperbarui')
+      emit('refresh')
+    } catch {
+      fail('Gagal memperbarui status')
+    }
+  })
+}
+
+const handleDelete = async () => {
+  confirm('Apakah Anda yakin ingin menghapus janji temu ini?', async () => {
+    try {
+      await api.delete(`/api/janjiTemu/delete?no_id=${props.appointment.No_Id}`, {
+        headers: { 'X-Jenis-User': 'admin' }
+      })
+      success('Janji temu berhasil dihapus')
+      emit('refresh')
+    } catch {
+      fail('Gagal menghapus janji temu')
+    }
+  })
 }
 </script>
 
@@ -65,83 +100,113 @@ const closeModal = () => {
       <!-- Scrollable Content Area -->
       <div class="flex-1 overflow-y-auto custom-scrollbar">
         <div class="p-8 space-y-8">
+          <!-- Status Badge -->
+          <div class="flex justify-center">
+            <span 
+              class="px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-sm"
+              :class="{
+                'bg-bejo-50 text-bejo-600 border border-bejo-100': props.appointment.Status_Progress === 'baru',
+                'bg-violet-50 text-violet-600 border border-violet-100': props.appointment.Status_Progress === 'dikonfirmasi',
+                'bg-blue-50 text-blue-600 border border-blue-100': props.appointment.Status_Progress === 'proses',
+                'bg-emerald-50 text-emerald-600 border border-emerald-100': props.appointment.Status_Progress === 'selesai',
+                'bg-red-50 text-red-600 border border-red-100': props.appointment.Status_Progress === 'batal',
+              }"
+            >
+              <div class="size-1.5 rounded-full" :class="{
+                'bg-bejo-500': props.appointment.Status_Progress === 'baru',
+                'bg-violet-500': props.appointment.Status_Progress === 'dikonfirmasi',
+                'bg-blue-500': props.appointment.Status_Progress === 'proses',
+                'bg-emerald-500': props.appointment.Status_Progress === 'selesai',
+                'bg-red-500': props.appointment.Status_Progress === 'batal',
+              }"></div>
+              {{ props.appointment.Status_Progress }}
+            </span>
+          </div>
+
           <!-- Date/Time Segment -->
           <div class="p-5 bg-slate-50 rounded-3xl border border-slate-100 flex items-center justify-between">
             <div class="space-y-1">
               <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Jadwal Kunjungan</span>
               <div class="text-sm font-black text-slate-900">
-                 {{ new Date(props.appointment.start).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' }) }}
+                 {{ new Date(props.appointment.Tanggal_Janji).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' }) }}
               </div>
             </div>
             <div class="text-right space-y-1">
                <span class="text-[10px] font-black uppercase tracking-widest text-bejo-500">Waktu</span>
                <div class="text-sm font-black text-bejo-600">
-                  {{ new Date(props.appointment.start).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }} WIB
+                  {{ props.appointment.Waktu_Janji }} WIB
                </div>
             </div>
           </div>
 
-          <!-- Property Card -->
-          <div class="space-y-4">
-            <div class="flex items-center gap-4">
-               <img :src="props.appointment.image" class="size-20 rounded-2xl object-cover shadow-lg" />
-               <div class="min-w-0">
-                  <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Unit Properti</span>
-                  <h4 class="text-sm font-black text-slate-900 truncate">{{ props.appointment.propertyName }}</h4>
-                  <div class="flex items-center gap-1.5 mt-1">
-                     <Icon icon="lucide:map-pin" class="size-3 text-bejo-500" />
-                     <span class="text-[10px] font-bold text-slate-500 truncate">{{ props.appointment.location }}</span>
-                  </div>
-               </div>
+          <!-- Info List -->
+          <div class="space-y-6">
+            <div>
+              <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Lokasi</span>
+              <div class="flex items-start gap-3">
+                <Icon icon="lucide:map-pin" class="size-4 text-bejo-500 shrink-0 mt-0.5" />
+                <span class="text-sm font-bold text-slate-700">{{ props.appointment.Lokasi_Pertemuan }}</span>
+              </div>
             </div>
-          </div>
 
-          <!-- Agent -->
-          <div class="pt-6 border-t border-slate-50">
-             <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-4">Agen Pendamping</span>
-             <div class="flex items-center gap-4 p-4 bg-bejo-50/50 rounded-2xl border border-bejo-100">
-                <div class="size-10 rounded-xl bg-bejo-500 flex items-center justify-center font-black text-white shadow-lg shadow-bejo-500/20">
-                   {{ props.appointment.salesName.charAt(0) }}
-                </div>
-                <div class="min-w-0">
-                   <div class="text-sm font-black text-slate-900 truncate">{{ props.appointment.salesName }}</div>
-                   <div class="text-[10px] font-bold text-slate-500">{{ props.appointment.salesPhone }}</div>
-                </div>
-             </div>
-          </div>
+            <div>
+              <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Tipe Pertemuan</span>
+              <div class="flex items-center gap-3">
+                <Icon :icon="props.appointment.Tipe_Pertemuan === 'online' ? 'lucide:video' : 'lucide:users'" class="size-4 text-bejo-500" />
+                <span class="text-sm font-bold text-slate-700 capitalize">{{ props.appointment.Tipe_Pertemuan }}</span>
+              </div>
+            </div>
 
-          <!-- Specs -->
-          <div class="grid grid-cols-2 gap-3">
-             <div class="p-3 bg-slate-50 rounded-2xl text-center border border-slate-100">
-                <span class="text-[9px] font-black uppercase tracking-wider text-slate-400">LT / LB</span>
-                <div class="text-xs font-black text-slate-800">{{ props.appointment.landSize }} / {{ props.appointment.buildingSize }} m²</div>
-             </div>
-             <div class="p-3 bg-slate-50 rounded-2xl text-center border border-slate-100">
-                <span class="text-[9px] font-black uppercase tracking-wider text-slate-400">Kamar</span>
-                <div class="text-xs font-black text-slate-800">{{ props.appointment.bedrooms }} KT / {{ props.appointment.bathrooms }} KM</div>
-             </div>
+            <div v-if="props.appointment.Alasan_Batal">
+              <span class="text-[10px] font-black uppercase tracking-widest text-red-400 block mb-2">Alasan Batal</span>
+              <p class="text-sm font-bold text-red-600 italic">"{{ props.appointment.Alasan_Batal }}"</p>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Actions (Pinned at Bottom) -->
       <div class="p-8 bg-slate-50/50 border-t border-slate-100 space-y-3 shrink-0">
-         <button @click="$emit('openChat', props.appointment.customerId)" class="w-full px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-sm group">
+         <button @click="$emit('openChat', props.appointment.Id_Customer)" class="w-full px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-sm group">
             <Icon icon="lucide:message-circle" class="size-4 group-hover:scale-110 transition-transform" />
-            Hubungi Kami
+            Hubungi Customer
          </button>
+         
          <div class="grid grid-cols-2 gap-3">
-            <button @click="closeModal" class="px-3 py-3 bg-white hover:bg-red-50 text-red-600 border border-slate-200 hover:border-red-200 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">
-               Batalkan
-            </button>
-            <button @click="openReschedule = true" class="px-3 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-slate-900/10">
-               Reschedule
-            </button>
+            <template v-if="props.appointment.Status_Progress === 'baru'">
+              <button @click="handleUpdateStatus('dikonfirmasi')" class="px-3 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/10">
+                 Konfirmasi
+              </button>
+              <button @click="openReschedule = true" class="px-3 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-slate-900/10">
+                 Reschedule
+              </button>
+            </template>
+
+            <template v-else-if="props.appointment.Status_Progress === 'dikonfirmasi'">
+              <button @click="handleUpdateStatus('proses')" class="px-3 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-500/10">
+                 Mulai Proses
+              </button>
+              <button @click="handleUpdateStatus('batal')" class="px-3 py-3 bg-white border border-slate-200 text-red-600 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">
+                 Batalkan
+              </button>
+            </template>
+
+            <template v-else-if="props.appointment.Status_Progress === 'proses'">
+              <button @click="handleUpdateStatus('selesai')" class="px-3 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/10">
+                 Selesaikan
+              </button>
+            </template>
+
+            <template v-else>
+              <button @click="handleDelete" class="col-span-2 px-3 py-3 bg-red-500 hover:bg-red-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">
+                 Hapus Data
+              </button>
+            </template>
          </div>
       </div>
     </div>
 
-    <!-- Reschedule Overlay (Simple version for now) -->
+    <!-- Reschedule Overlay -->
     <div v-if="openReschedule" class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm">
        <div class="bg-white rounded-[2.5rem] w-full max-w-lg p-10 shadow-2xl animate-in zoom-in duration-300">
           <div class="flex justify-between items-center mb-8">

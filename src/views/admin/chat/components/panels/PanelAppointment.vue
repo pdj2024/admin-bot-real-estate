@@ -9,6 +9,7 @@ const props = defineProps<{
   showAppointmentModal: boolean
   appointmentForm: any
   appointmentCalendarOptions: any
+  isLoading?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -35,6 +36,17 @@ watch(() => props.showAppointmentModal, (newVal) => {
     <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="emit('close')" />
 
     <div class="relative w-full max-w-6xl max-h-[94vh] bg-white rounded-[2rem] shadow-2xl shadow-slate-900/20 flex flex-col overflow-hidden z-10 animate-fade-in-up">
+      <!-- Loading Overlay -->
+      <div v-if="isLoading" class="absolute inset-0 z-[100] bg-white/70 backdrop-blur-sm flex flex-col items-center justify-center">
+        <div class="size-16 relative mb-4">
+          <div class="absolute inset-0 border-4 border-slate-100 rounded-full"></div>
+          <div class="absolute inset-0 border-4 border-bejo-500 rounded-full border-t-transparent animate-spin"></div>
+          <Icon icon="lucide:loader-2" class="size-6 text-bejo-500 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+        </div>
+        <h4 class="text-lg font-black text-slate-800 tracking-tight">Harap Tunggu...</h4>
+        <p class="text-xs font-bold text-slate-500 text-center max-w-[250px] mt-1.5 leading-relaxed">Sistem sedang memuat data jadwal terkini.</p>
+      </div>
+
       <div class="shrink-0 flex items-center justify-between px-6 md:px-8 py-4 md:py-5 border-b border-slate-100 bg-white">
         <div class="flex items-center gap-3">
           <div class="size-10 rounded-2xl bg-gradient-to-br from-bejo-50 to-bejo-100 flex items-center justify-center text-bejo-600 shadow-sm shadow-bejo-500/10">

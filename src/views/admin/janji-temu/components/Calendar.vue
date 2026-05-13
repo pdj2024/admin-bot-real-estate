@@ -10,12 +10,34 @@ import { ref, onMounted, computed } from 'vue'
 import { calendarEvents } from './data'
 
 const isMobile = ref(false)
-
 const emit = defineEmits(['openAppointment'])
 
 const props = defineProps<{
   appointmentOpen?: boolean
+  appointments: any[]
 }>()
+
+const calendarEvents = computed(() => {
+  return props.appointments.map(item => {
+    // Determine color based on Status_Progress
+    let color = '#ca6d2c' // Default Bejo
+    if (item.Status_Progress === 'selesai') color = '#10b981' // Emerald
+    if (item.Status_Progress === 'batal') color = '#ef4444' // Red
+    if (item.Status_Progress === 'proses') color = '#3b82f6' // Blue
+    if (item.Status_Progress === 'dikonfirmasi') color = '#8b5cf6' // Violet
+    
+    return {
+      id: item.No_Id,
+      title: item.Nama_Customer || item.Id_Customer, // We might need to join data or the API might provide it
+      start: `${item.Tanggal_Janji.split('T')[0]}T${item.Waktu_Janji}`,
+      end: item.Waktu_Selesai ? `${item.Tanggal_Janji.split('T')[0]}T${item.Waktu_Selesai}` : undefined,
+      color: color,
+      extendedProps: {
+        ...item
+      }
+    }
+  })
+})
 
 const calendarColClass = computed(() => (props.appointmentOpen ? 'xl:col-span-3' : 'xl:col-span-4'))
 const fullCalendarRef = ref<InstanceType<typeof FullCalendar> | null>(null)
@@ -34,12 +56,12 @@ const calendarOptions = computed<CalendarOptions>(() => ({
   },
   editable: true,
   selectable: true,
-  events: calendarEvents,
+  events: calendarEvents.value,
   eventClick(info: EventClickArg) {
     refreshCalendar()
     const event = info.event
     const data = event.extendedProps
-    emit('openAppointment', { title: event.title, start: event.start!, end: event.end!, ...data })
+    emit('openAppointment', data)
   }
 }))
 

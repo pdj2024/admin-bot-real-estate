@@ -283,29 +283,51 @@ const scrollToBottom = async () => {
   setTimeout(scroll, 200) // Safety for slow image loads
 }
 
+const processingMessageIds = new Set<string>()
+
 const markMessagesAsRead = async () => {
-  if (props.activeTab !== 'chat_saya') return
+  if (props.activeTab !== 'chat_saya' || !props.chats) return
   
-  const deliveredMessages = props.chats.filter(
-    (chat) => chat.Tipe_User === 'customer' && (chat.Send_Status === 'delivered' || chat.Send_Status === 'send')
+  const messagesToUpdate = props.chats.filter(
+    (chat) => 
+      chat.Tipe_User === 'customer' && 
+      (chat.Send_Status === 'delivered' || chat.Send_Status === 'send') &&
+      chat.Message_Id &&
+      !processingMessageIds.has(chat.Message_Id)
   )
   
-  if (deliveredMessages.length === 0) return
+  if (messagesToUpdate.length === 0) return
+
+  // Mark as processing to avoid redundant calls
+  messagesToUpdate.forEach(msg => processingMessageIds.add(msg.Message_Id))
 
   try {
-    const promises = deliveredMessages.map((msg) => 
-      api.put(`/api/chat/update-send-status?message_id=${msg.Message_Id}&send_status=read`, {}, {
-        headers: { 'X-Jenis-User': 'Admin' }
-      })
-    )
-    await Promise.all(promises)
+    const config = { headers: { 'X-Jenis-User': 'Admin' } }
     
-    // Update local state
-    deliveredMessages.forEach(msg => {
-      msg.Send_Status = 'read'
-    })
+    // Process individually to avoid one failure blocking others
+    await Promise.all(messagesToUpdate.map(async (msg) => {
+      try {
+        await api.put(`/api/chat/update-send-status?message_id=${msg.Message_Id}&send_status=read`, {}, config)
+        msg.Send_Status = 'read'
+      } catch (error: any) {
+        // If 403 (already updated) or 404 (not found), we can consider it "handled" or ignore
+        const status = error.response?.status
+        const message = error.response?.data?.Message
+        
+        if (status === 403 || status === 404 || message?.includes('terbaru')) {
+          msg.Send_Status = 'read' // Sync local state even if server says it's already updated
+        } else {
+          console.warn(`Gagal memperbarui status pesan ${msg.Message_Id}:`, error.message)
+        }
+      } finally {
+        // Remove from processing after a delay to allow prop updates to catch up
+        setTimeout(() => {
+          processingMessageIds.delete(msg.Message_Id)
+        }, 5000)
+      }
+    }))
   } catch (error) {
-    console.error('Gagal memperbarui status pesan:', error)
+    console.error('Terjadi kesalahan saat memperbarui status pesan:', error)
   }
 }
 
@@ -904,6 +926,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
         :showAppointmentModal="showAppointmentModal" 
         :appointmentForm="appointmentForm" 
         :appointmentCalendarOptions="appointmentCalendarOptions" 
+        :isLoading="isLoadingAppointments"
         @update:formTanggal="(val) => appointmentForm.tanggal = val"
         @update:formWaktu="(val) => appointmentForm.waktu = val"
         @update:formNamaLengkap="(val) => appointmentForm.namaLengkap = val"
