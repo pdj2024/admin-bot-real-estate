@@ -27,7 +27,7 @@ const calendarEvents = computed(() => {
     
     return {
       id: item.No_Id,
-      title: item.Nama_Customer || item.Id_Customer, // We might need to join data or the API might provide it
+      title: (item.Status_Progress === 'batal' ? ' [BATAL] ' : '') + (item.Nama_Customer || item.Id_Customer), // We might need to join data or the API might provide it
       start: `${item.Tanggal_Janji.split('T')[0]}T${item.Waktu_Janji}`,
       end: item.Waktu_Selesai ? `${item.Tanggal_Janji.split('T')[0]}T${item.Waktu_Selesai}` : undefined,
       color: color,
@@ -108,7 +108,7 @@ onMounted(() => {
 :deep(.fc .fc-button) {
   border-radius: 0.85rem;
   padding: 0.6rem 1rem;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -132,7 +132,7 @@ onMounted(() => {
 }
 
 :deep(.fc .fc-col-header-cell-cushion) {
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -140,7 +140,7 @@ onMounted(() => {
 }
 
 :deep(.fc-daygrid-day-number) {
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: #64748b;
   padding: 8px 12px !important;
@@ -149,7 +149,7 @@ onMounted(() => {
 :deep(.fc-daygrid-event) {
   border-radius: 8px;
   padding: 4px 8px;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   font-weight: 800;
   border: 1px solid var(--color-bejo-100);
   background-color: var(--color-bejo-50);

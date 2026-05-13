@@ -41,7 +41,7 @@ const getIconBg = (color: string) => {
         </div>
         <div>
           <h2 class="text-xl font-black text-slate-900 leading-none mb-1">{{ item.value }}</h2>
-          <p class="text-[9px] font-black uppercase tracking-widest text-slate-400 leading-none">{{ item.label }}</p>
+          <p class="text-xs font-black uppercase tracking-widest text-slate-400 leading-none">{{ item.label }}</p>
         </div>
       </div>
     </div>

@@ -54,9 +54,9 @@ const exportToExcel = async () => {
   const dataToExport = props.appointments.map(item => ({
     'ID': item.No_Id,
     'Tracking': item.No_Tracking,
-    'Customer': item.Id_Customer,
-    'Admin': item.Id_Admin,
-    'Produk': item.Id_Produk,
+    'Customer': item.Nama_Customer || item.Id_Customer,
+    'Admin': item.Nama_Admin || item.Id_Admin,
+    'Produk': item.Nama_Produk || item.Id_Produk,
     'Tipe': item.Tipe_Pertemuan,
     'Tanggal': item.Tanggal_Janji,
     'Waktu': item.Waktu_Janji,
@@ -70,6 +70,7 @@ const exportToExcel = async () => {
   
   writeFile(workbook, `Janji-Temu-${new Date().toISOString().split('T')[0]}.xlsx`)
   isExportOpen.value = false
+  success('Data berhasil diexport ke Excel')
 }
 
 const exportToPDF = async () => {
@@ -86,8 +87,8 @@ const exportToPDF = async () => {
 
   const tableData = props.appointments.map(item => [
     item.No_Id,
-    item.Id_Customer,
-    item.Id_Produk,
+    item.Nama_Customer || item.Id_Customer,
+    item.Nama_Produk || item.Id_Produk,
     `${item.Tanggal_Janji.split('T')[0]} ${item.Waktu_Janji}`,
     item.Status_Progress,
     item.Tipe_Pertemuan
@@ -114,6 +115,7 @@ const exportToPDF = async () => {
 
   doc.save(`Janji-Temu-${new Date().toISOString().split('T')[0]}.pdf`)
   isExportOpen.value = false
+  success('Data berhasil diexport ke PDF')
 }
 
 if (typeof window !== 'undefined') {
@@ -185,54 +187,60 @@ if (typeof window !== 'undefined') {
       <table class="w-full border-collapse">
         <thead class="bg-slate-50/50">
           <tr v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
-            <th v-for="header in headerGroup.headers" :key="header.id" class="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
+            <th v-for="header in headerGroup.headers" :key="header.id" class="px-8 py-5 text-left text-[11px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
               <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
             </th>
           </tr>
         </thead>
 
         <tbody class="divide-y divide-slate-50">
-          <tr v-for="row in table.getRowModel().rows" :key="row.id" class="hover:bg-slate-50/30 transition-colors group">
+          <tr v-for="row in table.getRowModel().rows" :key="row.id" 
+              class="hover:bg-slate-50/30 transition-colors group"
+              :class="{ 'opacity-60 bg-red-50/30': row.original.Status_Progress === 'batal' }"
+          >
             <!-- Tracking -->
             <td class="px-8 py-6">
-              <span class="text-[10px] font-black text-slate-900 bg-slate-100 px-2 py-1 rounded-lg">#{{ row.original.No_Tracking }}</span>
+              <span class="text-xs font-black text-slate-900 bg-slate-100 px-2 py-1 rounded-lg">#{{ row.original.No_Tracking }}</span>
             </td>
 
             <!-- Customer -->
             <td class="px-8 py-6">
               <div class="flex items-center gap-4">
-                <div class="size-10 rounded-xl bg-slate-900 flex items-center justify-center text-white font-black text-xs shadow-lg">
+                <div class="size-10 rounded-xl bg-bejo-600 flex items-center justify-center text-white font-black text-xs shadow-lg">
                   {{ row.original.Id_Customer.charAt(0) }}
                 </div>
                 <div>
-                  <div class="text-sm font-black text-slate-900">{{ row.original.Id_Customer }}</div>
-                  <div class="text-[10px] font-bold text-slate-500">ID Customer</div>
+                  <div class="text-base font-black text-slate-900">{{ row.original.Nama_Customer || row.original.Id_Customer }}</div>
+                  <div class="text-[11px] font-bold text-slate-500">{{ row.original.Id_Customer }}</div>
                 </div>
               </div>
             </td>
 
             <!-- Product -->
             <td class="px-8 py-6">
-               <div class="text-sm font-black text-slate-700">{{ row.original.Id_Produk }}</div>
-               <span class="px-2 py-0.5 bg-bejo-50 text-[9px] font-black text-bejo-600 rounded uppercase tracking-tighter capitalize">{{ row.original.Tipe_Pertemuan }}</span>
+               <div class="text-base font-black text-slate-700">{{ row.original.Nama_Produk || row.original.Id_Produk }}</div>
+               <div class="flex items-center gap-2">
+                  <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{{ row.original.Id_Produk }}</span>
+                  <span class="px-2 py-0.5 bg-bejo-50 text-[11px] font-black text-bejo-600 rounded uppercase tracking-tighter capitalize">{{ row.original.Tipe_Pertemuan }}</span>
+               </div>
             </td>
 
             <!-- Date/Time -->
             <td class="px-8 py-6">
                <div class="flex items-center gap-2 text-slate-900">
                   <Icon icon="lucide:calendar" class="size-4 text-bejo-500" />
-                  <span class="text-sm font-bold">{{ row.original.Tanggal_Janji.split('T')[0] }}</span>
+                  <span class="text-base font-bold">{{ row.original.Tanggal_Janji.split('T')[0] }}</span>
                </div>
                <div class="flex items-center gap-2 text-slate-400 mt-1">
                   <Icon icon="lucide:clock" class="size-3.5" />
-                  <span class="text-xs font-medium">{{ row.original.Waktu_Janji }} WIB</span>
+                  <span class="text-sm font-medium">{{ row.original.Waktu_Janji }} WIB</span>
                </div>
             </td>
 
             <!-- Status -->
             <td class="px-8 py-6">
                <span 
-                class="px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest inline-flex items-center gap-1.5"
+                class="px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-widest inline-flex items-center gap-1.5"
                 :class="{
                   'bg-bejo-50 text-bejo-700': row.original.Status_Progress === 'baru',
                   'bg-emerald-100 text-emerald-700': row.original.Status_Progress === 'selesai',
@@ -250,6 +258,9 @@ if (typeof window !== 'undefined') {
                   }"></div>
                   {{ row.original.Status_Progress }}
                </span>
+               <div v-if="row.original.Status_Progress === 'batal' && row.original.Alasan_Batal" class="mt-1 text-[10px] font-bold text-red-400 uppercase tracking-tighter max-w-[120px] leading-tight">
+                  Ket: {{ row.original.Alasan_Batal }}
+               </div>
             </td>
 
             <!-- Aksi -->
@@ -262,7 +273,7 @@ if (typeof window !== 'undefined') {
                      <Icon icon="lucide:x-circle" class="size-5" />
                   </button>
                </div>
-               <div v-else class="text-[10px] font-black text-slate-300 uppercase tracking-widest italic">
+               <div v-else class="text-xs font-black text-slate-300 uppercase tracking-widest italic">
                   No Actions
                </div>
             </td>
@@ -273,12 +284,12 @@ if (typeof window !== 'undefined') {
 
     <!-- Pagination -->
     <div class="px-8 py-6 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
-       <span class="text-xs font-bold text-slate-400">Total <span class="text-slate-900">{{ props.appointments.length }}</span> Janji Temu</span>
+       <span class="text-sm font-bold text-slate-400">Total <span class="text-slate-900">{{ props.appointments.length }}</span> Janji Temu</span>
        <div class="flex items-center gap-2">
           <button @click="table.previousPage()" :disabled="!table.getCanPreviousPage()" class="size-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all disabled:opacity-50">
              <Icon icon="lucide:chevron-left" class="size-4" />
           </button>
-          <div class="px-4 text-xs font-black text-slate-900">
+          <div class="px-4 text-sm font-black text-slate-900">
             {{ table.getState().pagination.pageIndex + 1 }} / {{ table.getPageCount() }}
           </div>
           <button @click="table.nextPage()" :disabled="!table.getCanNextPage()" class="size-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all disabled:opacity-50">
