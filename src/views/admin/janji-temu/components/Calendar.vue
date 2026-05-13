@@ -7,7 +7,6 @@ import interactionPlugin from '@fullcalendar/interaction'
 import idLocale from '@fullcalendar/core/locales/id'
 import type { CalendarOptions, EventClickArg } from '@fullcalendar/core'
 import { ref, onMounted, computed } from 'vue'
-import { calendarEvents } from './data'
 
 const isMobile = ref(false)
 const emit = defineEmits(['openAppointment'])

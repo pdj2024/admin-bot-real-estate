@@ -207,7 +207,8 @@ const {
 
 const { 
   showAppointmentModal, appointmentStage, appointmentForm, 
-  appointmentCalendarOptions, handleSelectUnitForAppointment, saveNewAppointment 
+  appointmentCalendarOptions, handleSelectUnitForAppointment, saveNewAppointment,
+  isLoadingAppointments 
 } = useChatAppointments(props, (t: string, u?: string, r?: string, p?: string, id?: string, url?: string, user?: string) => sendChat(t, u, r, p, id, url, user))
 
 const { 
