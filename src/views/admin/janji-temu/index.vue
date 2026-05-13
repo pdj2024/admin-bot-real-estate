@@ -120,7 +120,7 @@ const handleRefresh = () => {
       <!-- Mobile & Tablet Modal Detail -->
       <Transition name="fade">
         <div v-if="openAppointment && showAsPopup" class="fixed inset-0 z-[1050] flex items-center justify-center p-4 md:p-10">
-          <div class="absolute inset-0 bg-bejo-900/40 backdrop-blur-sm shadow-2xl" @click="closeAppointment"></div>
+          <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-md shadow-2xl" @click="closeAppointment"></div>
           <div class="relative w-full max-w-lg h-[85vh] animate-in zoom-in-95 duration-300">
             <Event 
               :openAppointment="openAppointment" 

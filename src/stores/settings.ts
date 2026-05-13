@@ -158,37 +158,52 @@ export const useSettings = defineStore('settings', () => {
     document.documentElement.style.setProperty('--secondary-color', theme.secondaryColor)
   }
 
+  const initPromise = ref<Promise<void> | null>(null)
+
   // Initialize store
   const init = async (force = false) => {
-    // 1. Load from localStorage first (for instant UI)
-    if (!isInitialized.value) {
-      const storedBusiness = localStorage.getItem('business_settings')
-      if (storedBusiness) {
-        Object.assign(business, JSON.parse(storedBusiness))
+    if (initPromise.value && !force) return initPromise.value
+
+    initPromise.value = (async () => {
+      // 1. Load from localStorage first (for instant UI)
+      if (!isInitialized.value) {
+        const storedBusiness = localStorage.getItem('business_settings')
+        if (storedBusiness) {
+          Object.assign(business, JSON.parse(storedBusiness))
+        }
+
+        const storedBot = localStorage.getItem('bot_settings')
+        if (storedBot) {
+          Object.assign(bot, JSON.parse(storedBot))
+        }
+
+        const storedApp = localStorage.getItem('app_global_status')
+        if (storedApp) {
+          Object.assign(app, JSON.parse(storedApp))
+        }
+
+        const storedTheme = localStorage.getItem('theme_settings')
+        if (storedTheme) {
+          Object.assign(theme, JSON.parse(storedTheme))
+          applyThemeColors()
+        }
       }
 
-      const storedBot = localStorage.getItem('bot_settings')
-      if (storedBot) {
-        Object.assign(bot, JSON.parse(storedBot))
+      // 2. Fetch strategy: Only fetch if not initialized or forced
+      if (!isInitialized.value || force) {
+        try {
+          await Promise.all([fetchBusinessSettings(), fetchDefaultSettings()])
+          isInitialized.value = true
+        } catch (error) {
+          console.error('Initialization failed:', error)
+          // Reset promise so next call can retry
+          initPromise.value = null
+          throw error
+        }
       }
+    })()
 
-      const storedApp = localStorage.getItem('app_global_status')
-      if (storedApp) {
-        Object.assign(app, JSON.parse(storedApp))
-      }
-
-      const storedTheme = localStorage.getItem('theme_settings')
-      if (storedTheme) {
-        Object.assign(theme, JSON.parse(storedTheme))
-        applyThemeColors()
-      }
-    }
-
-    // 2. Fetch strategy: Only fetch if not initialized or forced
-    if (!isInitialized.value || force) {
-      await Promise.all([fetchBusinessSettings(), fetchDefaultSettings()])
-      isInitialized.value = true
-    }
+    return initPromise.value
   }
 
   const saveBusiness = () => {

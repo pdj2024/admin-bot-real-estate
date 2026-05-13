@@ -12,25 +12,40 @@ import idLocale from '@fullcalendar/core/locales/id'
 import type { CalendarOptions } from '@fullcalendar/core'
 import api from '@/services/axios'
 
+import { useSettings } from '@/stores/settings'
+
 const props = defineProps<{ openAppointment: boolean; appointment: any }>()
 const emit = defineEmits(['close', 'refresh', 'openChat'])
 
+const settingsStore = useSettings()
 const productData = ref<any>(null)
 const isLoadingProduct = ref(false)
 const isSendingBrochure = ref(false)
 
-const getBase64ImageFromUrl = async (imageUrl: string) => {
+const getBase64ImageFromUrl = async (imageUrl: string, maxWidth = 1024): Promise<string | null> => {
   try {
     const res = await fetch(imageUrl)
     const blob = await res.blob()
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onloadend = () => resolve(reader.result)
-      reader.onerror = reject
-      reader.readAsDataURL(blob)
-    })
+    const bitmap = await createImageBitmap(blob)
+    
+    const canvas = document.createElement('canvas')
+    let width = bitmap.width
+    let height = bitmap.height
+
+    if (width > maxWidth) {
+      height = (maxWidth / width) * height
+      width = maxWidth
+    }
+
+    canvas.width = width
+    canvas.height = height
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return null
+    
+    ctx.drawImage(bitmap, 0, 0, width, height)
+    return canvas.toDataURL('image/jpeg', 0.8)
   } catch (error) {
-    console.error('Gagal mengambil gambar:', error)
+    console.error('Gagal mengambil/mengoptimasi gambar:', error)
     return null
   }
 }
@@ -38,99 +53,241 @@ const getBase64ImageFromUrl = async (imageUrl: string) => {
 const sendBrochure = async () => {
   if (!productData.value) return
   
-  confirm('Kirim brosur properti ini ke customer?', async () => {
-    isSendingBrochure.value = true
-    try {
-      const doc = new jsPDF('p', 'mm', 'a4')
-      const width = doc.internal.pageSize.getWidth()
-      const height = doc.internal.pageSize.getHeight()
+  isSendingBrochure.value = true
+  try {
+    const doc = new jsPDF({
+      orientation: 'l',
+      unit: 'mm',
+      format: 'a4',
+      compress: true
+    })
+    const width = 297
+    const height = 210
+    
+    const primaryColor = '#EB701F'
+    const slateColor = '#0f172a'
+    const lightSlate = '#f8fafc'
 
-      doc.setFillColor(202, 109, 44)
-      doc.rect(0, 0, width, 60, 'F')
-      
-      doc.setTextColor(255, 255, 255)
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(24)
-      doc.text('BROCHURE PROPERTI', 20, 25)
-      
-      doc.setFontSize(14)
-      doc.setFont('helvetica', 'normal')
-      doc.text('Eksklusif Dari Bejo Bot Properti', 20, 35)
+    doc.setFillColor(255, 255, 255)
+    doc.rect(0, 0, width, height, 'F')
 
-      let imgBase64 = null
-      if (productData.value.MediaUrls?.[0]?.ThumbUrl || productData.value.MediaUrls?.[0]?.Id_Media) {
-        imgBase64 = await getBase64ImageFromUrl(productData.value.MediaUrls[0].ThumbUrl || productData.value.MediaUrls[0].Id_Media)
-      }
+    const validMedia = (productData.value.MediaUrls || []).filter((m: any) => {
+      const url = (m.ThumbUrl || m.Id_Media || '').toLowerCase()
+      return !url.endsWith('.mp4') && !url.endsWith('.mov') && !url.endsWith('.avi')
+    })
 
-      if (imgBase64) {
-        doc.addImage(imgBase64 as string, 'JPEG', 20, 70, width - 40, 80, undefined, 'FAST')
-      } else {
-        doc.setFillColor(241, 245, 249)
-        doc.rect(20, 70, width - 40, 80, 'F')
-        doc.setTextColor(148, 163, 184)
-        doc.text('Gambar tidak tersedia', width/2, 115, { align: 'center' })
-      }
-
-      doc.setTextColor(15, 23, 42)
-      doc.setFontSize(20)
-      doc.setFont('helvetica', 'bold')
-      doc.text(productData.value.Nama_Produk, 20, 165)
-      
-      doc.setTextColor(202, 109, 44)
-      doc.setFontSize(16)
-      doc.text(`Rp ${formatPrice(productData.value.Harga_Jual2 || productData.value.Harga_Sewa2 || productData.value.Harga_Jual1)}`, 20, 175)
-
-      doc.setTextColor(100, 116, 139)
-      doc.setFontSize(11)
-      doc.setFont('helvetica', 'normal')
-      let specs = `Tipe: ${productData.value.Tipe}`
-      if (productData.value.Jumlah_Kamar_Tidur) specs += ` | KT: ${productData.value.Jumlah_Kamar_Tidur}`
-      if (productData.value.Jumlah_Kamar_Mandi) specs += ` | KM: ${productData.value.Jumlah_Kamar_Mandi}`
-      if (productData.value.Jumlah_Carpot) specs += ` | Carport: ${productData.value.Jumlah_Carpot}`
-      doc.text(specs, 20, 185)
-
-      doc.setTextColor(15, 23, 42)
-      doc.setFontSize(12)
-      doc.setFont('helvetica', 'bold')
-      doc.text('Lokasi:', 20, 200)
-      doc.setFont('helvetica', 'normal')
-      doc.text(`${productData.value.Alamat}, ${productData.value.Nama_Kota}`, 20, 207, { maxWidth: width - 40 })
-
-      doc.setFont('helvetica', 'bold')
-      doc.text('Tentang Properti:', 20, 225)
-      doc.setFontSize(10)
-      doc.setFont('helvetica', 'normal')
-      doc.setTextColor(71, 85, 105)
-      doc.text(productData.value.Keterangan || 'Tidak ada deskripsi tambahan untuk properti ini.', 20, 232, { maxWidth: width - 40, align: 'justify' })
-
-      doc.setFillColor(15, 23, 42)
-      doc.rect(0, height - 30, width, 30, 'F')
-      doc.setTextColor(255, 255, 255)
-      doc.setFontSize(10)
-      doc.text('Hubungi kami untuk informasi lebih lanjut', width/2, height - 15, { align: 'center' })
-      doc.text('www.bejobot.id', width/2, height - 10, { align: 'center' })
-
-      const pdfBase64 = doc.output('datauristring')
-      
-      const phoneNumber = props.appointment.Telepon_Customer || props.appointment.Id_Customer
-      let formattedPhone = phoneNumber.replace(/\D/g, '')
-      if (formattedPhone.startsWith('0')) formattedPhone = '62' + formattedPhone.substring(1)
-      
-      await api.post('/api/waha/send-document', {
-        PhoneNumber: formattedPhone + '@s.whatsapp.net',
-        FileUrl: pdfBase64,
-        FileName: `Brosur_${productData.value.Nama_Produk.replace(/\s+/g, '_')}.pdf`,
-        Caption: `Halo ${props.appointment.Nama_Customer}, berikut adalah brosur untuk ${productData.value.Nama_Produk}.`
-      })
-
-      success('Brosur berhasil dikirim ke WhatsApp Customer')
-    } catch (error) {
-      console.error('Gagal mengirim brosur:', error)
-      fail('Gagal mengirim brosur. Silakan coba lagi.')
-    } finally {
-      isSendingBrochure.value = false
+    const images = []
+    for (let i = 0; i < Math.min(validMedia.length, 3); i++) {
+      const img = await getBase64ImageFromUrl(validMedia[i].ThumbUrl || validMedia[i].Id_Media)
+      if (img) images.push(img)
     }
-  })
+
+    let logoBase64 = null
+    if (settingsStore.business.Logo_Company || settingsStore.business.Id_Logo_Company) {
+      logoBase64 = await getBase64ImageFromUrl((settingsStore.business.Logo_Company || settingsStore.business.Id_Logo_Company) as string)
+    }
+
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`http://localhost:5000/properti/${productData.value.Slug}`)}`
+    const qrBase64 = await getBase64ImageFromUrl(qrUrl)
+
+    // Helpers
+    const drawDots = (x: number, y: number, rows: number, cols: number) => {
+      doc.setFillColor(226, 232, 240)
+      for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
+          doc.circle(x + (j * 3.5), y + (i * 3.5), 0.6, 'F')
+        }
+      }
+    }
+
+    const col1X = 15
+    const col2X = 110
+    const col3X = 215
+
+    // --- COLUMN 1 ---
+    doc.setFillColor(primaryColor)
+    doc.roundedRect(-10, -10, 50, 50, 10, 10, 'F')
+    if (logoBase64) doc.addImage(logoBase64 as string, 'PNG', 5, 5, 25, 25)
+
+    doc.setTextColor(slateColor)
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(26)
+    const tLines = doc.splitTextToSize(productData.value.Nama_Produk.toUpperCase(), 80)
+    doc.text(tLines, col1X, 65)
+    
+    doc.setFontSize(10)
+    doc.setTextColor(primaryColor)
+    doc.text(`Tawaran Eksklusif dari ${settingsStore.business.appName}`, col1X, 65 + (tLines.length * 10))
+
+    const spY = 100
+    doc.setFillColor(slateColor)
+    doc.roundedRect(col1X, spY, 65, 10, 3, 3, 'F')
+    doc.setTextColor(255, 255, 255)
+    doc.setFontSize(8.5)
+    doc.text('MENGAPA MEMILIH KAMI?', col1X + 8, spY + 6.5)
+
+    doc.setTextColor(slateColor)
+    doc.setFontSize(9.5)
+    doc.setFont('helvetica', 'normal')
+    let aY = spY + 20
+    const pts = productData.value.Akses_Jalan || ['Lokasi strategis Surabaya', 'Desain arsitektur modern', 'Fasilitas premium lengkap', 'Nilai investasi tinggi']
+    pts.slice(0, 4).forEach((p: string) => {
+      doc.setDrawColor(primaryColor)
+      doc.setLineWidth(0.5)
+      doc.circle(col1X + 4, aY - 1.5, 2.5, 'S')
+      doc.line(col1X + 3, aY - 1.5, col1X + 3.8, aY - 0.5)
+      doc.line(col1X + 3.8, aY - 0.5, col1X + 5.5, aY - 2.5)
+      doc.text(p, col1X + 12, aY, { maxWidth: 75 })
+      aY += 12
+    })
+
+    if (images[0]) {
+      doc.addImage(images[0] as string, 'JPEG', col1X + 2, 153, 76, 46, undefined, 'FAST')
+      doc.setDrawColor(primaryColor)
+      doc.setLineWidth(1.5)
+      doc.roundedRect(col1X, 151, 80, 50, 4, 4, 'S')
+    }
+
+    // --- COLUMN 2 ---
+    const centerX = col2X + 35
+    const centerY = 70
+    const rad = 35
+    
+    drawDots(col2X + 15, 20, 5, 8)
+
+    if (images[1]) {
+      // Donut Masking Trick for perfect JS PDF circle crop
+      doc.addImage(images[1] as string, 'JPEG', centerX - rad, centerY - rad, rad * 2, rad * 2, undefined, 'FAST')
+      doc.setDrawColor(255, 255, 255)
+      doc.setLineWidth(25)
+      doc.circle(centerX, centerY, rad + 12, 'S')
+      
+      // Rings
+      doc.setDrawColor(primaryColor)
+      doc.setLineWidth(1.5)
+      doc.circle(centerX, centerY, rad + 1, 'S')
+      doc.setLineWidth(0.8)
+      doc.circle(centerX, centerY, rad + 5, 'S')
+    }
+
+    const fY = 130
+    doc.setFillColor(primaryColor)
+    doc.roundedRect(col2X + 5, fY, 60, 10, 3, 3, 'F')
+    doc.setTextColor(255, 255, 255)
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(10)
+    doc.text('FASILITAS LENGKAP', col2X + 35, fY + 6.5, { align: 'center' })
+
+    doc.setTextColor(slateColor)
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'normal')
+    let sY = fY + 20
+    const sps = [
+      `Tipe: ${productData.value.Tipe || '-'}`,
+      `KT: ${productData.value.Jumlah_Kamar_Tidur || '-'}`,
+      `KM: ${productData.value.Jumlah_Kamar_Mandi || '-'}`,
+      `Carport: ${productData.value.Jumlah_Carpot || '-'}`,
+      `Listrik: ${productData.value.Daya_Listrik || '-'} VA`
+    ]
+    sps.forEach((s, i) => {
+      const x = i % 2 === 0 ? col2X : col2X + 40
+      doc.setFillColor(primaryColor)
+      doc.circle(x, sY - 1, 1, 'F')
+      doc.text(s, x + 4, sY)
+      if (i % 2 !== 0) sY += 10
+    })
+
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(11)
+    doc.text('TENTANG PROPERTI', col2X + 35, 185, { align: 'center' })
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(9)
+    doc.setTextColor(100, 116, 139)
+    doc.text(productData.value.Keterangan || 'Unit premium dengan privasi maksimal sekaligus pemandangan kota terbaik.', col2X, 192, { maxWidth: 70, align: 'justify' })
+
+    // --- COLUMN 3 ---
+    doc.setFillColor(slateColor)
+    doc.roundedRect(col3X + 10, 30, 45, 9, 2, 2, 'F')
+    doc.setTextColor(255, 255, 255)
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(9.5)
+    doc.text('DETAIL HARGA', col3X + 32.5, 36, { align: 'center' })
+
+    let pY = 60
+    if (settingsStore.app.viewDiscount && productData.value.Harga_Jual1) {
+      doc.setTextColor(148, 163, 184)
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'normal')
+      const op = `Rp ${formatPrice(productData.value.Harga_Jual1)}`
+      doc.text(op, col3X, pY)
+      doc.setDrawColor(primaryColor)
+      doc.setLineWidth(0.5)
+      doc.line(col3X, pY - 1.2, col3X + doc.getTextWidth(op), pY - 1.2)
+      pY += 12
+    }
+
+    doc.setTextColor(148, 163, 184)
+    doc.text('HARGA MULAI', col3X, pY)
+    doc.setFontSize(26)
+    doc.setTextColor(primaryColor)
+    doc.setFont('helvetica', 'bold')
+    doc.text(`Rp ${formatPrice(productData.value.Harga_Jual2 || productData.value.Harga_Sewa2 || productData.value.Harga_Jual1)}`, col3X, pY + 12)
+
+    doc.setDrawColor(226, 232, 240)
+    doc.setLineWidth(0.5)
+    doc.line(col3X, 85, col3X + 65, 85)
+    
+    doc.setTextColor(100, 116, 139)
+    doc.setFontSize(8.5)
+    doc.setFont('helvetica', 'normal')
+    doc.text('• UNIT TERBATAS & EKSKLUSIF', col3X, 95)
+    doc.text('• BEBAS BIAYA SURAT-SURAT', col3X, 102)
+
+    drawDots(col3X + 60, 90, 6, 4)
+
+    if (qrBase64) {
+      doc.addImage(qrBase64 as string, 'PNG', col3X + 15, 120, 35, 35)
+      doc.setFontSize(8)
+      doc.setTextColor(primaryColor)
+      doc.setFont('helvetica', 'bold')
+      doc.text('SCAN UNTUK DETAIL UNIT', col3X + 32.5, 162, { align: 'center' })
+    }
+
+    doc.setFillColor(primaryColor)
+    doc.roundedRect(col3X - 20, height - 45, 120, 60, 10, 10, 'F')
+    
+    doc.setFillColor('#f97316')
+    doc.circle(width, height, 30, 'F')
+    doc.setFillColor(255, 255, 255)
+    doc.circle(width, height, 15, 'F')
+
+    doc.setTextColor(255, 255, 255)
+    doc.setFontSize(11)
+    doc.setFont('helvetica', 'bold')
+    doc.text('HUBUNGI KAMI SEGERA', col3X - 5, height - 25)
+    doc.setFontSize(8.5)
+    doc.setFont('helvetica', 'normal')
+    doc.text(`WhatsApp: +${settingsStore.business.whatsapp}`, col3X - 5, height - 17)
+    doc.text(`Website: wabotui.padajaya.biz.id`, col3X - 5, height - 12)
+
+    const pdfBase64 = doc.output('datauristring')
+    const phoneNumber = props.appointment.Telepon_Customer || props.appointment.Id_Customer
+    let fPhone = phoneNumber.replace(/\D/g, '')
+    if (fPhone.startsWith('0')) fPhone = '62' + fPhone.substring(1)
+    
+    await api.post('/api/waha/send-document', {
+      PhoneNumber: fPhone + '@s.whatsapp.net',
+      FileUrl: pdfBase64,
+      FileName: `Brosur_Exclusive_${productData.value.Nama_Produk.replace(/\s+/g, '_')}.pdf`,
+      Caption: `Halo *${props.appointment.Nama_Customer}*,\n\nBerikut adalah brosur digital untuk unit *${productData.value.Nama_Produk}*.\n\nJanji temu kita dijadwalkan pada:\n🗓️ *${new Date(props.appointment.Tanggal_Janji).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}*\n⏰ *${props.appointment.Waktu_Janji} WIB*\n\nSampai jumpa di lokasi!`
+    })
+    success('Brosur Exclusive berhasil dikirim ke WhatsApp Customer')
+  } catch (error) {
+    console.error('Gagal mengirim brosur:', error)
+    fail('Gagal mengirim brosur. Silakan coba lagi.')
+  } finally {
+    isSendingBrochure.value = false
+  }
 }
 
 const fetchProductDetails = async () => {
@@ -146,7 +303,8 @@ const fetchProductDetails = async () => {
   }
 }
 
-watch(() => props.appointment?.No_Id, () => {
+watch(() => props.appointment?.No_Id, async () => {
+  await settingsStore.init()
   fetchProductDetails()
 }, { immediate: true })
 
@@ -162,6 +320,7 @@ const openReschedule = ref(false)
 const openRescheduleForm = ref(false)
 const selectedDate = ref('')
 const startTime = ref('')
+const rescheduleReason = ref('Reschedule by Admin')
 
 const calendarOptions = computed<CalendarOptions>(() => ({
   plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
@@ -176,40 +335,37 @@ const calendarOptions = computed<CalendarOptions>(() => ({
 }))
 
 const saveReschedule = async () => {
-  confirm(`Konfirmasi perubahan jadwal ke ${selectedDate.value} pukul ${startTime.value}?`, async () => {
-    try {
-      await api.put(`/api/janjiTemu/reschedule?no_id=${props.appointment.No_Id}`, {
-        Tanggal_Janji: selectedDate.value,
-        Waktu_Janji: startTime.value,
-        Waktu_Selesai: null,
-        Alasan_Batal: 'reschedule by admin'
-      }, {
-        headers: { 'X-Jenis-User': 'admin' }
-      })
-      success('Jadwal berhasil diperbarui')
-      openRescheduleForm.value = false
-      openReschedule.value = false
-      emit('refresh')
-    } catch {
-      fail('Gagal memperbarui jadwal')
-    }
-  })
+  try {
+    await api.put(`/api/janjiTemu/reschedule?no_id=${props.appointment.No_Id}`, {
+      Tanggal_Janji: selectedDate.value,
+      Waktu_Janji: startTime.value,
+      Waktu_Selesai: null,
+      Alasan_Batal: rescheduleReason.value
+    }, {
+      headers: { 'X-Jenis-User': 'admin' }
+    })
+    success('Jadwal berhasil diperbarui')
+    openRescheduleForm.value = false
+    openReschedule.value = false
+    rescheduleReason.value = 'Reschedule by Admin'
+    emit('refresh')
+  } catch {
+    fail('Gagal memperbarui jadwal')
+  }
 }
 
 const showMoreActions = ref(false)
 
 const handleUpdateStatus = async (status: string) => {
-  confirm(`Ubah status janji temu menjadi <b>${status}</b>?`, async () => {
-    try {
-      await api.put(`/api/janjiTemu/update-status?no_id=${props.appointment.No_Id}&status_progress=${status}`)
-      success(`Status berhasil diperbarui menjadi ${status}`)
-      emit('refresh')
-      emit('close')
-    } catch (error) {
-      console.error('Gagal memperbarui status:', error)
-      fail('Gagal memperbarui status janji temu')
-    }
-  })
+  try {
+    await api.put(`/api/janjiTemu/update-status?no_id=${props.appointment.No_Id}&status_progress=${status}`)
+    success(`Status berhasil diperbarui menjadi ${status}`)
+    emit('refresh')
+    emit('close')
+  } catch (error) {
+    console.error('Gagal memperbarui status:', error)
+    fail('Gagal memperbarui status janji temu')
+  }
 }
 
 const cancelAppointment = async () => {
@@ -257,24 +413,48 @@ const handleDelete = async () => {
     }
   })
 }
+
+const copyToClipboard = (text: string) => {
+  navigator.clipboard.writeText(text)
+  success('Berhasil disalin ke clipboard')
+}
+
+const openInMaps = (query: string, isCoord = false) => {
+  const url = isCoord 
+    ? `https://www.google.com/maps?q=${query}`
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`
+  window.open(url, '_blank')
+}
 </script>
 
 <template>
   <div v-if="props.openAppointment" class="h-full">
-    <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-2xl shadow-slate-200/60 overflow-hidden h-full flex flex-col">
+    <div class="bg-white rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] overflow-hidden h-full flex flex-col">
       <div 
         class="relative p-8 pb-14 text-white transition-colors duration-500"
         :class="props.appointment.Status_Progress === 'batal' ? 'bg-red-500' : 'bg-bejo-500'"
       >
         <div class="flex justify-between items-center mb-6">
-          <span 
-            class="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-white/10"
-          >
-            {{ props.appointment.Status_Progress }}
-          </span>
-          <button @click="$emit('close')" class="size-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all">
-            <Icon icon="lucide:x" class="size-5" />
-          </button>
+          <div class="flex items-center gap-3">
+             <span 
+                class="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[9px] font-black uppercase tracking-[0.2em] border border-white/10"
+             >
+                #{{ props.appointment.No_Tracking }}
+             </span>
+             <button @click="copyToClipboard(props.appointment.No_Tracking)" class="text-white/40 hover:text-white transition-colors">
+                <Icon icon="lucide:copy" class="size-3" />
+             </button>
+          </div>
+          <div class="flex items-center gap-2">
+             <span 
+               class="px-3 py-1 bg-white text-bejo-600 rounded-full text-[9px] font-black uppercase tracking-[0.2em]"
+             >
+               {{ props.appointment.Status_Progress }}
+             </span>
+             <button @click="$emit('close')" class="size-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all border border-white/5">
+                <Icon icon="lucide:x" class="size-4" />
+             </button>
+          </div>
         </div>
 
         <div class="text-center">
@@ -286,7 +466,7 @@ const handleDelete = async () => {
           </p>
         </div>
 
-        <div class="absolute -bottom-7 left-8 right-8 bg-white rounded-3xl shadow-xl shadow-bejo-900/10 border border-slate-100 p-4 flex items-center justify-between">
+        <div class="absolute -bottom-7 left-8 right-8 bg-white rounded-3xl p-4 flex items-center justify-between shadow-lg shadow-black/5">
            <div class="flex items-center gap-3">
               <div class="size-9 rounded-xl bg-bejo-600 text-white flex items-center justify-center font-black text-xs">
                 {{ (props.appointment.Nama_Customer || 'C').charAt(0) }}
@@ -316,8 +496,16 @@ const handleDelete = async () => {
       <div class="flex-1 overflow-y-auto custom-scrollbar pt-10">
         <div class="px-8 pb-8 space-y-6">
           <div class="grid grid-cols-2 gap-3">
-             <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Lokasi</span>
+             <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 group">
+                <div class="flex justify-between items-center mb-2">
+                   <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Lokasi</span>
+                   <button 
+                      @click="openInMaps(props.appointment.Lokasi_Pertemuan)"
+                      class="text-[8px] font-black text-bejo-500 hover:text-bejo-600 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                   >
+                      Cari di Maps <Icon icon="lucide:external-link" class="size-2" />
+                   </button>
+                </div>
                 <div class="flex items-center gap-2">
                    <Icon icon="lucide:map-pin" class="size-3.5 text-bejo-500" />
                    <span class="text-xs font-black text-slate-700 truncate">{{ props.appointment.Lokasi_Pertemuan }}</span>
@@ -344,7 +532,7 @@ const handleDelete = async () => {
              
              <a 
                 v-else-if="productData" 
-                :href="`/property/${productData.Slug}`" 
+                :href="`/properti/${productData.Slug}`" 
                 target="_blank"
                 class="flex gap-4 p-3 bg-white border border-slate-100 rounded-3xl hover:border-bejo-200 transition-all group cursor-pointer shadow-sm hover:shadow-md"
              >
@@ -375,7 +563,15 @@ const handleDelete = async () => {
                    </div>
 
                    <div class="flex items-center justify-between">
-                      <span class="text-[9px] font-black text-bejo-600 bg-bejo-50 px-2 py-0.5 rounded">{{ productData.Tipe }}</span>
+                      <div class="flex items-center gap-2">
+                         <span class="text-[9px] font-black text-bejo-600 bg-bejo-50 px-2 py-0.5 rounded">{{ productData.Tipe }}</span>
+                         <button 
+                            @click.stop.prevent="openInMaps(`${productData.Latitude},${productData.Longitude}`, true)"
+                            class="text-[8px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded flex items-center gap-1 hover:bg-emerald-100 transition-colors"
+                         >
+                            <Icon icon="lucide:navigation" class="size-2" /> Petunjuk Arah
+                         </button>
+                      </div>
                       <span class="text-xs font-black text-emerald-600">
                          Rp {{ formatPrice(productData.Harga_Jual2 || productData.Harga_Sewa2 || productData.Harga_Jual1) }}
                       </span>
@@ -386,10 +582,11 @@ const handleDelete = async () => {
              <div v-else class="text-[10px] font-bold text-slate-400 italic px-1">Produk: {{ props.appointment.Nama_Produk }}</div>
           </div>
         </div>
-      </div>      <div class="p-8 bg-white border-t border-slate-100 shrink-0 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)]">
-          <!-- Top Row: Hubungi & Brosur -->
+      </div>
+
+      <div class="p-8 bg-white border-t border-slate-100 shrink-0">
           <div class="grid grid-cols-2 gap-3 mb-4">
-             <button @click="$emit('openChat', props.appointment.Id_Customer)" class="px-4 py-3.5 bg-green-500 hover:bg-green-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-lg shadow-green-500/10 group">
+             <button @click="$emit('openChat', props.appointment.Id_Customer)" class="px-4 py-3.5 bg-green-500 hover:bg-green-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 group">
                <Icon icon="lucide:message-circle" class="size-4 group-hover:scale-110 transition-transform" />
                Hubungi
             </button>
@@ -397,7 +594,7 @@ const handleDelete = async () => {
                v-if="props.appointment.Status_Progress !== 'batal'"
                @click="sendBrochure" 
                :disabled="isSendingBrochure || !productData"
-               class="px-4 py-3.5 bg-bejo-500 hover:bg-bejo-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-lg shadow-bejo-500/10 group disabled:opacity-50"
+               class="px-4 py-3.5 bg-white hover:bg-bejo-50 text-bejo-600 border-2 border-bejo-100 hover:border-bejo-200 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 group disabled:opacity-50"
             >
                <Icon v-if="isSendingBrochure" icon="lucide:loader-2" class="size-4 animate-spin" />
                <Icon v-else icon="lucide:file-text" class="size-4 group-hover:scale-110 transition-transform" />
@@ -406,21 +603,19 @@ const handleDelete = async () => {
             <button 
                v-else 
                @click="handleDelete" 
-               class="px-4 py-3.5 bg-red-500 hover:bg-red-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-500/20"
+               class="px-4 py-3.5 bg-red-500 hover:bg-red-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
             >
                <Icon icon="lucide:trash-2" class="size-4" />
                Hapus Data
             </button>
           </div>
           
-          <!-- Bottom Row: Primary Action & More Actions -->
           <div v-if="props.appointment.Status_Progress !== 'batal'" class="flex items-center gap-3">
-             <!-- Primary Step Button -->
              <div class="flex-1">
                 <button 
                    v-if="props.appointment.Status_Progress === 'baru'"
                    @click="handleUpdateStatus('dikonfirmasi')" 
-                   class="w-full px-4 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/10 flex items-center justify-center gap-2"
+                   class="w-full px-4 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
                 >
                    <Icon icon="lucide:check-circle" class="size-4" />
                    Konfirmasi Janji
@@ -428,7 +623,7 @@ const handleDelete = async () => {
                 <button 
                    v-else-if="props.appointment.Status_Progress === 'dikonfirmasi'"
                    @click="handleUpdateStatus('proses')" 
-                   class="w-full px-4 py-3.5 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-500/10 flex items-center justify-center gap-2"
+                   class="w-full px-4 py-3.5 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
                 >
                    <Icon icon="lucide:play-circle" class="size-4" />
                    Mulai Pertemuan
@@ -436,7 +631,7 @@ const handleDelete = async () => {
                 <button 
                    v-else-if="props.appointment.Status_Progress === 'proses'"
                    @click="handleUpdateStatus('selesai')" 
-                   class="w-full px-4 py-3.5 bg-violet-500 hover:bg-violet-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all shadow-lg shadow-violet-500/10 flex items-center justify-center gap-2"
+                   class="w-full px-4 py-3.5 bg-violet-500 hover:bg-violet-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
                 >
                    <Icon icon="lucide:award" class="size-4" />
                    Selesaikan
@@ -446,7 +641,6 @@ const handleDelete = async () => {
                 </div>
              </div>
 
-             <!-- More Actions Button (Three Dots) -->
              <div class="relative">
                 <button 
                    @click="showMoreActions = !showMoreActions"
@@ -455,7 +649,6 @@ const handleDelete = async () => {
                    <Icon icon="lucide:more-horizontal" class="size-5" />
                 </button>
                 
-                <!-- Dropdown Menu -->
                 <div 
                    v-if="showMoreActions"
                    class="absolute bottom-full right-0 mb-4 w-48 bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-bottom-2 duration-200"
@@ -475,16 +668,13 @@ const handleDelete = async () => {
                       Batalkan Janji
                    </button>
                 </div>
-
-                <!-- Backdrop to close dropdown -->
                 <div v-if="showMoreActions" @click="showMoreActions = false" class="fixed inset-0 z-40"></div>
              </div>
           </div>
-      </div>v>
+      </div>
     </div>
 
-    <!-- Reschedule Overlay -->
-    <div v-if="openReschedule" class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-bejo-900/40 backdrop-blur-sm">
+    <div v-if="openReschedule" class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md">
        <div class="bg-white rounded-[2.5rem] w-full max-w-lg p-10 shadow-2xl animate-in zoom-in duration-300">
           <div class="flex justify-between items-center mb-8">
              <h4 class="text-xl font-black text-slate-900">Pilih Jadwal Baru</h4>
@@ -501,6 +691,14 @@ const handleDelete = async () => {
                   <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Pukul</label>
                   <input v-model="startTime" type="time" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold" />
                 </div>
+             </div>
+             <div>
+                <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Alasan Perubahan Jadwal</label>
+                <textarea 
+                   v-model="rescheduleReason" 
+                   class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold min-h-[80px]"
+                   placeholder="Masukkan alasan reschedule..."
+                ></textarea>
              </div>
              <button @click="saveReschedule" class="w-full py-4 bg-bejo-500 hover:bg-bejo-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-bejo-500/30">
                 Simpan Jadwal Baru
