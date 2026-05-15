@@ -1,25 +1,50 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { Icon } from '@iconify/vue'
-import { RouterLink } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { logout } from '@/services/auth'
 import { confirm } from '@/utils/sweet-alert'
 
+const router = useRouter()
 const namaDisplay = ref(localStorage.getItem('nama_display') || '');
 const noId = ref(localStorage.getItem('no_id') || '');
+const userAvatar = ref(localStorage.getItem('user_avatar') || '');
 
 const handleLogout = () => {
   confirm('Apakah Anda ingin keluar?', () => {
     logout(true)
   })
 }
+
+const updateProfileData = () => {
+  namaDisplay.value = localStorage.getItem('nama_display') || ''
+  userAvatar.value = localStorage.getItem('user_avatar') || ''
+}
+
+onMounted(() => {
+  window.addEventListener('profile-updated', updateProfileData)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('profile-updated', updateProfileData)
+})
+
+const openSettingsAccount = () => {
+  localStorage.setItem('settings_active_tab', 'account')
+  window.dispatchEvent(new Event('force-settings-tab'))
+  router.push('/pengaturan')
+}
 </script>
 
 <template>
   <div class="topbar-item hs-dropdown relative inline-flex [--placement:bottom-right]">
     <button id="hs-dropdown-with-icons" type="button" class="hs-dropdown-toggle flex items-center gap-3 px-2 py-1.5 rounded-full hover:bg-default-100 transition-all group">
-      <div class="size-9 rounded-full bg-bejo-500 flex items-center justify-center text-white ring-2 ring-white shadow-sm group-hover:scale-105 transition-transform">
-        <Icon icon="lucide:headset" class="size-5" />
+      <div :class="[
+        'size-9 rounded-full flex items-center justify-center ring-2 ring-white shadow-sm group-hover:scale-105 transition-transform overflow-hidden',
+        userAvatar ? 'bg-slate-50' : 'bg-bejo-500 text-white'
+      ]">
+        <img v-if="userAvatar" :src="userAvatar" class="size-full object-cover" />
+        <Icon v-else icon="lucide:headset" class="size-5" />
       </div>
       <div class="hidden md:flex flex-col items-start leading-none text-left">
         <span class="text-xs font-black text-default-900">{{ namaDisplay }}</span>
@@ -34,8 +59,12 @@ const handleLogout = () => {
         <p class="text-[10px] font-black text-bejo-600 uppercase tracking-widest mb-3">Akun Administrator</p>
         <div class="flex items-center gap-3">
           <div class="relative">
-            <div class="size-12 rounded-xl bg-bejo-500 flex items-center justify-center text-white shadow-lg shadow-bejo-500/20">
-               <Icon icon="lucide:headset" class="size-6" />
+            <div :class="[
+              'size-12 rounded-xl flex items-center justify-center shadow-lg overflow-hidden',
+              userAvatar ? 'bg-slate-50 shadow-slate-200/50' : 'bg-bejo-500 text-white shadow-bejo-500/20'
+            ]">
+               <img v-if="userAvatar" :src="userAvatar" class="size-full object-cover" />
+               <Icon v-else icon="lucide:headset" class="size-6" />
             </div>
             <span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></span>
           </div>
@@ -48,12 +77,12 @@ const handleLogout = () => {
       
       <!-- Menu Items -->
       <div class="space-y-1">
-        <RouterLink to="/pengaturan" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-default-600 hover:bg-bejo-50 hover:text-bejo-600 transition-all group">
+        <button @click="openSettingsAccount" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-default-600 hover:bg-bejo-50 hover:text-bejo-600 transition-all group">
           <div class="size-8 rounded-lg bg-default-50 flex items-center justify-center group-hover:bg-bejo-100 transition-colors">
             <Icon icon="lucide:user-cog" class="size-4" />
           </div>
           Pengaturan Akun
-        </RouterLink>
+        </button>
 
         <div class="h-px bg-default-100 mx-2 my-1"></div>
 

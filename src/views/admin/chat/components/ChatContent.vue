@@ -416,12 +416,23 @@ const generateBrochure = async (product: any) => {
   const maxTitleWidth = 90
   let titleFontSize = 26
   doc.setFontSize(titleFontSize)
-  let tLines = doc.splitTextToSize(product.Nama_Produk.toUpperCase(), maxTitleWidth)
+  const propName = (product.Nama_Produk || 'Properti').toUpperCase()
+  let tLines = doc.splitTextToSize(propName, maxTitleWidth)
 
   if (tLines.length > 2) {
     titleFontSize = 20
     doc.setFontSize(titleFontSize)
-    tLines = doc.splitTextToSize(product.Nama_Produk.toUpperCase(), maxTitleWidth)
+    tLines = doc.splitTextToSize(propName, maxTitleWidth)
+  }
+  if (tLines.length > 3) {
+    titleFontSize = 16
+    doc.setFontSize(titleFontSize)
+    tLines = doc.splitTextToSize(propName, maxTitleWidth)
+  }
+  if (tLines.length > 4) {
+    titleFontSize = 14
+    doc.setFontSize(titleFontSize)
+    tLines = doc.splitTextToSize(propName, maxTitleWidth)
   }
   if (tLines.length > 5) {
     tLines = tLines.slice(0, 5)
@@ -499,7 +510,7 @@ const generateBrochure = async (product: any) => {
     { label: 'Kamar Mandi', value: product.Jumlah_Kamar_Mandi || '-' },
     { label: 'Carport', value: product.Jumlah_Carpot || '-' },
     { label: 'Listrik', value: product.Daya_Listrik ? `${product.Daya_Listrik} VA` : '-' }
-  ]
+  ].filter(d => !(d.label === 'Lantai' && (d.value === '-' || !d.value)))
 
   doc.setTextColor(slateColor)
   doc.setFontSize(9)
@@ -516,49 +527,88 @@ const generateBrochure = async (product: any) => {
 
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(11)
-  doc.text('TENTANG PROPERTI', col2X + 35, 178, { align: 'center' })
+  doc.text('HUNIAN MODERN & STRATEGIS', col2X + 35, 178, { align: 'center' })
+  
+  doc.setFont('helvetica', 'italic')
+  doc.setFontSize(8.5)
+  doc.setTextColor(primaryColor)
+  doc.text('Investasi terbaik di lokasi strategis', col2X + 35, 182, { align: 'center' })
+
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(9.5)
   doc.setTextColor(slateColor)
-  doc.text(product.Keterangan || 'Unit premium dengan privasi maksimal sekaligus pemandangan kota terbaik.', col2X, 185, { maxWidth: 70, align: 'justify', lineHeightFactor: 1.5 })
+  doc.text(product.Keterangan || 'Unit premium dengan privasi maksimal sekaligus pemandangan kota terbaik.', col2X, 187, { maxWidth: 70, align: 'justify', lineHeightFactor: 1.5 })
 
   doc.setFillColor(darkOrange)
   doc.roundedRect(col3X + 10, 30, 45, 9, 2, 2, 'F')
   doc.setTextColor(255, 255, 255)
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(9.5)
-  doc.text('DETAIL HARGA', col3X + 32.5, 36, { align: 'center' })
+  doc.text('PENAWARAN TERBATAS', col3X + 32.5, 36, { align: 'center' })
 
   let pY = 48
   const hasJual = product.Harga_Jual1 > 0 || product.Harga_Jual2 > 0
   const hasSewa = product.Harga_Sewa1 > 0 || product.Harga_Sewa2 > 0
   const isBoth = hasJual && hasSewa
 
-  const drawPriceBlock = (label: string, oldP: number, newP: number) => {
-    if (settingsStore.app.viewDiscount && oldP > 0 && newP > 0 && oldP !== newP) {
-      doc.setTextColor(239, 68, 68)
-      doc.setFontSize(9)
-      doc.setFont('helvetica', 'bold')
-      const op = `Rp ${formatPrice(oldP)}`
-      doc.text(op, col3X, pY)
-      doc.setDrawColor(239, 68, 68)
-      doc.setLineWidth(0.4)
-      doc.line(col3X - 1, pY - 1, col3X + doc.getTextWidth(op) + 1, pY - 1)
-      pY += 5
-    }
+  const drawPriceBlock = (label: string, oldP: number, newP: number, isSewa: boolean) => {
     doc.setFontSize(isBoth ? 8 : 9.5)
     doc.setFont('helvetica', 'normal')
+    doc.setTextColor(slateColor)
     doc.text(label, col3X, pY)
-    doc.setFontSize(isBoth ? 22 : 30)
+    
+    let promoOffset = 0
+    if (settingsStore.app.viewDiscount && oldP > 0 && newP > 0 && oldP !== newP) {
+      doc.setTextColor(156, 163, 175) // Gray-400 for strikethrough
+      doc.setFontSize(isBoth ? 8 : 10)
+      doc.setFont('helvetica', 'bold')
+      const op = `Rp ${formatPrice(oldP)}`
+      doc.text(op, col3X, pY + 4.5)
+      doc.setDrawColor(239, 68, 68) // Red-500 line
+      doc.setLineWidth(0.5)
+      const tw = doc.getTextWidth(op)
+      doc.line(col3X - 1, pY + 3.2, col3X + tw + 1, pY + 3.2)
+      
+      doc.setFillColor(239, 68, 68)
+      doc.roundedRect(col3X + tw + 3, pY + 1, 14, 4, 1, 1, 'F')
+      doc.setTextColor(255, 255, 255)
+      doc.setFontSize(isBoth ? 5 : 6)
+      doc.text('PROMO', col3X + tw + 10, pY + 3.7, { align: 'center' })
+      
+      promoOffset = isBoth ? 5.5 : 6.5
+    }
+
+    const finalPriceY = pY + (isBoth ? 9 : 11) + promoOffset
+
+    doc.setFontSize(isBoth ? 18 : 24)
     doc.setTextColor(primaryColor)
     doc.setFont('helvetica', 'bold')
-    doc.text(`Rp ${formatPrice(newP || oldP)}`, col3X, pY + (isBoth ? 8 : 11))
-    pY += isBoth ? 16 : 22
+    const finalPrice = newP || oldP
+    const finalPriceStr = `Rp ${formatPrice(finalPrice)}`
+    doc.text(finalPriceStr, col3X, finalPriceY)
+    
+    const priceWidth = doc.getTextWidth(finalPriceStr)
+
+    if (isSewa) {
+      doc.setFontSize(isBoth ? 7 : 8)
+      doc.setTextColor(slateColor)
+      doc.setFont('helvetica', 'normal')
+      doc.text(product.Satuan_Minimal_Sewa ? `/ ${product.Satuan_Minimal_Sewa}` : '/ Tahun', col3X + priceWidth + 2, finalPriceY)
+    }
+
+    pY += isBoth ? (15 + promoOffset) : (20 + promoOffset)
   }
 
-  if (hasJual) drawPriceBlock(isBoth ? 'DENGAN HANYA (JUAL)' : 'DENGAN HANYA', product.Harga_Jual1, product.Harga_Jual2)
-  if (isBoth) pY += 8
-  if (hasSewa) drawPriceBlock(isBoth ? 'DENGAN HANYA (SEWA)' : 'DENGAN HANYA', product.Harga_Sewa1, product.Harga_Sewa2)
+  if (hasJual) {
+    drawPriceBlock(isBoth ? 'HARGA JUAL:' : 'DENGAN HANYA', product.Harga_Jual1, product.Harga_Jual2, false)
+    if (isBoth) {
+       doc.setDrawColor(226, 232, 240)
+       doc.setLineWidth(0.5)
+       doc.line(col3X, pY - 2, col3X + 65, pY - 2)
+       pY += 4
+    }
+  }
+  if (hasSewa) drawPriceBlock(isBoth ? 'HARGA SEWA:' : 'DENGAN HANYA', product.Harga_Sewa1, product.Harga_Sewa2, true)
 
   const finalPY = Math.max(90, pY + 2)
   doc.setDrawColor(226, 232, 240)

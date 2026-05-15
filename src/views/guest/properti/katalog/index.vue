@@ -55,12 +55,12 @@
         </div>
       </div>
 
-      <div class="grid lg:grid-cols-4 grid-cols-1 gap-8">
-        <aside class="lg:col-span-1">
-          <Filter v-model:openFilter="isFilterOpen" v-model:searchQuery="searchQuery" v-model:facilities="facilities" v-model:region="region" v-model:priceRange="priceRange" v-model:transactionType="transactionType" :provinces="provinces" :isAdmin="isAdmin" class="lg:sticky lg:top-24" />
+      <div class="grid xl:grid-cols-4 grid-cols-1 gap-8">
+        <aside class="xl:col-span-1">
+          <Filter v-model:openFilter="isFilterOpen" v-model:searchQuery="searchQuery" v-model:facilities="facilities" v-model:region="region" v-model:priceRange="priceRange" v-model:transactionType="transactionType" :provinces="provinces" :isAdmin="isAdmin" class="xl:sticky xl:top-24" />
         </aside>
 
-        <section class="lg:col-span-3">
+        <section class="xl:col-span-3">
           <Rumah @openFilter="toggleFilter" :searchQuery="searchQuery" :facilities="facilities" :region="region" :priceRange="priceRange" v-model:transactionType="transactionType" :isAdmin="isAdmin" />
         </section>
       </div>

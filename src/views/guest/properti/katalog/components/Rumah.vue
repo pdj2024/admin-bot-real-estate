@@ -6,10 +6,13 @@
       </div>
 
       <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center justify-center sm:justify-end gap-3 w-full sm:w-auto relative mb-2 sm:mb-0">
-        <button @click="$emit('openFilter')" class="lg:hidden flex-1 flex items-center justify-center gap-2 px-4 py-2 border border-bejo-100 rounded-xl bg-bejo-50 text-sm font-bold text-bejo-700 hover:bg-bejo-100 transition-colors"><Icon icon="lucide:filter" class="size-4" /> Filter</button>
+        <button @click="$emit('openFilter')" class="xl:hidden flex items-center justify-center gap-2 px-4 py-2 border border-bejo-100 rounded-xl bg-bejo-600 text-white shadow-md shadow-bejo-600/20 text-sm font-bold hover:bg-bejo-700 transition-all">
+          <Icon icon="lucide:filter" class="size-4" /> 
+          Filter
+        </button>
 
         <div id="transaksi-container" class="relative flex-1 sm:flex-none">
-          <button @click="isTransaksiOpen = !isTransaksiOpen" class="w-full flex items-center justify-between gap-3 px-4 py-2 border border-bejo-100 rounded-xl bg-white text-sm font-bold hover:bg-bejo-50 hover:border-bejo-200 transition-all text-slate-700">
+          <button @click="isTransaksiOpen = !isTransaksiOpen" class="w-full flex items-center justify-between gap-3 px-4 py-2 border border-slate-200 rounded-xl bg-white text-sm font-bold hover:bg-slate-50 transition-all text-slate-700 shadow-sm">
             <div class="flex items-center gap-2">
               <Icon icon="lucide:tag" class="size-4 text-bejo-600" />
               <span>{{ transactionType }}</span>

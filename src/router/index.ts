@@ -177,6 +177,24 @@ const router = createRouter({
       component: () => import('@/views/admin/kelola-data/wilayah/index.vue')
     },
     {
+      path: '/data/icon',
+      name: 'Data Icon',
+      meta: {
+        title: 'Data Icon',
+        requiresAuth: true
+      },
+      component: () => import('@/views/admin/kelola-data/icon/index.vue')
+    },
+    {
+      path: '/data/status',
+      name: 'Data Status',
+      meta: {
+        title: 'Data Status',
+        requiresAuth: true
+      },
+      component: () => import('@/views/admin/kelola-data/status/index.vue')
+    },
+    {
       path: '/pengaturan',
       name: 'Pengaturan',
       meta: {

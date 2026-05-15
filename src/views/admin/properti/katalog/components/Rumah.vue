@@ -370,15 +370,15 @@ defineExpose({ openAddModal })
 
       <div class="flex flex-col sm:flex-row sm:flex-wrap items-center gap-3 w-full lg:w-auto">
         <!-- Row 1: Filter, Transaction, Type -->
-        <div class="grid grid-cols-3 gap-2 w-full sm:w-auto sm:flex sm:items-center sm:gap-3">
-          <button type="button" @click="emit('openFilter')" class="xl:hidden px-2 sm:px-4 py-2.5 bg-bejo-600 text-white rounded-xl text-[10px] sm:text-[11px] font-black uppercase tracking-wider hover:bg-bejo-700 transition-all shadow-md shadow-bejo-600/20 flex items-center justify-center gap-1.5 btn-trigger-filter">
-            <Icon icon="lucide:settings-2" class="size-3.5" />
+        <div class="grid grid-cols-4 gap-2 w-full sm:w-auto sm:flex sm:items-center sm:gap-3">
+          <button type="button" @click="emit('openFilter')" class="xl:hidden px-4 py-2.5 bg-bejo-600 text-white rounded-xl text-[10px] sm:text-[11px] font-black uppercase tracking-wider hover:bg-bejo-700 transition-all shadow-md shadow-bejo-600/20 flex items-center justify-center gap-1.5 btn-trigger-filter min-w-[80px]">
+            <Icon icon="lucide:filter" class="size-4" />
             Filter
           </button>
 
           <div class="relative inline-flex">
-            <button type="button" @click="isTransactionOpen = !isTransactionOpen" class="w-full px-2 sm:px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[10px] sm:text-[11px] font-black text-slate-700 hover:bg-slate-50 transition-all shadow-sm uppercase tracking-wider truncate">
-              <Icon icon="lucide:filter" class="size-3.5 me-1.5 inline text-bejo-600" />
+            <button type="button" @click="isTransactionOpen = !isTransactionOpen" class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[10px] sm:text-[11px] font-black text-slate-700 hover:bg-slate-50 transition-all shadow-sm uppercase tracking-wider truncate">
+              <Icon icon="lucide:tag" class="size-4 me-1.5 inline text-bejo-600" />
               {{ transactionFilter }}
             </button>
             <Transition enter-active-class="transition duration-100 ease-out" enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100" leave-active-class="transition duration-75 ease-in" leave-from-class="transform scale-100 opacity-100" leave-to-class="transform scale-95 opacity-0">

@@ -46,6 +46,7 @@ const handleLogin = async (isQuick = false) => {
       localStorage.setItem('no_id', data.No_Id)
       localStorage.setItem('nama_display', data.Nama_Display)
       localStorage.setItem('role_user', data.Role_User)
+      localStorage.setItem('user_phone', data.telepon || '')
       const resData = data.Data || data
       localStorage.setItem('token', resData.token || resData.Token)
       localStorage.setItem('refreshToken', resData.refreshToken || resData.RefreshToken)
@@ -63,6 +64,7 @@ const handleLogin = async (isQuick = false) => {
           name: data.Nama_Display,
           email: loginPayload.Email,
           password: loginPayload.Password,
+          avatar: localStorage.getItem('user_avatar'),
           timestamp: Date.now()
         }))
       } else {
@@ -114,8 +116,9 @@ onMounted(() => {
     <div v-if="showQuickLogin" class="space-y-6 animate-in fade-in zoom-in-95 duration-500">
       <div class="p-6 bg-bejo-50/50 border border-bejo-100 rounded-[2.5rem] flex flex-col items-center text-center group">
         <div class="relative mb-4">
-          <div class="size-20 bg-white rounded-full flex items-center justify-center text-3xl font-black text-bejo-600 shadow-xl border-4 border-white ring-4 ring-bejo-50 transition-transform group-hover:scale-105">
-            {{ savedAccount.name?.charAt(0).toUpperCase() }}
+          <div class="size-20 bg-white rounded-full flex items-center justify-center text-3xl font-black text-bejo-600 shadow-xl border-4 border-white ring-4 ring-bejo-50 transition-transform group-hover:scale-105 overflow-hidden">
+            <img v-if="savedAccount.avatar" :src="savedAccount.avatar" class="size-full object-cover" />
+            <span v-else>{{ savedAccount.name?.charAt(0).toUpperCase() }}</span>
           </div>
           <div class="absolute bottom-0 right-0 size-6 bg-emerald-500 border-4 border-white rounded-full"></div>
         </div>

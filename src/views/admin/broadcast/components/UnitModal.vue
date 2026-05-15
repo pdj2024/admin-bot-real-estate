@@ -64,7 +64,7 @@ const formatPrice = (price: number) => {
 
       <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-2xl z-10 overflow-hidden border border-slate-100 animate-in fade-in zoom-in slide-in-from-bottom-8 duration-500 flex flex-col max-h-[85vh]">
         <!-- Modal Header -->
-        <div class="relative p-6 md:p-8 border-b border-slate-50 shrink-0">
+        <div class="relative px-6 py-6 md:px-8 md:pt-8 md:pb-4 border-b border-slate-50 shrink-0">
           <div class="absolute top-0 right-0 w-48 h-48 bg-bejo-50/50 rounded-full -mr-24 -mt-24 blur-3xl"></div>
           
           <div class="relative flex items-center justify-between">
@@ -82,7 +82,7 @@ const formatPrice = (price: number) => {
             </button>
           </div>
 
-          <div class="relative mt-6">
+          <div class="relative mt-4">
             <Icon icon="lucide:search" class="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
             <input 
               v-model="searchQuery"
@@ -94,7 +94,7 @@ const formatPrice = (price: number) => {
         </div>
 
         <!-- Modal Body (Scrollable) -->
-        <div class="flex-grow overflow-y-auto p-4 md:p-6 space-y-3 custom-scrollbar">
+        <div class="flex-grow overflow-y-auto px-4 py-1 md:px-6 md:pt-2 md:pb-6 space-y-3 custom-scrollbar">
           <div v-if="isLoading" class="flex flex-col items-center justify-center py-20 gap-4 opacity-50">
             <Icon icon="lucide:loader-2" class="size-10 animate-spin text-bejo-500" />
             <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Memuat Data Unit...</span>
@@ -116,15 +116,29 @@ const formatPrice = (price: number) => {
                       <Icon icon="lucide:image" class="size-6" />
                    </div>
                 </div>
-                <div class="space-y-0.5">
-                  <h6 class="text-xs font-black text-slate-900 group-hover:text-bejo-600 transition-colors">{{ unit.Nama_Produk }}</h6>
-                  <div class="flex items-center gap-2 text-[10px] font-bold text-slate-400">
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2">
+                    <h6 class="text-sm font-black text-slate-900 group-hover:text-bejo-600 transition-colors">{{ unit.Nama_Produk }}</h6>
+                    <span v-if="unit.Tipe" class="px-1.5 py-0.5 rounded-lg bg-slate-100 text-slate-500 text-[8px] font-black uppercase tracking-wider border border-slate-200/50 group-hover:bg-white group-hover:border-bejo-200 group-hover:text-bejo-600 transition-all">
+                      {{ unit.Tipe }}
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-2 text-xs font-bold text-slate-400">
                     <Icon icon="lucide:map-pin" class="size-3 text-bejo-500" />
                     {{ unit.Nama_Kota }}
                   </div>
-                  <div class="flex items-center gap-3 mt-1">
-                    <span class="text-[10px] font-black text-bejo-600 uppercase">{{ formatPrice(unit.Harga_Jual1 || unit.Harga_Sewa1) }}</span>
-                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{{ unit.Luas_Tanah }}m² / {{ unit.Luas_Bangunan }}m²</span>
+                  <div class="flex flex-col md:flex-row md:items-center gap-1 md:gap-4 mt-2">
+                    <div class="flex items-center gap-3">
+                      <span v-if="unit.Harga_Jual1 > 0" class="text-xs font-black text-bejo-600 uppercase">
+                        Jual: {{ formatPrice(unit.Harga_Jual2 || unit.Harga_Jual1) }}
+                      </span>
+                      <span v-if="unit.Harga_Sewa1 > 0" class="text-xs font-black text-slate-500 uppercase border-l border-slate-200 pl-3">
+                        Sewa: {{ formatPrice(unit.Harga_Sewa2 || unit.Harga_Sewa1) }}
+                      </span>
+                    </div>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter md:border-l md:border-slate-200 md:pl-4">
+                      {{ unit.Luas_Tanah }}m² / {{ unit.Luas_Bangunan }}m²
+                    </span>
                   </div>
                 </div>
               </div>

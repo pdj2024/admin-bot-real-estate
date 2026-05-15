@@ -74,7 +74,7 @@ onMounted(() => {
     <div class="px-4 py-0 md:p-3 md:pt-1 pb-32 space-y-6 md:space-y-8">
       <!-- Main Catalog Content -->
       <div class="grid xl:grid-cols-4 grid-cols-1 gap-6 md:gap-8">
-        <aside class="xl:col-span-1 hidden xl:block">
+        <aside class="xl:col-span-1">
           <Filter 
             v-model:openFilter="isFilterOpen" 
             v-model:searchQuery="searchQuery"

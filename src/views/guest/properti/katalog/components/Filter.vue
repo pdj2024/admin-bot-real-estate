@@ -2,14 +2,19 @@
   <div>
     <!-- Backdrop for Mobile -->
     <Transition enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0" enter-to-class="opacity-100" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0">
-      <div v-if="openFilter" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[55] lg:hidden" @click="$emit('update:openFilter', false)"></div>
+      <div v-if="openFilter" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] xl:hidden" @click="$emit('update:openFilter', false)"></div>
     </Transition>
 
-    <div ref="filterRef" :class="[!openFilter ? 'translate-y-full lg:translate-y-0 hidden lg:block' : 'translate-y-0 block', 'fixed inset-x-0 bottom-0 z-[60] lg:static lg:w-full lg:inset-auto transition-transform duration-500 ease-out']">
-      <div class="bg-white rounded-t-[2.5rem] lg:rounded-[2.5rem] shadow-2xl lg:shadow-xl shadow-slate-900/20 overflow-hidden max-h-[85vh] lg:max-h-none flex flex-col">
-        <!-- Bottom Sheet Handle (Mobile Only) -->
-        <div class="flex justify-center pt-4 pb-2 lg:hidden">
-          <div class="w-12 h-1.5 bg-slate-200 rounded-full"></div>
+    <div ref="filterRef" :class="[
+      !openFilter ? 'opacity-0 scale-95 xl:opacity-100 xl:scale-100 hidden xl:block pointer-events-none xl:pointer-events-auto' : 'opacity-100 scale-100 block',
+      'z-[210] fixed xl:static xl:w-full xl:inset-auto top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 xl:translate-x-0 xl:translate-y-0 w-[95vw] sm:w-[500px] xl:w-full transition-all duration-300 ease-out'
+    ]">
+      <div class="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-900/20 overflow-hidden max-h-[90vh] lg:max-h-none flex flex-col">
+        <!-- Modal Close Button -->
+        <div class="flex justify-end p-4 xl:hidden pb-0">
+          <button @click.stop="$emit('update:openFilter', false)" class="size-8 rounded-full bg-slate-100 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all flex items-center justify-center">
+            <Icon icon="lucide:x" class="size-4" />
+          </button>
         </div>
 
         <div class="p-6 overflow-y-auto custom-scroll lg:overflow-visible">
@@ -340,7 +345,7 @@ const handleClickOutside = (event: MouseEvent) => {
 
   if (props.openFilter && filterRef.value) {
     // Abaikan jika yang diklik adalah trigger button dari Rumah.vue
-    const isTrigger = target.closest('button') && target.innerText.includes('Filter')
+    const isTrigger = target.closest('button') && (target.closest('button')?.innerText.includes('Filter') || target.closest('button')?.classList.contains('btn-trigger-filter'))
     if (!filterRef.value.contains(target) && !isTrigger) {
       emit('update:openFilter', false)
     }

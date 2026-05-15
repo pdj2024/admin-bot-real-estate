@@ -1,12 +1,25 @@
 <template>
-  <div ref="filterRef" @click.stop :class="[
-    !openFilter ? 'hidden lg:block' : 'block',
-    inline ? 'w-full' : (compact ? 'z-[250] fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95vw] sm:w-[450px]' : 'z-[38] fixed inset-x-4 bottom-6 lg:sticky lg:top-24 lg:w-full lg:inset-auto')
-  ]">
-    <div :class="[
-      inline ? 'bg-white/50 rounded-[2rem] border border-slate-200 shadow-inner' : 'bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40'
-    ]" class="overflow-hidden">
-      <div :class="[compact || inline ? 'p-4' : 'p-6']">
+  <div>
+    <!-- Backdrop for Mobile -->
+    <Transition enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0" enter-to-class="opacity-100" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0">
+      <div v-if="openFilter" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] xl:hidden" @click="$emit('update:openFilter', false)"></div>
+    </Transition>
+
+    <div ref="filterRef" @click.stop :class="[
+      !openFilter ? 'opacity-0 scale-95 xl:opacity-100 xl:scale-100 hidden xl:block pointer-events-none xl:pointer-events-auto' : 'opacity-100 scale-100 block',
+      inline ? 'w-full' : (compact ? 'z-[250] fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95vw] sm:w-[450px]' : 'z-[210] fixed xl:static xl:w-full xl:inset-auto top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 xl:translate-x-0 xl:translate-y-0 w-[95vw] sm:w-[500px] xl:w-full transition-all duration-300 ease-out')
+    ]">
+      <div :class="[
+        inline ? 'bg-white/50 rounded-[2rem] border border-slate-200 shadow-inner' : 'bg-white rounded-[2rem] border border-slate-100 shadow-2xl shadow-slate-900/10'
+      ]" class="overflow-hidden max-h-[90vh] xl:max-h-none flex flex-col">
+        <!-- Modal Close Button -->
+        <div v-if="!inline && !compact" class="flex justify-end p-4 xl:hidden pb-0">
+          <button @click.stop="$emit('update:openFilter', false)" class="size-8 rounded-full bg-slate-100 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all flex items-center justify-center">
+            <Icon icon="lucide:x" class="size-4" />
+          </button>
+        </div>
+
+        <div :class="[compact || inline ? 'p-4' : 'p-6']" class="overflow-y-auto custom-scroll lg:overflow-visible">
         <div v-if="compact && !inline" class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
           <div class="flex items-center gap-3">
             <div class="size-10 rounded-2xl bg-bejo-50 flex items-center justify-center text-bejo-600">
@@ -343,6 +356,7 @@
           </button>
         </div>
       </div>
+      </div>
     </div>
   </div>
 </template>
@@ -547,7 +561,7 @@ const handleClickOutside = (event: MouseEvent) => {
 
   if (props.openFilter && filterRef.value) {
     // Abaikan jika yang diklik adalah trigger button dari Rumah.vue
-    const isTrigger = target.closest('button') && target.innerText.includes('Filter')
+    const isTrigger = target.closest('.btn-trigger-filter')
     if (!filterRef.value.contains(target) && !isTrigger) {
       emit('update:openFilter', false)
     }

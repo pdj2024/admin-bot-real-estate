@@ -100,19 +100,32 @@
             <template v-else>
               <!-- Profile Dropdown -->
               <div class="hs-dropdown relative inline-flex [--placement:bottom-right]">
-                <button id="hs-dropdown-profile" type="button" class="hs-dropdown-toggle flex items-center gap-3 px-3 py-1.5 rounded-full bg-white border border-bejo-200 text-bejo-600 hover:bg-bejo-50 hover:shadow-lg hover:shadow-bejo-600/10 transition-all font-bold text-sm group">
-                  <div class="size-8 rounded-full bg-bejo-500 flex items-center justify-center text-white ring-2 ring-white group-hover:ring-bejo-100 transition-all">
-                    <Icon icon="lucide:user" class="size-4" />
+                <button id="hs-dropdown-profile" type="button" class="hs-dropdown-toggle flex items-center gap-3 px-2 py-1.5 rounded-full bg-white border border-bejo-200 text-bejo-600 hover:bg-bejo-50 hover:shadow-lg hover:shadow-bejo-600/10 transition-all font-bold text-sm group">
+                  <div :class="[
+                    'size-8 rounded-full flex items-center justify-center ring-2 ring-white group-hover:ring-bejo-100 transition-all overflow-hidden',
+                    userAvatar ? 'bg-slate-50' : 'bg-bejo-500 text-white'
+                  ]">
+                    <img v-if="userAvatar" :src="userAvatar" class="size-full object-cover" />
+                    <Icon v-else icon="lucide:user" class="size-4" />
                   </div>
                   <span class="hidden sm:inline">Halo, {{ userName }}</span>
                   <Icon icon="lucide:chevron-down" class="size-4 opacity-50 group-hover:opacity-100 transition-all" />
                 </button>
 
                 <div class="hs-dropdown-menu transition-[opacity,margin] duration hs-dropdown-open:opacity-100 opacity-0 hidden min-w-60 bg-white shadow-2xl rounded-2xl p-2 border border-slate-100 mt-2 z-50 overflow-hidden" aria-labelledby="hs-dropdown-profile">
-                  <div class="px-4 py-3 mb-2 bg-bejo-50/50 rounded-xl border border-bejo-100/50">
-                    <p class="text-[10px] font-black text-bejo-600 uppercase tracking-widest mb-1">Akun Terhubung</p>
-                    <p class="text-sm font-black text-slate-900 truncate">{{ userName }}</p>
-                    <p class="text-[10px] font-bold text-slate-400">{{ noId }}</p>
+                  <div class="px-4 py-3 mb-2 bg-bejo-50/50 rounded-xl border border-bejo-100/50 flex items-center gap-3">
+                    <div :class="[
+                      'size-10 rounded-lg flex items-center justify-center shadow-lg overflow-hidden shrink-0',
+                      userAvatar ? 'bg-slate-50 shadow-slate-200/50' : 'bg-bejo-500 text-white shadow-bejo-500/20'
+                    ]">
+                      <img v-if="userAvatar" :src="userAvatar" class="size-full object-cover" />
+                      <Icon v-else icon="lucide:user" class="size-5" />
+                    </div>
+                    <div class="overflow-hidden">
+                      <p class="text-[10px] font-black text-bejo-600 uppercase tracking-widest mb-0.5">Akun Terhubung</p>
+                      <p class="text-sm font-black text-slate-900 truncate">{{ userName }}</p>
+                      <p class="text-[10px] font-bold text-slate-400">{{ noId }}</p>
+                    </div>
                   </div>
                   
                   <div class="space-y-1">
@@ -305,6 +318,7 @@ const { setSideNavSize } = layoutStore
 const isLoggedIn = ref(false)
 const userName = ref('')
 const noId = ref('')
+const userAvatar = ref('')
 
 const handleLogout = () => {
   confirm('Apakah Anda ingin keluar dari sesi ini?', () => {
@@ -332,6 +346,7 @@ onMounted(() => {
     isLoggedIn.value = true
     userName.value = name || 'User'
     noId.value = idValue || '-'
+    userAvatar.value = localStorage.getItem('user_avatar') || ''
     
     // Initialize Preline for the dropdown
     nextTick(() => {
