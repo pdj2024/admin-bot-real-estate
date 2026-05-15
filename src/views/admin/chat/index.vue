@@ -22,7 +22,7 @@ const lastMessageId = ref<string>('')
 const takeOverBatch = ref<TakeOverPayload[]>([])
 const takeOverSuccess = ref<string[]>([])
 
-const currentActiveTab = ref<string>('chat_saya')
+const currentActiveTab = ref<'chat_saya' | 'bot'>('chat_saya')
 
 const sidebarRef = ref<any>(null)
 const chatContentRef = ref<any>(null)
@@ -79,7 +79,7 @@ const handleUsernameChange = (username: string) => {
   }
 }
 
-const handleTabChange = (tab: string) => {
+const handleTabChange = (tab: 'chat_saya' | 'bot') => {
   currentActiveTab.value = tab
 }
 
@@ -216,10 +216,13 @@ const startSignalR = async () => {
     if (String(data.roomId) === String(selectedRoomId.value)) {
       if (data.senderId === myId) {
         console.log('[SignalR] Update status pesan sendiri')
-        const pendingChat = chats.value.find((c) => c.Message === data.message && c.Send_Status === 'pending')
-        if (pendingChat) {
-          pendingChat.Message_Id = data.messageId
-          pendingChat.Send_Status = 'send'
+        const myChat = chats.value.find((c) => 
+          c.Message === data.message && 
+          (c.Send_Status === 'pending' || (c.Send_Status === 'send' && !c.Message_Id))
+        )
+        if (myChat) {
+          myChat.Message_Id = data.messageId
+          myChat.Send_Status = 'send'
           return
         }
       }
@@ -370,9 +373,10 @@ watch(
   { immediate: true }
 )
 
-const handleUpdateChatStatus = (payload: { index: number; status: 'send' | 'failed' | 'pending' }) => {
+const handleUpdateChatStatus = (payload: { index: number; status: 'send' | 'failed' | 'pending'; id?: string }) => {
   if (chats.value[payload.index]) {
     chats.value[payload.index].Send_Status = payload.status
+    if (payload.id) chats.value[payload.index].Message_Id = payload.id
   }
 }
 
@@ -398,6 +402,7 @@ onBeforeUnmount(() => {
             class="shrink-0 h-full"
             :activeRoomId="selectedRoomId || ''" 
             :usernameChange="selectedUsernameChange" 
+            :activeTab="currentActiveTab"
             @selectChat="handleSelectChat" 
             @username="handleUsername" 
             @phoneNumber="handlePhone" 

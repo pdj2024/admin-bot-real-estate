@@ -40,7 +40,7 @@ export function useChatProducts(props: any, sendChat: any) {
     if (products.value.length > 0) return
     isLoadingProducts.value = true
     try {
-      const { data } = await api.get('/api/realEstate/getAll', { headers: { 'X-Jenis-User': 'Admin' } })
+      const { data } = await api.get('/api/realEstate/getAll?status_display=Aktif&status_properti=Tersedia&orderby=no_id&orderdir=asc', { headers: { 'X-Jenis-User': 'Admin' } })
       products.value = data.Data
     } catch (err) {
       console.error('Fetch products error:', err)

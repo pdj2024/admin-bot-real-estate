@@ -12,6 +12,7 @@ defineProps<{
   isLoadingProducts: boolean,
   filteredProducts: any[],
   activeExpandedProductId: string | null,
+  openBrochureSelection: boolean,
   // Filter Props
   facilitiesFilter: any,
   regionFilter: any,
@@ -56,10 +57,12 @@ const Filter = defineAsyncComponent(() => import('@/views/admin/properti/katalog
       <div class="flex items-center justify-between mb-6 px-2 shrink-0">
         <div class="flex items-center gap-3">
           <div class="size-10 rounded-2xl bg-gradient-to-br from-bejo-50 to-bejo-100 flex items-center justify-center text-bejo-600">
-            <Icon :icon="openAppointment ? 'lucide:calendar-search' : 'lucide:blocks'" class="size-5" />
+            <Icon :icon="openAppointment ? 'lucide:calendar-search' : (openBrochureSelection ? 'lucide:file-text' : 'lucide:blocks')" class="size-5" />
           </div>
           <div>
-            <h4 class="text-slate-900 font-extrabold text-lg tracking-tight">{{ openAppointment ? 'Pilih Unit untuk Janji Temu' : 'Pilih Etalase' }}</h4>
+            <h4 class="text-slate-900 font-extrabold text-lg tracking-tight">
+              {{ openAppointment ? 'Pilih Unit untuk Janji Temu' : (openBrochureSelection ? 'Kirim Brosur Digital' : 'Pilih Etalase') }}
+            </h4>
             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Pilih unit untuk melanjutkan</p>
           </div>
         </div>
@@ -94,7 +97,7 @@ const Filter = defineAsyncComponent(() => import('@/views/admin/properti/katalog
               leave-from-class="transform translate-y-0 opacity-100"
               leave-to-class="transform -translate-y-4 opacity-0"
             >
-              <div v-if="openFilter" class="w-full max-h-[300px] overflow-y-auto custom-scrollbar rounded-[2rem] border border-slate-100 bg-white shadow-inner p-1">
+              <div v-if="openFilter" class="w-full rounded-[2rem] border border-slate-100 bg-white shadow-inner p-1">
                 <Filter 
                   :openFilter="true"
                   :inline="true"

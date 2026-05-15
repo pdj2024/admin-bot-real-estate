@@ -15,7 +15,7 @@ const searchQuery = ref('')
 const fetchUnits = async () => {
   isLoading.value = true
   try {
-    const { data } = await api.get('/api/realEstate/getAll?status_display=aktif&status_properti=Tersedia&orderby=no_id&orderdir=asc', {
+    const { data } = await api.get('/api/realEstate/getAll?status_display=Aktif&status_properti=Tersedia&orderby=no_id&orderdir=asc', {
       headers: { 'X-Jenis-User': 'admin' }
     })
     units.value = data.Data || []

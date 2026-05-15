@@ -37,7 +37,7 @@ const props = defineProps<{
   activeMatchIndex?: number
 }>()
 
-defineEmits(['imageLoaded'])
+const emit = defineEmits(['imageLoaded', 'regenerateBrochure'])
 
 const isMe = computed(() => {
   const role = (props.chat.Tipe_User || '').toLowerCase()
@@ -116,8 +116,8 @@ const formattedMsg = computed(() => {
         const matchId = `match-${props.idx}-${currentMatchIdx}`
         return `<span id="${matchId}" class="${highlightClass}">${match}</span>`
       })
-    } catch (e) {
-      console.error('Highlight regex error:', e)
+    } catch {
+      console.error('Highlight regex error')
     }
   }
   return formatted
@@ -133,6 +133,55 @@ const imageSource = computed(() => {
   }
   return ''
 })
+
+const getBrochureFileName = (chat: any) => {
+  if (!chat.Message) return chat.Id_Paket || (chat.No_Penawaran ? `Brosur_Properti_${chat.No_Penawaran}.pdf` : 'Brosur_Digital.pdf')
+  const match = chat.Message.match(/unit \*(.*?)\*/)
+  if (match && match[1]) {
+    return `Brosur_Properti_${match[1].replace(/\s+/g, '_')}.pdf`
+  }
+  return chat.Id_Paket || (chat.No_Penawaran ? `Brosur_Properti_${chat.No_Penawaran}.pdf` : 'Brosur_Digital.pdf')
+}
+
+const downloadPDF = async (chat: any) => {
+  const url = chat.localPdfData || chat.Media_Url;
+  if (!url) {
+    emit('regenerateBrochure', chat);
+    return;
+  }
+  
+  const fileName = getBrochureFileName(chat);
+  
+  if (url.startsWith('data:')) {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } else {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const objectUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(objectUrl);
+    } catch {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  }
+}
 
 const getMediaId = (paket?: string) => {
   if (!paket) return ''
@@ -221,6 +270,32 @@ const showImagePreview = ref(false)
         <div class="px-3 py-1.5 md:px-4 md:py-2.5 rounded-2xl text-[13px] md:text-sm relative transition-all duration-300 hover:shadow-xl" :class="[bubbleStyle, isMe ? 'hover:translate-x-1' : 'hover:-translate-x-1']">
           <div v-if="imageSource" class="mb-3 overflow-hidden rounded-xl border border-black/5 shadow-inner bg-slate-50/50">
             <img :src="imageSource" @load="$emit('imageLoaded')" @click="showImagePreview = true" class="w-full h-auto object-cover max-h-72 hover:scale-105 transition-transform duration-500 cursor-pointer" />
+          </div>
+
+          <!-- Brochure/Document Style -->
+          <div v-if="chat.Jenis_Pesan && (chat.Jenis_Pesan === 'brochure' || chat.Jenis_Pesan.startsWith('brosur_'))" class="mb-3 bg-white/40 rounded-xl p-3 border border-black/5 flex flex-col gap-3">
+            <div class="flex items-center gap-3">
+               <div class="size-10 bg-red-500 rounded-lg flex flex-col items-center justify-center text-white shrink-0 shadow-sm">
+                  <Icon icon="fa6-solid:file-pdf" class="size-5" />
+                  <span class="text-[6px] font-black mt-0.5">PDF</span>
+               </div>
+               <div class="flex flex-col min-w-0">
+                  <span class="text-[11px] font-bold text-slate-900 truncate" :title="getBrochureFileName(chat)">
+                    {{ getBrochureFileName(chat) }}
+                  </span>
+                  <span class="text-[9px] font-medium text-slate-500 uppercase tracking-tight">PDF • Brosur Digital</span>
+               </div>
+            </div>
+            
+            <div class="flex items-center gap-4 pt-2 border-t border-black/5">
+               <a 
+                 href="#"
+                 @click.prevent="downloadPDF(chat)"
+                 class="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1"
+               >
+                 Save as...
+               </a>
+            </div>
           </div>
 
           <span v-if="chat.Message" class="block break-words leading-relaxed tracking-tight" v-html="formattedMsg"></span>

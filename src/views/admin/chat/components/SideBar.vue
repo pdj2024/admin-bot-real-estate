@@ -13,11 +13,13 @@ const props = withDefaults(
     activeRoomId?: string
     usernameChange?: string
     takeOverStatus?: string[]
+    activeTab?: 'chat_saya' | 'bot'
   }>(),
   {
     activeRoomId: '',
     usernameChange: '',
-    takeOverStatus: () => []
+    takeOverStatus: () => [],
+    activeTab: 'chat_saya'
   }
 )
 
@@ -27,9 +29,16 @@ const chatsAssign = ref<Chat[]>([])
 const roomIdsBot = ref<string[]>([])
 const roomIdsAktif = ref<string[]>([])
 const roomIdsAssign = ref<string[]>([])
-const activeTab = ref<'chat_saya' | 'bot'>('chat_saya')
+const activeTab = ref<'chat_saya' | 'bot'>(props.activeTab)
 const isLoading = ref<boolean>(false)
 const selectedChatId = ref<string>(props.activeRoomId)
+
+watch(() => props.activeTab, (newTab) => {
+  if (newTab && newTab !== activeTab.value) {
+    activeTab.value = newTab
+    fetchData(newTab)
+  }
+})
 
 watch(() => props.activeRoomId, (newId) => {
   selectedChatId.value = newId
@@ -48,9 +57,7 @@ const unreadCounts = ref<Record<string, number>>({})
 const firstUnreadIds = ref<Record<string, string>>({})
 const searchQuery = ref('')
 
-const selectedBotRoomIds = ref<string[]>([])
-const selectedAssignRoomIds = ref<string[]>([])
-const selectedActiveRoomIds = ref<string[]>([])
+const selectedRoomIds = ref<string[]>([])
 const pressTimer = ref<any>(null)
 const isLongPress = ref(false)
 const startCoord = ref({ x: 0, y: 0 })
@@ -77,10 +84,11 @@ const selectChat = (idx: number, group: string, id: string, idLawan: string, use
   emit('username', username || '')
   emit('phoneNumber', phoneNumber || '')
   emit('statusBot', statusBot || 'nonaktif')
-  emit('changeTab', activeTab.value)
-  if (group == 'bot') {
-    emit('lastMessageId', chatsBot.value[idx]?.Last_Id_Message_Viewed ?? '')
+  if (activeTab.value !== group && (group === 'bot' || group === 'chat_saya')) {
+    activeTab.value = group as any
+    emit('changeTab', group)
   }
+  
   closeSidebar()
   selectedChatId.value = id
 
@@ -290,17 +298,16 @@ const fetchData = async (tab: 'bot' | 'chat_saya', silent: boolean = false) => {
 }
 
 const changeTab = (tab: 'bot' | 'chat_saya') => {
-  activeTab.value = tab
+  if (activeTab.value === tab && (chatsBot.value.length > 0 || chatsAktif.value.length > 0)) return
   
   // Clear all lists to prevent stale data
   chatsBot.value = []
   chatsAktif.value = []
   chatsAssign.value = []
   
-  selectedActiveRoomIds.value = []
-  selectedBotRoomIds.value = []
-  selectedAssignRoomIds.value = []
+  selectedRoomIds.value = []
 
+  activeTab.value = tab
   fetchData(tab)
   emit('changeTab', tab)
 }
@@ -589,10 +596,10 @@ const handleTakeOverConversation = () => {
 }
 
 const handleBatchEndActive = () => {
-  if (selectedActiveRoomIds.value.length === 0) return
+  if (selectedRoomIds.value.length === 0) return
 
   const dataEndChat: TakeOverPayload[] = chatsAktif.value
-    .filter(c => selectedActiveRoomIds.value.includes(c.Room_Id))
+    .filter(c => selectedRoomIds.value.includes(c.Room_Id))
     .map((chat) => {
       return {
         type: 'system_keluar',
@@ -603,15 +610,19 @@ const handleBatchEndActive = () => {
       }
     })
 
-  emit('chatTakeOverBatch', dataEndChat)
-  selectedActiveRoomIds.value = []
+  if (dataEndChat.length > 0) {
+    emit('chatTakeOverBatch', dataEndChat)
+    // Clear only rooms that were part of this batch
+    const endedIds = dataEndChat.map(p => p.room)
+    selectedRoomIds.value = selectedRoomIds.value.filter(id => !endedIds.includes(id))
+  }
 }
 
 const handleBatchTakeOverBot = () => {
-  if (selectedBotRoomIds.value.length === 0) return
+  if (selectedRoomIds.value.length === 0) return
 
   const dataTakeOverChat: TakeOverPayload[] = chatsBot.value
-    .filter(c => selectedBotRoomIds.value.includes(c.Room_Id))
+    .filter(c => selectedRoomIds.value.includes(c.Room_Id))
     .map((chat) => {
       return {
         type: 'system_masuk',
@@ -622,15 +633,18 @@ const handleBatchTakeOverBot = () => {
       }
     })
 
-  emit('chatTakeOverBatch', dataTakeOverChat)
-  selectedBotRoomIds.value = []
+  if (dataTakeOverChat.length > 0) {
+    emit('chatTakeOverBatch', dataTakeOverChat)
+    const takenIds = dataTakeOverChat.map(p => p.room)
+    selectedRoomIds.value = selectedRoomIds.value.filter(id => !takenIds.includes(id))
+  }
 }
 
 const handleBatchTakeOverAssign = () => {
-  if (selectedAssignRoomIds.value.length === 0) return
+  if (selectedRoomIds.value.length === 0) return
 
   const dataTakeOverChat: TakeOverPayload[] = chatsAssign.value
-    .filter(c => selectedAssignRoomIds.value.includes(c.Room_Id))
+    .filter(c => selectedRoomIds.value.includes(c.Room_Id))
     .map((chat) => {
       return {
         type: 'system_masuk',
@@ -641,23 +655,25 @@ const handleBatchTakeOverAssign = () => {
       }
     })
 
-  emit('chatTakeOverBatch', dataTakeOverChat)
-
-  selectedAssignRoomIds.value = []
+  if (dataTakeOverChat.length > 0) {
+    emit('chatTakeOverBatch', dataTakeOverChat)
+    const takenIds = dataTakeOverChat.map(p => p.room)
+    selectedRoomIds.value = selectedRoomIds.value.filter(id => !takenIds.includes(id))
+  }
 }
 
 const isAllBotChatsSelected = computed({
   get: () => {
     const list = filteredChatsBot.value
-    return list.length > 0 && list.every(c => selectedBotRoomIds.value.includes(c.Room_Id))
+    return list.length > 0 && list.every(c => selectedRoomIds.value.includes(c.Room_Id))
   },
   set: (value) => {
     const list = filteredChatsBot.value
     if (value) {
-      const toAdd = list.filter(c => !selectedBotRoomIds.value.includes(c.Room_Id)).map(c => c.Room_Id)
-      selectedBotRoomIds.value = [...selectedBotRoomIds.value, ...toAdd]
+      const toAdd = list.filter(c => !selectedRoomIds.value.includes(c.Room_Id)).map(c => c.Room_Id)
+      selectedRoomIds.value = [...selectedRoomIds.value, ...toAdd]
     } else {
-      selectedBotRoomIds.value = selectedBotRoomIds.value.filter(id => !list.some(c => c.Room_Id === id))
+      selectedRoomIds.value = selectedRoomIds.value.filter(id => !list.some(c => c.Room_Id === id))
     }
   }
 })
@@ -665,15 +681,15 @@ const isAllBotChatsSelected = computed({
 const isAllAssignChatsSelected = computed({
   get: () => {
     const list = filteredChatsAssign.value
-    return list.length > 0 && list.every(c => selectedAssignRoomIds.value.includes(c.Room_Id))
+    return list.length > 0 && list.every(c => selectedRoomIds.value.includes(c.Room_Id))
   },
   set: (value) => {
     const list = filteredChatsAssign.value
     if (value) {
-      const toAdd = list.filter(c => !selectedAssignRoomIds.value.includes(c.Room_Id)).map(c => c.Room_Id)
-      selectedAssignRoomIds.value = [...selectedAssignRoomIds.value, ...toAdd]
+      const toAdd = list.filter(c => !selectedRoomIds.value.includes(c.Room_Id)).map(c => c.Room_Id)
+      selectedRoomIds.value = [...selectedRoomIds.value, ...toAdd]
     } else {
-      selectedAssignRoomIds.value = selectedAssignRoomIds.value.filter(id => !list.some(c => c.Room_Id === id))
+      selectedRoomIds.value = selectedRoomIds.value.filter(id => !list.some(c => c.Room_Id === id))
     }
   }
 })
@@ -681,15 +697,15 @@ const isAllAssignChatsSelected = computed({
 const isAllActiveChatsSelected = computed({
   get: () => {
     const list = filteredChatsAktif.value
-    return list.length > 0 && list.every(c => selectedActiveRoomIds.value.includes(c.Room_Id))
+    return list.length > 0 && list.every(c => selectedRoomIds.value.includes(c.Room_Id))
   },
   set: (value) => {
     const list = filteredChatsAktif.value
     if (value) {
-      const toAdd = list.filter(c => !selectedActiveRoomIds.value.includes(c.Room_Id)).map(c => c.Room_Id)
-      selectedActiveRoomIds.value = [...selectedActiveRoomIds.value, ...toAdd]
+      const toAdd = list.filter(c => !selectedRoomIds.value.includes(c.Room_Id)).map(c => c.Room_Id)
+      selectedRoomIds.value = [...selectedRoomIds.value, ...toAdd]
     } else {
-      selectedActiveRoomIds.value = selectedActiveRoomIds.value.filter(id => !list.some(c => c.Room_Id === id))
+      selectedRoomIds.value = selectedRoomIds.value.filter(id => !list.some(c => c.Room_Id === id))
     }
   }
 })
@@ -800,9 +816,9 @@ defineExpose({
                     <p class="text-default-700 font-bold text-[11px] uppercase tracking-widest">Bot ({{ filteredChatsBot.length }})</p>
                   </div>
 
-                  <button v-if="selectedBotRoomIds.length > 0" @click="handleBatchTakeOverBot" class="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold text-[var(--color-bejo-700)] bg-[var(--color-bejo-100)] hover:bg-[var(--color-bejo-200)] border border-[var(--color-bejo-300)] rounded transition-colors shadow-sm">
+                  <button v-if="filteredChatsBot.some((c: any) => selectedRoomIds.includes(c.Room_Id))" @click="handleBatchTakeOverBot" class="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold text-[var(--color-bejo-700)] bg-[var(--color-bejo-100)] hover:bg-[var(--color-bejo-200)] border border-[var(--color-bejo-300)] rounded transition-colors shadow-sm">
                     <Icon icon="lucide:message-square-plus" class="size-3.5" />
-                    Ambil Alih {{ selectedBotRoomIds.length > 1 ? selectedBotRoomIds.length : '' }} Chat
+                    Ambil Alih Chat
                   </button>
                 </div>
 
@@ -810,7 +826,6 @@ defineExpose({
                     <div
                       v-for="(chat, idx) in filteredChatsBot"
                       :key="chat.Room_Id"
-                      v-memo="[chat.Room_Id, chat.Last_Message_At, chat.Last_Message, chat.New_Message_Count, selectedChatId === chat.Room_Id, selectedBotRoomIds.includes(chat.Room_Id)]"
                       @click="selectChat(idx, 'bot', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan, chat.Telepon_User_Lawan, chat.Status_Bot || 'aktif')"
                       @contextmenu.prevent="openContextMenu($event, chat, 'bot', idx)"
                       @pointerdown="handlePointerDown($event, chat, 'bot', idx)"
@@ -824,7 +839,7 @@ defineExpose({
                       }"
                     >
                       <div class="shrink-0 flex items-center">
-                        <input @click.stop type="checkbox" :value="chat.Room_Id" v-model="selectedBotRoomIds" class="size-4.5 rounded-lg border-slate-200 text-bejo-500 focus:ring-bejo-500/20 cursor-pointer transition-all" />
+                        <input @click.stop type="checkbox" :value="String(chat.Room_Id)" v-model="selectedRoomIds" class="size-4.5 rounded-lg border-slate-200 text-bejo-500 focus:ring-bejo-500/20 cursor-pointer transition-all" />
                       </div>
 
                       <div class="relative shrink-0 flex items-center justify-center font-black rounded-2xl size-10 bg-gradient-to-br from-bejo-50 to-bejo-100/50 text-bejo-600 border border-white shadow-sm group-hover:scale-105 transition-all duration-300">
@@ -884,9 +899,8 @@ defineExpose({
                       <p class="text-[var(--text-bejo-800)] font-bold text-[11px] uppercase tracking-widest">Belum Di-Assign ({{ filteredChatsAssign.length }})</p>
                     </div>
 
-                    <button v-if="selectedAssignRoomIds.length > 0" @click="handleBatchTakeOverAssign" class="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold text-[var(--color-bejo-700)] bg-[var(--color-bejo-100)] hover:bg-[var(--color-bejo-200)] border border-[var(--color-bejo-300)] rounded transition-colors shadow-sm">
+                    <button v-if="filteredChatsAssign.some((c: any) => selectedRoomIds.includes(c.Room_Id))" @click="handleBatchTakeOverAssign" class="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold text-[var(--color-bejo-700)] bg-[var(--color-bejo-100)] hover:bg-[var(--color-bejo-200)] border border-[var(--color-bejo-300)] rounded transition-colors shadow-sm">
                       <Icon icon="lucide:message-square-plus" class="size-3.5" />
-                      <!-- Ambil Alih {{ selectedAssignRoomIds.length > 1 ? selectedAssignRoomIds.length : '' }} Chat -->
                       Ambil Alih Chat
                     </button>
                   </div>
@@ -895,7 +909,6 @@ defineExpose({
                     <div
                       v-for="(chat, idx) in filteredChatsAssign.slice().reverse()"
                       :key="chat.Room_Id"
-                      v-memo="[chat.Room_Id, chat.Last_Message_At, chat.Last_Message, chat.New_Message_Count, selectedChatId === chat.Room_Id, selectedAssignRoomIds.includes(chat.Room_Id)]"
                       @click="selectChat(idx, 'chat_saya', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan, chat.Telepon_User_Lawan, chat.Status_Bot || 'nonaktif')"
                       @contextmenu.prevent="openContextMenu($event, chat, 'assign', idx)"
                       @pointerdown="handlePointerDown($event, chat, 'assign', idx)"
@@ -909,7 +922,7 @@ defineExpose({
                       }"
                     >
                       <div class="shrink-0 flex items-center">
-                        <input @click.stop type="checkbox" :value="chat.Room_Id" v-model="selectedAssignRoomIds" class="size-4.5 rounded-lg border-slate-200 text-bejo-500 focus:ring-bejo-500/20 cursor-pointer transition-all" />
+                        <input @click.stop type="checkbox" :value="String(chat.Room_Id)" v-model="selectedRoomIds" class="size-4.5 rounded-lg border-slate-200 text-bejo-500 focus:ring-bejo-500/20 cursor-pointer transition-all" />
                       </div>
 
                       <div class="relative shrink-0 flex items-center justify-center font-black rounded-2xl size-10 bg-gradient-to-br from-slate-100 to-slate-200/50 text-slate-600 border border-white shadow-sm group-hover:scale-105 transition-all duration-300">
@@ -964,9 +977,9 @@ defineExpose({
                       <p class="text-default-700 font-bold text-[11px] uppercase tracking-widest">Chat Aktif({{ filteredChatsAktif.length }})</p>
                     </div>
 
-                    <button v-if="selectedActiveRoomIds.length > 0" @click="handleBatchEndActive" class="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold text-white bg-red-500 hover:bg-red-600 rounded transition-colors shadow-sm">
+                    <button v-if="filteredChatsAktif.some((c: any) => selectedRoomIds.includes(c.Room_Id))" @click="handleBatchEndActive" class="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold text-white bg-red-500 hover:bg-red-600 rounded transition-colors shadow-sm">
                       <Icon icon="lucide:message-square-x" class="size-3.5" />
-                      Akhiri {{ selectedActiveRoomIds.length > 1 ? selectedActiveRoomIds.length : '' }} Chat
+                      Akhiri Chat
                     </button>
                   </div>
 
@@ -974,7 +987,6 @@ defineExpose({
                     <div
                       v-for="(chat, idx) in filteredChatsAktif"
                       :key="chat.Room_Id"
-                      v-memo="[chat.Room_Id, chat.Last_Message_At, chat.Last_Message, chat.New_Message_Count, selectedChatId === chat.Room_Id, selectedActiveRoomIds.includes(chat.Room_Id)]"
                       @click="selectChat(idx, 'chat_saya', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan, chat.Telepon_User_Lawan, chat.Status_Bot || 'nonaktif')"
                       @contextmenu.prevent="openContextMenu($event, chat, 'aktif', idx)"
                       @pointerdown="handlePointerDown($event, chat, 'aktif', idx)"
@@ -988,7 +1000,7 @@ defineExpose({
                       }"
                     >
                       <div class="shrink-0 flex items-center">
-                        <input @click.stop type="checkbox" :value="chat.Room_Id" v-model="selectedActiveRoomIds" class="size-4.5 rounded-lg border-slate-200 text-bejo-500 focus:ring-bejo-500/20 cursor-pointer transition-all" />
+                        <input @click.stop type="checkbox" :value="String(chat.Room_Id)" v-model="selectedRoomIds" class="size-4.5 rounded-lg border-slate-200 text-bejo-500 focus:ring-bejo-500/20 cursor-pointer transition-all" />
                       </div>
 
                       <div class="relative shrink-0 flex items-center justify-center font-black rounded-2xl size-10 bg-gradient-to-br from-bejo-50 to-bejo-100/50 text-bejo-600 border border-white shadow-sm group-hover:scale-105 transition-all duration-300">

@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, nextTick, computed, watch, defineAsyncComponent } from 'vue'
 import { Icon } from '@iconify/vue'
-import { fail } from '@/utils/sweet-alert'
+import { success, fail } from '@/utils/sweet-alert'
+import Swal from 'sweetalert2'
+import { jsPDF } from 'jspdf'
 import api from '@/services/axios'
 import ChatBubble from './ChatBubble.vue'
 import bgChat from '@/assets/images/background-chat.png'
@@ -10,6 +12,7 @@ import simplebar from 'simplebar-vue'
 import { type Chat, type PreviewImage, commonEmojis } from './data'
 import { type TakeOverPayload } from './SideBar.vue'
 import { PROVINCES } from '@/utils/regions'
+import { useSettings } from '@/stores/settings'
 
 import { useChatProducts } from '@/composables/admin/useChatProducts'
 import { useChatTransfer } from '@/composables/admin/useChatTransfer'
@@ -18,6 +21,9 @@ import { useChatAppointments } from '@/composables/admin/useChatAppointments'
 const PanelEtalase = defineAsyncComponent(() => import('./panels/PanelEtalase.vue'))
 const PanelTukarCS = defineAsyncComponent(() => import('./panels/PanelTukarCS.vue'))
 const PanelAppointment = defineAsyncComponent(() => import('./panels/PanelAppointment.vue'))
+
+// Shared across instances to prevent duplicate processing during remounts
+const globalProcessingRooms = new Set<string>()
 
 const etalaseRef = ref<HTMLElement | null>(null)
 const tukarCSRef = ref<HTMLElement | null>(null)
@@ -45,10 +51,50 @@ const searchChatResults = ref<{ chatIndex: number; matchIndex: number }[]>([])
 const currentSearchMatch = ref(-1)
 const searchChatInputRef = ref<HTMLInputElement | null>(null)
 const showEmojiPicker = ref(false)
+const openBrochureSelection = ref(false)
+const brochureProductData = ref<any>(null)
+const brochureCaption = ref('')
+const showBrochureCaptionModal = ref(false)
+const isSendingBrochure = ref(false)
+const isTakingOver = ref(false)
+const isProcessingBatch = ref(false)
+const settingsStore = useSettings()
 
 const addEmoji = (emoji: string) => {
   sendChatContent.value += emoji
   chatInputRef.value?.focus()
+}
+
+const getBase64ImageFromUrl = async (imageUrl: string, maxWidth = 1024, format = 'image/jpeg'): Promise<string | null> => {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      let width = img.width
+      let height = img.height
+
+      if (width > maxWidth) {
+        height = (maxWidth / width) * height
+        width = maxWidth
+      }
+
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        resolve(null)
+        return
+      }
+
+      ctx.drawImage(img, 0, 0, width, height)
+      resolve(canvas.toDataURL(format, format === 'image/jpeg' ? 0.8 : undefined))
+    }
+    img.onerror = () => {
+      resolve(null)
+    }
+    img.src = imageUrl
+  })
 }
 
 const username = defineModel<string>('username')
@@ -95,7 +141,7 @@ const emit = defineEmits<{
   (e: 'usernameChange', value: string): void
   (e: 'takeOverStatus', value: string[]): void
   (e: 'addChat', value: Chat): void
-  (e: 'updateChatStatus', value: { index: number; status: 'send' | 'failed' | 'pending' }): void
+  (e: 'updateChatStatus', value: { index: number; status: 'send' | 'failed' | 'pending'; id?: string }): void
 }>()
 
 const handleClickOutside = (event: MouseEvent) => {
@@ -199,21 +245,11 @@ const prevSearchMatch = () => {
   }
 }
 
-const { 
-  products, isLoadingProducts, searchKatalog, 
-  filteredProducts, activeExpandedProductId, fetchProducts, sendProduct,
-  facilitiesFilter, regionFilter, priceRangeFilter, transactionTypeFilter, typeFilter
-} = useChatProducts(props, (t: string, u?: string, r?: string, p?: string, id?: string, url?: string, user?: string) => sendChat(t, u, r, p, id, url, user))
+const { products, isLoadingProducts, searchKatalog, filteredProducts, activeExpandedProductId, fetchProducts, sendProduct, facilitiesFilter, regionFilter, priceRangeFilter, transactionTypeFilter, typeFilter } = useChatProducts(props, (t: string, u?: string, r?: string, p?: string, id?: string, url?: string, user?: string) => sendChat(t, u, r, p, id, url, user))
 
-const { 
-  showAppointmentModal, appointmentStage, appointmentForm, 
-  appointmentCalendarOptions, handleSelectUnitForAppointment, saveNewAppointment,
-  isLoadingAppointments 
-} = useChatAppointments(props, (t: string, u?: string, r?: string, p?: string, id?: string, url?: string, user?: string) => sendChat(t, u, r, p, id, url, user))
+const { showAppointmentModal, appointmentStage, appointmentForm, appointmentCalendarOptions, handleSelectUnitForAppointment, saveNewAppointment, isLoadingAppointments } = useChatAppointments(props, (t: string, u?: string, r?: string, p?: string, id?: string, url?: string, user?: string) => sendChat(t, u, r, p, id, url, user))
 
-const { 
-  searchCS, isFetchingAdmins, filteredAdmins, fetchAdmins, handleTransferChat 
-} = useChatTransfer(props, emit, (t: string, u?: string, r?: string, p?: string, id?: string, url?: string, user?: string) => sendChat(t, u, r, p, id, url, user))
+const { searchCS, isFetchingAdmins, filteredAdmins, fetchAdmins, handleTransferChat } = useChatTransfer(props, emit, (t: string, u?: string, r?: string, p?: string, id?: string, url?: string, user?: string) => sendChat(t, u, r, p, id, url, user))
 
 watch(openEtalase, (n) => {
   if (n) {
@@ -250,11 +286,451 @@ const handleOpenTukarCS = () => {
 const closeEtalase = () => {
   openEtalase.value = false
   openAppointment.value = false
+  openBrochureSelection.value = false
   searchKatalog.value = ''
 }
 
-const endChat = () => takeOverChat(true)
+const handleOpenBrochureSelection = () => {
+  openBrochureSelection.value = true
+  openMenu.value = false
+  fetchProducts()
+}
 
+const handleSelectUnitForBrochure = (product: any) => {
+  brochureProductData.value = product
+  brochureCaption.value = `Halo *${username.value || props.phoneNumber}*,\n\nBerikut adalah brosur digital untuk unit *${product.Nama_Produk}*.\n\nSilakan dipelajari detailnya, jika ada pertanyaan jangan ragu untuk bertanya ya!`
+  showBrochureCaptionModal.value = true
+  openBrochureSelection.value = false
+}
+
+const formatPrice = (price: number) => {
+  if (!price) return 'N/A'
+  if (price >= 1000000000) return (price / 1000000000).toFixed(1).replace('.0', '') + ' M'
+  if (price >= 1000000) return (price / 1000000).toFixed(1).replace('.0', '') + ' Jt'
+  if (price >= 1000) return (price / 1000).toFixed(1).replace('.0', '') + ' Rb'
+  return price.toString()
+}
+
+const generateBrochure = async (product: any) => {
+  const doc = new jsPDF({
+    orientation: 'l',
+    unit: 'mm',
+    format: 'a4',
+    compress: true
+  })
+  const width = 297
+  const height = 210
+
+  const primaryColor = '#EB701F'
+  const darkOrange = '#c2410c'
+  const slateColor = '#0f172a'
+
+  doc.setFillColor(255, 255, 255)
+  doc.rect(0, 0, width, height, 'F')
+
+  const validMedia = (product.MediaUrls || []).filter((m: any) => {
+    const url = (m.ThumbUrl || m.Id_Media || '').toLowerCase()
+    return !url.endsWith('.mp4') && !url.endsWith('.mov') && !url.endsWith('.avi')
+  })
+
+  const mediaToFetch = validMedia.map((m: any) => m.ThumbUrl || m.Id_Media).filter((src: string) => src && !src.startsWith('http') && !src.startsWith('data:'))
+  let resolvedUrls: Record<string, string> = {}
+
+  if (mediaToFetch.length > 0) {
+    try {
+      const { data } = await api.post('/api/mediacloud/read-url-batch', { ids: mediaToFetch }, { headers: { 'X-Jenis-User': 'admin' } })
+      resolvedUrls = Object.entries(data?.success || {}).reduce((acc: any, [id, val]: any) => {
+        acc[id] = val.Url
+        return acc
+      }, {})
+    } catch {
+      //
+    }
+  }
+
+  const images = []
+  for (let i = 0; i < Math.min(validMedia.length, 3); i++) {
+    const src = validMedia[i].ThumbUrl || validMedia[i].Id_Media
+    const url = resolvedUrls[src] || src
+    const img = await getBase64ImageFromUrl(url)
+    if (img) images.push(img)
+  }
+
+  let logoBase64 = null
+  const logoSrc = (settingsStore.business.Logo_Company || settingsStore.business.Id_Logo_Company) as string
+  if (logoSrc) {
+    let logoUrl = logoSrc
+    if (!logoSrc.startsWith('http') && !logoSrc.startsWith('data:')) {
+      try {
+        const { data } = await api.post('/api/mediacloud/read-url-batch', { ids: [logoSrc] }, { headers: { 'X-Jenis-User': 'admin' } })
+        logoUrl = data?.success?.[logoSrc]?.Url || logoSrc
+      } catch {}
+    }
+    logoBase64 = await getBase64ImageFromUrl(logoUrl, 1024, 'image/png')
+  }
+
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`http://localhost:5000/properti/${product.Slug}`)}`
+  const qrBase64 = await getBase64ImageFromUrl(qrUrl)
+
+  const drawDots = (x: number, y: number, rows: number, cols: number) => {
+    doc.setFillColor(226, 232, 240)
+    for (let i = 0; i < rows; i++) {
+      for (let j = 0; j < cols; j++) {
+        doc.circle(x + j * 3.5, y + i * 3.5, 0.6, 'F')
+      }
+    }
+  }
+
+  const col1X = 15
+  const col2X = 110
+  const col3X = 215
+
+  doc.setFillColor(primaryColor)
+  doc.roundedRect(-10, -10, 50, 50, 10, 10, 'F')
+  if (logoBase64) {
+    doc.setFillColor(255, 255, 255)
+    doc.roundedRect(3, 3, 29, 29, 4, 4, 'F')
+    doc.addImage(logoBase64 as string, 'PNG', 5, 5, 25, 25)
+  }
+
+  // RENDER SECOND IMAGE FIRST! This prevents its white mask from drawing over the text
+  const centerX = col2X + 35
+  const centerY = 58
+  const rad = 35
+
+  drawDots(col2X + 15, 12, 5, 8)
+
+  if (images[1]) {
+    doc.addImage(images[1] as string, 'JPEG', centerX - rad, centerY - rad, rad * 2, rad * 2, undefined, 'FAST')
+    doc.setDrawColor(255, 255, 255)
+    doc.setLineWidth(25)
+    doc.circle(centerX, centerY, rad + 12, 'S')
+    doc.setDrawColor(primaryColor)
+    doc.setLineWidth(1.5)
+    doc.circle(centerX, centerY, rad + 1, 'S')
+    doc.setLineWidth(0.8)
+    doc.circle(centerX, centerY, rad + 5, 'S')
+  }
+
+  doc.setFont('helvetica', 'bold')
+  const maxTitleWidth = 90
+  let titleFontSize = 26
+  doc.setFontSize(titleFontSize)
+  let tLines = doc.splitTextToSize(product.Nama_Produk.toUpperCase(), maxTitleWidth)
+
+  if (tLines.length > 2) {
+    titleFontSize = 20
+    doc.setFontSize(titleFontSize)
+    tLines = doc.splitTextToSize(product.Nama_Produk.toUpperCase(), maxTitleWidth)
+  }
+  if (tLines.length > 5) {
+    tLines = tLines.slice(0, 5)
+  }
+
+  // Draw Title line by line for maximum reliability
+  doc.setTextColor(slateColor)
+  let currentTitleY = 55
+  const titleLineStep = (titleFontSize * 0.35) + 2
+  tLines.forEach((line: string) => {
+    doc.text(line, col1X, currentTitleY)
+    currentTitleY += titleLineStep
+  })
+
+  const subTitleY = currentTitleY + 2
+
+  doc.setFontSize(10)
+  doc.setTextColor(primaryColor)
+  doc.text(`Tawaran Eksklusif dari ${settingsStore.business.appName}`, col1X, subTitleY)
+
+  const spY = Math.max(80, subTitleY + 12)
+  doc.setFillColor(darkOrange)
+  doc.roundedRect(col1X, spY, 65, 10, 3, 3, 'F')
+  doc.setTextColor(255, 255, 255)
+  doc.setFontSize(8.5)
+  doc.text('MENGAPA MEMILIH KAMI?', col1X + 32.5, spY + 6.5, { align: 'center' })
+
+  doc.setTextColor(slateColor)
+  doc.setFontSize(9.5)
+  doc.setFont('helvetica', 'normal')
+  let aY = spY + 16
+  const pts = product.Akses_Jalan || ['Lokasi strategis Surabaya', 'Desain arsitektur modern', 'Fasilitas premium lengkap', 'Nilai investasi tinggi']
+  pts.slice(0, 4).forEach((p: string) => {
+    doc.setDrawColor(primaryColor)
+    doc.setLineWidth(0.5)
+    doc.circle(col1X + 4, aY - 1.5, 2.5, 'S')
+    doc.line(col1X + 3, aY - 1.5, col1X + 3.8, aY - 0.5)
+    doc.line(col1X + 3.8, aY - 0.5, col1X + 5.5, aY - 2.5)
+    const pLines = doc.splitTextToSize(p, 72)
+    doc.text(pLines, col1X + 10, aY)
+    aY += (pLines.length * 4) + 4
+  })
+
+  if (images[0]) {
+    const imgY = Math.max(135, aY + 3)
+    try {
+      doc.addImage(images[0] as string, 'JPEG', col1X, imgY, 80, 50, undefined, 'FAST')
+    } catch {
+      // Fallback
+    }
+    
+    // Cross-compatible mask: Draw a thick white rounded rectangle to hide sharp image corners
+    doc.setDrawColor(255, 255, 255)
+    doc.setLineWidth(4)
+    doc.roundedRect(col1X, imgY, 80, 50, 4, 4, 'S')
+    
+    // Draw the actual thin orange border inside the masked area
+    doc.setDrawColor(primaryColor)
+    doc.setLineWidth(1)
+    doc.roundedRect(col1X, imgY, 80, 50, 4, 4, 'S')
+  }
+
+  const fY = 115
+  doc.setFillColor(primaryColor)
+  doc.roundedRect(col2X + 5, fY, 60, 10, 3, 3, 'F')
+  doc.setTextColor(255, 255, 255)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(10)
+  doc.text('FASILITAS LENGKAP', col2X + 35, fY + 6.5, { align: 'center' })
+
+  const details = [
+    { label: 'Tipe', value: product.Tipe || '-' },
+    { label: 'Lantai', value: product.Lantai || '-' },
+    { label: 'Kamar Tidur', value: product.Jumlah_Kamar_Tidur || '-' },
+    { label: 'Kamar Mandi', value: product.Jumlah_Kamar_Mandi || '-' },
+    { label: 'Carport', value: product.Jumlah_Carpot || '-' },
+    { label: 'Listrik', value: product.Daya_Listrik ? `${product.Daya_Listrik} VA` : '-' }
+  ]
+
+  doc.setTextColor(slateColor)
+  doc.setFontSize(9)
+  doc.setFont('helvetica', 'normal')
+  details.forEach((item, index) => {
+    const isRight = index % 2 === 1
+    const x = isRight ? col2X + 40 : col2X + 2
+    const y = 135 + Math.floor(index / 2) * 10
+    
+    doc.setFillColor(darkOrange)
+    doc.circle(x - 1, y - 1, 1, 'F')
+    doc.text(`${item.label}: ${item.value}`, x + 2, y)
+  })
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(11)
+  doc.text('TENTANG PROPERTI', col2X + 35, 178, { align: 'center' })
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(9.5)
+  doc.setTextColor(slateColor)
+  doc.text(product.Keterangan || 'Unit premium dengan privasi maksimal sekaligus pemandangan kota terbaik.', col2X, 185, { maxWidth: 70, align: 'justify', lineHeightFactor: 1.5 })
+
+  doc.setFillColor(darkOrange)
+  doc.roundedRect(col3X + 10, 30, 45, 9, 2, 2, 'F')
+  doc.setTextColor(255, 255, 255)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(9.5)
+  doc.text('DETAIL HARGA', col3X + 32.5, 36, { align: 'center' })
+
+  let pY = 48
+  const hasJual = product.Harga_Jual1 > 0 || product.Harga_Jual2 > 0
+  const hasSewa = product.Harga_Sewa1 > 0 || product.Harga_Sewa2 > 0
+  const isBoth = hasJual && hasSewa
+
+  const drawPriceBlock = (label: string, oldP: number, newP: number) => {
+    if (settingsStore.app.viewDiscount && oldP > 0 && newP > 0 && oldP !== newP) {
+      doc.setTextColor(239, 68, 68)
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'bold')
+      const op = `Rp ${formatPrice(oldP)}`
+      doc.text(op, col3X, pY)
+      doc.setDrawColor(239, 68, 68)
+      doc.setLineWidth(0.4)
+      doc.line(col3X - 1, pY - 1, col3X + doc.getTextWidth(op) + 1, pY - 1)
+      pY += 5
+    }
+    doc.setFontSize(isBoth ? 8 : 9.5)
+    doc.setFont('helvetica', 'normal')
+    doc.text(label, col3X, pY)
+    doc.setFontSize(isBoth ? 22 : 30)
+    doc.setTextColor(primaryColor)
+    doc.setFont('helvetica', 'bold')
+    doc.text(`Rp ${formatPrice(newP || oldP)}`, col3X, pY + (isBoth ? 8 : 11))
+    pY += isBoth ? 16 : 22
+  }
+
+  if (hasJual) drawPriceBlock(isBoth ? 'DENGAN HANYA (JUAL)' : 'DENGAN HANYA', product.Harga_Jual1, product.Harga_Jual2)
+  if (isBoth) pY += 8
+  if (hasSewa) drawPriceBlock(isBoth ? 'DENGAN HANYA (SEWA)' : 'DENGAN HANYA', product.Harga_Sewa1, product.Harga_Sewa2)
+
+  const finalPY = Math.max(90, pY + 2)
+  doc.setDrawColor(226, 232, 240)
+  doc.setLineWidth(0.5)
+  doc.line(col3X, finalPY, col3X + 65, finalPY)
+  doc.setTextColor(100, 116, 139)
+  doc.setFontSize(8.5)
+  doc.setFont('helvetica', 'normal')
+  doc.text('• UNIT TERBATAS & EKSKLUSIF', col3X, finalPY + 10)
+  doc.text('• BEBAS BIAYA SURAT-SURAT', col3X, finalPY + 17)
+  drawDots(col3X + 60, finalPY + 5, 6, 4)
+
+  if (qrBase64) {
+    doc.addImage(qrBase64 as string, 'PNG', col3X + 15, 120, 35, 35)
+    doc.setFontSize(8)
+    doc.setTextColor(primaryColor)
+    doc.setFont('helvetica', 'bold')
+    doc.text('SCAN UNTUK DETAIL UNIT', col3X + 32.5, 162, { align: 'center' })
+  }
+
+  doc.setFillColor(primaryColor)
+  doc.roundedRect(col3X - 20, height - 45, 120, 60, 10, 10, 'F')
+  doc.setFillColor('#f97316')
+  doc.circle(width, height, 30, 'F')
+  doc.setFillColor(255, 255, 255)
+  doc.circle(width, height, 15, 'F')
+
+  doc.setTextColor(255, 255, 255)
+  doc.setFontSize(11)
+  doc.setFont('helvetica', 'bold')
+  doc.text('HUBUNGI KAMI SEGERA', col3X - 5, height - 25)
+  doc.setFontSize(9.5)
+  doc.setFont('helvetica', 'bold')
+  doc.setDrawColor(255, 255, 255)
+  doc.setLineWidth(0.3)
+  
+  // Phone Icon - Centered with text at height - 18
+  const waY = height - 18
+  doc.roundedRect(col3X - 10.5, waY - 2.25, 2.5, 4.5, 0.5, 0.5, 'S')
+  doc.circle(col3X - 9.25, waY, 0.2, 'S')
+  doc.text(`WhatsApp: +${settingsStore.business.whatsapp}`, col3X - 5, waY)
+  
+  // Globe Icon - Centered with text at height - 12
+  const webY = height - 12
+  doc.circle(col3X - 9.25, webY - 0.7, 2, 'S')
+  doc.line(col3X - 11.25, webY - 0.7, col3X - 7.25, webY - 0.7)
+  doc.line(col3X - 9.25, webY - 2.7, col3X - 9.25, webY + 1.3)
+  doc.text(`Website: wabotui.padajaya.biz.id`, col3X - 5, webY)
+
+  // Decorative Blobs
+  doc.setGState(new (doc as any).GState({ opacity: 0.1 }))
+  doc.setFillColor(primaryColor)
+  doc.circle(width * 0.5, height * 0.9, 40, 'F')
+  doc.circle(width * 0.1, height * 0.5, 25, 'F')
+  doc.circle(width * 0.9, height * 0.2, 30, 'F')
+  doc.setGState(new (doc as any).GState({ opacity: 1.0 }))
+
+  return doc
+}
+
+const sendBrochureFinal = async () => {
+  if (!brochureProductData.value) return
+
+  isSendingBrochure.value = true
+  try {
+    const doc = await generateBrochure(brochureProductData.value)
+    const pdfBase64 = doc.output('datauristring')
+    let fPhone = props.phoneNumber.replace(/\D/g, '')
+    if (fPhone.startsWith('0')) fPhone = '62' + fPhone.substring(1)
+
+    const fileName = `Brosur_Properti_${brochureProductData.value.Nama_Produk.replace(/\s+/g, '_')}.pdf`
+
+    // 1. Send to WhatsApp via WAHA Gateway
+    await api.post(
+      '/api/waha/send-document',
+      {
+        PhoneNumber: fPhone + '@s.whatsapp.net',
+        FileUrl: pdfBase64,
+        FileName: fileName,
+        Caption: brochureCaption.value
+      },
+      { headers: { 'X-Jenis-User': 'admin' } }
+    )
+
+    // 2. Save to Database Chat using the exact format requested
+    const now = new Date()
+    const sentAt = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 19)
+    const myId = localStorage.getItem('no_id') || ''
+
+    // Construct User_Ids for the room
+    const userIds = [props.idLawan, 'adm_bot']
+    if (myId && !userIds.includes(myId)) userIds.push(myId)
+
+    const payload = {
+      Chat: {
+        Jenis_Pesan: 'brochure',
+        Sent_At: sentAt,
+        Sender_Id: myId,
+        Tipe_User: 'admin',
+        Message: brochureCaption.value,
+        Id_Paket: null,
+        No_Pesanan: null,
+        No_Penawaran: String(brochureProductData.value.No_Id || brochureProductData.value.Id_Paket),
+        Send_Status: 'send'
+      },
+      Room_Id: props.roomId,
+      User_Ids: userIds
+    }
+
+    const { data } = await api.post('/api/chat/create', payload, { headers: { 'X-Jenis-User': 'Admin' } })
+
+    // 3. Emit event to update local UI immediately
+    if (data.StatusCode === 200 && data.Data) {
+      // We inject the base64 locally so the Open button works without re-generating
+      const newMessage = { ...data.Data, localPdfData: pdfBase64 }
+      emit('addChat', newMessage)
+    }
+
+    success('Brosur Exclusive berhasil dikirim ke WhatsApp Customer')
+    showBrochureCaptionModal.value = false
+  } catch (error) {
+    console.error('Gagal mengirim brosur:', error)
+    fail('Gagal mengirim brosur. Silakan coba lagi.')
+  } finally {
+    isSendingBrochure.value = false
+  }
+}
+
+const handleRegenerateBrochure = async (chat: any) => {
+  const productId = chat.No_Penawaran
+  if (!productId) return
+
+  Swal.fire({
+    title: 'Menyiapkan Brosur...',
+    text: 'Mohon tunggu sebentar',
+    allowOutsideClick: false,
+    confirmButtonColor: '#df7730',
+    didOpen: () => {
+      Swal.showLoading()
+    }
+  })
+  
+  let product = products.value.find((p) => String(p.No_Id || p.Id_Paket) === String(productId))
+  if (!product) {
+    try {
+      const { data } = await api.get(`/api/realEstate/getAll?no_id=${productId}`)
+      if (data.Data && data.Data.length > 0) {
+        product = data.Data[0]
+      }
+    } catch {
+      // Failed to fetch product details
+    }
+  }
+
+  if (!product) {
+    fail('Gagal mengambil data properti untuk brosur')
+    return
+  }
+
+  try {
+    const doc = await generateBrochure(product)
+    const fileName = `Brosur_Properti_${product.Nama_Produk.replace(/\s+/g, '_')}.pdf`
+    doc.save(fileName)
+    Swal.close()
+  } catch (error) {
+    console.error('Gagal regenerate brosur:', error)
+    Swal.close()
+    fail('Gagal mengunduh brosur. Silakan coba lagi.')
+  }
+}
+
+const endChat = () => takeOverChat(true)
 
 const reinitPreline = async () => {
   await nextTick()
@@ -288,56 +764,56 @@ const processingMessageIds = new Set<string>()
 
 const markMessagesAsRead = async () => {
   if (props.activeTab !== 'chat_saya' || !props.chats) return
-  
-  const messagesToUpdate = props.chats.filter(
-    (chat) => 
-      chat.Tipe_User === 'customer' && 
-      (chat.Send_Status === 'delivered' || chat.Send_Status === 'send') &&
-      chat.Message_Id &&
-      !processingMessageIds.has(chat.Message_Id)
-  )
-  
+
+  const messagesToUpdate = props.chats.filter((chat) => chat.Tipe_User === 'customer' && (chat.Send_Status === 'delivered' || chat.Send_Status === 'send') && chat.Message_Id && !processingMessageIds.has(chat.Message_Id))
+
   if (messagesToUpdate.length === 0) return
 
   // Mark as processing to avoid redundant calls
-  messagesToUpdate.forEach(msg => processingMessageIds.add(msg.Message_Id))
+  messagesToUpdate.forEach((msg) => processingMessageIds.add(msg.Message_Id))
 
   try {
     const config = { headers: { 'X-Jenis-User': 'Admin' } }
-    
+
     // Process individually to avoid one failure blocking others
-    await Promise.all(messagesToUpdate.map(async (msg) => {
-      try {
-        await api.put(`/api/chat/update-send-status?message_id=${msg.Message_Id}&send_status=read`, {}, config)
-        msg.Send_Status = 'read'
-      } catch (error: any) {
-        // If 403 (already updated) or 404 (not found), we can consider it "handled" or ignore
-        const status = error.response?.status
-        const message = error.response?.data?.Message
-        
-        if (status === 403 || status === 404 || message?.includes('terbaru')) {
-          msg.Send_Status = 'read' // Sync local state even if server says it's already updated
-        } else {
-          console.warn(`Gagal memperbarui status pesan ${msg.Message_Id}:`, error.message)
+    await Promise.all(
+      messagesToUpdate.map(async (msg) => {
+        try {
+          await api.put(`/api/chat/update-send-status?message_id=${msg.Message_Id}&send_status=read`, {}, config)
+          msg.Send_Status = 'read'
+        } catch (error: any) {
+          // If 403 (already updated) or 404 (not found), we can consider it "handled" or ignore
+          const status = error.response?.status
+          const message = error.response?.data?.Message
+
+          if (status === 403 || status === 404 || message?.includes('terbaru')) {
+            msg.Send_Status = 'read' // Sync local state even if server says it's already updated
+          } else {
+            console.warn(`Gagal memperbarui status pesan ${msg.Message_Id}:`, error.message)
+          }
+        } finally {
+          // Remove from processing after a delay to allow prop updates to catch up
+          setTimeout(() => {
+            processingMessageIds.delete(msg.Message_Id)
+          }, 5000)
         }
-      } finally {
-        // Remove from processing after a delay to allow prop updates to catch up
-        setTimeout(() => {
-          processingMessageIds.delete(msg.Message_Id)
-        }, 5000)
-      }
-    }))
+      })
+    )
   } catch (error) {
     console.error('Terjadi kesalahan saat memperbarui status pesan:', error)
   }
 }
 
 // Auto mark as read when opening chat
-watch(() => props.chats, (newChats) => {
-  if (newChats && newChats.length > 0) {
-    markMessagesAsRead()
-  }
-}, { immediate: true })
+watch(
+  () => props.chats,
+  (newChats) => {
+    if (newChats && newChats.length > 0) {
+      markMessagesAsRead()
+    }
+  },
+  { immediate: true }
+)
 
 const sendChat = async (type: string, url?: string, targetRoomId?: string, targetPhone?: string, idPaket?: string, mediaUrl?: string, usernameCS?: string) => {
   if (!type.includes('system') && !sendChatContent.value.trim()) return
@@ -357,10 +833,10 @@ const sendChat = async (type: string, url?: string, targetRoomId?: string, targe
   }
 
   const currentUserIds: string[] = []
-  
+
   // 1. Ambil ID Customer (Id Lawan)
   if (props.idLawan) currentUserIds.push(props.idLawan)
-  
+
   // 2. Ambil ID Bot (Selalu ada di room sesuai contoh user)
   if (!currentUserIds.includes('adm_bot')) currentUserIds.push('adm_bot')
 
@@ -372,7 +848,7 @@ const sendChat = async (type: string, url?: string, targetRoomId?: string, targe
   if (isCurrentActiveRoom && props.chats?.length > 0) {
     const lastChat = props.chats[props.chats.length - 1]
     if (lastChat.User_Ids && Array.isArray(lastChat.User_Ids)) {
-      lastChat.User_Ids.forEach(id => {
+      lastChat.User_Ids.forEach((id) => {
         if (!currentUserIds.includes(id)) currentUserIds.push(id)
       })
     }
@@ -384,7 +860,8 @@ const sendChat = async (type: string, url?: string, targetRoomId?: string, targe
   let messageText = ''
   if (type === 'system_masuk' || type === 'system_masuk_tukar') messageText = (username || 'Admin') + '_X7#mQ9!vW2_Bergabung'
   else if (type === 'system_keluar' || type === 'system_keluar_tukar') messageText = (username || 'Admin') + '_X7#mQ9!vW2_Keluar'
-  else if (type.includes('system')) messageText = url || ''
+  else if (type === 'system_image_brochure') messageText = (username || 'Admin') + '_X7#mQ9!vW2_Mengirim Brosur: ' + url
+  else if (type.includes('system') || type.startsWith('brosur_')) messageText = url || ''
   else messageText = sendChatContent.value
 
   const tempIndex = props.chats.length
@@ -411,55 +888,70 @@ const sendChat = async (type: string, url?: string, targetRoomId?: string, targe
     // Selalu kirim ke WA Gateway (Waha) sesuai instruksi user
     // Kecuali untuk semua tipe system karena sudah dihandle manual atau hanya untuk internal DB
     if (messageText.trim() && !type.includes('system')) {
-      await api.post('/api/waha/send-text', { 
-        ChatId: formattedPhone + '@s.whatsapp.net', 
-        ReplyTo: null, 
-        Text: messageText.replace('_X7#mQ9!vW2_', ' '), 
-        LinkPreview: true, 
-        LinkPreviewHighQuality: false, 
-        Session: 'session_OtpWaha' 
-      }, { headers: { 'X-Jenis-User': 'admin' } })
+      await api.post(
+        '/api/waha/send-text',
+        {
+          ChatId: formattedPhone + '@s.whatsapp.net',
+          ReplyTo: null,
+          Text: messageText.replace('_X7#mQ9!vW2_', ' '),
+          LinkPreview: true,
+          LinkPreviewHighQuality: false,
+          Session: 'session_OtpWaha'
+        },
+        { headers: { 'X-Jenis-User': 'admin' } }
+      )
     }
-    await api.post('/api/chat/create', { Chat: { Jenis_Pesan: type.includes('system') ? type : 'text', Sent_At: sentAt, Sender_Id: myId, Tipe_User: role, Message: type.includes('system_image') ? url : messageText, Id_Paket: type == 'system_image_product' ? idPaket : null, No_Pesanan: null, No_Penawaran: type == 'system_image_appointment' ? idPaket : null, Send_Status: 'send' }, Room_Id: activeRoomId, User_Ids: currentUserIds }, { headers: { 'X-Jenis-User': 'admin' } })
-    if (isCurrentActiveRoom) emit('updateChatStatus', { index: tempIndex, status: 'send' })
+    const res = await api.post('/api/chat/create', { Chat: { Jenis_Pesan: type.includes('system') ? type : 'text', Sent_At: sentAt, Sender_Id: myId, Tipe_User: role, Message: type.includes('system_image') ? url : messageText, Id_Paket: type == 'system_image_product' ? idPaket : null, No_Pesanan: null, No_Penawaran: type == 'system_image_appointment' ? idPaket : null, Send_Status: 'send' }, Room_Id: activeRoomId, User_Ids: currentUserIds }, { headers: { 'X-Jenis-User': 'admin' } })
+    const newMessageId = res.data.Data?.Message_Id
+    if (isCurrentActiveRoom) emit('updateChatStatus', { index: tempIndex, status: 'send', id: newMessageId })
     if ((type === 'system_keluar' || type === 'system_masuk_tukar') && isCurrentActiveRoom) emit('clearRoom')
-    
+
     // Mark previous messages as read after replying
     if (!type.includes('system')) await markMessagesAsRead()
-  } catch (err: any) {
+  } catch (error) {
     if (isCurrentActiveRoom) emit('updateChatStatus', { index: tempIndex, status: 'failed' })
-
-    // Mengambil pesan utama
-    const errorMessage = err?.message || 'Terjadi kesalahan yang tidak diketahui'
-    console.log('Pesan Error:', errorMessage)
-
-    // Mengambil detail lengkap beserta baris kodenya (Stack Trace)
-    const errorStack = err?.stack
-    console.log('Detail Stack:', errorStack)
+    console.error(error)
   }
 }
 
 const takeOverChat = async (status: boolean, phoneNumber?: string, roomId?: string, customerId?: string) => {
-  const targetPhone = phoneNumber || props.phoneNumber
   const targetRoom = roomId || props.roomId || undefined
+  if (!targetRoom) return
+
+  // Global lock to prevent duplicate execution for the same room/status (remount protection)
+  const lockKey = `${targetRoom}_${status}`
+  if (globalProcessingRooms.has(lockKey) || isTakingOver.value) return
+
+  globalProcessingRooms.add(lockKey)
+  const targetPhone = phoneNumber || props.phoneNumber
   const targetCustomerId = customerId || props.idLawan
+
+  isTakingOver.value = true
   try {
-    await api.post('/api/chat/toggle-bot', { 
-      customer_phone: targetPhone, 
-      admin_id: localStorage.getItem('no_id'), 
-      customer_id: targetCustomerId,
-      room_id: targetRoom,
-      status_bot: status 
-    }, { headers: { 'X-Jenis-User': 'admin' } })
-    
+    await api.post(
+      '/api/chat/toggle-bot',
+      {
+        customer_phone: targetPhone,
+        admin_id: localStorage.getItem('no_id'),
+        customer_id: targetCustomerId,
+        room_id: targetRoom,
+        status_bot: status
+      },
+      { headers: { 'X-Jenis-User': 'admin' } }
+    )
+
     // 2. Kirim pesan sistem ke database & push ke UI lokal
     const systemType = status === false ? 'system_masuk' : 'system_keluar'
     await sendChat(systemType, undefined, targetRoom, targetPhone)
-    
+
     emit('chatTakeOver', status)
   } catch (err: any) {
     if (err.response?.data?.Message?.includes('Percakapan ini sudah diambil alih')) fail('Percakapan ini sudah diambil alih Admin lain')
     else fail(status == false ? 'Ambil alih percakapan gagal' : 'Akhiri percakapan gagal')
+  } finally {
+    isTakingOver.value = false
+    // Release global lock after a delay to ensure any SignalR updates or remounts have finished
+    setTimeout(() => globalProcessingRooms.delete(lockKey), 5000)
   }
 }
 
@@ -622,15 +1114,28 @@ watch(
 watch(
   () => props.takeOverBatch,
   async (newVal) => {
-    if (newVal && newVal.length > 0) {
-      const takeOverSuccess: string[] = []
-      for (const [, item] of newVal.entries()) {
-        try {
-          await takeOverChat(item.status, item.phoneNumber, item.room, item.customerId)
-          takeOverSuccess.push(item.room)
-        } catch {}
+    if (newVal && newVal.length > 0 && !isProcessingBatch.value) {
+      isProcessingBatch.value = true
+      // Copy the batch to process and clear the prop in parent immediately
+      // This prevents a new instance (remount) from seeing the same batch
+      const batchToProcess = [...newVal]
+      emit('takeOverStatus', [])
+
+      try {
+        const takeOverSuccess: string[] = []
+        for (const item of batchToProcess) {
+          try {
+            await takeOverChat(item.status, item.phoneNumber, item.room, item.customerId)
+            takeOverSuccess.push(item.room)
+          } catch {
+            //
+          }
+        }
+        // Emit final success status if we still have any
+        if (takeOverSuccess.length > 0) emit('takeOverStatus', takeOverSuccess)
+      } finally {
+        isProcessingBatch.value = false
       }
-      emit('takeOverStatus', takeOverSuccess)
     }
   },
   { deep: true, immediate: true }
@@ -717,7 +1222,11 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 
           <div v-if="!isSearchingChat" class="flex items-center gap-2 sm:gap-3">
             <button @click.stop="toggleSearchChat" class="size-9 sm:size-10 rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-bejo-600 hover:border-bejo-100 hover:bg-bejo-50 hover:shadow-lg hover:shadow-bejo-500/10 transition-all duration-300 flex items-center justify-center"><Icon icon="lucide:search" class="size-4 sm:size-5"></Icon></button>
-            <button v-if="props.isTakenOver" @click="endChat" title="Akhiri Percakapan" class="h-9 sm:h-10 px-3 sm:px-4 rounded-xl bg-red-500 border border-red-100 text-white hover:bg-red-600 hover:text-white hover:shadow-lg hover:shadow-red-500/20 transition-all duration-300 flex items-center justify-center gap-2 group"><Icon icon="lucide:log-out" class="size-4"></Icon><span class="hidden sm:inline text-[10px] font-black uppercase tracking-widest">Akhiri</span></button>
+            <button v-if="props.isTakenOver" @click="endChat" :disabled="isTakingOver" title="Akhiri Percakapan" class="h-9 sm:h-10 px-3 sm:px-4 rounded-xl bg-red-500 border border-red-100 text-white hover:bg-red-600 hover:text-white hover:shadow-lg hover:shadow-red-500/20 transition-all duration-300 flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed">
+              <Icon v-if="isTakingOver" icon="lucide:loader-2" class="size-4 animate-spin"></Icon>
+              <Icon v-else icon="lucide:log-out" class="size-4"></Icon>
+              <span class="hidden sm:inline text-[10px] font-black uppercase tracking-widest">{{ isTakingOver ? 'Memproses...' : 'Akhiri' }}</span>
+            </button>
           </div>
         </div>
       </div>
@@ -786,22 +1295,10 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
               <!-- Unread Messages Divider -->
               <div v-if="i === firstUnreadIndex" class="flex items-center justify-center my-6 relative py-2 px-10">
                 <div class="absolute inset-x-0 h-px bg-bejo-200/50"></div>
-                <div class="relative bg-bejo-50 text-bejo-600 text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full border border-bejo-100 shadow-sm">
-                  Pesan Belum Terbaca
-                </div>
+                <div class="relative bg-bejo-50 text-bejo-600 text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full border border-bejo-100 shadow-sm">Pesan Belum Terbaca</div>
               </div>
 
-              <ChatBubble 
-                :id="'chat-message-' + i" 
-                :idx="i" 
-                :chat="chat" 
-                :chats="chats" 
-                :lastMessageId="props.lastMessageId" 
-                :highlight="searchChatQuery" 
-                :isActiveMatch="i === activeSearchChatIndex" 
-                :activeMatchIndex="activeSearchMatchIndex" 
-                @imageLoaded="scrollToBottom" 
-              />
+              <ChatBubble :id="'chat-message-' + i" :idx="i" :chat="chat" :chats="chats" :lastMessageId="props.lastMessageId" :highlight="searchChatQuery" :isActiveMatch="i === activeSearchChatIndex" :activeMatchIndex="activeSearchMatchIndex" @imageLoaded="scrollToBottom" @regenerateBrochure="handleRegenerateBrochure" />
             </template>
           </div>
         </simplebar>
@@ -817,9 +1314,10 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 
       <div v-if="!isLoadingChat" class="p-1 md:p-3.5 bg-white border-t border-slate-50" :class="{ hidden: isPreviewMode }">
         <div v-if="!props.isTakenOver" class="w-full">
-          <button @click="takeOverChat(false)" class="w-full py-4 bg-bejo-500 hover:bg-bejo-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl flex justify-center items-center gap-3 shadow-xl shadow-bejo-500/20 active:scale-[0.98] transition-all px-8 border-2 border-white/20">
-            <Icon icon="lucide:message-square-plus" class="size-5" />
-            <span>Ambil Alih Percakapan</span>
+          <button @click="takeOverChat(false)" :disabled="isTakingOver" class="w-full py-4 bg-bejo-500 hover:bg-bejo-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl flex justify-center items-center gap-3 shadow-xl shadow-bejo-500/20 active:scale-[0.98] transition-all px-8 border-2 border-white/20 disabled:opacity-70 disabled:cursor-not-allowed">
+            <Icon v-if="isTakingOver" icon="lucide:loader-2" class="size-5 animate-spin" />
+            <Icon v-else icon="lucide:message-square-plus" class="size-5" />
+            <span>{{ isTakingOver ? 'Memproses...' : 'Ambil Alih Percakapan' }}</span>
           </button>
         </div>
 
@@ -830,11 +1328,17 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
             </button>
 
             <div v-if="openMenu" class="absolute bottom-[calc(100%+16px)] left-0 min-w-[220px] bg-white shadow-2xl shadow-slate-900/10 border border-slate-50 rounded-[1.5rem] p-2 z-50 transform origin-bottom-left transition-all animate-fade-in-up">
-              <button @click.stop="handleOpenEtalase" class="flex items-center gap-3.5 w-full text-left px-4 py-3 hover:bg-bejo-50 text-slate-600 hover:text-bejo-600 rounded-xl text-[13px] font-bold transition-all">
+              <button @click.stop="handleOpenEtalase" class="flex items-center gap-3.5 w-full text-left px-4 py-3 hover:bg-bejo-50 text-slate-600 hover:text-bejo-600 rounded-xl text-[13px] font-bold transition-all border-b border-slate-50">
                 <div class="size-8 rounded-lg bg-bejo-100 flex items-center justify-center text-bejo-600">
                   <Icon icon="lucide:blocks" class="size-4" />
                 </div>
                 <span>Pilih Etalase</span>
+              </button>
+              <button @click.stop="handleOpenBrochureSelection" class="flex items-center gap-3.5 w-full text-left px-4 py-3 hover:bg-bejo-50 text-slate-600 hover:text-bejo-600 rounded-xl text-[13px] font-bold transition-all">
+                <div class="size-8 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600">
+                  <Icon icon="lucide:file-text" class="size-4" />
+                </div>
+                <span>Kirim Brosur</span>
               </button>
               <button @click.stop="handleOpenAppointment" class="flex items-center gap-3.5 w-full text-left px-4 py-3 hover:bg-bejo-50 text-slate-600 hover:text-bejo-600 rounded-xl text-[13px] font-bold transition-all">
                 <div class="size-8 rounded-lg bg-bejo-100 flex items-center justify-center text-bejo-600">
@@ -904,46 +1408,87 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
       </div>
     </div>
     <Teleport to="body">
-      <PanelEtalase 
-        :openEtalase="openEtalase" 
-        :isSendingImage="isSendingImage" 
-        :openAppointment="openAppointment" 
-        v-model:searchKatalog="searchKatalog" 
-        v-model:openFilter="openFilter" 
-        v-model:activeExpandedProductId="activeExpandedProductId" 
+      <PanelEtalase
+        :openEtalase="openEtalase || openBrochureSelection"
+        :isSendingImage="isSendingImage || isSendingBrochure"
+        :openAppointment="openAppointment"
+        :openBrochureSelection="openBrochureSelection"
+        v-model:searchKatalog="searchKatalog"
+        v-model:openFilter="openFilter"
+        v-model:activeExpandedProductId="activeExpandedProductId"
         v-model:facilitiesFilter="facilitiesFilter"
         v-model:regionFilter="regionFilter"
         v-model:priceRangeFilter="priceRangeFilter"
         v-model:transactionTypeFilter="transactionTypeFilter"
         v-model:typeFilter="typeFilter"
         :provinces="PROVINCES"
-        :isLoadingProducts="isLoadingProducts" 
-        :filteredProducts="filteredProducts" 
-        @close="closeEtalase" 
-        @selectUnit="openAppointment ? (handleSelectUnitForAppointment($event), openAppointment = false) : sendProduct($event, (val) => isSendingImage = val, closeEtalase)" 
+        :isLoadingProducts="isLoadingProducts"
+        :filteredProducts="filteredProducts"
+        @close="closeEtalase"
+        @selectUnit="openAppointment ? (handleSelectUnitForAppointment($event), (openAppointment = false)) : openBrochureSelection ? handleSelectUnitForBrochure($event) : sendProduct($event, (val) => (isSendingImage = val), closeEtalase)"
       />
 
-      <PanelAppointment 
-        :showAppointmentModal="showAppointmentModal" 
-        :appointmentForm="appointmentForm" 
-        :appointmentCalendarOptions="appointmentCalendarOptions" 
+      <!-- Brochure Caption Modal -->
+      <div v-if="showBrochureCaptionModal" class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+        <div class="bg-white rounded-[2.5rem] w-full max-w-lg p-10 shadow-2xl animate-fade-in-up">
+          <div class="flex justify-between items-center mb-8">
+            <div class="flex items-center gap-3">
+              <div class="size-10 rounded-2xl bg-orange-100 flex items-center justify-center text-orange-600">
+                <Icon icon="lucide:file-text" class="size-5" />
+              </div>
+              <h4 class="text-xl font-black text-slate-900 tracking-tight">Kirim Brosur Eksklusif</h4>
+            </div>
+            <button @click="showBrochureCaptionModal = false" class="size-9 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all"><Icon icon="lucide:x" class="size-6" /></button>
+          </div>
+
+          <div v-if="brochureProductData" class="flex items-center gap-5 p-5 bg-slate-50/80 border border-slate-100 rounded-3xl mb-8">
+            <img :src="brochureProductData.MediaUrls?.[0]?.ThumbUrl || brochureProductData.MediaUrls?.[0]?.Id_Media" class="size-20 rounded-2xl object-cover shadow-sm border-2 border-white" />
+            <div>
+              <h5 class="font-extrabold text-slate-900 leading-tight mb-1">{{ brochureProductData.Nama_Produk }}</h5>
+              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Brosur Digital</p>
+            </div>
+          </div>
+
+          <div class="space-y-6">
+            <div>
+              <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2 px-1">Keterangan Pesan (WhatsApp)</label>
+              <textarea v-model="brochureCaption" class="w-full px-6 py-5 bg-slate-50 border border-slate-200 rounded-3xl text-sm font-bold min-h-[160px] focus:bg-white focus:ring-8 focus:ring-bejo-500/5 focus:border-bejo-500 transition-all outline-none resize-none" placeholder="Masukkan caption brosur..."></textarea>
+            </div>
+
+            <button @click="sendBrochureFinal" :disabled="isSendingBrochure" class="w-full py-5 bg-bejo-500 hover:bg-bejo-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-bejo-500/30 flex items-center justify-center gap-3 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed">
+              <Icon v-if="isSendingBrochure" icon="lucide:loader-2" class="size-5 animate-spin" />
+              <Icon v-else icon="lucide:send" class="size-5" />
+              <span>{{ isSendingBrochure ? 'Mengirim...' : 'Kirim Brosur Sekarang' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <PanelAppointment
+        :showAppointmentModal="showAppointmentModal"
+        :appointmentForm="appointmentForm"
+        :appointmentCalendarOptions="appointmentCalendarOptions"
         :isLoading="isLoadingAppointments"
-        @update:formTanggal="(val) => appointmentForm.tanggal = val"
-        @update:formWaktu="(val) => appointmentForm.waktu = val"
-        @update:formNamaLengkap="(val) => appointmentForm.namaLengkap = val"
-        @update:formNoTelp="(val) => appointmentForm.noTelp = val"
-        @update:formCatatan="(val) => appointmentForm.catatan = val"
-        @close="showAppointmentModal = false" 
-        @save="saveNewAppointment((val) => sendChatContent = val)" 
+        @update:formTanggal="(val) => (appointmentForm.tanggal = val)"
+        @update:formWaktu="(val) => (appointmentForm.waktu = val)"
+        @update:formNamaLengkap="(val) => (appointmentForm.namaLengkap = val)"
+        @update:formNoTelp="(val) => (appointmentForm.noTelp = val)"
+        @update:formCatatan="(val) => (appointmentForm.catatan = val)"
+        @close="showAppointmentModal = false"
+        @save="saveNewAppointment((val) => (sendChatContent = val))"
       />
 
-      <PanelTukarCS 
-        :openTukarCS="openTukarCS" 
-        v-model:searchCS="searchCS" 
-        :isFetchingAdmins="isFetchingAdmins" 
-        :filteredAdmins="filteredAdmins" 
-        @close="openTukarCS = false" 
-        @transfer="handleTransferChat($event, () => { openTukarCS = false })" 
+      <PanelTukarCS
+        :openTukarCS="openTukarCS"
+        v-model:searchCS="searchCS"
+        :isFetchingAdmins="isFetchingAdmins"
+        :filteredAdmins="filteredAdmins"
+        @close="openTukarCS = false"
+        @transfer="
+          handleTransferChat($event, () => {
+            openTukarCS = false
+          })
+        "
       />
     </Teleport>
   </div>

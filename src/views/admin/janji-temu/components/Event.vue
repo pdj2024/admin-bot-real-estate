@@ -23,36 +23,40 @@ const isLoadingProduct = ref(false)
 const isSendingBrochure = ref(false)
 
 const getBase64ImageFromUrl = async (imageUrl: string, maxWidth = 1024, format = 'image/jpeg'): Promise<string | null> => {
-  try {
-    const res = await fetch(imageUrl)
-    const blob = await res.blob()
-    const bitmap = await createImageBitmap(blob)
-    
-    const canvas = document.createElement('canvas')
-    let width = bitmap.width
-    let height = bitmap.height
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      let width = img.width
+      let height = img.height
 
-    if (width > maxWidth) {
-      height = (maxWidth / width) * height
-      width = maxWidth
+      if (width > maxWidth) {
+        height = (maxWidth / width) * height
+        width = maxWidth
+      }
+
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        resolve(null)
+        return
+      }
+
+      ctx.drawImage(img, 0, 0, width, height)
+      resolve(canvas.toDataURL(format, format === 'image/jpeg' ? 0.8 : undefined))
     }
-
-    canvas.width = width
-    canvas.height = height
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return null
-    
-    ctx.drawImage(bitmap, 0, 0, width, height)
-    return canvas.toDataURL(format, format === 'image/jpeg' ? 0.8 : undefined)
-  } catch (error) {
-    console.error('Error fetching image:', error)
-    return null
-  }
+    img.onerror = () => {
+      resolve(null)
+    }
+    img.src = imageUrl
+  })
 }
 
 const sendBrochure = async () => {
   if (!productData.value) return
-  
+
   isSendingBrochure.value = true
   try {
     const doc = new jsPDF({
@@ -63,11 +67,10 @@ const sendBrochure = async () => {
     })
     const width = 297
     const height = 210
-    
+
     const primaryColor = '#EB701F'
     const darkOrange = '#c2410c'
     const slateColor = '#0f172a'
-    const lightSlate = '#f8fafc'
 
     doc.setFillColor(255, 255, 255)
     doc.rect(0, 0, width, height, 'F')
@@ -77,15 +80,41 @@ const sendBrochure = async () => {
       return !url.endsWith('.mp4') && !url.endsWith('.mov') && !url.endsWith('.avi')
     })
 
+    // Resolve Media IDs to URLs if needed
+    const mediaToFetch = validMedia.map((m: any) => m.ThumbUrl || m.Id_Media).filter((src: string) => src && !src.startsWith('http') && !src.startsWith('data:'))
+    let resolvedUrls: Record<string, string> = {}
+
+    if (mediaToFetch.length > 0) {
+      try {
+        const { data } = await api.post('/api/mediacloud/read-url-batch', { ids: mediaToFetch }, { headers: { 'X-Jenis-User': 'admin' } })
+        resolvedUrls = Object.entries(data?.success || {}).reduce((acc: any, [id, val]: any) => {
+          acc[id] = val.Url
+          return acc
+        }, {})
+      } catch (err) {
+        console.error('Failed to resolve media URLs:', err)
+      }
+    }
+
     const images = []
     for (let i = 0; i < Math.min(validMedia.length, 3); i++) {
-      const img = await getBase64ImageFromUrl(validMedia[i].ThumbUrl || validMedia[i].Id_Media)
+      const src = validMedia[i].ThumbUrl || validMedia[i].Id_Media
+      const url = resolvedUrls[src] || src
+      const img = await getBase64ImageFromUrl(url)
       if (img) images.push(img)
     }
 
     let logoBase64 = null
-    if (settingsStore.business.Logo_Company || settingsStore.business.Id_Logo_Company) {
-      logoBase64 = await getBase64ImageFromUrl((settingsStore.business.Logo_Company || settingsStore.business.Id_Logo_Company) as string, 1024, 'image/png')
+    const logoSrc = (settingsStore.business.Logo_Company || settingsStore.business.Id_Logo_Company) as string
+    if (logoSrc) {
+      let logoUrl = logoSrc
+      if (!logoSrc.startsWith('http') && !logoSrc.startsWith('data:')) {
+        try {
+          const { data } = await api.post('/api/mediacloud/read-url-batch', { ids: [logoSrc] }, { headers: { 'X-Jenis-User': 'admin' } })
+          logoUrl = data?.success?.[logoSrc]?.Url || logoSrc
+        } catch {}
+      }
+      logoBase64 = await getBase64ImageFromUrl(logoUrl, 1024, 'image/png')
     }
 
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`http://localhost:5000/properti/${productData.value.Slug}`)}`
@@ -96,7 +125,7 @@ const sendBrochure = async () => {
       doc.setFillColor(226, 232, 240)
       for (let i = 0; i < rows; i++) {
         for (let j = 0; j < cols; j++) {
-          doc.circle(x + (j * 3.5), y + (i * 3.5), 0.6, 'F')
+          doc.circle(x + j * 3.5, y + i * 3.5, 0.6, 'F')
         }
       }
     }
@@ -114,22 +143,64 @@ const sendBrochure = async () => {
       doc.addImage(logoBase64 as string, 'PNG', 5, 5, 25, 25)
     }
 
-    doc.setTextColor(slateColor)
+    // --- COLUMN 2 IMAGE (RENDERED FIRST TO PREVENT WHITE MASK OVERLAP) ---
+    const centerX = col2X + 35
+    const centerY = 58
+    const rad = 35
+
+    drawDots(col2X + 15, 12, 5, 8)
+
+    if (images[1]) {
+      // Donut Masking Trick for perfect JS PDF circle crop
+      doc.addImage(images[1] as string, 'JPEG', centerX - rad, centerY - rad, rad * 2, rad * 2, undefined, 'FAST')
+      doc.setDrawColor(255, 255, 255)
+      doc.setLineWidth(25)
+      doc.circle(centerX, centerY, rad + 12, 'S')
+
+      // Rings
+      doc.setDrawColor(primaryColor)
+      doc.setLineWidth(1.5)
+      doc.circle(centerX, centerY, rad + 1, 'S')
+      doc.setLineWidth(0.8)
+      doc.circle(centerX, centerY, rad + 5, 'S')
+    }
+
     doc.setFont('helvetica', 'bold')
-    doc.setFontSize(26)
-    const tLines = doc.splitTextToSize(productData.value.Nama_Produk.toUpperCase(), 80)
-    doc.text(tLines, col1X, 65)
-    
+    const maxTitleWidth = 90
+    let titleFontSize = 26
+    doc.setFontSize(titleFontSize)
+    let tLines = doc.splitTextToSize(productData.value.Nama_Produk.toUpperCase(), maxTitleWidth)
+
+    if (tLines.length > 2) {
+      titleFontSize = 20
+      doc.setFontSize(titleFontSize)
+      tLines = doc.splitTextToSize(productData.value.Nama_Produk.toUpperCase(), maxTitleWidth)
+    }
+    if (tLines.length > 5) {
+      tLines = tLines.slice(0, 5)
+    }
+
+    // Draw Title line by line for maximum reliability
+    doc.setTextColor(slateColor)
+    let currentTitleY = 55
+    const titleLineStep = (titleFontSize * 0.35) + 2
+    tLines.forEach((line: string) => {
+      doc.text(line, col1X, currentTitleY)
+      currentTitleY += titleLineStep
+    })
+
+    const subTitleY = currentTitleY + 2
+
     doc.setFontSize(10)
     doc.setTextColor(primaryColor)
-    doc.text(`Tawaran Eksklusif dari ${settingsStore.business.appName}`, col1X, 65 + (tLines.length * 10))
+    doc.text(`Tawaran Eksklusif dari ${settingsStore.business.appName}`, col1X, subTitleY)
 
-    const spY = 95
+    const spY = Math.max(80, subTitleY + 12)
     doc.setFillColor(darkOrange)
     doc.roundedRect(col1X, spY, 65, 10, 3, 3, 'F')
     doc.setTextColor(255, 255, 255)
     doc.setFontSize(8.5)
-    doc.text('MENGAPA MEMILIH KAMI?', col1X + 8, spY + 6.5)
+    doc.text('MENGAPA MEMILIH KAMI?', col1X + 32.5, spY + 6.5, { align: 'center' })
 
     doc.setTextColor(slateColor)
     doc.setFontSize(9.5)
@@ -142,73 +213,67 @@ const sendBrochure = async () => {
       doc.circle(col1X + 4, aY - 1.5, 2.5, 'S')
       doc.line(col1X + 3, aY - 1.5, col1X + 3.8, aY - 0.5)
       doc.line(col1X + 3.8, aY - 0.5, col1X + 5.5, aY - 2.5)
-      doc.text(p, col1X + 12, aY, { maxWidth: 75 })
-      aY += 10
+      const pLines = doc.splitTextToSize(p, 72)
+      doc.text(pLines, col1X + 10, aY)
+      aY += (pLines.length * 4) + 4
     })
 
     if (images[0]) {
-      doc.addImage(images[0] as string, 'JPEG', col1X + 2, 153, 76, 46, undefined, 'FAST')
-      doc.setDrawColor(primaryColor)
-      doc.setLineWidth(1.5)
-      doc.roundedRect(col1X, 151, 80, 50, 4, 4, 'S')
-    }
-
-    // --- COLUMN 2 ---
-    const centerX = col2X + 35
-    const centerY = 58
-    const rad = 35
-    
-    drawDots(col2X + 15, 12, 5, 8)
-
-    if (images[1]) {
-      // Donut Masking Trick for perfect JS PDF circle crop
-      doc.addImage(images[1] as string, 'JPEG', centerX - rad, centerY - rad, rad * 2, rad * 2, undefined, 'FAST')
-      doc.setDrawColor(255, 255, 255)
-      doc.setLineWidth(25)
-      doc.circle(centerX, centerY, rad + 12, 'S')
+      const imgY = Math.max(135, aY + 3)
+      try {
+        doc.addImage(images[0] as string, 'JPEG', col1X, imgY, 80, 50, undefined, 'FAST')
+      } catch {
+        // Fallback
+      }
       
-      // Rings
+      // Cross-compatible mask: Draw a thick white rounded rectangle to hide sharp image corners
+      doc.setDrawColor(255, 255, 255)
+      doc.setLineWidth(4)
+      doc.roundedRect(col1X, imgY, 80, 50, 4, 4, 'S')
+      
+      // Draw the actual thin orange border inside the masked area
       doc.setDrawColor(primaryColor)
-      doc.setLineWidth(1.5)
-      doc.circle(centerX, centerY, rad + 1, 'S')
-      doc.setLineWidth(0.8)
-      doc.circle(centerX, centerY, rad + 5, 'S')
+      doc.setLineWidth(1)
+      doc.roundedRect(col1X, imgY, 80, 50, 4, 4, 'S')
     }
 
+    // --- COLUMN 2 CONTENT ---
     const fY = 115
     doc.setFillColor(primaryColor)
     doc.roundedRect(col2X + 5, fY, 60, 10, 3, 3, 'F')
     doc.setTextColor(255, 255, 255)
-    doc.setFont('helvetica', 'bold')
     doc.setFontSize(10)
     doc.text('FASILITAS LENGKAP', col2X + 35, fY + 6.5, { align: 'center' })
+
+    const details = [
+      { label: 'Tipe', value: productData.value.Tipe || '-' },
+      { label: 'Lantai', value: productData.value.Lantai || '-' },
+      { label: 'Kamar Tidur', value: productData.value.Jumlah_Kamar_Tidur || '-' },
+      { label: 'Kamar Mandi', value: productData.value.Jumlah_Kamar_Mandi || '-' },
+      { label: 'Carport', value: productData.value.Jumlah_Carpot || '-' },
+      { label: 'Listrik', value: productData.value.Daya_Listrik ? `${productData.value.Daya_Listrik} VA` : '-' }
+    ]
 
     doc.setTextColor(slateColor)
     doc.setFontSize(9)
     doc.setFont('helvetica', 'normal')
-    let sY = fY + 20
-    const sps = [
-      `Tipe: ${productData.value.Tipe || '-'}`,
-      `Kamar Tidur: ${productData.value.Jumlah_Kamar_Tidur || '-'}`,
-      `Kamar Mandi: ${productData.value.Jumlah_Kamar_Mandi || '-'}`,
-      `Carport: ${productData.value.Jumlah_Carpot || '-'}`,
-      `Listrik: ${productData.value.Daya_Listrik || '-'} VA`
-    ]
-    sps.forEach((s, i) => {
-      const x = i % 2 === 0 ? col2X : col2X + 40
-      doc.setFillColor(primaryColor)
-      doc.circle(x, sY - 1, 1, 'F')
-      doc.text(s, x + 4, sY)
-      if (i % 2 !== 0) sY += 10
+    details.forEach((item, index) => {
+      const isRight = index % 2 === 1
+      const x = isRight ? col2X + 40 : col2X + 2
+      const y = 135 + Math.floor(index / 2) * 10
+      
+      doc.setFillColor(darkOrange)
+      doc.circle(x - 1, y - 1, 1, 'F')
+      doc.text(`${item.label}: ${item.value}`, x + 2, y)
     })
 
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(11)
-    doc.text('TENTANG PROPERTI', col2X + 35, 185, { align: 'center' })
+    doc.text('TENTANG PROPERTI', col2X + 35, 178, { align: 'center' })
     doc.setFont('helvetica', 'normal')
-    doc.setFontSize(9)
-    doc.setTextColor(100, 116, 139)
-    doc.text(productData.value.Keterangan || 'Unit premium dengan privasi maksimal sekaligus pemandangan kota terbaik.', col2X, 192, { maxWidth: 70, align: 'justify' })
+    doc.setFontSize(9.5)
+    doc.setTextColor(slateColor)
+    doc.text(productData.value.Keterangan || 'Unit premium dengan privasi maksimal sekaligus pemandangan kota terbaik.', col2X, 185, { maxWidth: 70, align: 'justify', lineHeightFactor: 1.5 })
 
     // --- COLUMN 3 ---
     doc.setFillColor(darkOrange)
@@ -218,39 +283,51 @@ const sendBrochure = async () => {
     doc.setFontSize(9.5)
     doc.text('DETAIL HARGA', col3X + 32.5, 36, { align: 'center' })
 
-    let pY = 60
-    if (settingsStore.app.viewDiscount && productData.value.Harga_Jual1) {
-      doc.setTextColor(239, 68, 68)
-      doc.setFontSize(11)
+    let pY = 48
+    const hasJual = productData.value.Harga_Jual1 > 0 || productData.value.Harga_Jual2 > 0
+    const hasSewa = productData.value.Harga_Sewa1 > 0 || productData.value.Harga_Sewa2 > 0
+    const isBoth = hasJual && hasSewa
+
+    const drawPriceBlock = (label: string, oldP: number, newP: number) => {
+      if (settingsStore.app.viewDiscount && oldP > 0 && newP > 0 && oldP !== newP) {
+        doc.setTextColor(239, 68, 68)
+        doc.setFontSize(9)
+        doc.setFont('helvetica', 'bold')
+        const op = `Rp ${formatPrice(oldP)}`
+        doc.text(op, col3X, pY)
+        doc.setDrawColor(239, 68, 68)
+        doc.setLineWidth(0.4)
+        doc.line(col3X - 1, pY - 1, col3X + doc.getTextWidth(op) + 1, pY - 1)
+        pY += 5
+      }
+
+      doc.setFontSize(isBoth ? 8 : 9.5)
+      doc.setFont('helvetica', 'normal')
+      doc.text(label, col3X, pY)
+
+      doc.setFontSize(isBoth ? 22 : 30)
+      doc.setTextColor(primaryColor)
       doc.setFont('helvetica', 'bold')
-      const op = `Rp ${formatPrice(productData.value.Harga_Jual1)}`
-      doc.text(op, col3X, pY)
-      doc.setDrawColor(239, 68, 68)
-      doc.setLineWidth(0.6)
-      doc.line(col3X - 1, pY - 1.5, col3X + doc.getTextWidth(op) + 1, pY - 1.5)
-      pY += 12
+      doc.text(`Rp ${formatPrice(newP || oldP)}`, col3X, pY + (isBoth ? 8 : 11))
+      pY += isBoth ? 16 : 22
     }
 
-    doc.setTextColor(148, 163, 184)
-    doc.setFontSize(10)
-    doc.setFont('helvetica', 'normal')
-    doc.text('DENGAN HANYA', col3X, pY)
-    doc.setFontSize(26)
-    doc.setTextColor(primaryColor)
-    doc.setFont('helvetica', 'bold')
-    doc.text(`Rp ${formatPrice(productData.value.Harga_Jual2 || productData.value.Harga_Sewa2 || productData.value.Harga_Jual1)}`, col3X, pY + 12)
+    if (hasJual) drawPriceBlock(isBoth ? 'DENGAN HANYA (JUAL)' : 'DENGAN HANYA', productData.value.Harga_Jual1, productData.value.Harga_Jual2)
+    if (isBoth) pY += 8 // Extra padding between jual and sewa
+    if (hasSewa) drawPriceBlock(isBoth ? 'DENGAN HANYA (SEWA)' : 'DENGAN HANYA', productData.value.Harga_Sewa1, productData.value.Harga_Sewa2)
 
+    const finalPY = Math.max(90, pY + 2)
     doc.setDrawColor(226, 232, 240)
     doc.setLineWidth(0.5)
-    doc.line(col3X, 85, col3X + 65, 85)
-    
+    doc.line(col3X, finalPY, col3X + 65, finalPY)
+
     doc.setTextColor(100, 116, 139)
     doc.setFontSize(8.5)
     doc.setFont('helvetica', 'normal')
-    doc.text('• UNIT TERBATAS & EKSKLUSIF', col3X, 95)
-    doc.text('• BEBAS BIAYA SURAT-SURAT', col3X, 102)
+    doc.text('• UNIT TERBATAS & EKSKLUSIF', col3X, finalPY + 10)
+    doc.text('• BEBAS BIAYA SURAT-SURAT', col3X, finalPY + 17)
 
-    drawDots(col3X + 60, 90, 6, 4)
+    drawDots(col3X + 60, finalPY + 5, 6, 4)
 
     if (qrBase64) {
       doc.addImage(qrBase64 as string, 'PNG', col3X + 15, 120, 35, 35)
@@ -262,7 +339,7 @@ const sendBrochure = async () => {
 
     doc.setFillColor(primaryColor)
     doc.roundedRect(col3X - 20, height - 45, 120, 60, 10, 10, 'F')
-    
+
     doc.setFillColor('#f97316')
     doc.circle(width, height, 30, 'F')
     doc.setFillColor(255, 255, 255)
@@ -272,22 +349,75 @@ const sendBrochure = async () => {
     doc.setFontSize(11)
     doc.setFont('helvetica', 'bold')
     doc.text('HUBUNGI KAMI SEGERA', col3X - 5, height - 25)
-    doc.setFontSize(8.5)
-    doc.setFont('helvetica', 'normal')
-    doc.text(`WhatsApp: +${settingsStore.business.whatsapp}`, col3X - 5, height - 17)
-    doc.text(`Website: wabotui.padajaya.biz.id`, col3X - 5, height - 12)
+    doc.setFontSize(9.5)
+    doc.setFont('helvetica', 'bold')
+    doc.setDrawColor(255, 255, 255)
+    doc.setLineWidth(0.3)
+    
+    // Phone Icon - Centered with text at height - 18
+    const waY = height - 18
+    doc.roundedRect(col3X - 10.5, waY - 2.25, 2.5, 4.5, 0.5, 0.5, 'S')
+    doc.circle(col3X - 9.25, waY, 0.2, 'S')
+    doc.text(`WhatsApp: +${settingsStore.business.whatsapp}`, col3X - 5, waY)
+    
+    // Globe Icon - Centered with text at height - 12
+    const webY = height - 12
+    doc.circle(col3X - 9.25, webY - 0.7, 2, 'S')
+    doc.line(col3X - 11.25, webY - 0.7, col3X - 7.25, webY - 0.7)
+    doc.line(col3X - 9.25, webY - 2.7, col3X - 9.25, webY + 1.3)
+    doc.text(`Website: wabotui.padajaya.biz.id`, col3X - 5, webY)
+
+    // Decorative Blobs
+    doc.setGState(new (doc as any).GState({ opacity: 0.1 }))
+    doc.setFillColor(primaryColor)
+    doc.circle(width * 0.5, height * 0.9, 40, 'F')
+    doc.circle(width * 0.1, height * 0.5, 25, 'F')
+    doc.circle(width * 0.9, height * 0.2, 30, 'F')
+    doc.setGState(new (doc as any).GState({ opacity: 1.0 }))
 
     const pdfBase64 = doc.output('datauristring')
     const phoneNumber = props.appointment.Telepon_Customer || props.appointment.Id_Customer
     let fPhone = phoneNumber.replace(/\D/g, '')
     if (fPhone.startsWith('0')) fPhone = '62' + fPhone.substring(1)
-    
+
+    const brochureCaption = `Halo *${props.appointment.Nama_Customer}*,\n\nBerikut adalah brosur digital untuk unit *${productData.value.Nama_Produk}*.\n\nJanji temu Bapak/Ibu dijadwalkan pada:\n🗓️ *${new Date(props.appointment.Tanggal_Janji).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}*\n⏰ *${props.appointment.Waktu_Janji} WIB*\n\nSampai jumpa di lokasi!`
+
     await api.post('/api/waha/send-document', {
       PhoneNumber: fPhone + '@s.whatsapp.net',
       FileUrl: pdfBase64,
-      FileName: `Brosur_Exclusive_${productData.value.Nama_Produk.replace(/\s+/g, '_')}.pdf`,
-      Caption: `Halo *${props.appointment.Nama_Customer}*,\n\nBerikut adalah brosur digital untuk unit *${productData.value.Nama_Produk}*.\n\nJanji temu kita dijadwalkan pada:\n🗓️ *${new Date(props.appointment.Tanggal_Janji).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}*\n⏰ *${props.appointment.Waktu_Janji} WIB*\n\nSampai jumpa di lokasi!`
+      FileName: `Brosur_Properti_${productData.value.Nama_Produk.replace(/\s+/g, '_')}.pdf`,
+      Caption: brochureCaption
     })
+
+    // Simpan log ke DB Chat agar muncul di history
+    try {
+      const myId = localStorage.getItem('no_id') || ''
+      const now = new Date()
+      const sentAt = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 19)
+
+      const userIds = [props.appointment.Id_Customer, 'adm_bot']
+      if (myId && !userIds.includes(myId)) userIds.push(myId)
+
+      const payload = {
+        Chat: {
+          Jenis_Pesan: 'brochure',
+          Sent_At: sentAt,
+          Sender_Id: myId,
+          Tipe_User: 'admin',
+          Message: brochureCaption,
+          Id_Paket: null,
+          No_Pesanan: null,
+          No_Penawaran: String(productData.value.No_Id || productData.value.Id_Paket),
+          Send_Status: 'send'
+        },
+        Room_Id: props.appointment.Room_Id || '',
+        User_Ids: userIds
+      }
+
+      await api.post('/api/chat/create', payload, { headers: { 'X-Jenis-User': 'Admin' } })
+    } catch (err) {
+      console.warn('Gagal mencatat log brosur ke DB Chat:', err)
+    }
     success('Brosur Exclusive berhasil dikirim ke WhatsApp Customer')
   } catch (error) {
     console.error('Gagal mengirim brosur:', error)
@@ -310,10 +440,14 @@ const fetchProductDetails = async () => {
   }
 }
 
-watch(() => props.appointment?.No_Id, async () => {
-  await settingsStore.init()
-  fetchProductDetails()
-}, { immediate: true })
+watch(
+  () => props.appointment?.No_Id,
+  async () => {
+    await settingsStore.init()
+    fetchProductDetails()
+  },
+  { immediate: true }
+)
 
 const formatPrice = (price: number) => {
   if (!price) return 'N/A'
@@ -343,14 +477,18 @@ const calendarOptions = computed<CalendarOptions>(() => ({
 
 const saveReschedule = async () => {
   try {
-    await api.put(`/api/janjiTemu/reschedule?no_id=${props.appointment.No_Id}`, {
-      Tanggal_Janji: selectedDate.value,
-      Waktu_Janji: startTime.value,
-      Waktu_Selesai: null,
-      Alasan_Batal: rescheduleReason.value
-    }, {
-      headers: { 'X-Jenis-User': 'admin' }
-    })
+    await api.put(
+      `/api/janjiTemu/reschedule?no_id=${props.appointment.No_Id}`,
+      {
+        Tanggal_Janji: selectedDate.value,
+        Waktu_Janji: startTime.value,
+        Waktu_Selesai: null,
+        Alasan_Batal: rescheduleReason.value
+      },
+      {
+        headers: { 'X-Jenis-User': 'admin' }
+      }
+    )
     success('Jadwal berhasil diperbarui')
     openRescheduleForm.value = false
     openReschedule.value = false
@@ -385,7 +523,7 @@ const cancelAppointment = async () => {
     showCancelButton: true,
     confirmButtonColor: '#ef4444',
     confirmButtonText: 'Ya, Batalkan!',
-    cancelButtonText: 'Kembali',
+    cancelButtonText: 'Kembali'
   })
 
   if (reason) {
@@ -427,9 +565,7 @@ const copyToClipboard = (text: string) => {
 }
 
 const openInMaps = (query: string, isCoord = false) => {
-  const url = isCoord 
-    ? `https://www.google.com/maps?q=${query}`
-    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`
+  const url = isCoord ? `https://www.google.com/maps?q=${query}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`
   window.open(url, '_blank')
 }
 </script>
@@ -437,30 +573,21 @@ const openInMaps = (query: string, isCoord = false) => {
 <template>
   <div v-if="props.openAppointment" class="h-full">
     <div class="bg-white rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] overflow-hidden h-full flex flex-col">
-      <div 
-        class="relative p-8 pb-14 text-white transition-colors duration-500"
-        :class="props.appointment.Status_Progress === 'batal' ? 'bg-red-500' : 'bg-bejo-500'"
-      >
+      <div class="relative p-8 pb-14 text-white transition-colors duration-500" :class="props.appointment.Status_Progress === 'batal' ? 'bg-red-500' : 'bg-bejo-500'">
         <div class="flex justify-between items-center mb-6">
           <div class="flex items-center gap-3">
-             <span 
-                class="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[9px] font-black uppercase tracking-[0.2em] border border-white/10"
-             >
-                #{{ props.appointment.No_Tracking }}
-             </span>
-             <button @click="copyToClipboard(props.appointment.No_Tracking)" class="text-white/40 hover:text-white transition-colors">
-                <Icon icon="lucide:copy" class="size-3" />
-             </button>
+            <span class="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[9px] font-black uppercase tracking-[0.2em] border border-white/10"> #{{ props.appointment.No_Tracking }} </span>
+            <button @click="copyToClipboard(props.appointment.No_Tracking)" class="text-white/40 hover:text-white transition-colors">
+              <Icon icon="lucide:copy" class="size-3" />
+            </button>
           </div>
           <div class="flex items-center gap-2">
-             <span 
-               class="px-3 py-1 bg-white text-bejo-600 rounded-full text-[9px] font-black uppercase tracking-[0.2em]"
-             >
-               {{ props.appointment.Status_Progress }}
-             </span>
-             <button @click="$emit('close')" class="size-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all border border-white/5">
-                <Icon icon="lucide:x" class="size-4" />
-             </button>
+            <span class="px-3 py-1 bg-white text-bejo-600 rounded-full text-[9px] font-black uppercase tracking-[0.2em]">
+              {{ props.appointment.Status_Progress }}
+            </span>
+            <button @click="$emit('close')" class="size-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all border border-white/5">
+              <Icon icon="lucide:x" class="size-4" />
+            </button>
           </div>
         </div>
 
@@ -468,250 +595,192 @@ const openInMaps = (query: string, isCoord = false) => {
           <div class="text-3xl font-black mb-1">
             {{ new Date(props.appointment.Tanggal_Janji).toLocaleDateString('id-ID', { day: 'numeric', month: 'long' }) }}
           </div>
-          <p class="text-xs font-bold text-white/70 uppercase tracking-widest">
-            {{ new Date(props.appointment.Tanggal_Janji).toLocaleDateString('id-ID', { weekday: 'long' }) }} • {{ props.appointment.Waktu_Janji }} WIB
-          </p>
+          <p class="text-xs font-bold text-white/70 uppercase tracking-widest">{{ new Date(props.appointment.Tanggal_Janji).toLocaleDateString('id-ID', { weekday: 'long' }) }} • {{ props.appointment.Waktu_Janji }} WIB</p>
         </div>
 
         <div class="absolute -bottom-7 left-8 right-8 bg-white rounded-3xl p-4 flex items-center justify-between shadow-lg shadow-black/5">
-           <div class="flex items-center gap-3">
-              <div class="size-9 rounded-xl bg-bejo-600 text-white flex items-center justify-center font-black text-xs">
-                {{ (props.appointment.Nama_Customer || 'C').charAt(0) }}
-              </div>
-              <div class="flex flex-col">
-                <span class="text-[9px] font-black text-bejo-400 uppercase tracking-tight">Customer</span>
-                <span class="text-[11px] font-black text-slate-900 truncate max-w-[80px]">{{ props.appointment.Nama_Customer || props.appointment.Id_Customer }}</span>
-              </div>
-           </div>
-           
-           <div class="flex flex-col items-center">
-              <Icon icon="lucide:users" class="size-4 text-slate-200" />
-           </div>
+          <div class="flex items-center gap-3">
+            <div class="size-9 rounded-xl bg-bejo-600 text-white flex items-center justify-center font-black text-xs">
+              {{ (props.appointment.Nama_Customer || 'C').charAt(0) }}
+            </div>
+            <div class="flex flex-col">
+              <span class="text-[9px] font-black text-bejo-400 uppercase tracking-tight">Customer</span>
+              <span class="text-[11px] font-black text-slate-900 truncate max-w-[80px]">{{ props.appointment.Nama_Customer || props.appointment.Id_Customer }}</span>
+            </div>
+          </div>
 
-           <div class="flex items-center gap-3 text-right">
-              <div class="flex flex-col">
-                <span class="text-[9px] font-black text-slate-400 uppercase tracking-tight">Admin</span>
-                <span class="text-[11px] font-black text-slate-900 truncate max-w-[80px]">{{ props.appointment.Nama_Admin || props.appointment.Id_Admin || 'Admin' }}</span>
-              </div>
-              <div class="size-9 rounded-xl bg-slate-100 text-slate-500 border border-slate-200 flex items-center justify-center font-black text-xs">
-                {{ (props.appointment.Nama_Admin || 'A').charAt(0) }}
-              </div>
-           </div>
+          <div class="flex flex-col items-center">
+            <Icon icon="lucide:users" class="size-4 text-slate-200" />
+          </div>
+
+          <div class="flex items-center gap-3 text-right">
+            <div class="flex flex-col">
+              <span class="text-[9px] font-black text-slate-400 uppercase tracking-tight">Admin</span>
+              <span class="text-[11px] font-black text-slate-900 truncate max-w-[80px]">{{ props.appointment.Nama_Admin || props.appointment.Id_Admin || 'Admin' }}</span>
+            </div>
+            <div class="size-9 rounded-xl bg-slate-100 text-slate-500 border border-slate-200 flex items-center justify-center font-black text-xs">
+              {{ (props.appointment.Nama_Admin || 'A').charAt(0) }}
+            </div>
+          </div>
         </div>
       </div>
 
       <div class="flex-1 overflow-y-auto custom-scrollbar pt-10">
         <div class="px-8 pb-8 space-y-6">
           <div class="grid grid-cols-2 gap-3">
-             <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 group">
-                <div class="flex justify-between items-center mb-2">
-                   <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Lokasi</span>
-                   <button 
-                      @click="openInMaps(props.appointment.Lokasi_Pertemuan)"
-                      class="text-[8px] font-black text-bejo-500 hover:text-bejo-600 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                   >
-                      Cari di Maps <Icon icon="lucide:external-link" class="size-2" />
-                   </button>
-                </div>
-                <div class="flex items-center gap-2">
-                   <Icon icon="lucide:map-pin" class="size-3.5 text-bejo-500" />
-                   <span class="text-xs font-black text-slate-700 truncate">{{ props.appointment.Lokasi_Pertemuan }}</span>
-                </div>
-             </div>
-             <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Tipe</span>
-                <div class="flex items-center gap-2">
-                   <Icon :icon="props.appointment.Tipe_Pertemuan === 'online' ? 'lucide:video' : 'lucide:users'" class="size-3.5 text-bejo-500" />
-                   <span class="text-xs font-black text-slate-700 capitalize">{{ props.appointment.Tipe_Pertemuan }}</span>
-                </div>
-             </div>
+            <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 group">
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Lokasi</span>
+                <button @click="openInMaps(props.appointment.Lokasi_Pertemuan)" class="text-[8px] font-black text-bejo-500 hover:text-bejo-600 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">Cari di Maps <Icon icon="lucide:external-link" class="size-2" /></button>
+              </div>
+              <div class="flex items-center gap-2">
+                <Icon icon="lucide:map-pin" class="size-3.5 text-bejo-500" />
+                <span class="text-xs font-black text-slate-700 truncate">{{ props.appointment.Lokasi_Pertemuan }}</span>
+              </div>
+            </div>
+            <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+              <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Tipe</span>
+              <div class="flex items-center gap-2">
+                <Icon :icon="props.appointment.Tipe_Pertemuan === 'online' ? 'lucide:video' : 'lucide:users'" class="size-3.5 text-bejo-500" />
+                <span class="text-xs font-black text-slate-700 capitalize">{{ props.appointment.Tipe_Pertemuan }}</span>
+              </div>
+            </div>
           </div>
 
           <div v-if="props.appointment.Alasan_Batal" class="p-4 bg-red-50 rounded-2xl border border-red-100">
-             <span class="text-[9px] font-black text-red-400 uppercase tracking-widest block mb-1">Alasan Batal</span>
-             <p class="text-xs font-bold text-red-600 italic">"{{ props.appointment.Alasan_Batal }}"</p>
+            <span class="text-[9px] font-black text-red-400 uppercase tracking-widest block mb-1">Alasan Batal</span>
+            <p class="text-xs font-bold text-red-600 italic">"{{ props.appointment.Alasan_Batal }}"</p>
           </div>
 
           <div class="space-y-3">
-             <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Unit Properti</span>
-             
-             <div v-if="isLoadingProduct" class="h-20 bg-slate-50 rounded-2xl animate-pulse"></div>
-             
-             <a 
-                v-else-if="productData" 
-                :href="`/properti/${productData.Slug}`" 
-                target="_blank"
-                class="flex gap-4 p-3 bg-white border border-slate-100 rounded-3xl hover:border-bejo-200 transition-all group cursor-pointer shadow-sm hover:shadow-md"
-             >
-                <img 
-                   v-if="productData.MediaUrls?.[0]?.ThumbUrl || productData.MediaUrls?.[0]?.Id_Media"
-                   :src="productData.MediaUrls[0].ThumbUrl || productData.MediaUrls[0].Id_Media" 
-                   class="size-20 rounded-2xl object-cover"
-                />
-                <div class="flex-1 min-w-0 flex flex-col justify-center">
-                   <h4 class="text-xs font-black text-slate-900 truncate group-hover:text-bejo-600 transition-colors">{{ productData.Nama_Produk }}</h4>
-                   <p class="text-[9px] font-medium text-slate-500 truncate mb-1">
-                      {{ productData.Alamat }}<span v-if="productData.Nama_Kota">, {{ productData.Nama_Kota }}</span>
-                   </p>
-                   
-                   <div class="flex items-center gap-3 text-slate-400 mb-2">
-                      <div v-if="productData.Jumlah_Kamar_Tidur" class="flex items-center gap-1">
-                         <Icon icon="lucide:bed" class="size-3" />
-                         <span class="text-[9px] font-bold">{{ productData.Jumlah_Kamar_Tidur }}</span>
-                      </div>
-                      <div v-if="productData.Jumlah_Kamar_Mandi" class="flex items-center gap-1">
-                         <Icon icon="lucide:bath" class="size-3" />
-                         <span class="text-[9px] font-bold">{{ productData.Jumlah_Kamar_Mandi }}</span>
-                      </div>
-                      <div v-if="productData.Jumlah_Carpot" class="flex items-center gap-1">
-                         <Icon icon="lucide:car" class="size-3" />
-                         <span class="text-[9px] font-bold">{{ productData.Jumlah_Carpot }}</span>
-                      </div>
-                   </div>
+            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Unit Properti</span>
 
-                   <div class="flex items-center justify-between">
-                      <div class="flex items-center gap-2">
-                         <span class="text-[9px] font-black text-bejo-600 bg-bejo-50 px-2 py-0.5 rounded">{{ productData.Tipe }}</span>
-                         <button 
-                            @click.stop.prevent="openInMaps(`${productData.Latitude},${productData.Longitude}`, true)"
-                            class="text-[8px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded flex items-center gap-1 hover:bg-emerald-100 transition-colors"
-                         >
-                            <Icon icon="lucide:navigation" class="size-2" /> Petunjuk Arah
-                         </button>
-                      </div>
-                      <span class="text-xs font-black text-emerald-600">
-                         Rp {{ formatPrice(productData.Harga_Jual2 || productData.Harga_Sewa2 || productData.Harga_Jual1) }}
-                      </span>
-                   </div>
+            <div v-if="isLoadingProduct" class="h-20 bg-slate-50 rounded-2xl animate-pulse"></div>
+
+            <a v-else-if="productData" :href="`/properti/${productData.Slug}`" target="_blank" class="flex gap-4 p-3 bg-white border border-slate-100 rounded-3xl hover:border-bejo-200 transition-all group cursor-pointer shadow-sm hover:shadow-md">
+              <img v-if="productData.MediaUrls?.[0]?.ThumbUrl || productData.MediaUrls?.[0]?.Id_Media" :src="productData.MediaUrls[0].ThumbUrl || productData.MediaUrls[0].Id_Media" class="size-20 rounded-2xl object-cover" />
+              <div class="flex-1 min-w-0 flex flex-col justify-center">
+                <h4 class="text-xs font-black text-slate-900 truncate group-hover:text-bejo-600 transition-colors">{{ productData.Nama_Produk }}</h4>
+                <p class="text-[9px] font-medium text-slate-500 truncate mb-1">
+                  {{ productData.Alamat }}<span v-if="productData.Nama_Kota">, {{ productData.Nama_Kota }}</span>
+                </p>
+
+                <div class="flex items-center gap-3 text-slate-400 mb-2">
+                  <div v-if="productData.Jumlah_Kamar_Tidur" class="flex items-center gap-1">
+                    <Icon icon="lucide:bed" class="size-3" />
+                    <span class="text-[9px] font-bold">{{ productData.Jumlah_Kamar_Tidur }}</span>
+                  </div>
+                  <div v-if="productData.Jumlah_Kamar_Mandi" class="flex items-center gap-1">
+                    <Icon icon="lucide:bath" class="size-3" />
+                    <span class="text-[9px] font-bold">{{ productData.Jumlah_Kamar_Mandi }}</span>
+                  </div>
+                  <div v-if="productData.Jumlah_Carpot" class="flex items-center gap-1">
+                    <Icon icon="lucide:car" class="size-3" />
+                    <span class="text-[9px] font-bold">{{ productData.Jumlah_Carpot }}</span>
+                  </div>
                 </div>
-             </a>
-             
-             <div v-else class="text-[10px] font-bold text-slate-400 italic px-1">Produk: {{ props.appointment.Nama_Produk }}</div>
+
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="text-[9px] font-black text-bejo-600 bg-bejo-50 px-2 py-0.5 rounded">{{ productData.Tipe }}</span>
+                    <button @click.stop.prevent="openInMaps(`${productData.Latitude},${productData.Longitude}`, true)" class="text-[8px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded flex items-center gap-1 hover:bg-emerald-100 transition-colors"><Icon icon="lucide:navigation" class="size-2" /> Petunjuk Arah</button>
+                  </div>
+                  <span class="text-xs font-black text-emerald-600"> Rp {{ formatPrice(productData.Harga_Jual2 || productData.Harga_Sewa2 || productData.Harga_Jual1) }} </span>
+                </div>
+              </div>
+            </a>
+
+            <div v-else class="text-[10px] font-bold text-slate-400 italic px-1">Produk: {{ props.appointment.Nama_Produk }}</div>
           </div>
         </div>
       </div>
 
       <div class="p-8 bg-white border-t border-slate-100 shrink-0">
-          <div class="grid grid-cols-2 gap-3 mb-4">
-             <button @click="$emit('openChat', props.appointment.Id_Customer)" class="px-4 py-3.5 bg-green-500 hover:bg-green-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 group">
-               <Icon icon="lucide:message-circle" class="size-4 group-hover:scale-110 transition-transform" />
-               Hubungi
-            </button>
-            <button 
-               v-if="props.appointment.Status_Progress !== 'batal'"
-               @click="sendBrochure" 
-               :disabled="isSendingBrochure || !productData"
-               class="px-4 py-3.5 bg-white hover:bg-bejo-50 text-bejo-600 border-2 border-bejo-100 hover:border-bejo-200 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 group disabled:opacity-50"
-            >
-               <Icon v-if="isSendingBrochure" icon="lucide:loader-2" class="size-4 animate-spin" />
-               <Icon v-else icon="lucide:file-text" class="size-4 group-hover:scale-110 transition-transform" />
-               Kirim Brosur
-            </button>
-            <button 
-               v-else 
-               @click="handleDelete" 
-               class="px-4 py-3.5 bg-red-500 hover:bg-red-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
-            >
-               <Icon icon="lucide:trash-2" class="size-4" />
-               Hapus Data
-            </button>
-          </div>
-          
-          <div v-if="props.appointment.Status_Progress !== 'batal'" class="flex items-center gap-3">
-             <div class="flex-1">
-                <button 
-                   v-if="props.appointment.Status_Progress === 'baru'"
-                   @click="handleUpdateStatus('dikonfirmasi')" 
-                   class="w-full px-4 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
-                >
-                   <Icon icon="lucide:check-circle" class="size-4" />
-                   Konfirmasi Janji
-                </button>
-                <button 
-                   v-else-if="props.appointment.Status_Progress === 'dikonfirmasi'"
-                   @click="handleUpdateStatus('proses')" 
-                   class="w-full px-4 py-3.5 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
-                >
-                   <Icon icon="lucide:play-circle" class="size-4" />
-                   Mulai Pertemuan
-                </button>
-                <button 
-                   v-else-if="props.appointment.Status_Progress === 'proses'"
-                   @click="handleUpdateStatus('selesai')" 
-                   class="w-full px-4 py-3.5 bg-violet-500 hover:bg-violet-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
-                >
-                   <Icon icon="lucide:award" class="size-4" />
-                   Selesaikan
-                </button>
-                <div v-else class="w-full py-3.5 bg-emerald-50 text-emerald-600 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-center border border-emerald-100">
-                   Janji Temu Selesai
-                </div>
-             </div>
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <button @click="$emit('openChat', props.appointment.Id_Customer)" class="px-4 py-3.5 bg-green-500 hover:bg-green-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 group">
+            <Icon icon="lucide:message-circle" class="size-4 group-hover:scale-110 transition-transform" />
+            Hubungi
+          </button>
+          <button v-if="props.appointment.Status_Progress !== 'batal'" @click="sendBrochure" :disabled="isSendingBrochure || !productData" class="px-4 py-3.5 bg-white hover:bg-bejo-50 text-bejo-600 border-2 border-bejo-100 hover:border-bejo-200 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 group disabled:opacity-50">
+            <Icon v-if="isSendingBrochure" icon="lucide:loader-2" class="size-4 animate-spin" />
+            <Icon v-else icon="lucide:file-text" class="size-4 group-hover:scale-110 transition-transform" />
+            Kirim Brosur
+          </button>
+          <button v-else @click="handleDelete" class="px-4 py-3.5 bg-red-500 hover:bg-red-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2">
+            <Icon icon="lucide:trash-2" class="size-4" />
+            Hapus Data
+          </button>
+        </div>
 
-             <div class="relative">
-                <button 
-                   @click="showMoreActions = !showMoreActions"
-                   class="size-12 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-500 transition-all flex items-center justify-center border border-slate-200/50"
-                >
-                   <Icon icon="lucide:more-horizontal" class="size-5" />
-                </button>
-                
-                <div 
-                   v-if="showMoreActions"
-                   class="absolute bottom-full right-0 mb-4 w-48 bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-bottom-2 duration-200"
-                >
-                   <button 
-                      @click="openReschedule = true; showMoreActions = false" 
-                      class="w-full px-5 py-3.5 text-left text-[11px] font-black text-slate-700 hover:bg-bejo-50 hover:text-bejo-600 transition-colors flex items-center gap-3 border-b border-slate-50"
-                   >
-                      <Icon icon="lucide:calendar-clock" class="size-4" />
-                      Reschedule
-                   </button>
-                   <button 
-                      @click="cancelAppointment" 
-                      class="w-full px-5 py-3.5 text-left text-[11px] font-black text-red-500 hover:bg-red-50 transition-colors flex items-center gap-3"
-                   >
-                      <Icon icon="lucide:ban" class="size-4" />
-                      Batalkan Janji
-                   </button>
-                </div>
-                <div v-if="showMoreActions" @click="showMoreActions = false" class="fixed inset-0 z-40"></div>
-             </div>
+        <div v-if="props.appointment.Status_Progress !== 'batal'" class="flex items-center gap-3">
+          <div class="flex-1">
+            <button v-if="props.appointment.Status_Progress === 'baru'" @click="handleUpdateStatus('dikonfirmasi')" class="w-full px-4 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2">
+              <Icon icon="lucide:check-circle" class="size-4" />
+              Konfirmasi Janji
+            </button>
+            <button v-else-if="props.appointment.Status_Progress === 'dikonfirmasi'" @click="handleUpdateStatus('proses')" class="w-full px-4 py-3.5 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2">
+              <Icon icon="lucide:play-circle" class="size-4" />
+              Mulai Pertemuan
+            </button>
+            <button v-else-if="props.appointment.Status_Progress === 'proses'" @click="handleUpdateStatus('selesai')" class="w-full px-4 py-3.5 bg-violet-500 hover:bg-violet-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2">
+              <Icon icon="lucide:award" class="size-4" />
+              Selesaikan
+            </button>
+            <div v-else class="w-full py-3.5 bg-emerald-50 text-emerald-600 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-center border border-emerald-100">Janji Temu Selesai</div>
           </div>
+
+          <div class="relative">
+            <button @click="showMoreActions = !showMoreActions" class="size-12 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-500 transition-all flex items-center justify-center border border-slate-200/50">
+              <Icon icon="lucide:more-horizontal" class="size-5" />
+            </button>
+
+            <div v-if="showMoreActions" class="absolute bottom-full right-0 mb-4 w-48 bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-bottom-2 duration-200">
+              <button
+                @click="
+                  openReschedule = true;
+                  showMoreActions = false;
+                "
+                class="w-full px-5 py-3.5 text-left text-[11px] font-black text-slate-700 hover:bg-bejo-50 hover:text-bejo-600 transition-colors flex items-center gap-3 border-b border-slate-50"
+              >
+                <Icon icon="lucide:calendar-clock" class="size-4" />
+                Reschedule
+              </button>
+              <button @click="cancelAppointment" class="w-full px-5 py-3.5 text-left text-[11px] font-black text-red-500 hover:bg-red-50 transition-colors flex items-center gap-3">
+                <Icon icon="lucide:ban" class="size-4" />
+                Batalkan Janji
+              </button>
+            </div>
+            <div v-if="showMoreActions" @click="showMoreActions = false" class="fixed inset-0 z-40"></div>
+          </div>
+        </div>
       </div>
     </div>
 
     <div v-if="openReschedule" class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md">
-       <div class="bg-white rounded-[2.5rem] w-full max-w-lg p-10 shadow-2xl animate-in zoom-in duration-300">
-          <div class="flex justify-between items-center mb-8">
-             <h4 class="text-xl font-black text-slate-900">Pilih Jadwal Baru</h4>
-             <button @click="openReschedule = false" class="text-slate-400 hover:text-slate-900"><Icon icon="lucide:x" class="size-6" /></button>
+      <div class="bg-white rounded-[2.5rem] w-full max-w-lg p-10 shadow-2xl animate-in zoom-in duration-300">
+        <div class="flex justify-between items-center mb-8">
+          <h4 class="text-xl font-black text-slate-900">Pilih Jadwal Baru</h4>
+          <button @click="openReschedule = false" class="text-slate-400 hover:text-slate-900"><Icon icon="lucide:x" class="size-6" /></button>
+        </div>
+        <FullCalendar :options="calendarOptions" class="mb-8" />
+        <div v-if="openRescheduleForm" class="space-y-6">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Tanggal</label>
+              <input v-model="selectedDate" type="date" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold" />
+            </div>
+            <div>
+              <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Pukul</label>
+              <input v-model="startTime" type="time" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold" />
+            </div>
           </div>
-          <FullCalendar :options="calendarOptions" class="mb-8" />
-          <div v-if="openRescheduleForm" class="space-y-6">
-             <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Tanggal</label>
-                  <input v-model="selectedDate" type="date" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold" />
-                </div>
-                <div>
-                  <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Pukul</label>
-                  <input v-model="startTime" type="time" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold" />
-                </div>
-             </div>
-             <div>
-                <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Alasan Perubahan Jadwal</label>
-                <textarea 
-                   v-model="rescheduleReason" 
-                   class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold min-h-[80px]"
-                   placeholder="Masukkan alasan reschedule..."
-                ></textarea>
-             </div>
-             <button @click="saveReschedule" class="w-full py-4 bg-bejo-500 hover:bg-bejo-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-bejo-500/30">
-                Simpan Jadwal Baru
-             </button>
+          <div>
+            <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Alasan Perubahan Jadwal</label>
+            <textarea v-model="rescheduleReason" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold min-h-[80px]" placeholder="Masukkan alasan reschedule..."></textarea>
           </div>
-       </div>
+          <button @click="saveReschedule" class="w-full py-4 bg-bejo-500 hover:bg-bejo-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-bejo-500/30">Simpan Jadwal Baru</button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
