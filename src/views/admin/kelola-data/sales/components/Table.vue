@@ -357,7 +357,7 @@ onBeforeUnmount(() => {
 
         <tbody class="divide-y divide-slate-50">
           <tr v-for="row in table.getRowModel().rows" :key="row.id" class="hover:bg-slate-50/50 transition-all duration-300 group">
-            <td v-if="table.getColumn('select')" class="px-4 py-5">
+            <td v-if="table.getColumn('select')?.getIsVisible()" class="px-4 py-5">
               <FlexRender :render="table.getColumn('select')!.columnDef.cell" :props="row.getVisibleCells().find(c => c.column.id === 'select')?.getContext()" />
             </td>
             <td v-if="table.getColumn('name')?.getIsVisible()" class="px-6 py-5">
@@ -413,7 +413,7 @@ onBeforeUnmount(() => {
               </div>
             </td>
 
-            <td class="px-6 py-5 relative action-menu">
+            <td v-if="table.getColumn('aksi')?.getIsVisible()" class="px-6 py-5 relative action-menu">
               <button @click.stop="toggleDropdown($event, row.original.id)" class="size-10 rounded-xl flex items-center justify-center hover:bg-slate-100 transition-all text-slate-400 hover:text-slate-900 border border-transparent hover:border-slate-200">
                 <Icon icon="lucide:more-vertical" class="size-5" />
               </button>

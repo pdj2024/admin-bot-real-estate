@@ -10,7 +10,7 @@ defineProps({
   }
 })
 
-const emit = defineEmits(['search', 'filterStatus', 'exportExcel', 'exportPdf', 'print', 'updateColumns'])
+const emit = defineEmits(['search', 'filterStatus', 'add', 'exportExcel', 'exportPdf', 'print', 'updateColumns'])
 const searchQuery = ref('')
 const status = ref('')
 const isStatusOpen = ref(false)
@@ -48,8 +48,9 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 flex-grow">
-    <div class="relative group flex-grow lg:max-w-xs">
+  <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
+    <!-- Search Interface -->
+    <div class="relative group w-full lg:w-64">
       <div class="absolute inset-y-0 start-0 flex items-center ps-4 pointer-events-none transition-colors group-focus-within:text-bejo-500 text-slate-400">
         <Icon icon="lucide:search" class="size-4" />
       </div>
@@ -61,6 +62,7 @@ onBeforeUnmount(() => {
       />
     </div>
 
+    <!-- Status Selector (Custom) -->
     <div class="relative w-full lg:w-40 status-dropdown">
       <button 
         @click="isStatusOpen = !isStatusOpen"
@@ -87,6 +89,7 @@ onBeforeUnmount(() => {
     </div>
 
     <div class="flex items-center gap-3">
+      <!-- Export Dropdown -->
       <div class="relative export-dropdown flex-1 lg:flex-none">
         <button 
           @click="isExportOpen = !isExportOpen"
@@ -117,6 +120,7 @@ onBeforeUnmount(() => {
         </Transition>
       </div>
       
+      <!-- Settings Popover -->
       <div class="relative settings-wrapper">
         <button 
           @click="isSettingsOpen = !isSettingsOpen" 
@@ -133,7 +137,24 @@ onBeforeUnmount(() => {
           @update="$emit('updateColumns', $event)"
         />
       </div>
+
+      <button 
+        @click="$emit('add')"
+        class="lg:hidden flex-1 h-11 bg-bejo-500 hover:bg-bejo-600 text-white rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-bejo-500/20 transition-all flex items-center justify-center gap-2 active:scale-95 whitespace-nowrap"
+      >
+        <Icon icon="lucide:plus" class="size-4" />
+        Tambah
+      </button>
     </div>
+
+    <!-- Add Button (Desktop) -->
+    <button 
+      @click="$emit('add')"
+      class="hidden lg:flex px-6 h-11 bg-bejo-500 hover:bg-bejo-600 text-white rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-bejo-500/20 transition-all items-center gap-2 active:scale-95 whitespace-nowrap"
+    >
+      <Icon icon="lucide:plus" class="size-4" />
+      Tambah Icon
+    </button>
   </div>
 </template>
 

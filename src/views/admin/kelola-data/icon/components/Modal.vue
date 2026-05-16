@@ -23,6 +23,7 @@ const form = reactive({
 })
 
 const tipeOptions = [
+  { label: 'LUCIDE / ICONIFY', value: 'iconify', icon: 'lucide:smile' },
   { label: 'CSS CLASS', value: 'class', icon: 'lucide:code-2' },
   { label: 'SVG CODE', value: 'svg', icon: 'lucide:file-code-2' },
   { label: 'IMAGE URL', value: 'url', icon: 'lucide:image' }
@@ -126,7 +127,7 @@ const handleSave = async () => {
             </div>
             <div>
               <h3 class="text-sm font-black text-slate-900 uppercase tracking-widest">{{ editData ? 'Edit Icon' : 'Tambah Icon Baru' }}</h3>
-              <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Konfigurasi Master Icon Aplikasi</p>
+              <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Konfigurasi Icon Aplikasi</p>
             </div>
           </div>
           <button @click="emit('close')" class="size-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-white hover:text-red-500 transition-all">
@@ -144,7 +145,7 @@ const handleSave = async () => {
                 v-model="form.Nama"
                 type="text" 
                 class="w-full h-12 px-4 bg-slate-50 border border-slate-100 rounded-xl focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500/50 outline-none transition-all font-bold text-slate-700 text-sm"
-                placeholder="Misal: fa fa-home atau iconify-id"
+                placeholder="Misal: home, user, fa fa-home, atau URL gambar"
               />
             </div>
 
@@ -261,7 +262,7 @@ const handleSave = async () => {
                   <img :src="form.Nama" class="size-10 object-contain" />
                 </template>
                 <template v-else>
-                  <Icon :icon="form.Nama" class="size-10" />
+                  <Icon :icon="form.Nama.includes(':') ? form.Nama : `lucide:${form.Nama}`" class="size-10" />
                 </template>
               </div>
             </div>

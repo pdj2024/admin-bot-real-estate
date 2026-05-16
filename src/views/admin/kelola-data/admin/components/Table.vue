@@ -484,11 +484,11 @@ onBeforeUnmount(() => {
 
           <!-- Data Rows -->
           <tr v-else v-for="row in table.getRowModel().rows" :key="row.id" class="hover:bg-slate-50/50 transition-all duration-300 group" :class="{ 'bg-bejo-50/30': row.getIsSelected() }">
-            <td class="pl-4 pr-0 py-5">
+            <td v-if="table.getColumn('select')?.getIsVisible()" class="pl-4 pr-0 py-5">
               <FlexRender v-if="table.getColumn('select')" :render="table.getColumn('select')!.columnDef.cell" :props="row.getVisibleCells().find(c => c.column.id === 'select')?.getContext()" />
             </td>
 
-            <td class="pl-3 pr-6 py-5">
+            <td v-if="table.getColumn('Nama_User')?.getIsVisible()" class="pl-3 pr-6 py-5">
               <div class="flex items-center gap-4">
                 <div class="size-12 rounded-2xl bg-gradient-to-br from-bejo-500 to-bejo-600 text-white flex items-center justify-center font-black text-lg shadow-lg shadow-bejo-500/20 group-hover:scale-110 transition-transform duration-500">
                   {{ getInitial(row.original.Nama_User) }}
@@ -505,7 +505,7 @@ onBeforeUnmount(() => {
               </div>
             </td>
 
-            <td class="px-6 py-5">
+            <td v-if="table.getColumn('Email')?.getIsVisible()" class="px-6 py-5">
               <div class="flex flex-col gap-1.5">
                 <div class="flex items-center gap-2 text-slate-600 font-bold text-sm">
                   <Icon icon="lucide:mail" class="size-4 text-slate-400" />
@@ -518,7 +518,7 @@ onBeforeUnmount(() => {
               </div>
             </td>
 
-            <td class="px-6 py-5">
+            <td v-if="table.getColumn('Status')?.getIsVisible()" class="px-6 py-5">
               <div class="flex items-center gap-3">
                 <div 
                   class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border"
@@ -536,7 +536,7 @@ onBeforeUnmount(() => {
               </div>
             </td>
 
-            <td class="px-6 py-5 relative action-menu">
+            <td v-if="table.getColumn('aksi')?.getIsVisible()" class="px-6 py-5 relative action-menu">
               <button @click.stop="toggleDropdown($event, row.original.No_Id)" class="size-10 rounded-xl flex items-center justify-center hover:bg-slate-100 transition-all text-slate-400 hover:text-slate-900 border border-transparent hover:border-slate-200">
                 <Icon icon="lucide:more-vertical" class="size-5" />
               </button>

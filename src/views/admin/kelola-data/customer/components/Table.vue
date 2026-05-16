@@ -557,7 +557,7 @@ onBeforeUnmount(() => {
 
           <!-- Data Rows -->
           <tr v-else v-for="row in table.getRowModel().rows" :key="row.id" class="hover:bg-slate-50/50 transition-all duration-300 group" :class="{ 'bg-bejo-50/30': row.getIsSelected() }">
-            <td class="pl-4 pr-0 py-5">
+            <td v-if="table.getColumn('select')?.getIsVisible()" class="pl-4 pr-0 py-5">
               <FlexRender v-if="table.getColumn('select')" :render="table.getColumn('select')!.columnDef.cell" :props="row.getVisibleCells().find(c => c.column.id === 'select')?.getContext()" />
             </td>
 

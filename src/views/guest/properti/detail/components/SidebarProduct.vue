@@ -3,6 +3,9 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import type { Product } from '../index.vue'
+import { downloadBrochure } from '@/utils/propertyBrochure'
+import { useSettings } from '@/stores/settings'
+import { success, fail } from '@/utils/sweet-alert'
 
 const router = useRouter()
 const props = defineProps<{
@@ -74,6 +77,21 @@ const handleWhatsApp = () => {
   if (!props.product) return
   const message = `Halo, saya tertarik dengan properti "${props.product.Nama_Produk}" yang saya lihat di website. Bisa minta info lebih lanjut?%0A%0AUrl: ${window.location.origin}/properti/detail/${props.product.Slug}`
   window.open(`https://wa.me/6281234567890?text=${message}`, '_blank')
+}
+
+const settingsStore = useSettings()
+const isDownloading = ref(false)
+const handleDownload = async () => {
+  if (!props.product || isDownloading.value) return
+  isDownloading.value = true
+  
+  const res = await downloadBrochure(props.product, settingsStore.business, settingsStore.app)
+  if (res) {
+    success('Brosur berhasil diunduh')
+  } else {
+    fail('Gagal mengunduh brosur')
+  }
+  isDownloading.value = false
 }
 </script>
 
@@ -232,6 +250,12 @@ const handleWhatsApp = () => {
                 Bagikan
              </button>
           </div>
+
+          <button @click="handleDownload" :disabled="isDownloading" class="w-full h-12 bg-bejo-50 text-bejo-600 rounded-2xl font-black text-[10px] uppercase tracking-widest border border-bejo-100 hover:bg-bejo-600 hover:text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+             <Icon v-if="isDownloading" icon="lucide:loader-2" class="size-4 animate-spin" />
+             <Icon v-else icon="lucide:file-down" class="size-4" />
+             Unduh Brosur Digital
+          </button>
        </div>
 
        <!-- Disclaimer -->

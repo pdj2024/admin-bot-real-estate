@@ -127,7 +127,7 @@ const handleSave = async () => {
             </div>
             <div>
               <h3 class="text-sm font-black text-slate-900 uppercase tracking-widest">{{ editData ? 'Edit Status' : 'Tambah Status Baru' }}</h3>
-              <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Konfigurasi Master Status & Warna</p>
+              <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Konfigurasi Status & Warna</p>
             </div>
           </div>
           <button @click="emit('close')" class="size-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-white hover:text-red-500 transition-all">
@@ -225,7 +225,7 @@ const handleSave = async () => {
 
             <!-- Status -->
             <div class="space-y-2">
-              <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Status Master</label>
+              <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Status</label>
               <div class="flex items-center gap-3 h-12 px-4 bg-slate-50 border border-slate-100 rounded-xl group transition-all" :class="{ 'border-bejo-500/30 bg-bejo-50/10': form.Status === 'aktif' }">
                 <span class="text-[10px] font-black uppercase tracking-widest transition-colors" :class="form.Status === 'aktif' ? 'text-bejo-600' : 'text-slate-400'">
                   {{ form.Status === 'aktif' ? 'Aktif' : 'Nonaktif' }}

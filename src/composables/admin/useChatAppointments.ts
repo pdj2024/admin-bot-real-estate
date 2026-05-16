@@ -42,9 +42,11 @@ export function useChatAppointments(props: any, sendChat: any) {
   }
 
   const bookedDates = computed(() => {
-    return allAppointments.value.map((item) => {
-      return item.Tanggal_Janji.split('T')[0]
-    })
+    return allAppointments.value
+      .filter(item => item.Status_Progress !== 'batal')
+      .map((item) => {
+        return item.Tanggal_Janji.split('T')[0]
+      })
   })
 
   const handleSelectUnitForAppointment = (product: any) => {
@@ -87,14 +89,16 @@ export function useChatAppointments(props: any, sendChat: any) {
       if (bookedDates.value.includes(key)) return ['fc-day-booked']
       return []
     },
-    events: allAppointments.value.map((item) => ({
-      title: item.Id_Customer,
-      start: `${item.Tanggal_Janji.split('T')[0]}T${item.Waktu_Janji}`,
-      backgroundColor: '#94a3b8',
-      borderColor: '#94a3b8',
-      textColor: '#ffffff',
-      extendedProps: item
-    })),
+    events: allAppointments.value
+      .filter(item => item.Status_Progress !== 'batal')
+      .map((item) => ({
+        title: item.Id_Customer,
+        start: `${item.Tanggal_Janji.split('T')[0]}T${item.Waktu_Janji}`,
+        backgroundColor: '#94a3b8',
+        borderColor: '#94a3b8',
+        textColor: '#ffffff',
+        extendedProps: item
+      })),
     headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
     eventClick: () => {}
   }))
@@ -125,6 +129,7 @@ export function useChatAppointments(props: any, sendChat: any) {
     try {
       // 1. Create Appointment in DB
       await api.post('/api/janjiTemu/create', {
+        Room_Id: props.roomId,
         Id_Customer: props.idLawan,
         Id_Admin: localStorage.getItem('no_id'),
         Id_Produk: f.unitId,

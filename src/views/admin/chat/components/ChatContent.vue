@@ -65,6 +65,8 @@ const addEmoji = (emoji: string) => {
   chatInputRef.value?.focus()
 }
 
+
+
 const getBase64ImageFromUrl = async (imageUrl: string, maxWidth = 1024, format = 'image/jpeg'): Promise<string | null> => {
   return new Promise((resolve) => {
     const img = new Image()
@@ -125,6 +127,7 @@ const props = defineProps<{
   roomId: string | null
   idLawan: string
   phoneNumber: string
+  namaDisplay?: string
   activeTab: string
   chats: Chat[]
   lastMessageId: string
@@ -266,7 +269,7 @@ watch(openTukarCS, (n) => {
 })
 
 const handleOpenAppointment = () => {
-  appointmentForm.value = { namaLengkap: username.value || '', noTelp: props.phoneNumber, lokasi: '', catatan: '', tanggal: '', waktu: '', properti: '', unitId: '', mediaId: '', mediaUrl: '' }
+  appointmentForm.value = { namaLengkap: username.value || '', noTelp: props.phoneNumber, lokasi: '', catatan: '', tanggal: '', waktu: '', properti: '', unitId: '', mediaId: '', mediaUrl: '', Room_Id: props.roomId }
   appointmentStage.value = 1
   openAppointment.value = true
   fetchProducts()
@@ -727,7 +730,7 @@ const sendBrochureFinal = async () => {
       emit('addChat', newMessage)
     }
 
-    success('Brosur Exclusive berhasil dikirim ke WhatsApp Customer')
+    success('Brosur properti berhasil dikirim ke WhatsApp Customer')
     showBrochureCaptionModal.value = false
   } catch (error) {
     console.error('Gagal mengirim brosur:', error)
@@ -1010,11 +1013,18 @@ const saveUsername = async () => {
     const config = { headers: { 'X-Jenis-User': 'admin' } }
     const res = await api.get(`/api/customer/getAll?no_id=${props.idLawan}`, config)
     const customerData = res.data.Data[0]
-    await api.put(`/api/customer/update?no_id=${props.idLawan}`, { ...customerData, UserName: username.value }, config)
+    
+    // Only update UserName as requested (the label)
+    await api.put(`/api/customer/update?no_id=${props.idLawan}`, { 
+      ...customerData, 
+      UserName: username.value 
+    }, config)
+    
     emit('usernameChange', username.value!)
     changeUsername.value = false
+    success('Label/Username berhasil diperbarui')
   } catch (err: any) {
-    alert(err.response?.data?.Message || err.message || 'Terjadi kesalahan sistem')
+    fail(err.response?.data?.Message || err.message || 'Terjadi kesalahan sistem')
   }
 }
 
@@ -1095,7 +1105,7 @@ const removeImage = (index: number) => {
   else if (activeIndex.value >= index) activeIndex.value = Math.max(0, activeIndex.value - 1)
 }
 
-defineExpose({ setInitialFiles })
+
 
 watch(
   () => props.roomId,
@@ -1211,6 +1221,11 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
+
+defineExpose({
+  takeOverChat,
+  setInitialFiles
+})
 </script>
 
 <template>
@@ -1237,13 +1252,16 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
                 <h6 class="text-slate-900 font-extrabold text-xs md:text-base tracking-tight capitalize leading-tight truncate max-w-[120px] md:max-w-none flex-1 min-w-0">
                   <template v-if="changeUsername">
                     <div class="flex items-center gap-2">
-                      <input v-model="username" placeholder="Ubah nama..." class="bg-slate-50 border-transparent rounded-xl py-1.5 px-3 text-sm font-bold focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500 focus:bg-white transition-all outline-none border border-slate-100 shadow-inner" />
+                      <input v-model="username" placeholder="Ubah label..." class="bg-slate-50 border-transparent rounded-xl py-1.5 px-3 text-sm font-bold focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500 focus:bg-white transition-all outline-none border border-slate-100 shadow-inner" />
                       <button @click="saveUsername" class="text-[10px] font-black uppercase tracking-widest bg-bejo-500 text-white px-4 py-2 mt-0.5 rounded-lg shadow-lg shadow-bejo-500/20 hover:scale-105 active:scale-95 transition-all">Simpan</button>
                     </div>
                   </template>
                   <template v-else>
                     <span class="flex items-center gap-2 group/name cursor-pointer" @click="changeUsername = true">
-                      {{ username || phoneNumber }}
+                      <span class="truncate">
+                        {{ props.namaDisplay || phoneNumber }}
+                        <span v-if="username" class="text-slate-400 font-bold ml-1 text-[10px] md:text-sm">({{ username }})</span>
+                      </span>
                       <Icon icon="lucide:pencil" class="size-4 text-slate-300 group-hover/name:text-bejo-500 transition-colors" />
                     </span>
                   </template>
@@ -1615,7 +1633,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 
 :deep(.fc-day-booked) {
   background-color: #f8fafc !important;
-  cursor: not-allowed !important;
+  cursor: default !important;
   position: relative;
 }
 

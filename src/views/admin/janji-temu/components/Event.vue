@@ -428,7 +428,7 @@ const sendBrochure = async () => {
     let fPhone = phoneNumber.replace(/\D/g, '')
     if (fPhone.startsWith('0')) fPhone = '62' + fPhone.substring(1)
 
-    const brochureCaption = `Halo *${props.appointment.Nama_Customer}*,\n\nBerikut adalah brosur digital untuk unit *${productData.value.Nama_Produk}*.\n\nJanji temu Bapak/Ibu dijadwalkan pada:\n🗓️ *${new Date(props.appointment.Tanggal_Janji).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}*\n⏰ *${props.appointment.Waktu_Janji} WIB*\n\nSampai jumpa di lokasi!`
+    const brochureCaption = `Halo *${props.appointment.Nama_Display_Customer || props.appointment.Nama_Customer}*,\n\nBerikut adalah brosur digital untuk unit *${productData.value.Nama_Produk}*.\n\nMengingatkan kembali, janji temu Bapak/Ibu dijadwalkan pada:\n🗓️ *${new Date(props.appointment.Tanggal_Janji).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}*\n⏰ *${props.appointment.Waktu_Janji} WIB*\n\nSampai jumpa di lokasi!`
 
     await api.post('/api/waha/send-document', {
       PhoneNumber: fPhone + '@s.whatsapp.net',
@@ -466,7 +466,7 @@ const sendBrochure = async () => {
     } catch (err) {
       console.warn('Gagal mencatat log brosur ke DB Chat:', err)
     }
-    success('Brosur Exclusive berhasil dikirim ke WhatsApp Customer')
+    success('Brosur properti berhasil dikirim ke WhatsApp Customer')
   } catch (error) {
     console.error('Gagal mengirim brosur:', error)
     fail('Gagal mengirim brosur. Silakan coba lagi.')

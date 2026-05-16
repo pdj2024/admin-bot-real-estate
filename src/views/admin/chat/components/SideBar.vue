@@ -66,6 +66,8 @@ const emit = defineEmits<{
   (e: 'selectChat', id: string): void
   (e: 'idLawan', id_lawan: string): void
   (e: 'username', username: string): void
+  (e: 'nama-display', value: string): void
+  (e: 'usernameLawan', value: string): void
   (e: 'phoneNumber', phoneNumber: string): void
   (e: 'statusBot', status: string): void
   (e: 'changeTab', tab: string): void
@@ -74,7 +76,7 @@ const emit = defineEmits<{
   (e: 'chatTakeOverBatch', payload: TakeOverPayload[]): void
 }>()
 
-const selectChat = (idx: number, group: string, id: string, idLawan: string, username: string, phoneNumber: string, statusBot: string) => {
+const selectChat = (idx: number, group: string, id: string, idLawan: string, username: string, phoneNumber: string, statusBot: string, namaDisplay: string = '') => {
   if (isLongPress.value) {
     isLongPress.value = false
     return
@@ -82,6 +84,7 @@ const selectChat = (idx: number, group: string, id: string, idLawan: string, use
   emit('selectChat', id)
   emit('idLawan', idLawan)
   emit('username', username || '')
+  emit('nama-display', namaDisplay || '')
   emit('phoneNumber', phoneNumber || '')
   emit('statusBot', statusBot || 'nonaktif')
   if (activeTab.value !== group && (group === 'bot' || group === 'chat_saya')) {
@@ -117,7 +120,8 @@ const checkAndEmitActiveChat = () => {
   
   if (chat) {
     emit('idLawan', chat.Id_Lawan)
-    emit('username', chat.Username_Lawan )
+    emit('username', chat.Username_Lawan || '')
+    emit('nama-display', chat.Nama_Display_Lawan || chat.Room_Name || '')
     emit('phoneNumber', chat.Telepon_User_Lawan || '')
     emit('statusBot', chat.Status_Bot || 'nonaktif')
     
@@ -149,6 +153,7 @@ export interface Chat {
   Tipe_User: string
   Telepon_User: string
   Username_Lawan: string
+  Nama_Display_Lawan?: string
   Id_Lawan: string
   Id_Media_Lawan: string
   No_Id_Media_Lawan: string
@@ -219,10 +224,6 @@ const fetchData = async (tab: 'bot' | 'chat_saya', silent: boolean = false) => {
       const tempIdsBot: string[] = []
 
       data.Data.forEach((item: any) => {
-        if (!item.Username_Lawan || item.Username_Lawan === '') {
-          item.Username_Lawan = item.Telepon_User_Lawan || item.Id_Lawan || item.Room_Id
-        }
-        
         if (item.Room_Id) {
           tempBot.push(item)
           tempIdsBot.push(item.Room_Id)
@@ -248,10 +249,6 @@ const fetchData = async (tab: 'bot' | 'chat_saya', silent: boolean = false) => {
         // Hanya proses room yang aktif dan memiliki data lawan lengkap
         if (item.Status !== 'aktif' || !item.Id_Lawan || !item.Telepon_User_Lawan) return
 
-        if (!item.Username_Lawan || item.Username_Lawan === '') {
-          item.Username_Lawan = item.Telepon_User_Lawan || item.Id_Lawan || item.Room_Id
-        }
-        
         if (item.Room_Id) {
           if (unreadCounts.value[item.Room_Id] !== undefined) {
             item.New_Message_Count = unreadCounts.value[item.Room_Id]
@@ -535,9 +532,10 @@ const handleViewConversation = () => {
       selectedChatGroup.value, 
       chat.Room_Id, 
       chat.Id_Lawan, 
-      chat.Username_Lawan, 
+      chat.Username_Lawan || '', 
       chat.Telepon_User_Lawan, 
-      chat.Status_Bot || 'nonaktif'
+      chat.Status_Bot || 'nonaktif',
+      chat.Nama_Display_Lawan || chat.Room_Name || ''
     )
   }
   closeContextMenu()
@@ -587,9 +585,10 @@ const handleTakeOverConversation = () => {
       'chat_saya', 
       chat.Room_Id, 
       chat.Id_Lawan, 
-      chat.Username_Lawan, 
+      chat.Username_Lawan || '', 
       chat.Telepon_User_Lawan, 
-      'nonaktif'
+      'nonaktif',
+      chat.Nama_Display_Lawan || chat.Room_Name || ''
     )
   }
   closeContextMenu()
@@ -714,7 +713,7 @@ const filterList = (list: Chat[]) => {
   if (!searchQuery.value.trim()) return list
   const query = searchQuery.value.toLowerCase()
   return list.filter(chat => 
-    (chat.Username_Lawan || '').toLowerCase().includes(query) ||
+    (chat.Nama_Display_Lawan || chat.Username_Lawan || '').toLowerCase().includes(query) ||
     (chat.Telepon_User_Lawan || '').toLowerCase().includes(query)
   )
 }
@@ -826,7 +825,7 @@ defineExpose({
                     <div
                       v-for="(chat, idx) in filteredChatsBot"
                       :key="chat.Room_Id"
-                      @click="selectChat(idx, 'bot', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan, chat.Telepon_User_Lawan, chat.Status_Bot || 'aktif')"
+                      @click="selectChat(idx, 'bot', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan || '', chat.Telepon_User_Lawan, chat.Status_Bot || 'aktif', chat.Nama_Display_Lawan || chat.Room_Name || '')"
                       @contextmenu.prevent="openContextMenu($event, chat, 'bot', idx)"
                       @pointerdown="handlePointerDown($event, chat, 'bot', idx)"
                       @pointerup="handlePointerUp"
@@ -843,7 +842,7 @@ defineExpose({
                       </div>
 
                       <div class="relative shrink-0 flex items-center justify-center font-black rounded-2xl size-10 bg-gradient-to-br from-bejo-50 to-bejo-100/50 text-bejo-600 border border-white shadow-sm group-hover:scale-105 transition-all duration-300">
-                        <span v-if="chat.Username_Lawan" class="text-xs tracking-tighter">{{ chat.Username_Lawan?.charAt(0).toUpperCase() }}</span>
+                        <span v-if="chat.Nama_Display_Lawan || chat.Username_Lawan || chat.Telepon_User_Lawan" class="text-xs tracking-tighter">{{ (chat.Nama_Display_Lawan || chat.Username_Lawan || chat.Telepon_User_Lawan)?.charAt(0).toUpperCase() }}</span>
                         <Icon v-else icon="lucide:user" class="size-5 text-bejo-300" />
                         <span class="absolute -bottom-1 -right-1 size-3.5 border-2 border-white rounded-full bg-bejo-500 shadow-sm shadow-green-500/20"></span>
                       </div>
@@ -851,7 +850,7 @@ defineExpose({
                       <div class="flex-grow min-w-0">
                         <div class="flex items-center justify-between gap-2 mb-1">
                           <h6 class="text-slate-900 font-black text-sm truncate tracking-tight">
-                            {{ chat.Username_Lawan }}
+                            {{ chat.Nama_Display_Lawan || chat.Username_Lawan || chat.Telepon_User_Lawan }}
                           </h6>
                           <span class="text-[9px] font-black text-slate-400 shrink-0 uppercase tracking-tighter">
                             {{ getDateChat(chat.Last_Message_At) }}
@@ -909,7 +908,7 @@ defineExpose({
                     <div
                       v-for="(chat, idx) in filteredChatsAssign.slice().reverse()"
                       :key="chat.Room_Id"
-                      @click="selectChat(idx, 'chat_saya', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan, chat.Telepon_User_Lawan, chat.Status_Bot || 'nonaktif')"
+                      @click="selectChat(idx, 'chat_saya', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan || '', chat.Telepon_User_Lawan, chat.Status_Bot || 'nonaktif', chat.Nama_Display_Lawan || chat.Room_Name || '')"
                       @contextmenu.prevent="openContextMenu($event, chat, 'assign', idx)"
                       @pointerdown="handlePointerDown($event, chat, 'assign', idx)"
                       @pointerup="handlePointerUp"
@@ -926,7 +925,7 @@ defineExpose({
                       </div>
 
                       <div class="relative shrink-0 flex items-center justify-center font-black rounded-2xl size-10 bg-gradient-to-br from-slate-100 to-slate-200/50 text-slate-600 border border-white shadow-sm group-hover:scale-105 transition-all duration-300">
-                        <span v-if="chat.Username_Lawan" class="text-xs tracking-tighter">{{ chat.Username_Lawan.charAt(0).toUpperCase() }}</span>
+                        <span v-if="chat.Nama_Display_Lawan || chat.Username_Lawan || chat.Telepon_User_Lawan" class="text-xs tracking-tighter">{{ (chat.Nama_Display_Lawan || chat.Username_Lawan || chat.Telepon_User_Lawan)?.charAt(0).toUpperCase() }}</span>
                         <Icon v-else icon="lucide:user" class="size-5 text-slate-300" />
                         <span class="absolute -bottom-1 -right-1 size-3.5 border-2 border-white rounded-full bg-slate-300 shadow-sm"></span>
                       </div>
@@ -934,7 +933,7 @@ defineExpose({
                       <div class="flex-grow min-w-0">
                         <div class="flex items-center justify-between gap-2 mb-1">
                           <h6 class="text-slate-900 font-black text-sm truncate tracking-tight">
-                            {{ chat.Username_Lawan }}
+                            {{ chat.Nama_Display_Lawan || chat.Username_Lawan || chat.Telepon_User_Lawan }}
                           </h6>
                           <span class="text-[9px] font-black text-slate-400 shrink-0 uppercase tracking-tighter">
                             {{ getDateChat(chat.Last_Message_At) }}
@@ -987,7 +986,7 @@ defineExpose({
                     <div
                       v-for="(chat, idx) in filteredChatsAktif"
                       :key="chat.Room_Id"
-                      @click="selectChat(idx, 'chat_saya', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan, chat.Telepon_User_Lawan, chat.Status_Bot || 'nonaktif')"
+                      @click="selectChat(idx, 'chat_saya', chat.Room_Id, chat.Id_Lawan, chat.Username_Lawan || '', chat.Telepon_User_Lawan, chat.Status_Bot || 'nonaktif', chat.Nama_Display_Lawan || chat.Room_Name || '')"
                       @contextmenu.prevent="openContextMenu($event, chat, 'aktif', idx)"
                       @pointerdown="handlePointerDown($event, chat, 'aktif', idx)"
                       @pointerup="handlePointerUp"
@@ -1004,7 +1003,7 @@ defineExpose({
                       </div>
 
                       <div class="relative shrink-0 flex items-center justify-center font-black rounded-2xl size-10 bg-gradient-to-br from-bejo-50 to-bejo-100/50 text-bejo-600 border border-white shadow-sm group-hover:scale-105 transition-all duration-300">
-                        <span v-if="chat.Username_Lawan" class="text-xs tracking-tighter">{{ chat.Username_Lawan.charAt(0).toUpperCase() }}</span>
+                        <span v-if="chat.Nama_Display_Lawan || chat.Username_Lawan || chat.Telepon_User_Lawan" class="text-xs tracking-tighter">{{ (chat.Nama_Display_Lawan || chat.Username_Lawan || chat.Telepon_User_Lawan)?.charAt(0).toUpperCase() }}</span>
                         <Icon v-else icon="lucide:user" class="size-5 text-bejo-300" />
                         <span class="absolute -bottom-1 -right-1 size-3.5 border-2 border-white rounded-full bg-bejo-500 shadow-sm shadow-green-500/20"></span>
                       </div>
@@ -1012,7 +1011,7 @@ defineExpose({
                       <div class="flex-grow min-w-0">
                         <div class="flex items-center justify-between gap-2 mb-1">
                           <h6 class="text-slate-900 font-black text-sm truncate tracking-tight">
-                            {{ chat.Username_Lawan }}
+                            {{ chat.Nama_Display_Lawan || chat.Username_Lawan || chat.Telepon_User_Lawan }}
                           </h6>
                           <span class="text-[9px] font-black text-slate-400 shrink-0 uppercase tracking-tighter">
                             {{ getDateChat(chat.Last_Message_At) }}

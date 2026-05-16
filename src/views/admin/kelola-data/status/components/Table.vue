@@ -1,32 +1,85 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, h, computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import api from '@/services/axios'
-import { fail, success, confirm } from '@/utils/sweet-alert'
-import * as XLSX from 'xlsx'
+import { useVueTable, FlexRender, getCoreRowModel, getPaginationRowModel, getSortedRowModel, getFilteredRowModel } from '@tanstack/vue-table'
+import { confirm, success, fail } from '@/utils/sweet-alert'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
+import * as XLSX from 'xlsx'
+
+interface StatusData {
+  No_Id: string
+  Nama: string
+  Warna: string | null
+  Kategori: string
+  Status: string
+  Keterangan: string | null
+}
+
+const items = ref<StatusData[]>([])
+const isLoading = ref(false)
+const rowSelection = ref<Record<string, boolean>>({})
+const emit = defineEmits(['edit', 'success'])
 
 const props = defineProps({
   searchQuery: { type: String, default: '' },
+  statusFilter: { type: String, default: '' },
   categoryFilter: { type: String, default: '' }
 })
 
-const emit = defineEmits(['edit', 'success'])
+const filteredData = computed(() => {
+  let result = items.value
+  if (props.categoryFilter) {
+    result = result.filter(item => item.Kategori === props.categoryFilter)
+  }
+  if (props.statusFilter) {
+    result = result.filter(item => item.Status === props.statusFilter)
+  }
+  return result
+})
 
-const items = ref<any[]>([])
-const isLoading = ref(false)
-const currentPage = ref(1)
-const itemsPerPage = ref(10)
+const columns = [
+  {
+    id: 'select',
+    header: ({ table }: any) => h('input', {
+      type: 'checkbox',
+      checked: table.getIsAllPageRowsSelected(),
+      indeterminate: table.getIsSomePageRowsSelected(),
+      onChange: table.getToggleAllPageRowsSelectedHandler(),
+      class: 'size-4 rounded border-slate-300 text-bejo-600 focus:ring-bejo-500/20 transition-all cursor-pointer'
+    }),
+    cell: ({ row }: any) => h('input', {
+      type: 'checkbox',
+      checked: row.getIsSelected(),
+      disabled: !row.getCanSelect(),
+      onChange: row.getToggleSelectedHandler(),
+      class: 'size-4 rounded border-slate-300 text-bejo-600 focus:ring-bejo-500/20 transition-all cursor-pointer'
+    }),
+    enableSorting: false,
+    enableHiding: false,
+  },
+  { 
+    accessorKey: 'Nama', 
+    header: 'Nama Status',
+    cell: ({ row }: any) => h('div', { class: 'flex items-center gap-3' }, [
+      h('div', { 
+        class: 'size-3 rounded-full border border-slate-200 shadow-sm', 
+        style: { backgroundColor: row.original.Warna || '#e2e8f0' } 
+      }),
+      h('span', { class: 'font-black text-slate-900 group-hover:text-bejo-600 transition-colors' }, row.original.Nama)
+    ])
+  },
+  { accessorKey: 'Kategori', header: 'Kategori' },
+  { accessorKey: 'Warna', header: 'Warna Hex' },
+  { accessorKey: 'Status', header: 'Status' },
+  { id: 'aksi', header: 'Action', enableSorting: false },
+  // Virtual columns
+  { accessorKey: 'Keterangan', header: 'Keterangan', meta: { isVirtual: true } },
+  { accessorKey: 'No_Id', header: 'ID Status', meta: { isVirtual: true } }
+]
 
-const columns = ref([
-  { key: 'Nama', label: 'NAMA STATUS', visible: true },
-  { key: 'Warna', label: 'WARNA', visible: true },
-  { key: 'Kategori', label: 'KATEGORI', visible: true },
-  { key: 'Status', label: 'STATUS', visible: true },
-  { key: 'Keterangan', label: 'KETERANGAN', visible: true },
-  { key: 'action', label: 'ACTION', visible: true }
-])
+const columnVisibility = ref({})
 
 const fetchData = async () => {
   isLoading.value = true
@@ -36,191 +89,381 @@ const fetchData = async () => {
       items.value = data.Data
     }
   } catch (err: any) {
-    fail(err.response?.data?.Message || 'Gagal mengambil data status')
+    console.error('Gagal memuat data:', err)
   } finally {
     isLoading.value = false
   }
 }
 
-const filteredData = computed(() => {
-  return items.value.filter(item => {
-    const matchesSearch = item.Nama.toLowerCase().includes(props.searchQuery.toLowerCase())
-    const matchesCategory = props.categoryFilter === '' || item.Kategori === props.categoryFilter
-    return matchesSearch && matchesCategory
-  })
+const toggleStatus = async (item: StatusData) => {
+  const newStatus = item.Status === 'aktif' ? 'nonaktif' : 'aktif'
+  try {
+    await api.put(`/api/masStatus/update?no_id=${item.No_Id}`, { ...item, Status: newStatus }, { headers: { 'X-Jenis-User': 'admin' } })
+    item.Status = newStatus
+    success(`Berhasil mengubah status ${item.Nama}`)
+    emit('success')
+  } catch {
+    fail(`Gagal mengubah status ${item.Nama}`)
+  }
+}
+
+const table = useVueTable({
+  get data() { return filteredData.value },
+  columns,
+  state: {
+    get rowSelection() { return rowSelection.value },
+    get globalFilter() { return props.searchQuery },
+    get columnVisibility() { return columnVisibility.value }
+  },
+  onRowSelectionChange: (updaterOrValue) => {
+    rowSelection.value = typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection.value) : updaterOrValue
+  },
+  onColumnVisibilityChange: (updaterOrValue) => {
+    columnVisibility.value = typeof updaterOrValue === 'function' ? updaterOrValue(columnVisibility.value) : updaterOrValue
+  },
+  getCoreRowModel: getCoreRowModel(),
+  getPaginationRowModel: getPaginationRowModel(),
+  getSortedRowModel: getSortedRowModel(),
+  getFilteredRowModel: getFilteredRowModel(),
+  getRowId: (row) => row.No_Id,
+  initialState: { pagination: { pageSize: 10 } }
 })
 
-const paginatedData = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage.value
-  const end = start + itemsPerPage.value
-  return filteredData.value.slice(start, end)
-})
+// Batch Actions
+const selectedItems = computed(() => table.getSelectedRowModel().rows.map(r => r.original as StatusData))
+const showBatchActivate = computed(() => selectedItems.value.some(item => item.Status !== 'aktif'))
+const showBatchDeactivate = computed(() => selectedItems.value.some(item => item.Status === 'aktif'))
 
-const totalPages = computed(() => Math.ceil(filteredData.value.length / itemsPerPage.value))
+const handleBatchUpdate = async (value: 'aktif' | 'nonaktif') => {
+  const selectedRows = table.getSelectedRowModel().rows
+  if (selectedRows.length === 0) return
 
-const handleDelete = (id: string) => {
-  confirm('Hapus status ini?', async () => {
-    try {
-      const { data } = await api.delete('/api/masStatus/delete', { params: { no_id: id } })
-      if (data.StatusCode === 200) {
-        success('Status berhasil dihapus')
-        fetchData()
+  confirm(`Apakah Anda yakin ingin mengubah Status untuk ${selectedRows.length} status terpilih?`, async () => {
+    let successCount = 0
+    let failCount = 0
+
+    for (const row of selectedRows) {
+      const item = row.original
+      try {
+        await api.put(`/api/masStatus/update?no_id=${item.No_Id}`, 
+          { ...item, Status: value }, 
+          { headers: { 'X-Jenis-User': 'admin' } }
+        )
+        item.Status = value
+        successCount++
+      } catch {
+        failCount++
       }
-    } catch (err: any) {
-      fail(err.response?.data?.Message || 'Gagal menghapus status')
     }
+
+    if (successCount > 0) success(`Berhasil mengubah ${successCount} data status`)
+    if (failCount > 0) fail(`${failCount} data gagal diubah`)
+    
+    table.resetRowSelection()
+    emit('success')
   })
 }
 
-// Table functions for Filter.vue
-const getColumns = () => columns.value
-const updateVisibility = (newCols: any[]) => { columns.value = newCols }
+const handleBatchDelete = async () => {
+  const selectedRows = table.getSelectedRowModel().rows
+  if (selectedRows.length === 0) return
+
+  confirm(`Apakah Anda yakin ingin menghapus ${selectedRows.length} status terpilih secara permanen?`, async () => {
+    let successCount = 0
+    let failCount = 0
+
+    for (const row of selectedRows) {
+      const item = row.original
+      try {
+        await api.delete(`/api/masStatus/delete`, { params: { no_id: item.No_Id } })
+        successCount++
+      } catch {
+        failCount++
+      }
+    }
+
+    if (successCount > 0) success(`Berhasil menghapus ${successCount} data status`)
+    if (failCount > 0) fail(`${failCount} data gagal dihapus`)
+    
+    fetchData()
+    table.resetRowSelection()
+    emit('success')
+  })
+}
+
+const getExportData = () => {
+  const visibleColumns = table.getVisibleLeafColumns().filter(c => !['select', 'aksi'].includes(c.id))
+  const headers = ['No', ...visibleColumns.map(c => (c.columnDef as any).header as string)]
+  const rows = table.getRowModel().rows.map((row) => {
+    return [
+      String(row.index + 1),
+      ...visibleColumns.map(col => {
+        const value = row.getValue(col.id)
+        return value === null || value === undefined ? '' : String(value)
+      })
+    ]
+  })
+  return { headers, rows }
+}
 
 const exportToExcel = () => {
-  const data = filteredData.value.map(item => ({
-    'Nama Status': item.Nama,
-    'Warna': item.Warna,
-    'Kategori': item.Kategori,
-    'Status': item.Status,
-    'Keterangan': item.Keterangan
-  }))
-  const ws = XLSX.utils.json_to_sheet(data)
+  const { headers, rows } = getExportData()
+  if (rows.length === 0) return fail('Tidak ada data untuk diekspor')
+  const wsData = [['DATA LIST STATUS'], [], headers, ...rows]
+  const ws = XLSX.utils.aoa_to_sheet(wsData)
   const wb = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(wb, ws, 'Statuses')
-  XLSX.writeFile(wb, 'master_statuses.xlsx')
+  XLSX.utils.book_append_sheet(wb, ws, 'Data')
+  XLSX.writeFile(wb, `list_status_${new Date().toISOString().split('T')[0]}.xlsx`)
+  success('Excel berhasil diunduh')
 }
 
 const exportToPDF = () => {
+  const { headers, rows } = getExportData()
+  if (rows.length === 0) return fail('Tidak ada data untuk diekspor')
   const doc = new jsPDF()
-  doc.text('Master Statuses List', 14, 15)
+  doc.setFontSize(18)
+  doc.text('DATA LIST STATUS', 14, 20)
   autoTable(doc, {
-    startY: 20,
-    head: [['Nama Status', 'Kategori', 'Status', 'Warna']],
-    body: filteredData.value.map(item => [item.Nama, item.Kategori, item.Status, item.Warna || '-']),
+    head: [headers],
+    body: rows,
+    startY: 30,
+    theme: 'striped',
+    headStyles: { fillColor: [235, 112, 31] }
   })
-  doc.save('master_statuses.pdf')
+  doc.save(`list_status_${new Date().toISOString().split('T')[0]}.pdf`)
+  success('PDF berhasil diunduh')
 }
 
 const printData = () => {
   window.print()
 }
 
-onMounted(fetchData)
+const updateVisibility = (visibility: any) => {
+  columnVisibility.value = visibility
+}
 
-defineExpose({ fetchData, getColumns, updateVisibility, exportToExcel, exportToPDF, printData })
+defineExpose({ 
+  fetchData, exportToExcel, exportToPDF, printData, updateVisibility,
+  getColumns: () => table.getAllLeafColumns().filter(c => !['select', 'aksi'].includes(c.id)).map(c => ({
+    id: c.id,
+    label: (c.columnDef as any).header as string,
+    isVisible: c.getIsVisible()
+  }))
+})
+
+const openDropdownId = ref<string | null>(null)
+const dropdownPosition = ref({ top: 0, left: 0 })
+
+const toggleDropdown = (event: MouseEvent, id: string) => {
+  if (openDropdownId.value === id) {
+    openDropdownId.value = null
+  } else {
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
+    dropdownPosition.value = { top: rect.bottom + 12, left: rect.right - 224 }
+    openDropdownId.value = id
+  }
+}
+
+const handleClickOutside = (event: MouseEvent) => {
+  if (!(event.target as HTMLElement).closest('.action-menu')) openDropdownId.value = null
+}
+
+const handleScroll = () => { if (openDropdownId.value) openDropdownId.value = null }
+
+const handleDelete = (item: StatusData) => {
+  confirm(`Ingin menghapus status ${item.Nama}?`, async () => {
+    try {
+      await api.delete('/api/masStatus/delete', { params: { no_id: item.No_Id } })
+      success('Status berhasil dihapus')
+      fetchData()
+      emit('success')
+    } catch (err: any) {
+      fail(err.response?.data?.Message || 'Gagal menghapus data')
+    }
+  })
+}
+
+onMounted(() => {
+  fetchData()
+  document.addEventListener('click', handleClickOutside)
+  window.addEventListener('scroll', handleScroll, true)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside)
+  window.removeEventListener('scroll', handleScroll, true)
+})
 </script>
 
 <template>
-  <div class="overflow-x-auto custom-scrollbar">
-    <table class="w-full text-left border-separate border-spacing-y-2">
-      <thead>
-        <tr class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-          <th v-for="col in columns.filter(c => c.visible)" :key="col.key" class="px-6 py-4">
-            {{ col.label }}
-          </th>
-        </tr>
-      </thead>
-      <tbody v-if="isLoading">
-        <tr v-for="i in 5" :key="i" class="animate-pulse">
-          <td v-for="col in columns.filter(c => c.visible)" :key="col.key" class="px-6 py-4">
-            <div class="h-8 bg-slate-100 rounded-lg w-full"></div>
-          </td>
-        </tr>
-      </tbody>
-      <tbody v-else-if="paginatedData.length > 0">
-        <tr v-for="item in paginatedData" :key="item.No_Id" class="group transition-all">
-          <td v-if="columns.find(c => c.key === 'Nama')?.visible" class="px-6 py-4 bg-slate-50 group-hover:bg-bejo-50/30 first:rounded-l-2xl transition-colors">
-            <span class="text-xs font-black text-slate-700">{{ item.Nama }}</span>
-          </td>
+  <div class="flex flex-col relative">
+    <!-- Batch Action Bar -->
+    <Transition name="slide-up">
+      <div v-if="Object.keys(rowSelection).length > 0" class="absolute -top-24 left-0 right-0 z-50 px-6 py-4 bg-white/80 backdrop-blur-md border border-bejo-100 rounded-3xl shadow-2xl shadow-bejo-500/10 flex items-center gap-4 animate-in fade-in slide-in-from-top-4">
+        <div class="flex items-center gap-3 pr-4 border-r border-slate-100">
+          <div class="size-10 rounded-xl bg-bejo-500 text-white flex items-center justify-center font-black text-sm shadow-lg shadow-bejo-500/20">
+            {{ Object.keys(rowSelection).length }}
+          </div>
+          <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Item Terpilih</span>
+        </div>
+        
+        <div class="flex flex-wrap items-center gap-2">
+          <button v-if="showBatchActivate" @click="handleBatchUpdate('aktif')" class="btn-batch bg-bejo-50 text-bejo-600 hover:bg-bejo-500 hover:text-white border-bejo-100">
+            <Icon icon="lucide:check-circle" class="size-3.5" />
+            Aktifkan Status
+          </button>
+          <button v-if="showBatchDeactivate" @click="handleBatchUpdate('nonaktif')" class="btn-batch bg-slate-50 text-slate-500 hover:bg-slate-900 hover:text-white border-slate-100">
+            <Icon icon="lucide:x-circle" class="size-3.5" />
+            Nonaktifkan Status
+          </button>
+          <button @click="handleBatchDelete" class="btn-batch bg-red-50 text-red-500 hover:bg-red-500 hover:text-white border-red-100">
+            <Icon icon="lucide:trash-2" class="size-3.5" />
+            Hapus
+          </button>
+        </div>
 
-          <td v-if="columns.find(c => c.key === 'Warna')?.visible" class="px-6 py-4 bg-slate-50 group-hover:bg-bejo-50/30 transition-colors">
-            <div class="flex items-center gap-3">
-              <div class="size-4 rounded-full border border-slate-200" :style="{ backgroundColor: item.Warna || '#e2e8f0' }"></div>
-              <span class="text-[10px] font-mono font-bold text-slate-400">{{ item.Warna || '-' }}</span>
-            </div>
-          </td>
-
-          <td v-if="columns.find(c => c.key === 'Kategori')?.visible" class="px-6 py-4 bg-slate-50 group-hover:bg-bejo-50/30 transition-colors">
-            <span class="px-2.5 py-1 rounded-lg bg-slate-200/50 text-[9px] font-black uppercase tracking-widest text-slate-500">
-              {{ item.Kategori }}
-            </span>
-          </td>
-
-          <td v-if="columns.find(c => c.key === 'Status')?.visible" class="px-6 py-4 bg-slate-50 group-hover:bg-bejo-50/30 transition-colors">
-            <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm"
-              :class="item.Status === 'aktif' ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-slate-400 text-white shadow-slate-400/20'">
-              {{ item.Status || 'aktif' }}
-            </span>
-          </td>
-
-          <td v-if="columns.find(c => c.key === 'Keterangan')?.visible" class="px-6 py-4 bg-slate-50 group-hover:bg-bejo-50/30 transition-colors">
-            <span class="text-[10px] font-bold text-slate-400 italic">{{ item.Keterangan || '-' }}</span>
-          </td>
-
-          <td v-if="columns.find(c => c.key === 'action')?.visible" class="px-6 py-4 bg-slate-50 group-hover:bg-bejo-50/30 last:rounded-r-2xl transition-colors">
-            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button @click="emit('edit', item)" class="size-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white transition-all shadow-sm">
-                <Icon icon="lucide:edit-3" class="size-3.5" />
-              </button>
-              <button @click="handleDelete(item.No_Id)" class="size-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm">
-                <Icon icon="lucide:trash-2" class="size-3.5" />
-              </button>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-      <tbody v-else>
-        <tr>
-          <td :colspan="columns.length" class="px-6 py-20 text-center">
-            <div class="flex flex-col items-center gap-3">
-              <div class="size-16 rounded-full bg-slate-50 flex items-center justify-center text-slate-200">
-                <Icon icon="lucide:package-open" class="size-8" />
-              </div>
-              <p class="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Data Tidak Ditemukan</p>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- Pagination -->
-  <div v-if="totalPages > 1" class="mt-8 flex items-center justify-between px-4">
-    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-      Menampilkan {{ paginatedData.length }} dari {{ filteredData.length }} data
-    </p>
-    <div class="flex items-center gap-2">
-      <button 
-        @click="currentPage--" 
-        :disabled="currentPage === 1"
-        class="size-8 rounded-lg border border-slate-100 flex items-center justify-center text-slate-400 disabled:opacity-30 hover:bg-slate-50 transition-all"
-      >
-        <Icon icon="lucide:chevron-left" class="size-4" />
-      </button>
-      <div class="flex items-center gap-1">
-        <button 
-          v-for="p in totalPages" :key="p"
-          @click="currentPage = p"
-          class="size-8 rounded-lg text-[10px] font-black transition-all"
-          :class="currentPage === p ? 'bg-bejo-600 text-white shadow-lg shadow-bejo-600/20' : 'text-slate-400 hover:bg-slate-50'"
-        >
-          {{ p }}
+        <button @click="table.resetRowSelection()" class="ml-auto flex items-center gap-2 px-4 py-2 text-[10px] font-black text-slate-400 hover:text-red-500 uppercase tracking-widest transition-all">
+          <Icon icon="lucide:rotate-ccw" class="size-3.5" />
+          Batal
         </button>
       </div>
-      <button 
-        @click="currentPage++" 
-        :disabled="currentPage === totalPages"
-        class="size-8 rounded-lg border border-slate-100 flex items-center justify-center text-slate-400 disabled:opacity-30 hover:bg-slate-50 transition-all"
-      >
-        <Icon icon="lucide:chevron-right" class="size-4" />
-      </button>
+    </Transition>
+
+    <div class="lg:overflow-visible relative">
+      <div v-if="isLoading && items.length > 0" class="absolute inset-0 z-10 bg-white/40 backdrop-blur-[1px] flex items-start justify-center pt-20">
+        <div class="bg-white px-4 py-2 rounded-2xl shadow-xl border border-bejo-100 flex items-center gap-3">
+          <Icon icon="lucide:loader-2" class="animate-spin size-4 text-bejo-500" />
+          <span class="text-[10px] font-black text-slate-600 uppercase tracking-widest">Sinkronisasi...</span>
+        </div>
+      </div>
+
+      <div class="max-h-[600px] overflow-auto custom-scrollbar">
+        <table class="min-w-full divide-y divide-slate-100 border-separate border-spacing-0">
+          <thead class="sticky top-0 z-30 bg-white/80 backdrop-blur-md shadow-sm">
+            <tr v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
+              <th v-for="header in headerGroup.headers.filter(h => !(h.column.columnDef.meta as any)?.isVirtual)" :key="header.id" 
+                class="py-5 text-start text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100"
+                :class="header.column.id === 'select' ? 'pl-4 pr-0 w-8' : 'px-6'"
+              >
+                <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
+              </th>
+            </tr>
+          </thead>
+
+          <tbody class="divide-y divide-slate-50">
+            <tr v-if="isLoading && items.length === 0">
+              <td colspan="6" class="py-24 text-center">
+                <div class="flex flex-col items-center gap-3">
+                  <div class="size-12 rounded-2xl bg-bejo-50 flex items-center justify-center">
+                    <Icon icon="lucide:loader-2" class="animate-spin size-6 text-bejo-500" />
+                  </div>
+                  <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Memuat Data...</span>
+                </div>
+              </td>
+            </tr>
+
+            <tr v-else-if="table.getRowModel().rows.length === 0">
+              <td colspan="6" class="py-20 text-center">
+                <div class="flex flex-col items-center gap-3 opacity-40">
+                  <Icon icon="lucide:database-zap" class="size-12 text-slate-300" />
+                  <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Tidak ada data ditemukan</span>
+                </div>
+              </td>
+            </tr>
+
+            <tr v-else v-for="row in table.getRowModel().rows" :key="row.id" class="hover:bg-slate-50/50 transition-all duration-300 group" :class="{ 'bg-bejo-50/30': row.getIsSelected() }">
+              <td v-if="table.getColumn('select')?.getIsVisible()" class="pl-4 pr-0 py-5">
+                <FlexRender v-if="table.getColumn('select')" :render="table.getColumn('select')!.columnDef.cell" :props="row.getVisibleCells().find(c => c.column.id === 'select')?.getContext()" />
+              </td>
+
+              <td v-if="table.getColumn('Nama')?.getIsVisible()" class="px-6 py-5">
+                <FlexRender :render="table.getColumn('Nama')!.columnDef.cell" :props="row.getVisibleCells().find(c => c.column.id === 'Nama')?.getContext()" />
+                <div v-if="table.getColumn('No_Id')?.getIsVisible()" class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-1 ml-6">ID: {{ row.original.No_Id }}</div>
+              </td>
+
+              <td v-if="table.getColumn('Kategori')?.getIsVisible()" class="px-6 py-5">
+                <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-[9px] font-black uppercase tracking-widest text-slate-500 border border-slate-200/50">
+                  {{ row.original.Kategori }}
+                </span>
+              </td>
+
+              <td v-if="table.getColumn('Warna')?.getIsVisible()" class="px-6 py-5">
+                <span class="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest">{{ row.original.Warna || '-' }}</span>
+              </td>
+
+              <td v-if="table.getColumn('Status')?.getIsVisible()" class="px-6 py-5">
+                <div class="flex items-center gap-3">
+                  <div class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border" :class="row.original.Status === 'aktif' ? 'bg-bejo-50 text-bejo-600 border-bejo-100 shadow-sm shadow-bejo-500/10' : 'bg-slate-50 text-slate-400 border-slate-100'">
+                    {{ row.original.Status === 'aktif' ? 'Aktif' : 'Nonaktif' }}
+                  </div>
+                  <button @click="toggleStatus(row.original)" class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-all duration-300 focus:outline-none" :class="row.original.Status === 'aktif' ? 'bg-bejo-500 shadow-[0_0_15px_rgba(249,115,22,0.3)]' : 'bg-slate-200'">
+                    <span class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition duration-300 ease-in-out" :class="row.original.Status === 'aktif' ? 'translate-x-4' : 'translate-x-0'"></span>
+                  </button>
+                </div>
+              </td>
+
+              <td v-if="table.getColumn('aksi')?.getIsVisible()" class="px-6 py-5 relative action-menu text-right">
+                <button @click.stop="toggleDropdown($event, row.original.No_Id)" class="size-10 rounded-xl inline-flex items-center justify-center hover:bg-slate-100 transition-all text-slate-400 hover:text-slate-900 border border-transparent hover:border-slate-200">
+                  <Icon icon="lucide:more-vertical" class="size-5" />
+                </button>
+
+                <Teleport to="body">
+                  <Transition 
+                    enter-active-class="transition duration-200 ease-out" enter-from-class="transform scale-95 opacity-0 -translate-y-2" enter-to-class="transform scale-100 opacity-100 translate-y-0" leave-active-class="transition duration-150 ease-in" leave-from-class="transform scale-100 opacity-100 translate-y-0" leave-to-class="transform scale-95 opacity-0 -translate-y-2"
+                  >
+                    <div v-if="openDropdownId === row.original.No_Id" class="fixed w-56 bg-white shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-slate-100 rounded-[1.5rem] p-2 z-[999] origin-top-right" :style="{ top: `${dropdownPosition.top}px`, left: `${dropdownPosition.left}px` }">
+                      <button @click="emit('edit', row.original); openDropdownId = null" class="dropdown-item w-full group/item">
+                        <div class="size-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover/item:bg-bejo-500 group-hover/item:text-white transition-all">
+                          <Icon icon="lucide:pencil" class="size-3.5" />
+                        </div>
+                        <span class="group-hover/item:text-slate-900 transition-colors">Edit Data</span>
+                      </button>
+                      <div class="my-1.5 border-t border-slate-50/50 mx-2"></div>
+                      <button @click="handleDelete(row.original); openDropdownId = null" class="dropdown-item w-full group/item text-red-500 hover:bg-red-50">
+                        <div class="size-8 rounded-lg bg-red-50 flex items-center justify-center text-red-400 group-hover/item:bg-red-500 group-hover/item:text-white transition-all">
+                          <Icon icon="lucide:trash-2" class="size-3.5" />
+                        </div>
+                        <span class="font-black">Hapus</span>
+                      </button>
+                    </div>
+                  </Transition>
+                </Teleport>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="px-6 py-5 border-t border-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-6">
+        <div class="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+          Menampilkan <span class="text-slate-900 font-black">{{ table.getRowModel().rows.length }}</span> dari <span class="text-slate-900 font-black">{{ items.length }}</span> Data
+        </div>
+        <select :value="table.getState().pagination.pageSize" @change="e => table.setPageSize(Number((e.target as HTMLSelectElement).value))" class="h-8 min-w-[70px] px-2.5 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-lg outline-none cursor-pointer hover:border-bejo-500 shadow-sm">
+          <option v-for="size in [10, 25, 50]" :key="size" :value="size">{{ size }}</option>
+        </select>
+      </div>
+      <div class="flex items-center gap-2">
+        <button @click="table.previousPage()" :disabled="!table.getCanPreviousPage()" class="btn-pagination"><Icon icon="lucide:chevron-left" class="size-4" /></button>
+        <button v-for="n in table.getPageCount()" :key="n" @click="table.setPageIndex(n - 1)" class="btn-pagination-num" :class="{ active: table.getState().pagination.pageIndex === n - 1 }">{{ n }}</button>
+        <button @click="table.nextPage()" :disabled="!table.getCanNextPage()" class="btn-pagination"><Icon icon="lucide:chevron-right" class="size-4" /></button>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
 @reference "@/assets/css/style.css";
-.custom-scrollbar::-webkit-scrollbar { height: 4px; }
-.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.btn-pagination { @apply size-9 flex items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-400 hover:bg-slate-50 disabled:opacity-30; }
+.btn-pagination-num { @apply size-9 flex items-center justify-center rounded-xl text-xs font-black text-slate-400 hover:bg-slate-50; }
+.btn-pagination-num.active { @apply bg-bejo-500 text-white shadow-lg shadow-bejo-500/20; }
+.dropdown-item { @apply flex items-center gap-3 px-3 py-2.5 text-[11px] font-black uppercase tracking-widest text-slate-600 rounded-xl hover:bg-slate-50; }
+.btn-batch { @apply flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-2xl border transition-all; }
+.custom-scrollbar::-webkit-scrollbar { height: 4px; width: 4px; }
 .custom-scrollbar::-webkit-scrollbar-thumb { @apply bg-slate-100 rounded-full; }
+
+.slide-up-enter-active, .slide-up-leave-active { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease; }
+.slide-up-enter-from, .slide-up-leave-to { transform: translateY(20px); opacity: 0; }
 </style>

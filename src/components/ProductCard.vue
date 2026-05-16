@@ -257,6 +257,7 @@
               <button @click="$emit('updateStatus', product, 'Aktif')" v-if="product.Status_Display == 'Draft' && product.Status_Properti == 'Tersedia'" class="admin-dropdown-item hover:bg-blue-50 hover:text-blue-600"><Icon icon="lucide:eye" class="size-4" /> Tampilkan Produk</button>
               <button @click="$emit('updateStatus', product, 'Draft')" v-if="product.Status_Display == 'Aktif' && product.Status_Properti == 'Tersedia'" class="admin-dropdown-item hover:bg-amber-50 hover:text-amber-600"><Icon icon="lucide:eye-off" class="size-4" /> Jadikan Draft</button>
               <button @click="$emit('edit', product.Slug)" class="admin-dropdown-item hover:bg-slate-50 hover:text-slate-900"><Icon icon="lucide:pencil" class="size-4" /> Ubah Data</button>
+              <button @click="handleDownload" class="admin-dropdown-item hover:bg-bejo-50 hover:text-bejo-600"><Icon icon="lucide:file-down" class="size-4" /> Unduh Brosur</button>
               <button @click="$emit('delete', product)" class="admin-dropdown-item text-red-500 hover:bg-red-50"><Icon icon="lucide:trash-2" class="size-4" /> Hapus Unit</button>
             </div>
           </Transition>
@@ -271,6 +272,8 @@ import { Icon } from '@iconify/vue'
 import { ref, onMounted, computed } from 'vue'
 import { useSettings } from '@/stores/settings'
 import { storeToRefs } from 'pinia'
+import { downloadBrochure } from '@/utils/propertyBrochure'
+import { success, fail } from '@/utils/sweet-alert'
 
 const settingsStore = useSettings()
 const { app } = storeToRefs(settingsStore)
@@ -338,6 +341,20 @@ const handleClick = () => {
   if (!effectivelyLoading.value) {
     emit('select', props.product)
   }
+}
+
+const isDownloading = ref(false)
+const handleDownload = async () => {
+  if (isDownloading.value) return
+  isDownloading.value = true
+  
+  const res = await downloadBrochure(props.product, settingsStore.business, settingsStore.app)
+  if (res) {
+    success('Brosur berhasil diunduh')
+  } else {
+    fail('Gagal mengunduh brosur')
+  }
+  isDownloading.value = false
 }
 </script>
 
