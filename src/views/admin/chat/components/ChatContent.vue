@@ -1008,6 +1008,28 @@ const takeOverChat = async (status: boolean, phoneNumber?: string, roomId?: stri
   }
 }
 
+const avatarInitials = computed(() => {
+  const name = (props.namaDisplay || props.phoneNumber || '').trim()
+  if (!name) return ''
+  const parts = name.split(/\s+/).filter(Boolean)
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase()
+  }
+  return name.substring(0, 2).toUpperCase()
+})
+
+const backupUsername = ref('')
+
+const startEditUsername = () => {
+  backupUsername.value = username.value || ''
+  changeUsername.value = true
+}
+
+const cancelEditUsername = () => {
+  username.value = backupUsername.value
+  changeUsername.value = false
+}
+
 const saveUsername = async () => {
   try {
     const config = { headers: { 'X-Jenis-User': 'admin' } }
@@ -1242,7 +1264,7 @@ defineExpose({
             </button>
 
             <div class="relative flex-shrink-0 flex items-center justify-center font-black rounded-xl size-8 md:size-10 bg-gradient-to-br from-bejo-50 to-bejo-100/50 text-bejo-600 border border-white shadow-lg shadow-bejo-500/10">
-              <span v-if="username" class="text-[10px] md:text-sm tracking-tighter">{{ username.substring(0, 2).toUpperCase() }}</span>
+              <span v-if="avatarInitials" class="text-[10px] md:text-sm tracking-tighter">{{ avatarInitials }}</span>
               <Icon v-else icon="lucide:user" class="size-4 md:size-5 text-bejo-300" />
               <span class="absolute -bottom-0.5 -right-0.5 size-2 md:size-3 border-2 border-white rounded-full bg-bejo-500 shadow-lg shadow-bejo-500/20 ring-1 ring-bejo-500/20"></span>
             </div>
@@ -1254,10 +1276,11 @@ defineExpose({
                     <div class="flex items-center gap-2">
                       <input v-model="username" placeholder="Ubah label..." class="bg-slate-50 border-transparent rounded-xl py-1.5 px-3 text-sm font-bold focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500 focus:bg-white transition-all outline-none border border-slate-100 shadow-inner" />
                       <button @click="saveUsername" class="text-[10px] font-black uppercase tracking-widest bg-bejo-500 text-white px-4 py-2 mt-0.5 rounded-lg shadow-lg shadow-bejo-500/20 hover:scale-105 active:scale-95 transition-all">Simpan</button>
+                      <button @click="cancelEditUsername" class="text-[10px] font-black uppercase tracking-widest bg-slate-200 text-slate-600 px-4 py-2 mt-0.5 rounded-lg shadow-sm hover:scale-105 active:scale-95 transition-all">Batal</button>
                     </div>
                   </template>
                   <template v-else>
-                    <span class="flex items-center gap-2 group/name cursor-pointer" @click="changeUsername = true">
+                    <span class="flex items-center gap-2 group/name cursor-pointer" @click="startEditUsername">
                       <span class="truncate">
                         {{ props.namaDisplay || phoneNumber }}
                         <span v-if="username" class="text-slate-400 font-bold ml-1 text-[10px] md:text-sm">({{ username }})</span>

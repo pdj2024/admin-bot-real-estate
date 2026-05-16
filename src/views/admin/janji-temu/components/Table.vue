@@ -400,7 +400,7 @@ if (typeof window !== 'undefined') {
                     <!-- Vertical Line -->
                     <div class="absolute left-[15px] top-2 bottom-2 w-0.5 bg-gradient-to-b from-bejo-500 via-slate-200 to-slate-200"></div>
 
-                    <div v-for="(item, idx) in getTimelineChain(row.original)" :key="item.No_Id" class="relative group/item">
+                    <div v-for="(item) in getTimelineChain(row.original)" :key="item.No_Id" class="relative group/item">
                       <!-- Dot -->
                       <div 
                         class="absolute -left-[23px] top-1.5 size-4 rounded-full border-4 border-white shadow-md z-10 transition-all duration-300 group-hover/item:scale-125"

@@ -18,6 +18,7 @@ const selectedUsernameChange = ref<string>('')
 const selectedPhone = ref<string>(localStorage.getItem('active_phone') || '')
 const selectedIdLawan = ref<string>(localStorage.getItem('active_id_lawan') || '')
 const selectedStatusBot = ref<string>(localStorage.getItem('active_status_bot') || 'nonaktif')
+const selectedNamaDisplay = ref<string>(localStorage.getItem('active_nama_display') || '')
 const lastMessageId = ref<string>('')
 const takeOverBatch = ref<TakeOverPayload[]>([])
 const takeOverSuccess = ref<string[]>([])
@@ -72,6 +73,11 @@ const handleStatusBot = (status: string) => {
   localStorage.setItem('active_status_bot', status)
 }
 
+const handleNamaDisplay = (name: string) => {
+  selectedNamaDisplay.value = name
+  localStorage.setItem('active_nama_display', name)
+}
+
 const handleUsernameChange = (username: string) => {
   selectedUsernameChange.value = username
   if (sidebarRef.value) {
@@ -89,11 +95,13 @@ const handleClearRoom = () => {
   selectedPhone.value = ''
   selectedIdLawan.value = ''
   selectedStatusBot.value = 'nonaktif'
+  selectedNamaDisplay.value = ''
   localStorage.removeItem('active_room_id')
   localStorage.removeItem('active_username')
   localStorage.removeItem('active_phone')
   localStorage.removeItem('active_id_lawan')
   localStorage.removeItem('active_status_bot')
+  localStorage.removeItem('active_nama_display')
 }
 
 // Tambahkan hook untuk menghapus session saat pindah halaman
@@ -405,6 +413,7 @@ onBeforeUnmount(() => {
             :activeTab="currentActiveTab"
             @selectChat="handleSelectChat" 
             @username="handleUsername" 
+            @nama-display="handleNamaDisplay"
             @phoneNumber="handlePhone" 
             @idLawan="handleIdLawan" 
             @changeTab="handleTabChange" 
@@ -422,6 +431,7 @@ onBeforeUnmount(() => {
             :idLawan="selectedIdLawan" 
             v-model:username="selectedUsername" 
             :phoneNumber="selectedPhone" 
+            :namaDisplay="selectedNamaDisplay"
             :activeTab="currentActiveTab" 
             :chats="chats" 
             :isLoadingChat="isLoadingChat"

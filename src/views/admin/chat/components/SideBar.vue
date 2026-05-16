@@ -742,6 +742,16 @@ watch(
   }
 )
 
+const getAvatarInitials = (chat: any) => {
+  const name = (chat.Nama_Display_Lawan || chat.Username_Lawan || chat.Telepon_User_Lawan || '').trim()
+  if (!name) return ''
+  const parts = name.split(/\s+/).filter(Boolean)
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase()
+  }
+  return name.substring(0, 2).toUpperCase()
+}
+
 onMounted(async () => {
   fetchData(activeTab.value)
   emit('changeTab', activeTab.value)
@@ -842,7 +852,7 @@ defineExpose({
                       </div>
 
                       <div class="relative shrink-0 flex items-center justify-center font-black rounded-2xl size-10 bg-gradient-to-br from-bejo-50 to-bejo-100/50 text-bejo-600 border border-white shadow-sm group-hover:scale-105 transition-all duration-300">
-                        <span v-if="chat.Nama_Display_Lawan || chat.Username_Lawan || chat.Telepon_User_Lawan" class="text-xs tracking-tighter">{{ (chat.Nama_Display_Lawan || chat.Username_Lawan || chat.Telepon_User_Lawan)?.charAt(0).toUpperCase() }}</span>
+                        <span v-if="getAvatarInitials(chat)" class="text-xs tracking-tighter">{{ getAvatarInitials(chat) }}</span>
                         <Icon v-else icon="lucide:user" class="size-5 text-bejo-300" />
                         <span class="absolute -bottom-1 -right-1 size-3.5 border-2 border-white rounded-full bg-bejo-500 shadow-sm shadow-green-500/20"></span>
                       </div>
@@ -925,7 +935,7 @@ defineExpose({
                       </div>
 
                       <div class="relative shrink-0 flex items-center justify-center font-black rounded-2xl size-10 bg-gradient-to-br from-slate-100 to-slate-200/50 text-slate-600 border border-white shadow-sm group-hover:scale-105 transition-all duration-300">
-                        <span v-if="chat.Nama_Display_Lawan || chat.Username_Lawan || chat.Telepon_User_Lawan" class="text-xs tracking-tighter">{{ (chat.Nama_Display_Lawan || chat.Username_Lawan || chat.Telepon_User_Lawan)?.charAt(0).toUpperCase() }}</span>
+                        <span v-if="getAvatarInitials(chat)" class="text-xs tracking-tighter">{{ getAvatarInitials(chat) }}</span>
                         <Icon v-else icon="lucide:user" class="size-5 text-slate-300" />
                         <span class="absolute -bottom-1 -right-1 size-3.5 border-2 border-white rounded-full bg-slate-300 shadow-sm"></span>
                       </div>
@@ -1003,7 +1013,7 @@ defineExpose({
                       </div>
 
                       <div class="relative shrink-0 flex items-center justify-center font-black rounded-2xl size-10 bg-gradient-to-br from-bejo-50 to-bejo-100/50 text-bejo-600 border border-white shadow-sm group-hover:scale-105 transition-all duration-300">
-                        <span v-if="chat.Nama_Display_Lawan || chat.Username_Lawan || chat.Telepon_User_Lawan" class="text-xs tracking-tighter">{{ (chat.Nama_Display_Lawan || chat.Username_Lawan || chat.Telepon_User_Lawan)?.charAt(0).toUpperCase() }}</span>
+                        <span v-if="getAvatarInitials(chat)" class="text-xs tracking-tighter">{{ getAvatarInitials(chat) }}</span>
                         <Icon v-else icon="lucide:user" class="size-5 text-bejo-300" />
                         <span class="absolute -bottom-1 -right-1 size-3.5 border-2 border-white rounded-full bg-bejo-500 shadow-sm shadow-green-500/20"></span>
                       </div>

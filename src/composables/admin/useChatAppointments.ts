@@ -24,7 +24,8 @@ export function useChatAppointments(props: any, sendChat: any) {
     properti: '',
     unitId: '',
     mediaId: '',
-    mediaUrl: ''
+    mediaUrl: '',
+    Room_Id: null as string | null
   })
 
   const fetchAppointments = async () => {
