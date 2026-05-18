@@ -268,8 +268,8 @@ if (typeof window !== 'undefined') {
               <!-- Tracking -->
               <td class="px-8 py-6">
                 <div class="flex items-center gap-2">
-                  <Icon v-if="row.original.Id_Janji_Lama" icon="lucide:history" class="size-4 text-bejo-500" />
                   <span class="text-sm font-bold text-slate-800 bg-slate-100 px-2.5 py-1 rounded-lg">#{{ row.original.No_Tracking }}</span>
+                  <Icon v-if="row.original.Id_Janji_Lama" icon="lucide:history" class="size-4 text-bejo-500" />
                 </div>
               </td>
 

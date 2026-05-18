@@ -18,6 +18,15 @@ export interface PriceRangeFilter {
   max: string | number
 }
 
+const cleanLocationText = (str: any) => {
+  if (!str) return ''
+  return String(str)
+    .toLowerCase()
+    .replace(/\b(kota|kabupaten|kab\.|kab)\b/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 export function usePropertyFilters(
   products: Ref<any[]>,
   searchQuery: Ref<string>,
@@ -87,17 +96,19 @@ export function usePropertyFilters(
     // 5. Region Filter
     if (regionFilter && regionFilter.value) {
       if (regionFilter.value.province) {
-        const prov = regionFilter.value.province.toLowerCase()
+        const prov = cleanLocationText(regionFilter.value.province)
         result = result.filter((p) => {
-          const locationStr = String(p.Nama_Kota || p.Area || '').toLowerCase()
-          return locationStr.includes(prov)
+          const areaStr = Array.isArray(p.Area) ? p.Area.join(', ') : p.Area || ''
+          const locationStr = cleanLocationText(`${p.Nama_Kota || ''} ${areaStr} ${p.Alamat || ''}`)
+          return locationStr.includes(prov) || prov.includes(locationStr)
         })
       }
       if (regionFilter.value.city) {
-        const city = regionFilter.value.city.toLowerCase()
+        const city = cleanLocationText(regionFilter.value.city)
         result = result.filter((p) => {
-          const locationStr = String(p.Nama_Kota || p.Area || '').toLowerCase()
-          return locationStr.includes(city)
+          const areaStr = Array.isArray(p.Area) ? p.Area.join(', ') : p.Area || ''
+          const locationStr = cleanLocationText(`${p.Nama_Kota || ''} ${areaStr} ${p.Alamat || ''}`)
+          return locationStr.includes(city) || city.includes(locationStr)
         })
       }
     }

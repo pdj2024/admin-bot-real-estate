@@ -195,7 +195,10 @@ const buildParams = () => {
   }
 
   // Region & Price
-  if (props.region.city) p.append('kota', props.region.city)
+  if (props.region.city) {
+    const cleanCity = props.region.city.replace(/\b(kota|kabupaten|kab\.|kab)\b/gi, '').replace(/\s+/g, ' ').trim()
+    p.append('kota', cleanCity)
+  }
   if (props.priceRange.min) p.append('harga_min', props.priceRange.min)
   if (props.priceRange.max) p.append('harga_max', props.priceRange.max)
 
