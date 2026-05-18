@@ -236,7 +236,7 @@ const handleDownload = async () => {
           <!-- Contact Button - Hidden if already Sold/Rented -->
           <button v-if="product?.Status_Properti === 'Tersedia'" @click="handleWhatsApp" class="w-full h-14 bg-green-500 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-green-500/20 hover:bg-green-600 transition-all active:scale-95 flex items-center justify-center gap-3">
              <Icon icon="ic:baseline-whatsapp" class="size-6" />
-             Hubungi Agen
+             Hubungi Kami
           </button>
 
           <!-- Secondary Actions -->
