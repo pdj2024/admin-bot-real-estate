@@ -89,15 +89,7 @@
           </div>
 
           <div class="flex items-center gap-4">
-            <template v-if="!isLoggedIn">
-              <a href="/login" class="hidden sm:flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-bejo-200 text-bejo-600 hover:bg-bejo-50 hover:shadow-lg hover:shadow-bejo-600/10 transition-all font-bold text-sm">
-                <Icon icon="lucide:user" class="size-4" /> Masuk / Dasbor
-              </a>
-              <a href="/login" class="sm:hidden size-10 rounded-full bg-bejo-50 flex items-center justify-center hover:bg-bejo-100 transition-colors border border-bejo-100">
-                <Icon icon="lucide:user" class="size-5 text-bejo-600" />
-              </a>
-            </template>
-            <template v-else>
+            <template v-if="isLoggedIn">
               <!-- Profile Dropdown -->
               <div class="hs-dropdown relative inline-flex [--placement:bottom-right]">
                 <button id="hs-dropdown-profile" type="button" class="hs-dropdown-toggle flex items-center gap-3 px-2 py-1.5 rounded-full bg-white border border-bejo-200 text-bejo-600 hover:bg-bejo-50 hover:shadow-lg hover:shadow-bejo-600/10 transition-all font-bold text-sm group">
