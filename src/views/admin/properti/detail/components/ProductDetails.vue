@@ -87,7 +87,7 @@ const formatCurrency = (value: number) => {
               <span class="font-black text-3xl text-slate-900 tracking-tighter" :class="!product ? 'text-transparent bg-slate-200 rounded-xl animate-pulse select-none' : ''">
                 {{ !product ? formatCurrency(5000000000) : (product?.Harga_Jual2 == 0 ? formatCurrency(product.Harga_Jual1) : formatCurrency(product.Harga_Jual2)) }}
               </span>
-              <div v-if="product?.Harga_Jual2 != 0 && product && app.viewDiscount" class="flex items-center gap-2 mt-1">
+              <div v-if="product?.Harga_Jual2 && product?.Harga_Jual2 != 0 && product && app.viewDiscount" class="flex items-center gap-2 mt-1">
                 <span class="relative text-xs font-bold text-slate-400 italic px-1 shrink-0">
                   {{ formatCurrency(product?.Harga_Jual1 || 0) }}
                   <span class="absolute inset-x-0 top-1/2 h-[1.2px] bg-slate-300 transform -rotate-2 opacity-100 rounded-full"></span>
@@ -105,7 +105,7 @@ const formatCurrency = (value: number) => {
               <h4 class="font-black text-3xl text-bejo-600 tracking-tighter" :class="!product ? 'text-transparent bg-slate-200 rounded-xl animate-pulse select-none' : ''">
                 {{ !product ? formatCurrency(150000000) : formatCurrency(product?.Harga_Sewa2 == 0 ? product.Harga_Sewa1 : product?.Harga_Sewa2 || 0) }}
               </h4>
-              <div v-if="product?.Harga_Sewa2 != 0 && product && app.viewDiscount" class="flex items-center gap-2 mt-1">
+              <div v-if="product?.Harga_Sewa2 && product?.Harga_Sewa2 != 0 && product && app.viewDiscount" class="flex items-center gap-2 mt-1">
                 <span class="relative text-xs font-bold text-slate-400 italic px-1 shrink-0">
                   {{ formatCurrency(product?.Harga_Sewa1 || 0) }}
                   <span class="absolute inset-x-0 top-1/2 h-[1.2px] bg-slate-300 transform -rotate-2 opacity-100 rounded-full"></span>

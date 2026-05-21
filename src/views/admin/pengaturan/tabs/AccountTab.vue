@@ -301,7 +301,7 @@ onMounted(() => {
             <div class="size-8 rounded-lg bg-bejo-500 flex items-center justify-center text-white shadow-lg shadow-bejo-500/20">
               <Icon icon="lucide:user-cog" class="size-4" />
             </div>
-            <h4 class="text-xs font-black text-slate-800 uppercase tracking-widest">Informasi Profil Akun</h4>
+            <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest">Akun Saya</h4>
           </div>
         </div>
 
@@ -318,7 +318,7 @@ onMounted(() => {
                 </template>
                 <template v-else>
                   <Icon icon="lucide:image-plus" class="size-8 text-slate-300 mb-2 group-hover:text-bejo-500" />
-                  <span class="text-[8px] font-black uppercase tracking-widest text-slate-400 group-hover:text-bejo-600">Foto Profil</span>
+                  <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-bejo-600">Foto Profil</span>
                 </template>
               </div>
               <div v-if="isUploadingPhoto" class="absolute inset-0 bg-white/80 backdrop-blur-sm rounded-[2rem] flex items-center justify-center z-10">
@@ -327,11 +327,11 @@ onMounted(() => {
             </div>
             
             <div class="flex-1 space-y-2 text-center md:text-left">
-              <h5 class="text-base font-black text-slate-900">Foto Profil</h5>
-              <p class="text-xs text-slate-500 font-medium leading-relaxed max-w-sm">
+              <h5 class="text-lg font-black text-slate-900">Foto Profil</h5>
+              <p class="text-sm text-slate-500 font-medium leading-relaxed max-w-sm">
                 Gunakan foto asli Anda berformat PNG atau JPG untuk memudahkan komunikasi antar tim dan pelanggan.
               </p>
-              <button @click="triggerPhotoUpload" class="text-[10px] font-black text-bejo-600 uppercase tracking-widest hover:text-bejo-700 flex items-center gap-2 mx-auto md:mx-0">
+              <button @click="triggerPhotoUpload" class="text-xs font-black text-bejo-600 uppercase tracking-widest hover:text-bejo-700 flex items-center gap-2 mx-auto md:mx-0">
                 Ubah Foto Profil
                 <Icon icon="lucide:arrow-right" class="size-3" />
               </button>
@@ -394,7 +394,7 @@ onMounted(() => {
                 <Icon icon="lucide:text-quote" class="size-4 text-bejo-500" />
                 Keterangan
               </label>
-              <textarea v-model="formProfile.Keterangan" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-green-500/5 focus:border-green-500 transition-all resize-none leading-relaxed custom-scrollbar" placeholder="Keterangan opsional..."></textarea>
+              <textarea v-model="formProfile.Keterangan" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-base font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-green-500/5 focus:border-green-500 transition-all resize-none leading-relaxed custom-scrollbar" placeholder="Keterangan opsional..."></textarea>
             </div>
           </div>
           
@@ -402,7 +402,7 @@ onMounted(() => {
             <button 
               :disabled="isSavingProfile" 
               @click="handleUpdateProfile" 
-              class="px-8 py-3 bg-bejo-600 hover:bg-bejo-700 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-xl shadow-bejo-900/20 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
+              class="px-8 py-3 bg-bejo-600 hover:bg-bejo-700 text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-xl shadow-bejo-900/20 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
             >
               <Icon v-if="isSavingProfile" icon="lucide:loader-2" class="size-4 animate-spin" />
               <Icon v-else icon="lucide:save" class="size-4" />
@@ -418,13 +418,13 @@ onMounted(() => {
           <div class="size-8 rounded-lg bg-orange-500 flex items-center justify-center text-white shadow-lg shadow-orange-500/20">
             <Icon icon="lucide:shield-alert" class="size-4" />
           </div>
-          <h4 class="text-xs font-black text-slate-800 uppercase tracking-widest">Keamanan & Ganti Sandi</h4>
+          <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest">Keamanan & Ganti Sandi</h4>
         </div>
 
         <div class="p-8 space-y-8">
           <div class="bg-orange-50/50 p-5 rounded-2xl border border-orange-100 flex gap-4">
             <Icon icon="lucide:info" class="size-5 text-orange-600 shrink-0 mt-0.5" />
-            <p class="text-[11px] text-orange-900 font-bold leading-relaxed uppercase tracking-wide">Pastikan kata sandi baru Anda terdiri dari minimal 8 karakter dengan kombinasi angka dan simbol untuk keamanan maksimal.</p>
+            <p class="text-[13px] text-orange-900 font-bold leading-relaxed uppercase tracking-wide">Pastikan kata sandi baru Anda terdiri dari minimal 8 karakter dengan kombinasi angka dan simbol untuk keamanan maksimal.</p>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -466,7 +466,7 @@ onMounted(() => {
             <button 
               :disabled="isLoadingPassword" 
               @click="handleUpdatePassword" 
-              class="px-8 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-xl shadow-orange-500/20 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
+              class="px-8 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-xl shadow-orange-500/20 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
             >
               <Icon v-if="isLoadingPassword" icon="lucide:loader-2" class="size-4 animate-spin" />
               <Icon v-else icon="lucide:refresh-cw" class="size-4" />
@@ -483,11 +483,11 @@ onMounted(() => {
 @reference "@/assets/css/style.css";
 
 .label {
-  @apply flex items-center gap-2 text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1;
+  @apply flex items-center gap-2 text-sm font-black text-slate-400 uppercase tracking-widest mb-2 ml-1;
 }
 
 .field-input {
-  @apply w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-sm font-bold text-slate-700 focus:ring-4 focus:ring-green-500/5 focus:border-green-500 outline-none transition-all;
+  @apply w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-base font-bold text-slate-700 focus:ring-4 focus:ring-green-500/5 focus:border-green-500 outline-none transition-all;
 }
 
 .field-input:focus {

@@ -146,8 +146,8 @@ const handleClose = () => {
                 <Icon icon="lucide:users" class="size-6" />
               </div>
               <div>
-                <h3 class="text-xl font-black text-slate-900 leading-none">Kelola Penerima</h3>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1.5">Pilih pelanggan yang akan menerima broadcast</p>
+                <h3 class="text-2xl font-black text-slate-900 leading-none">Kelola Penerima</h3>
+                <p class="text-sm font-black text-slate-400 uppercase tracking-widest mt-1.5">Pilih pelanggan yang akan menerima broadcast</p>
               </div>
             </div>
             <button @click="handleClose" class="size-10 rounded-xl flex items-center justify-center text-slate-400 hover:bg-slate-50 hover:text-slate-900 transition-all border border-transparent hover:border-slate-100">
@@ -162,14 +162,14 @@ const handleClose = () => {
                 v-model="searchQuery"
                 type="text" 
                 placeholder="Cari nama, email, atau telepon..." 
-                class="w-full h-12 pl-12 pr-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-700 outline-none focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500/50 transition-all"
+                class="w-full h-12 pl-12 pr-4 bg-slate-50 border border-slate-100 rounded-2xl text-base font-bold text-slate-700 outline-none focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500/50 transition-all"
               />
             </div>
 
             <!-- Select All Checkbox -->
             <button 
               @click="toggleSelectAll"
-              class="h-12 px-4 rounded-2xl border transition-all flex items-center gap-2 font-black text-[10px] uppercase tracking-widest"
+              class="h-12 px-4 rounded-2xl border transition-all flex items-center gap-2 font-black text-sm uppercase tracking-widest"
               :class="isAllSelected ? 'bg-bejo-500 text-white border-bejo-600' : 'bg-white text-slate-400 border-slate-100 hover:border-slate-200'"
             >
               <div class="size-4 rounded border flex items-center justify-center" :class="isAllSelected ? 'bg-white border-white text-bejo-500' : 'bg-slate-50 border-slate-200'">
@@ -184,7 +184,7 @@ const handleClose = () => {
         <div class="flex-grow overflow-y-auto p-4 md:p-6 space-y-3 custom-scrollbar">
           <div v-if="isLoading && customers.length === 0" class="flex flex-col items-center justify-center py-20 gap-4 opacity-50">
             <Icon icon="lucide:loader-2" class="size-10 animate-spin text-bejo-500" />
-            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Memuat Data...</span>
+            <span class="text-sm font-black text-slate-400 uppercase tracking-widest">Memuat Data...</span>
           </div>
 
           <template v-else>
@@ -212,14 +212,14 @@ const handleClose = () => {
                     {{ customer.Nama_Display?.charAt(0) || '?' }}
                   </div>
                   <div>
-                    <h6 class="text-sm font-black text-slate-900 group-hover:text-bejo-600 transition-colors">{{ customer.Nama_Display }}</h6>
-                    <p class="text-[11px] font-bold text-slate-400 mt-0.5">{{ customer.Email }}</p>
+                    <h6 class="text-base font-black text-slate-900 group-hover:text-bejo-600 transition-colors">{{ customer.Nama_Display }}</h6>
+                    <p class="text-sm font-bold text-slate-400 mt-0.5">{{ customer.Email }}</p>
                   </div>
                 </div>
 
                 <div class="flex items-center gap-6">
                   <span 
-                    class="text-[10px] font-black uppercase tracking-widest px-2.5 py-1.5 rounded-lg border transition-all"
+                    class="text-sm font-black uppercase tracking-widest px-2.5 py-1.5 rounded-lg border transition-all"
                     :class="customer.Status_Broadcast === 'aktif' ? 'bg-bejo-100 text-bejo-700 border-bejo-200' : 'bg-slate-50 text-slate-400 border-slate-100'"
                   >
                     {{ customer.Status_Broadcast === 'aktif' ? 'Terima' : 'Nonaktif' }}
@@ -238,7 +238,7 @@ const handleClose = () => {
 
             <div v-if="filteredCustomers.length === 0" class="flex flex-col items-center justify-center py-10 opacity-30">
               <Icon icon="lucide:user-x" class="size-12 mb-2" />
-              <span class="text-[11px] font-black uppercase tracking-widest">Penerima tidak ditemukan</span>
+              <span class="text-sm font-black uppercase tracking-widest">Penerima tidak ditemukan</span>
             </div>
           </template>
         </div>
@@ -252,7 +252,7 @@ const handleClose = () => {
                 <button 
                   v-if="selectedCustomers.some(c => c.Status_Broadcast !== 'aktif')"
                   @click="handleBatchUpdate('aktif')"
-                  class="h-10 px-5 bg-bejo-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-bejo-500/20 hover:bg-bejo-600 transition-all flex items-center gap-2 active:scale-95"
+                  class="h-10 px-5 bg-bejo-500 text-white rounded-xl text-sm font-black uppercase tracking-widest shadow-lg shadow-bejo-500/20 hover:bg-bejo-600 transition-all flex items-center gap-2 active:scale-95"
                 >
                   <Icon icon="lucide:check-circle" class="size-3.5" />
                   Aktifkan ({{ selectedIds.size }})
@@ -260,19 +260,19 @@ const handleClose = () => {
                 <button 
                   v-if="selectedCustomers.some(c => c.Status_Broadcast === 'aktif')"
                   @click="handleBatchUpdate('nonaktif')"
-                  class="h-10 px-5 bg-white border border-slate-200 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all flex items-center gap-2 active:scale-95"
+                  class="h-10 px-5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-black uppercase tracking-widest hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all flex items-center gap-2 active:scale-95"
                 >
                   <Icon icon="lucide:x-circle" class="size-3.5" />
                   Nonaktifkan
                 </button>
               </div>
-              <div v-else class="text-[11px] font-black text-slate-400 uppercase tracking-widest">
+              <div v-else class="text-sm font-black text-slate-400 uppercase tracking-widest">
                 Total Penerima Aktif: <span class="text-bejo-600">{{ customers.filter(c => c.Status_Broadcast === 'aktif').length }}</span>
               </div>
             </Transition>
           </div>
 
-          <button @click="handleClose" class="h-10 px-8 text-slate-700 hover:text-slate-900 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-95">
+          <button @click="handleClose" class="h-10 px-8 text-slate-700 hover:text-slate-900 rounded-xl text-sm font-black uppercase tracking-widest transition-all active:scale-95">
             Selesai
           </button>
         </div>

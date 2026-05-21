@@ -175,10 +175,14 @@ onUnmounted(() => {
 
 <template>
   <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-    <div class="px-8 py-6 border-b border-slate-50 bg-slate-50/50">
-      <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest">Kontrol Sistem Global</h4>
-    </div>
-
+    <div class="px-8 py-5 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="size-8 rounded-lg bg-bejo-500 flex items-center justify-center text-white shadow-lg shadow-bejo-500/20">
+              <Icon icon="lucide:settings-2" class="size-4" />
+            </div>
+            <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest">Pengaturan Sistem</h4>
+          </div>
+        </div>
     <div class="px-8 pb-8 space-y-8">
       <!-- WA Gateway Card -->
       <div 
@@ -195,15 +199,15 @@ onUnmounted(() => {
             </div>
             <div>
               <div class="flex items-center gap-2 mb-1">
-                <h5 class="text-lg font-black text-slate-900">WhatsApp Gateway</h5>
+                <h5 class="text-base font-black text-slate-900">WhatsApp Gateway</h5>
                 <span 
-                  class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest"
+                  class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest"
                   :class="wahaStatus?.status === 'WORKING' ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'"
                 >
                   {{ wahaStatus?.status === 'WORKING' ? 'Online' : 'Offline' }}
                 </span>
               </div>
-              <p class="text-sm text-slate-500 font-medium leading-relaxed max-w-md">
+              <p class="text-xs text-slate-500 font-medium leading-relaxed max-w-md">
                 Layanan penghubung sistem dengan server WhatsApp (WAHA Service).
               </p>
             </div>
@@ -234,14 +238,14 @@ onUnmounted(() => {
                     <Icon icon="lucide:user-check" class="size-6 text-emerald-600" />
                   </div>
                   <div class="flex-1 min-w-0">
-                    <h6 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Sesi Aktif</h6>
+                    <h6 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-0.5">Sesi Aktif</h6>
                     <p class="text-sm font-black text-slate-800 truncate">{{ wahaStatus.me?.pushName || 'WhatsApp Bot' }}</p>
-                    <p class="text-[11px] font-bold text-slate-500 mt-0.5">{{ wahaStatus.me?.id?.split('@')[0] }}</p>
+                    <p class="text-xs font-bold text-slate-500 mt-0.5">{{ wahaStatus.me?.id?.split('@')[0] }}</p>
                   </div>
                   <button 
                     @click="handleWahaLogout" 
                     :disabled="isLoggingOut"
-                    class="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-red-100 transition-all flex items-center gap-2"
+                    class="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-xs font-black uppercase tracking-widest hover:bg-red-100 transition-all flex items-center gap-2"
                   >
                     <Icon v-if="isLoggingOut" icon="lucide:loader-2" class="animate-spin size-3" />
                     Logout
@@ -258,7 +262,7 @@ onUnmounted(() => {
                     </div>
                     <div class="text-center px-4">
                       <p class="text-sm font-black text-slate-800">Scan QR Code</p>
-                      <p class="text-[10px] text-slate-500 font-bold mt-1 max-w-[200px]">Buka WhatsApp > Perangkat Tertaut > Tautkan Perangkat</p>
+                      <p class="text-xs text-slate-500 font-bold mt-1 max-w-[200px]">Buka WhatsApp > Perangkat Tertaut > Tautkan Perangkat</p>
                     </div>
                   </div>
                   <div v-else class="py-8 flex flex-col items-center">
@@ -281,10 +285,10 @@ onUnmounted(() => {
                   <ul class="space-y-3">
                     <li v-for="(item, i) in ['Respon Katalog Otomatis', 'Notifikasi Chat ke Admin', 'Auto-sinkronisasi Kontak']" :key="i" class="flex items-center gap-2">
                       <Icon icon="lucide:check-circle-2" class="size-3.5 text-emerald-500" />
-                      <span class="text-[11px] font-bold text-slate-600">{{ item }}</span>
+                      <span class="text-xs font-bold text-slate-600">{{ item }}</span>
                     </li>
                   </ul>
-                  <p class="mt-4 text-[10px] text-slate-400 font-medium leading-relaxed italic">
+                  <p class="mt-4 text-xs text-slate-400 font-medium leading-relaxed italic">
                     * Pastikan nomor WA Anda memiliki koneksi internet yang stabil untuk menjaga status "Online".
                   </p>
                 </div>
@@ -308,8 +312,8 @@ onUnmounted(() => {
               <Icon :icon="settingsStore.bot.isActive ? 'lucide:bot' : 'lucide:message-square-off'" class="size-7" />
             </div>
             <div>
-              <h5 class="text-lg font-black text-slate-900 mb-1">Aktifkan Bot</h5>
-              <p class="text-sm text-slate-500 font-medium leading-relaxed max-w-md">
+              <h5 class="text-base font-black text-slate-900 mb-1">Aktifkan Bot</h5>
+              <p class="text-xs text-slate-500 font-medium leading-relaxed max-w-md">
                 Aktifkan asisten otomatis untuk menangani pertanyaan pembeli via WhatsApp secara cerdas.
               </p>
             </div>
@@ -341,8 +345,8 @@ onUnmounted(() => {
               <Icon :icon="settingsStore.app.isMaintenance ? 'lucide:hammer' : 'lucide:rocket'" class="size-7" />
             </div>
             <div>
-              <h5 class="text-lg font-black text-slate-900 mb-1">Mode Perbaikan (Maintenance)</h5>
-              <p class="text-sm text-slate-500 font-medium leading-relaxed max-w-md">
+              <h5 class="text-base font-black text-slate-900 mb-1">Mode Perbaikan (Maintenance)</h5>
+              <p class="text-xs text-slate-500 font-medium leading-relaxed max-w-md">
                 Aktifkan ini untuk menonaktifkan seluruh akses pengunjung dan menampilkan halaman perbaikan profesional. Admin tetap bisa login & mengelola data.
               </p>
             </div>
@@ -382,8 +386,8 @@ onUnmounted(() => {
               <Icon icon="lucide:tag" class="size-7" />
             </div>
             <div>
-              <h5 class="text-lg font-black text-slate-900 mb-1">Tampilkan Harga Sebelum Diskon</h5>
-              <p class="text-sm text-slate-500 font-medium leading-relaxed max-w-md">
+              <h5 class="text-base font-black text-slate-900 mb-1">Tampilkan Harga Sebelum Diskon</h5>
+              <p class="text-xs text-slate-500 font-medium leading-relaxed max-w-md">
                 Jika diaktifkan, sistem akan menampilkan harga asli yang dicoret di samping harga promo.
               </p>
             </div>
@@ -407,7 +411,7 @@ onUnmounted(() => {
          </div>
          <div class="space-y-1">
             <h6 class="text-sm font-black text-bejo-900">Tentang Mode Perbaikan</h6>
-            <p class="text-sm text-bejo-700/70 font-bold leading-relaxed">
+            <p class="text-xs text-bejo-700/70 font-bold leading-relaxed">
               Gunakan mode ini saat Anda melakukan pembaruan besar pada database atau struktur situs. Data Anda tetap aman, namun pengunjung tidak akan melihat halaman yang sedang tidak stabil.
             </p>
          </div>

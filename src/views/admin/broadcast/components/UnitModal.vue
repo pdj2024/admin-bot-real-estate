@@ -72,9 +72,12 @@ const formatPrice = (price: number) => {
               <div class="size-12 rounded-2xl bg-bejo-500 text-white flex items-center justify-center shadow-lg shadow-bejo-500/20">
                 <Icon icon="lucide:home" class="size-6" />
               </div>
-              <div>
-                <h3 class="text-xl font-black text-slate-900 leading-none">Pilih Unit Properti</h3>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1.5">Pilih unit untuk dimasukkan ke dalam pesan</p>
+              <div class="space-y-1.5">
+                <div class="flex flex-wrap items-center gap-2">
+                  <h3 class="text-2xl font-black text-slate-900 leading-none">Pilih Unit Properti</h3>
+                  <span class="text-xs font-black text-bejo-600 bg-bejo-50 border border-bejo-100 px-2.5 py-1 rounded-md uppercase tracking-wider">Langkah 2 dari 3</span>
+                </div>
+                <p class="text-sm font-black text-slate-400 uppercase tracking-widest mt-1.5">Pilih unit untuk dimasukkan ke dalam pesan</p>
               </div>
             </div>
             <button @click="handleClose" class="size-10 rounded-xl flex items-center justify-center text-slate-400 hover:bg-slate-50 hover:text-slate-900 transition-all border border-transparent hover:border-slate-100">
@@ -88,7 +91,7 @@ const formatPrice = (price: number) => {
               v-model="searchQuery"
               type="text" 
               placeholder="Cari nama unit, kota, atau alamat..." 
-              class="w-full h-12 pl-12 pr-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold text-slate-700 outline-none focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500/50 transition-all"
+              class="w-full h-12 pl-12 pr-4 bg-slate-50 border border-slate-100 rounded-2xl text-base font-bold text-slate-700 outline-none focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500/50 transition-all"
             />
           </div>
         </div>
@@ -97,7 +100,7 @@ const formatPrice = (price: number) => {
         <div class="flex-grow overflow-y-auto px-4 py-1 md:px-6 md:pt-2 md:pb-6 space-y-3 custom-scrollbar">
           <div v-if="isLoading" class="flex flex-col items-center justify-center py-20 gap-4 opacity-50">
             <Icon icon="lucide:loader-2" class="size-10 animate-spin text-bejo-500" />
-            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Memuat Data Unit...</span>
+            <span class="text-sm font-black text-slate-400 uppercase tracking-widest">Memuat Data Unit...</span>
           </div>
 
           <template v-else>
@@ -118,25 +121,25 @@ const formatPrice = (price: number) => {
                 </div>
                 <div class="space-y-1">
                   <div class="flex items-center gap-2">
-                    <h6 class="text-sm font-black text-slate-900 group-hover:text-bejo-600 transition-colors">{{ unit.Nama_Produk }}</h6>
-                    <span v-if="unit.Tipe" class="px-1.5 py-0.5 rounded-lg bg-slate-100 text-slate-500 text-[8px] font-black uppercase tracking-wider border border-slate-200/50 group-hover:bg-white group-hover:border-bejo-200 group-hover:text-bejo-600 transition-all">
+                    <h6 class="text-base font-black text-slate-900 group-hover:text-bejo-600 transition-colors">{{ unit.Nama_Produk }}</h6>
+                    <span v-if="unit.Tipe" class="px-1.5 py-0.5 rounded-lg bg-slate-100 text-slate-500 text-xs font-black uppercase tracking-wider border border-slate-200/50 group-hover:bg-white group-hover:border-bejo-200 group-hover:text-bejo-600 transition-all">
                       {{ unit.Tipe }}
                     </span>
                   </div>
-                  <div class="flex items-center gap-2 text-xs font-bold text-slate-400">
+                  <div class="flex items-center gap-2 text-base font-bold text-slate-400">
                     <Icon icon="lucide:map-pin" class="size-3 text-bejo-500" />
                     {{ unit.Nama_Kota }}
                   </div>
                   <div class="flex flex-col md:flex-row md:items-center gap-1 md:gap-4 mt-2">
                     <div class="flex items-center gap-3">
-                      <span v-if="unit.Harga_Jual1 > 0" class="text-xs font-black text-bejo-600 uppercase">
+                      <span v-if="unit.Harga_Jual1 > 0" class="text-base font-black text-bejo-600 uppercase">
                         Jual: {{ formatPrice(unit.Harga_Jual2 || unit.Harga_Jual1) }}
                       </span>
-                      <span v-if="unit.Harga_Sewa1 > 0" class="text-xs font-black text-slate-500 uppercase border-l border-slate-200 pl-3">
+                      <span v-if="unit.Harga_Sewa1 > 0" class="text-base font-black text-slate-500 uppercase border-l border-slate-200 pl-3">
                         Sewa: {{ formatPrice(unit.Harga_Sewa2 || unit.Harga_Sewa1) }}
                       </span>
                     </div>
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter md:border-l md:border-slate-200 md:pl-4">
+                    <span class="text-sm font-bold text-slate-400 uppercase tracking-tighter md:border-l md:border-slate-200 md:pl-4">
                       {{ unit.Luas_Tanah }}m² / {{ unit.Luas_Bangunan }}m²
                     </span>
                   </div>
@@ -150,14 +153,17 @@ const formatPrice = (price: number) => {
 
             <div v-if="filteredUnits.length === 0" class="flex flex-col items-center justify-center py-10 opacity-30">
               <Icon icon="lucide:search-x" class="size-12 mb-2" />
-              <span class="text-[10px] font-black uppercase tracking-widest">Unit tidak ditemukan</span>
+              <span class="text-sm font-black uppercase tracking-widest">Unit tidak ditemukan</span>
             </div>
           </template>
         </div>
 
         <!-- Modal Footer -->
-        <div class="p-6 border-t border-slate-50 bg-slate-50/30 flex justify-end shrink-0">
-          <button @click="handleClose" class="h-10 px-8 text-slate-700 hover:text-slate-900 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95">
+        <div class="p-6 border-t border-slate-50 bg-slate-50/30 flex items-center justify-between shrink-0">
+          <button @click="selectUnit(null)" class="h-10 px-6 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-black uppercase tracking-widest transition-all active:scale-95">
+            Tanpa Unit / Lompati
+          </button>
+          <button @click="handleClose" class="h-10 px-8 text-slate-500 hover:text-slate-900 rounded-xl text-xs font-black uppercase tracking-widest transition-all active:scale-95">
             Batal
           </button>
         </div>

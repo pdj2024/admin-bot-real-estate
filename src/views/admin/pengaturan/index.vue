@@ -46,7 +46,7 @@ const activeComponent = computed(() => {
 const tabs = [
   { id: 'appearance', name: 'Tampilan', icon: 'lucide:monitor-smartphone', description: 'Atur tema, warna brand, dan tata letak sidebar.' },
   { id: 'business', name: 'Profil Perusahaan', icon: 'lucide:building-2', description: 'Kelola identitas, kontak resmi, dan info operasional.' },
-  { id: 'bot', name: 'AI Bot Setting', icon: 'lucide:bot', description: 'Atur instruksi, gaya bahasa, dan logika cerdas bot.' },
+  { id: 'bot', name: 'Bot Prompt', icon: 'lucide:bot', description: 'Atur instruksi, gaya bahasa, dan logika cerdas bot.' },
   { id: 'faq', name: 'Manajemen FAQ', icon: 'lucide:help-circle', description: 'Kelola pertanyaan dan jawaban bantuan pelanggan.' },
   { id: 'system', name: 'Sistem', icon: 'lucide:settings-2', description: 'Kontrol global, mode perbaikan, dan status situs.' },
   { id: 'account', name: 'Akun', icon: 'lucide:user-cog', description: 'Kelola profil admin dan kata sandi akses.' }
@@ -193,8 +193,8 @@ const handleResetAppearance = async () => {
               <Icon :icon="tab.icon" class="size-5" />
             </div>
             <div class="flex-1 min-w-0">
-              <span class="block text-[13px] font-black leading-tight">{{ tab.name }}</span>
-              <span class="block text-[10px] font-bold opacity-60 leading-tight mt-0.5 truncate" v-if="activeTab === tab.id">{{ tab.description }}</span>
+              <span class="block text-base font-black leading-tight">{{ tab.name }}</span>
+              <span class="block text-[13px] font-bold opacity-60 leading-tight mt-0.5 truncate" v-if="activeTab === tab.id">{{ tab.description }}</span>
             </div>
             <Icon v-if="activeTab === tab.id" icon="lucide:chevron-right" class="size-3.5 opacity-40 shrink-0" />
           </button>
@@ -207,9 +207,9 @@ const handleResetAppearance = async () => {
               <div class="size-5 bg-bejo-600 rounded-lg flex items-center justify-center">
                 <Icon icon="lucide:sparkles" class="size-2.5 text-white" />
               </div>
-              <h5 class="text-[9px] font-black uppercase tracking-[0.2em] text-bejo-600">Info Sistem</h5>
+              <h5 class="text-xs font-black uppercase tracking-[0.2em] text-bejo-600">Info Sistem</h5>
             </div>
-            <p class="text-[10px] text-slate-500 leading-relaxed font-bold">Banyak fitur baru akan hadir segera.</p>
+            <p class="text-[13px] text-slate-500 leading-relaxed font-bold">Banyak fitur baru akan hadir segera.</p>
           </div>
         </div>
       </div>

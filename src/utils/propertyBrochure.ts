@@ -288,7 +288,7 @@ export const downloadBrochure = async (product: any, businessSettings: any, appS
       doc.text(label, col3X, pY)
       
       let promoOffset = 0
-      if (appSettings.viewDiscount && oldP > 0 && newP > 0 && oldP !== newP) {
+      if (appSettings.viewDiscount && oldP > 0 && newP && newP > 0 && oldP !== newP) {
         doc.setTextColor(156, 163, 175)
         doc.setFontSize(isBoth ? 8 : 10)
         doc.setFont('helvetica', 'bold')

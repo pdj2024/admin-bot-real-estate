@@ -35,12 +35,14 @@ watch(form, (newVal) => {
 <template>
   <div class="space-y-6">
     <div class="card bg-white shadow-sm rounded-[2rem] border border-slate-100 overflow-hidden">
-      <div class="px-8 py-5 border-b border-slate-50 flex items-center gap-3 bg-slate-50/50">
-        <div class="size-8 rounded-lg bg-bejo-500 flex items-center justify-center text-white shadow-lg shadow-bejo-500/20">
-          <Icon icon="lucide:layout-template" class="size-4" />
+      <div class="px-8 py-5 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="size-8 rounded-lg bg-bejo-500 flex items-center justify-center text-white shadow-lg shadow-bejo-500/20">
+              <Icon icon="lucide:monitor-smartphone" class="size-4" />
+            </div>
+            <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest">Pengaturan Tampilan</h4>
+          </div>
         </div>
-        <h4 class="text-xs font-black text-slate-800 uppercase tracking-widest">Navigasi & Aksen Visual</h4>
-      </div>
       
       <div class="p-8 space-y-8">
         <div>
@@ -53,7 +55,7 @@ watch(form, (newVal) => {
               <input type="radio" v-model="form.sidenavSize" :value="size" class="peer sr-only" />
 
               <div
-                class="p-4 text-center rounded-2xl text-xs font-black uppercase tracking-[0.2em] transition-all border-2"
+                class="p-3 text-center rounded-xl text-xs font-black uppercase tracking-widest transition-all border-2"
                 :class="form.sidenavSize === size 
                   ? 'border-bejo-500 text-white shadow-xl shadow-bejo-500/20' 
                   : 'border-slate-100 text-slate-400 bg-slate-50 hover:border-bejo-500/50 group-hover:bg-white'"
@@ -82,12 +84,12 @@ watch(form, (newVal) => {
               Warna Primary
             </label>
             <div class="flex items-center gap-4">
-              <div class="relative h-14 w-14 rounded-2xl shadow-lg border-2 border-white ring-1 ring-slate-100 overflow-hidden shrink-0" :style="{ backgroundColor: form.colorPrimary }">
+              <div class="relative h-12 w-12 rounded-xl shadow-md border-2 border-white ring-1 ring-slate-100 overflow-hidden shrink-0" :style="{ backgroundColor: form.colorPrimary }">
                 <input v-model="form.colorPrimary" type="color" class="absolute -top-2 -left-2 h-20 w-20 opacity-0 cursor-pointer" />
               </div>
               <div class="flex-1">
                 <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">Hex Code</div>
-                <input v-model="form.colorPrimary" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-base font-black text-slate-700 uppercase tracking-widest focus:ring-4 focus:ring-green-500/5 focus:border-green-500 outline-none transition-all" />
+                <input v-model="form.colorPrimary" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold text-slate-700 uppercase font-mono focus:ring-4 focus:ring-green-500/5 focus:border-green-500 outline-none transition-all" />
               </div>
             </div>
           </div>
@@ -98,12 +100,12 @@ watch(form, (newVal) => {
               Warna Secondary
             </label>
             <div class="flex items-center gap-4">
-              <div class="relative h-14 w-14 rounded-2xl shadow-lg border-2 border-white ring-1 ring-slate-100 overflow-hidden shrink-0" :style="{ backgroundColor: form.colorSecondary }">
+              <div class="relative h-12 w-12 rounded-xl shadow-md border-2 border-white ring-1 ring-slate-100 overflow-hidden shrink-0" :style="{ backgroundColor: form.colorSecondary }">
                 <input v-model="form.colorSecondary" type="color" class="absolute -top-2 -left-2 h-20 w-20 opacity-0 cursor-pointer" />
               </div>
               <div class="flex-1">
                 <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">Hex Code</div>
-                <input v-model="form.colorSecondary" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-base font-black text-slate-700 uppercase tracking-widest focus:ring-4 focus:ring-green-500/5 focus:border-green-500 outline-none transition-all" />
+                <input v-model="form.colorSecondary" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold text-slate-700 uppercase font-mono focus:ring-4 focus:ring-green-500/5 focus:border-green-500 outline-none transition-all" />
               </div>
             </div>
           </div>
@@ -114,14 +116,14 @@ watch(form, (newVal) => {
     <div class="flex items-center gap-3 pt-4">
       <button 
         @click="handleSave" 
-        class="bg-green-500 hover:bg-green-600 px-8 py-4 text-white font-black text-sm rounded-2xl shadow-xl shadow-green-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2"
+        class="bg-green-500 hover:bg-green-600 px-6 py-3 text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-lg shadow-green-500/20 active:scale-95 transition-all flex items-center gap-2"
       >
         <Icon icon="lucide:save" class="size-4" />
         Simpan Pengaturan
       </button>
       <button 
         @click="emit('reset')" 
-        class="px-6 py-4 text-slate-500 hover:text-slate-800 text-[10px] font-black uppercase tracking-widest transition-colors"
+        class="px-5 py-3 text-slate-500 hover:text-slate-800 text-xs font-black uppercase tracking-widest transition-colors"
       >
         Reset Default
       </button>

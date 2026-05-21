@@ -30,9 +30,9 @@ const emit = defineEmits(['save', 'reset', 'update'])
       <div class="mb-6 pl-4 border-l-4 border-bejo-500">
         <div class="flex items-center gap-2 mb-1">
           <Icon icon="lucide:eye" class="size-4 text-bejo-500" />
-          <h5 class="text-sm font-black text-slate-800 uppercase tracking-widest">Live Preview</h5>
+          <h5 class="text-base font-black text-slate-800 uppercase tracking-widest">Live Preview</h5>
         </div>
-        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Pantau perubahan antarmuka secara real-time</p>
+        <p class="text-sm text-slate-400 font-bold uppercase tracking-wider">Pantau perubahan antarmuka secara real-time</p>
       </div>
       
       <SettingsPreview :settings="settings" />

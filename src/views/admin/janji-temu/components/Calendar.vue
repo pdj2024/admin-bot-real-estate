@@ -25,12 +25,19 @@ const calendarEvents = computed(() => {
     if (item.Status_Progress === 'proses') color = '#3b82f6' // Blue
     if (item.Status_Progress === 'dikonfirmasi') color = '#8b5cf6' // Violet
     
+    let className = 'event-baru'
+    if (item.Status_Progress === 'selesai') className = 'event-selesai'
+    else if (item.Status_Progress === 'batal') className = 'event-batal'
+    else if (item.Status_Progress === 'proses') className = 'event-proses'
+    else if (item.Status_Progress === 'dikonfirmasi') className = 'event-dikonfirmasi'
+
     return {
       id: item.No_Id,
       title: (item.Status_Progress === 'batal' ? ' [BATAL] ' : '') + (item.Nama_Customer || item.Id_Customer), // We might need to join data or the API might provide it
       start: `${item.Tanggal_Janji.split('T')[0]}T${item.Waktu_Janji}`,
       end: item.Waktu_Selesai ? `${item.Tanggal_Janji.split('T')[0]}T${item.Waktu_Selesai}` : undefined,
       color: color,
+      classNames: [className],
       extendedProps: {
         ...item
       }
@@ -55,6 +62,7 @@ const calendarOptions = computed<CalendarOptions>(() => ({
   },
   editable: true,
   selectable: true,
+  dayMaxEvents: true,
   events: calendarEvents.value,
   eventClick(info: EventClickArg) {
     refreshCalendar()
@@ -195,5 +203,171 @@ onMounted(() => {
   border-radius: 1.5rem;
   overflow: hidden;
   border: 1px solid #f1f5f9;
+}
+
+/* Event Status: baru (Bejo Orange/Amber theme) */
+:deep(.event-baru) {
+  background-color: #fff9e6 !important;
+  border-color: #ffe0b2 !important;
+  color: #ca6d2c !important;
+}
+:deep(.event-baru.fc-v-event) {
+  border-left: 4px solid #ca6d2c !important;
+}
+:deep(.event-baru .fc-event-main), :deep(.event-baru .fc-event-title) {
+  color: #ca6d2c !important;
+}
+:deep(.fc-list-event.event-baru:hover td) {
+  background-color: #fff9e6 !important;
+}
+:deep(.fc-list-event.event-baru .fc-list-event-dot) {
+  border-color: #ca6d2c !important;
+}
+
+/* Event Status: dikonfirmasi (Violet/Purple) */
+:deep(.event-dikonfirmasi) {
+  background-color: #f3e8ff !important;
+  border-color: #e9d5ff !important;
+  color: #7e22ce !important;
+}
+:deep(.event-dikonfirmasi.fc-v-event) {
+  border-left: 4px solid #8b5cf6 !important;
+}
+:deep(.event-dikonfirmasi .fc-event-main), :deep(.event-dikonfirmasi .fc-event-title) {
+  color: #7e22ce !important;
+}
+:deep(.fc-list-event.event-dikonfirmasi:hover td) {
+  background-color: #f3e8ff !important;
+}
+:deep(.fc-list-event.event-dikonfirmasi .fc-list-event-dot) {
+  border-color: #8b5cf6 !important;
+}
+
+/* Event Status: proses (Blue) */
+:deep(.event-proses) {
+  background-color: #eff6ff !important;
+  border-color: #bfdbfe !important;
+  color: #1d4ed8 !important;
+}
+:deep(.event-proses.fc-v-event) {
+  border-left: 4px solid #3b82f6 !important;
+}
+:deep(.event-proses .fc-event-main), :deep(.event-proses .fc-event-title) {
+  color: #1d4ed8 !important;
+}
+:deep(.fc-list-event.event-proses:hover td) {
+  background-color: #eff6ff !important;
+}
+:deep(.fc-list-event.event-proses .fc-list-event-dot) {
+  border-color: #3b82f6 !important;
+}
+
+/* Event Status: selesai (Emerald/Green) */
+:deep(.event-selesai) {
+  background-color: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #047857 !important;
+}
+:deep(.event-selesai.fc-v-event) {
+  border-left: 4px solid #10b981 !important;
+}
+:deep(.event-selesai .fc-event-main), :deep(.event-selesai .fc-event-title) {
+  color: #047857 !important;
+}
+:deep(.fc-list-event.event-selesai:hover td) {
+  background-color: #ecfdf5 !important;
+}
+:deep(.fc-list-event.event-selesai .fc-list-event-dot) {
+  border-color: #10b981 !important;
+}
+
+/* Event Status: batal (Red) */
+:deep(.event-batal) {
+  background-color: #fef2f2 !important;
+  border-color: #fecaca !important;
+  color: #b91c1c !important;
+}
+:deep(.event-batal.fc-v-event) {
+  border-left: 4px solid #ef4444 !important;
+}
+:deep(.event-batal .fc-event-main), :deep(.event-batal .fc-event-title) {
+  color: #b91c1c !important;
+}
+:deep(.fc-list-event.event-batal:hover td) {
+  background-color: #fef2f2 !important;
+}
+:deep(.fc-list-event.event-batal .fc-list-event-dot) {
+  border-color: #ef4444 !important;
+}
+
+/* Popover More Link Styling */
+:deep(.fc-daygrid-more-link) {
+  font-size: 0.75rem !important;
+  font-weight: 800 !important;
+  color: var(--color-bejo-600) !important;
+  background-color: var(--color-bejo-50) !important;
+  padding: 2px 6px !important;
+  border-radius: 6px !important;
+  transition: all 0.2s ease !important;
+  margin-top: 2px !important;
+  display: inline-block !important;
+}
+
+:deep(.fc-daygrid-more-link:hover) {
+  background-color: var(--color-bejo-100) !important;
+  color: var(--color-bejo-700) !important;
+  text-decoration: none !important;
+}
+
+/* Popover Container Styling */
+:deep(.fc-more-popover) {
+  border-radius: 24px !important;
+  overflow: hidden !important;
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1) !important;
+  border: 1px solid #f1f5f9 !important;
+  background: #ffffff !important;
+  z-index: 50 !important;
+}
+
+:deep(.fc-more-popover .fc-popover-header) {
+  background: #f8fafc !important;
+  padding: 12px 16px !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+:deep(.fc-more-popover .fc-popover-title) {
+  font-size: 0.875rem !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+:deep(.fc-more-popover .fc-popover-close) {
+  color: #64748b !important;
+  opacity: 0.7 !important;
+  transition: all 0.2s !important;
+}
+
+:deep(.fc-more-popover .fc-popover-close:hover) {
+  opacity: 1 !important;
+  color: #0f172a !important;
+}
+
+:deep(.fc-more-popover .fc-popover-body) {
+  padding: 16px !important;
+  background: #ffffff !important;
+  max-height: 280px !important;
+  overflow-y: auto !important;
+}
+
+/* Space out events in the popover */
+:deep(.fc-more-popover .fc-popover-body .fc-daygrid-event) {
+  margin-bottom: 8px !important;
+  padding: 6px 10px !important;
+}
+
+:deep(.fc-more-popover .fc-popover-body .fc-daygrid-event:last-child) {
+  margin-bottom: 0 !important;
 }
 </style>

@@ -312,7 +312,7 @@ const sendBrochure = async () => {
       doc.text(label, col3X, pY)
       
       let promoOffset = 0
-      if (settingsStore.app.viewDiscount && oldP > 0 && newP > 0 && oldP !== newP) {
+      if (settingsStore.app.viewDiscount && oldP > 0 && newP && newP > 0 && oldP !== newP) {
         doc.setTextColor(156, 163, 175) // Gray-400 for strikethrough
         doc.setFontSize(isBoth ? 8 : 10)
         doc.setFont('helvetica', 'bold')
@@ -551,7 +551,11 @@ const showMoreActions = ref(false)
 
 const handleUpdateStatus = async (status: string) => {
   try {
-    await api.put(`/api/janjiTemu/update-status?no_id=${props.appointment.No_Id}&status_progress=${status}`)
+    if (status === 'dikonfirmasi') {
+      await api.put(`/api/janjiTemu/confirm?no_id=${props.appointment.No_Id}`)
+    } else {
+      await api.put(`/api/janjiTemu/update-status?no_id=${props.appointment.No_Id}&status_progress=${status}`)
+    }
     success(`Status berhasil diperbarui menjadi ${status}`)
     emit('refresh')
     emit('close')

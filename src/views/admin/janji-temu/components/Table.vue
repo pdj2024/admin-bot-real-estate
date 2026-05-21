@@ -54,10 +54,16 @@ const emit = defineEmits(['refresh'])
 const handleUpdateStatus = async (item: any, newStatus: string) => {
   confirm(`Ubah status progress menjadi ${newStatus}?`, async () => {
     try {
-      const payload = { ...item, Status_Progress: newStatus }
-      await api.put(`/api/janjiTemu/update?no_id=${item.No_Id}`, payload, {
-        headers: { 'X-Jenis-User': 'admin' }
-      })
+      if (newStatus === 'dikonfirmasi') {
+        await api.put(`/api/janjiTemu/confirm?no_id=${item.No_Id}`, null, {
+          headers: { 'X-Jenis-User': 'admin' }
+        })
+      } else {
+        const payload = { ...item, Status_Progress: newStatus }
+        await api.put(`/api/janjiTemu/update?no_id=${item.No_Id}`, payload, {
+          headers: { 'X-Jenis-User': 'admin' }
+        })
+      }
       success('Status berhasil diperbarui')
       emit('refresh')
     } catch {

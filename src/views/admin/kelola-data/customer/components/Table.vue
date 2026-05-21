@@ -39,7 +39,6 @@ const columnVisibility = ref<VisibilityState>({
   Status_Broadcast: true,
   aksi: true
 })
-const showSettings = ref(false)
 
 const props = defineProps({
   searchQuery: {
@@ -394,34 +393,16 @@ const printData = () => {
   printWindow.document.close()
 }
 
-const openDropdownId = ref<string | null>(null)
-const dropdownPosition = ref({ top: 0, left: 0 })
-
-const toggleDropdown = (event: MouseEvent, id: string) => {
-  if (openDropdownId.value === id) {
-    openDropdownId.value = null
-  } else {
-    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
-    dropdownPosition.value = { 
-      top: rect.bottom + 8,
-      left: rect.right - 224
+const handleClearSession = async (customer: Customer) => {
+  confirm(`Apakah Anda yakin ingin membersihkan session bot untuk ${customer.Nama_Display}?`, async () => {
+    try {
+      await api.post('/api/auth/clear-bot-session', { PhoneNumber: String(customer.Telepon) })
+      success('Session bot berhasil dibersihkan')
+      emit('success')
+    } catch (err: any) {
+      fail(err.response?.data?.Message || 'Gagal membersihkan session')
     }
-    openDropdownId.value = id
-  }
-}
-
-const handleScroll = () => {
-  if (openDropdownId.value) openDropdownId.value = null
-}
-
-const handleClickOutside = (event: MouseEvent) => {
-  const target = event.target as HTMLElement
-  if (!target.closest('.action-menu')) {
-    openDropdownId.value = null
-  }
-  if (!target.closest('.settings-menu') && !target.closest('.btn-settings-trigger')) {
-    showSettings.value = false
-  }
+  })
 }
 
 const handleDelete = async (customer: Customer) => {
@@ -458,13 +439,9 @@ defineExpose({
 
 onMounted(() => {
   fetchData()
-  document.addEventListener('click', handleClickOutside)
-  window.addEventListener('scroll', handleScroll, true)
 })
 
 onBeforeUnmount(() => {
-  document.removeEventListener('click', handleClickOutside)
-  window.removeEventListener('scroll', handleScroll, true)
 })
 </script>
 
@@ -632,43 +609,21 @@ onBeforeUnmount(() => {
               </div>
             </td>
 
-            <td v-if="table.getColumn('aksi')?.getIsVisible()" class="px-6 py-5 relative action-menu">
-              <button @click.stop="toggleDropdown($event, row.original.No_Id)" class="size-10 rounded-xl flex items-center justify-center hover:bg-slate-100 transition-all text-slate-400 hover:text-slate-900 border border-transparent hover:border-slate-200">
-                <Icon icon="lucide:more-vertical" class="size-5" />
-              </button>
-
-              <Teleport to="body">
-                <Transition 
-                  enter-active-class="transition duration-100 ease-out" 
-                  enter-from-class="transform scale-95 opacity-0 -translate-y-2" 
-                  enter-to-class="transform scale-100 opacity-100 translate-y-0" 
-                  leave-active-class="transition duration-75 ease-in" 
-                  leave-from-class="transform scale-100 opacity-100 translate-y-0" 
-                  leave-to-class="transform scale-95 opacity-0 -translate-y-2"
-                >
-                  <div v-if="openDropdownId === row.original.No_Id" 
-                    class="fixed w-56 bg-white shadow-2xl border border-slate-100 rounded-2xl p-2 z-[999] origin-top-right"
-                    :style="{ 
-                      top: `${dropdownPosition.top}px`, 
-                      left: `${dropdownPosition.left}px` 
-                    }"
-                  >
-                    <button @click="emit('edit', row.original); openDropdownId = null" class="dropdown-item w-full group/item">
-                      <div class="size-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover/item:bg-bejo-500 group-hover/item:text-white transition-all">
-                        <Icon icon="lucide:pencil" class="size-4" /> 
-                      </div>
-                      <span class="group-hover/item:text-slate-900 transition-colors">Edit Data</span>
-                    </button>
-                    <div class="my-1.5 border-t border-slate-50/50 mx-2"></div>
-                    <button @click="handleDelete(row.original); openDropdownId = null" class="dropdown-item w-full group/item text-red-500 hover:bg-red-50">
-                      <div class="size-8 rounded-lg bg-red-50 flex items-center justify-center text-red-400 group-hover/item:bg-red-500 group-hover/item:text-white transition-all">
-                        <Icon icon="lucide:trash-2" class="size-4" /> 
-                      </div>
-                      <span class="font-black">Hapus</span>
-                    </button>
-                  </div>
-                </Transition>
-              </Teleport>
+            <td v-if="table.getColumn('aksi')?.getIsVisible()" class="px-6 py-5">
+              <div class="flex items-center gap-2">
+                <button @click="emit('edit', row.original)" class="h-9 px-3 rounded-xl bg-slate-50 hover:bg-bejo-500 hover:text-white border border-slate-100 text-slate-500 transition-all flex items-center justify-center gap-1.5 text-[11px] font-black uppercase tracking-wider active:scale-95">
+                  <Icon icon="lucide:pencil" class="size-3.5" />
+                  Edit
+                </button>
+                <button @click="handleClearSession(row.original)" class="h-9 px-3 rounded-xl bg-amber-50 hover:bg-amber-500 hover:text-white border border-amber-100 text-amber-500 transition-all flex items-center justify-center gap-1.5 text-[11px] font-black uppercase tracking-wider active:scale-95" title="Clear Bot Session">
+                  <Icon icon="lucide:refresh-cw" class="size-3.5" />
+                  Clear Session
+                </button>
+                <button @click="handleDelete(row.original)" class="h-9 px-3 rounded-xl bg-red-50 hover:bg-red-500 hover:text-white border border-red-100/50 text-red-500 transition-all flex items-center justify-center gap-1.5 text-[11px] font-black uppercase tracking-wider active:scale-95">
+                  <Icon icon="lucide:trash-2" class="size-3.5" />
+                  Hapus
+                </button>
+              </div>
             </td>
           </tr>
         </tbody>

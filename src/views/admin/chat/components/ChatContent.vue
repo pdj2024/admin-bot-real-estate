@@ -301,7 +301,7 @@ const handleOpenBrochureSelection = () => {
 
 const handleSelectUnitForBrochure = (product: any) => {
   brochureProductData.value = product
-  brochureCaption.value = `Halo *${username.value || props.phoneNumber}*,\n\nBerikut adalah brosur digital untuk unit *${product.Nama_Produk}*.\n\nSilakan dipelajari detailnya, jika ada pertanyaan jangan ragu untuk bertanya ya!`
+  brochureCaption.value = `Halo *${props.namaDisplay || props.phoneNumber}*,\n\nBerikut adalah brosur digital untuk unit *${product.Nama_Produk}*.\n\nSilakan dipelajari detailnya, jika ada pertanyaan jangan ragu untuk bertanya ya!`
   showBrochureCaptionModal.value = true
   openBrochureSelection.value = false
 }
@@ -561,7 +561,7 @@ const generateBrochure = async (product: any) => {
     doc.text(label, col3X, pY)
     
     let promoOffset = 0
-    if (settingsStore.app.viewDiscount && oldP > 0 && newP > 0 && oldP !== newP) {
+    if (settingsStore.app.viewDiscount && oldP > 0 && newP && newP > 0 && oldP !== newP) {
       doc.setTextColor(156, 163, 175) // Gray-400 for strikethrough
       doc.setFontSize(isBoth ? 8 : 10)
       doc.setFont('helvetica', 'bold')

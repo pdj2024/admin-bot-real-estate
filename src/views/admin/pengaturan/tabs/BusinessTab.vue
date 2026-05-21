@@ -426,12 +426,12 @@ onMounted(() => {
     <template v-else>
       <!-- Identitas Utama -->
       <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
-        <div class="px-8 py-5 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
+        <div class="px-8 py-5 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
           <div class="flex items-center gap-3">
             <div class="size-8 rounded-lg bg-bejo-500 flex items-center justify-center text-white shadow-lg shadow-bejo-500/20">
               <Icon icon="lucide:building-2" class="size-4" />
             </div>
-            <h4 class="text-xs font-black text-slate-800 uppercase tracking-widest">Identitas Dasar</h4>
+            <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest">Pengaturan Profil Perusahaan</h4>
           </div>
         </div>
 
@@ -448,7 +448,7 @@ onMounted(() => {
                 </template>
                 <template v-else>
                   <Icon icon="lucide:image-plus" class="size-8 text-slate-300 mb-2 group-hover:text-bejo-500" />
-                  <span class="text-[8px] font-black uppercase tracking-widest text-slate-400 group-hover:text-bejo-600">Logo Perusahaan</span>
+                  <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-bejo-600">Logo Perusahaan</span>
                 </template>
               </div>
               <div v-if="isUploadingLogo" class="absolute inset-0 bg-white/80 backdrop-blur-sm rounded-[2.5rem] flex items-center justify-center z-10">
@@ -457,11 +457,11 @@ onMounted(() => {
             </div>
             
             <div class="flex-1 space-y-2 text-center md:text-left">
-              <h5 class="text-base font-black text-slate-900">Logo</h5>
-              <p class="text-xs text-slate-500 font-medium leading-relaxed max-w-sm">
+              <h5 class="text-lg font-black text-slate-900">Logo</h5>
+              <p class="text-sm text-slate-500 font-medium leading-relaxed max-w-sm">
                 Gunakan logo berformat PNG atau JPG dengan latar belakang transparan/putih untuk hasil terbaik di seluruh platform.
               </p>
-              <button @click="triggerLogoUpload" class="text-[10px] font-black text-bejo-600 uppercase tracking-widest hover:text-bejo-700 flex items-center gap-2 mx-auto md:mx-0">
+              <button @click="triggerLogoUpload" class="text-xs font-black text-bejo-600 uppercase tracking-widest hover:text-bejo-700 flex items-center gap-2 mx-auto md:mx-0">
                 Ganti Logo
                 <Icon icon="lucide:arrow-right" class="size-3" />
               </button>
@@ -521,7 +521,7 @@ onMounted(() => {
           <div class="size-8 rounded-lg bg-bejo-500 flex items-center justify-center text-white shadow-lg shadow-bejo-500/20">
             <Icon icon="lucide:map-pin" class="size-4" />
           </div>
-          <h4 class="text-xs font-black text-slate-800 uppercase tracking-widest">Lokasi & Jam Operasional</h4>
+          <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest">Lokasi & Jam Operasional</h4>
         </div>
 
         <div class="p-8 space-y-8">
@@ -555,7 +555,7 @@ onMounted(() => {
                     <option v-for="day in daysList" :key="day" :value="day">{{ day }}</option>
                   </select>
                 </div>
-                <span class="text-[10px] font-black text-slate-300 uppercase">s/d</span>
+                <span class="text-xs font-black text-slate-300 uppercase">s/d</span>
                 <div class="flex-1">
                   <select v-model="hariSampai" class="field-input !py-3">
                     <option v-for="day in daysList" :key="day" :value="day">{{ day }}</option>
@@ -574,7 +574,7 @@ onMounted(() => {
                   <Icon icon="lucide:play" class="absolute right-4 top-1/2 -translate-y-1/2 size-3 text-slate-300 pointer-events-none" />
                   <input v-model="jamDari" type="time" class="field-input !py-3 pr-10" />
                 </div>
-                <span class="text-[10px] font-black text-slate-300 uppercase">s/d</span>
+                <span class="text-xs font-black text-slate-300 uppercase">s/d</span>
                 <div class="flex-1 relative">
                   <Icon icon="lucide:square" class="absolute right-4 top-1/2 -translate-y-1/2 size-3 text-slate-300 pointer-events-none" />
                   <input v-model="jamSampai" type="time" class="field-input !py-3 pr-10" />
@@ -590,7 +590,7 @@ onMounted(() => {
                 <Icon icon="lucide:navigation" class="size-4 text-bejo-500" />
                 Koordinat Lokasi (Peta)
               </label>
-              <div class="text-[10px] font-bold text-slate-400 bg-slate-50 px-3 py-1 rounded-full border border-slate-100 font-mono">
+              <div class="text-xs font-bold text-slate-400 bg-slate-50 px-3 py-1 rounded-full border border-slate-100 font-mono">
                 {{ form.Gmap || 'Belum dipilih' }}
               </div>
             </div>
@@ -609,8 +609,8 @@ onMounted(() => {
                     <div class="flex items-start gap-3">
                       <Icon icon="lucide:map-pin" class="size-4 mt-0.5 text-slate-400 group-hover:text-bejo-500" />
                       <div class="flex-1">
-                        <span class="text-xs font-black text-slate-700 block leading-tight">{{ p.mainText }}</span>
-                        <span class="text-[10px] font-bold text-slate-400 block mt-0.5" v-if="p.secondaryText">{{ p.secondaryText }}</span>
+                        <span class="text-sm font-black text-slate-700 block leading-tight">{{ p.mainText }}</span>
+                        <span class="text-xs font-bold text-slate-400 block mt-0.5" v-if="p.secondaryText">{{ p.secondaryText }}</span>
                       </div>
                     </div>
                   </button>
@@ -625,13 +625,13 @@ onMounted(() => {
               <!-- Loading Overlay -->
               <div v-if="!isMapLoaded" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-50/80 backdrop-blur-sm z-10">
                 <Icon icon="lucide:loader-2" class="size-10 animate-spin text-bejo-500/40" />
-                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-4">Memuat Peta...</span>
+                <span class="text-xs font-black text-slate-400 uppercase tracking-widest mt-4">Memuat Peta...</span>
               </div>
 
               <!-- Geolocation Button -->
               <button @click="getCurrentLocation" type="button" class="absolute bottom-6 right-6 p-3 bg-white hover:bg-slate-50 text-slate-700 rounded-2xl shadow-xl border border-slate-100 transition-all active:scale-90 flex items-center gap-2 group z-20" :disabled="isLocating">
                 <Icon :icon="isLocating ? 'lucide:loader-2' : 'lucide:locate-fixed'" class="size-5" :class="isLocating ? 'animate-spin text-bejo-500' : 'text-slate-400 group-hover:text-bejo-500'" />
-                <span class="text-[10px] font-black uppercase tracking-widest">{{ isLocating ? 'Mencari...' : 'Gunakan Lokasi Saat Ini' }}</span>
+                <span class="text-xs font-black uppercase tracking-widest">{{ isLocating ? 'Mencari...' : 'Gunakan Lokasi Saat Ini' }}</span>
               </button>
             </div>
           </div>
@@ -642,7 +642,7 @@ onMounted(() => {
         <button 
           :disabled="isSaving" 
           @click="handleSave" 
-          class="px-10 py-4 bg-green-500 hover:bg-green-600 text-white rounded-2xl font-black text-sm shadow-xl shadow-green-500/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
+          class="px-10 py-4 bg-green-500 hover:bg-green-600 text-white rounded-2xl font-black text-base shadow-xl shadow-green-500/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
         >
           <Icon v-if="isSaving" icon="lucide:loader-2" class="size-4 animate-spin" />
           <Icon v-else icon="lucide:save" class="size-4" />
@@ -657,7 +657,7 @@ onMounted(() => {
 @reference "@/assets/css/style.css";
 
 .label {
-  @apply flex items-center gap-2 text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1;
+  @apply flex items-center gap-2 text-sm font-black text-slate-400 uppercase tracking-widest mb-2 ml-1;
 }
 .field-input {
   @apply w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3.5 text-base font-bold text-slate-700 focus:ring-4 focus:ring-green-500/5 focus:border-green-500 outline-none transition-all;
