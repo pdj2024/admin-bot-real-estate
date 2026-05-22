@@ -82,10 +82,14 @@ const selectProduct = (product: any) => {
 const formatCurrency = (value: number) => {
   if (!value) return 'Rp 0'
   if (value >= 1000000000) {
-    return `Rp ${(value / 1000000000).toFixed(1)} M`
+    const val = value / 1000000000
+    const rounded = Math.round(val * 100) / 100
+    return `Rp ${rounded} M`
   }
   if (value >= 1000000) {
-    return `Rp ${(value / 1000000).toFixed(1)} Jt`
+    const val = value / 1000000
+    const rounded = Math.round(val * 100) / 100
+    return `Rp ${rounded} Jt`
   }
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
 }

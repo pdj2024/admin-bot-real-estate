@@ -171,6 +171,8 @@ export interface Chat {
   List_Id_Message_Received: string[]
   Last_Id_Message_Viewed?: string | ''
   New_Message_Count?: number | 0
+  Clean_Tooltip?: string
+  Formatted_Last_Message?: string
 }
 
 export interface TakeOverPayload {
@@ -225,6 +227,7 @@ const fetchData = async (tab: 'bot' | 'chat_saya', silent: boolean = false) => {
 
       data.Data.forEach((item: any) => {
         if (item.Room_Id) {
+          preProcessChat(item)
           tempBot.push(item)
           tempIdsBot.push(item.Room_Id)
         }
@@ -250,6 +253,7 @@ const fetchData = async (tab: 'bot' | 'chat_saya', silent: boolean = false) => {
         if (item.Status !== 'aktif' || !item.Id_Lawan || !item.Telepon_User_Lawan) return
 
         if (item.Room_Id) {
+          preProcessChat(item)
           if (unreadCounts.value[item.Room_Id] !== undefined) {
             item.New_Message_Count = unreadCounts.value[item.Room_Id]
           } else {
@@ -295,18 +299,16 @@ const fetchData = async (tab: 'bot' | 'chat_saya', silent: boolean = false) => {
 }
 
 const changeTab = (tab: 'bot' | 'chat_saya') => {
-  if (activeTab.value === tab && (chatsBot.value.length > 0 || chatsAktif.value.length > 0)) return
-  
-  // Clear all lists to prevent stale data
-  chatsBot.value = []
-  chatsAktif.value = []
-  chatsAssign.value = []
-  
-  selectedRoomIds.value = []
+  if (activeTab.value === tab) return
 
   activeTab.value = tab
-  fetchData(tab)
   emit('changeTab', tab)
+
+  // Hanya fetch jika data tab yang dituju memang kosong (belum pernah dimuat).
+  // Jika sudah ada data, tampilkan langsung dari cache — real-time update
+  // tetap berjalan via SignalR (refreshChatList).
+  const isEmpty = tab === 'bot' ? chatsBot.value.length === 0 : chatsAktif.value.length === 0 && chatsAssign.value.length === 0
+  if (isEmpty) fetchData(tab)
 }
 
 
@@ -341,6 +343,7 @@ const refreshChatList = (data?: any, silent: boolean = false) => {
           New_Message_Count: unreadCounts.value[roomIdStr],
           Status_Bot: data.jenisPesan === 'system_keluar' ? 'aktif' : (data.jenisPesan === 'system_masuk' ? 'nonaktif' : chatList[index].Status_Bot)
         }
+        preProcessChat(updatedChat)
         
         chatList.splice(index, 1)
         
@@ -394,35 +397,54 @@ const removeRoomFromList = (roomId: string) => {
   chatsAssign.value = chatsAssign.value.filter(c => c.Room_Id !== roomId)
 }
 
-const formatMessage = (msg: string, maxLength: number = 50) => {
-  if (!msg) return ''
-
-  let processedMsg = msg.replace(/\n/g, ' ')
-
-  if (processedMsg.includes('_data:image/')) {
-    const caption = processedMsg.split('_data:image/')[0].trim()
-    processedMsg = caption ? `🖼️ ${caption}` : `🖼️ Foto`
-  } else if (processedMsg.includes('data:image/')) {
-    processedMsg = '🖼️ Foto'
+const preProcessChat = (chat: Chat): Chat => {
+  if (!chat.Last_Message) {
+    chat.Clean_Tooltip = ''
+    chat.Formatted_Last_Message = ''
+    return chat
   }
 
-  const finalMsg = processedMsg.length > maxLength ? processedMsg.slice(0, maxLength) + '...' : processedMsg
+  const rawMsg = chat.Last_Message
 
-  return finalMsg
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
-}
+  // 1. cleanTooltip logic:
+  let cleaned = rawMsg.replace('_X7#mQ9!vW2_', ' ')
+  
+  const base64Idx = cleaned.indexOf('_data:image/')
+  if (base64Idx !== -1) {
+    cleaned = cleaned.substring(0, base64Idx) + '🖼️ Foto'
+  } else {
+    const dataIdx = cleaned.indexOf('data:image/')
+    if (dataIdx !== -1) {
+      cleaned = '🖼️ Foto'
+    }
+  }
 
-const cleanTooltip = (msg: string) => {
-  if (!msg) return ''
-  return msg
-    .replace('_X7#mQ9!vW2_', ' ') // System tag
-    .replace(/_data:image\/.*$/, '🖼️ Foto') // Image base64
+  chat.Clean_Tooltip = cleaned
     .replace(/\*(.*?)\*/g, '$1') // Bold
     .replace(/_(.*?)_/g, '$1')   // Italic
     .replace(/~(.*?)~/g, '$1')   // Strikethrough
     .replace(/```(.*?)```/gs, '$1') // Monospace
+
+  // 2. formatMessage logic:
+  let processedMsg = rawMsg.replace(/\n/g, ' ')
+
+  const base64IdxFormat = processedMsg.indexOf('_data:image/')
+  if (base64IdxFormat !== -1) {
+    const caption = processedMsg.substring(0, base64IdxFormat).trim()
+    processedMsg = caption ? `🖼️ ${caption}` : `🖼️ Foto`
+  } else if (processedMsg.indexOf('data:image/') !== -1) {
+    processedMsg = '🖼️ Foto'
+  }
+
+  const maxLength = 50
+  const finalMsg = processedMsg.length > maxLength ? processedMsg.slice(0, maxLength) + '...' : processedMsg
+
+  chat.Formatted_Last_Message = finalMsg
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+
+  return chat
 }
 
 
@@ -753,12 +775,18 @@ const getAvatarInitials = (chat: any) => {
 }
 
 onMounted(async () => {
-  fetchData(activeTab.value)
+  // Fetch tab aktif terlebih dahulu (prioritas utama)
+  await fetchData(activeTab.value)
   emit('changeTab', activeTab.value)
   window.addEventListener('click', closeContextMenu)
   nextTick(() => {
     window.HSStaticMethods?.autoInit()
   })
+
+  // Prefetch tab lainnya di background dengan delay kecil
+  // agar tidak bersaing dengan fetch pertama
+  const otherTab = activeTab.value === 'chat_saya' ? 'bot' : 'chat_saya'
+  setTimeout(() => fetchData(otherTab), 1500)
 })
 
 onUnmounted(() => {
@@ -870,8 +898,8 @@ defineExpose({
                         <div class="flex items-center justify-between gap-2">
                           <p 
                             class="text-[11px] font-bold truncate text-slate-500 leading-none" 
-                            :title="cleanTooltip(chat.Last_Message)"
-                            v-html="formatMessage(chat.Last_Message.replace('_X7#mQ9!vW2_', ' '))"
+                            :title="chat.Clean_Tooltip || ''"
+                            v-html="chat.Formatted_Last_Message || ''"
                           ></p>
 
                           <div class="flex items-center gap-2">
@@ -953,8 +981,8 @@ defineExpose({
                         <div class="flex items-center justify-between gap-2">
                           <p 
                             class="text-[11px] font-bold truncate text-slate-500 leading-none" 
-                            :title="cleanTooltip(chat.Last_Message)"
-                            v-html="formatMessage(chat.Last_Message.replace('_X7#mQ9!vW2_', ' '))"
+                            :title="chat.Clean_Tooltip || ''"
+                            v-html="chat.Formatted_Last_Message || ''"
                           ></p>
 
                           <div class="flex items-center gap-2">
@@ -1031,8 +1059,8 @@ defineExpose({
                         <div class="flex items-center justify-between gap-2">
                           <p 
                             class="text-[11px] font-bold truncate text-slate-500 leading-none" 
-                            :title="cleanTooltip(chat.Last_Message)"
-                            v-html="formatMessage(chat.Last_Message.replace('_X7#mQ9!vW2_', ' '))"
+                            :title="chat.Clean_Tooltip || ''"
+                            v-html="chat.Formatted_Last_Message || ''"
                           ></p>
 
                           <div class="flex items-center gap-2">

@@ -5,10 +5,9 @@ import { success, fail } from '@/utils/sweet-alert'
 import Swal from 'sweetalert2'
 import { jsPDF } from 'jspdf'
 import api from '@/services/axios'
-import ChatBubble from './ChatBubble.vue'
+import ChatHistory from './ChatHistory.vue'
 import bgChat from '@/assets/images/background-chat.png'
 import bgChatDark from '@/assets/images/background-chat-dark.png'
-import simplebar from 'simplebar-vue'
 import { type Chat, type PreviewImage, commonEmojis } from './data'
 import { type TakeOverPayload } from './SideBar.vue'
 import { PROVINCES } from '@/utils/regions'
@@ -29,9 +28,8 @@ const etalaseRef = ref<HTMLElement | null>(null)
 const tukarCSRef = ref<HTMLElement | null>(null)
 const filterRef = ref<any | null>(null)
 const containerRef = ref<HTMLElement | null>(null)
-const chatContainer = ref<any>(null)
+const chatHistoryRef = ref<InstanceType<typeof ChatHistory> | null>(null)
 const searchHeaderRef = ref<HTMLElement | null>(null)
-const showScrollToBottom = ref(false)
 
 const openMenu = ref(false)
 const openEtalase = ref(false)
@@ -113,10 +111,6 @@ const activeSearchMatchIndex = computed(() => {
   return searchChatResults.value[currentSearchMatch.value].matchIndex
 })
 
-const firstUnreadIndex = computed(() => {
-  if (props.activeTab !== 'chat_saya') return -1
-  return props.chats.findIndex((chat) => chat.Tipe_User === 'customer' && chat.Send_Status === 'delivered')
-})
 const isPreviewOpen = ref(false)
 const previewImages = ref<PreviewImage[]>([])
 const activeIndex = ref(0)
@@ -223,13 +217,8 @@ const scrollToSearchMatch = () => {
     const chatElementId = `chat-message-${chatIndex}`
     const chatElement = document.getElementById(chatElementId)
 
-    if (chatElement && cachedScrollEl) {
-      const containerHeight = (cachedScrollEl as HTMLElement).clientHeight
-      const elementTop = chatElement.offsetTop
-      const scrollToPosition = elementTop - containerHeight / 2 + chatElement.clientHeight / 2
-      if (typeof (cachedScrollEl as HTMLElement).scrollTo === 'function') {
-        ;(cachedScrollEl as HTMLElement).scrollTo({ top: scrollToPosition, behavior: 'smooth' })
-      }
+    if (chatElement) {
+      chatHistoryRef.value?.scrollToElement(chatIndex)
     }
   })
 }
@@ -308,9 +297,21 @@ const handleSelectUnitForBrochure = (product: any) => {
 
 const formatPrice = (price: number) => {
   if (!price) return 'N/A'
-  if (price >= 1000000000) return (price / 1000000000).toFixed(1).replace('.0', '') + ' M'
-  if (price >= 1000000) return (price / 1000000).toFixed(1).replace('.0', '') + ' Jt'
-  if (price >= 1000) return (price / 1000).toFixed(1).replace('.0', '') + ' Rb'
+  if (price >= 1000000000) {
+    const val = price / 1000000000
+    const rounded = Math.round(val * 100) / 100
+    return rounded.toString() + ' M'
+  }
+  if (price >= 1000000) {
+    const val = price / 1000000
+    const rounded = Math.round(val * 100) / 100
+    return rounded.toString() + ' Jt'
+  }
+  if (price >= 1000) {
+    const val = price / 1000
+    const rounded = Math.round(val * 100) / 100
+    return rounded.toString() + ' Rb'
+  }
   return price.toString()
 }
 
@@ -797,21 +798,7 @@ const openSidebar = (): void => {
   if (sidebarElement && (window as any).HSOverlay) (window as any).HSOverlay.open(sidebarElement)
 }
 
-let cachedScrollEl: Element | null = null
-const scrollToBottom = async () => {
-  await nextTick()
-  const scroll = () => {
-    if (cachedScrollEl && typeof (cachedScrollEl as HTMLElement).scrollTo === 'function') {
-      const el = cachedScrollEl as HTMLElement
-      el.scrollTo({ top: el.scrollHeight + 5000, behavior: 'auto' })
-    }
-  }
-
-  // Double trigger to ensure we catch layout changes
-  requestAnimationFrame(scroll)
-  setTimeout(scroll, 50)
-  setTimeout(scroll, 200) // Safety for slow image loads
-}
+// Scroll helper removed - delegated to ChatHistory.vue
 
 const processingMessageIds = new Set<string>()
 
@@ -934,7 +921,7 @@ const sendChat = async (type: string, url?: string, targetRoomId?: string, targe
     } as unknown as Chat)
     sendChatContent.value = ''
     resetInputHeight()
-    scrollToBottom()
+    chatHistoryRef.value?.scrollToBottom()
   }
 
   try {
@@ -1081,35 +1068,143 @@ const closePreview = () => {
   activeIndex.value = 0
 }
 
-const fileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.readAsDataURL(file)
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = reject
+const uploadToGcs = async (file: File): Promise<string> => {
+  const uploaderId = localStorage.getItem('no_id') || ''
+  const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+  const config = { headers: { 'X-Jenis-User': 'Admin' } }
+
+  // 1. Request Signed URL
+  const { data: reqData } = await api.post(
+    '/api/mediacloud/req-upload-url-batch',
+    { uploader_id: uploaderId, extensions: [ext] },
+    config
+  )
+  const uploadInfo = reqData[0]
+
+  // 2. Upload binary langsung ke GCS via Signed URL
+  await fetch(uploadInfo.UploadUrl, {
+    method: 'PUT',
+    body: file,
+    headers: { 'Content-Type': file.type }
   })
+
+  // 3. Konfirmasi upload → dapat Media ID
+  const { data: confirmData } = await api.post(
+    '/api/mediacloud/confirm-upload-batch',
+    {
+      files: [{
+        uploader_id: uploaderId,
+        fileName: file.name,
+        objectName: uploadInfo.ObjectName,
+        original_size: file.size,
+        content_type: file.type
+      }]
+    },
+    config
+  )
+  return confirmData.MediaIds[0] as string
+}
+
+const getGcsPublicUrl = async (mediaId: string): Promise<string> => {
+  const { data } = await api.post(
+    '/api/mediacloud/read-url-batch',
+    { ids: [mediaId] },
+    { headers: { 'X-Jenis-User': 'Admin' } }
+  )
+  return data?.success?.[mediaId]?.Url || ''
 }
 
 const sendImages = async () => {
   if (isSendingImage.value) return
   isSendingImage.value = true
-  const config = { headers: { 'X-Jenis-User': 'admin' } }
   try {
     let formattedPhone = props.phoneNumber.replace(/\D/g, '')
     if (formattedPhone.startsWith('0')) formattedPhone = '62' + formattedPhone.substring(1)
 
-    const payloads = await Promise.all(
-      previewImages.value.map(async (item) => {
-        const base64String = await fileToBase64(item.file)
-        return { PhoneNumber: formattedPhone + '@s.whatsapp.net', FileUrl: base64String, FileName: item.file.name, MimeType: item.file.type, Caption: item.caption }
-      })
-    )
-    for (const item of payloads) {
-      await api.post('/api/waha/send-image', item, config)
-      sendChat('system_image', item.Caption + '_' + item.FileUrl)
+    const now = new Date()
+    const sentAt = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 19)
+    const myId = localStorage.getItem('no_id') || ''
+    const role = localStorage.getItem('role_user') || 'admin'
+    const activeRoomId = props.roomId
+
+    const currentUserIds: string[] = []
+    if (props.idLawan) currentUserIds.push(props.idLawan)
+    if (!currentUserIds.includes('adm_bot')) currentUserIds.push('adm_bot')
+    if (myId && !currentUserIds.includes(myId)) currentUserIds.push(myId)
+
+    if (props.chats && props.chats.length > 0) {
+      const lastChat = props.chats[props.chats.length - 1]
+      if (lastChat.User_Ids && Array.isArray(lastChat.User_Ids)) {
+        lastChat.User_Ids.forEach((id) => {
+          if (!currentUserIds.includes(id)) currentUserIds.push(id)
+        })
+      }
     }
+
+    for (const item of previewImages.value) {
+      // 1. Upload file ke GCS → dapat Media ID
+      const mediaId = await uploadToGcs(item.file)
+
+      // 2. Ambil public URL untuk dikirim ke WAHA & disimpan di DB
+      const publicUrl = await getGcsPublicUrl(mediaId)
+
+      // 3. Kirim gambar ke WA via WAHA (gunakan public URL, bukan Base64)
+      if (publicUrl) {
+        await api.post(
+          '/api/waha/send-image',
+          {
+            PhoneNumber: formattedPhone + '@s.whatsapp.net',
+            FileUrl: publicUrl,
+            FileName: item.file.name,
+            MimeType: item.file.type,
+            Caption: item.caption
+          },
+          { headers: { 'X-Jenis-User': 'admin' } }
+        )
+      }
+
+      // 4. Emit local UI update dengan status pending
+      const tempIndex = props.chats.length
+      emit('addChat', {
+        Message: item.caption,
+        Sent_At: sentAt,
+        Sender_Id: myId,
+        Tipe_User: role,
+        Jenis_Pesan: 'image',
+        Send_Status: 'pending',
+        Room_Id: activeRoomId,
+        User_Ids: currentUserIds,
+        Id_Paket: mediaId,
+        Media_Url: item.url
+      } as unknown as Chat)
+
+      // 5. Post ke database chat via /api/chat/create
+      const payload = {
+        Chat: {
+          Jenis_Pesan: 'image',
+          Sent_At: sentAt,
+          Sender_Id: myId,
+          Tipe_User: role,
+          Message: item.caption,
+          Id_Paket: mediaId,
+          No_Pesanan: null,
+          No_Penawaran: null,
+          Send_Status: 'send'
+        },
+        Room_Id: activeRoomId,
+        User_Ids: currentUserIds
+      }
+
+      const res = await api.post('/api/chat/create', payload, { headers: { 'X-Jenis-User': 'admin' } })
+      const newMessageId = res.data.Data?.Message_Id
+      emit('updateChatStatus', { index: tempIndex, status: 'send', id: newMessageId })
+    }
+
     await markMessagesAsRead()
     closePreview()
+  } catch (error) {
+    console.error('Gagal mengirim gambar:', error)
+    fail('Gagal mengirim gambar. Silakan coba lagi.')
   } finally {
     isSendingImage.value = false
   }
@@ -1136,8 +1231,10 @@ watch(
       changeUsername.value = false
       previewImages.value = []
       closePreview()
+      nextTick(() => reinitPreline())
     }
-  }
+  },
+  { immediate: true }
 )
 
 const adjustInputHeight = () => {
@@ -1154,44 +1251,6 @@ const handleKeydown = (e: KeyboardEvent) => {
     sendChat('text')
   }
 }
-
-const initScrollListener = () => {
-  setTimeout(() => {
-    cachedScrollEl = document.querySelector('#chat-scroll-container .simplebar-content-wrapper')
-    if (cachedScrollEl) {
-      cachedScrollEl.removeEventListener('scroll', handleScroll)
-      cachedScrollEl.addEventListener('scroll', handleScroll)
-      handleScroll()
-    }
-  }, 100)
-}
-
-const handleScroll = () => {
-  if (!cachedScrollEl) return
-  const { scrollTop, scrollHeight, clientHeight } = cachedScrollEl as HTMLElement
-  const isAtBottom = scrollHeight - Math.ceil(scrollTop + clientHeight) <= 15
-  showScrollToBottom.value = scrollHeight > clientHeight && !isAtBottom
-}
-
-watch(
-  () => props.chats.length,
-  () => {
-    scrollToBottom()
-    setTimeout(handleScroll, 150)
-  },
-  { immediate: true }
-)
-
-watch(
-  () => props.roomId,
-  () => {
-    cachedScrollEl = null
-    showScrollToBottom.value = false
-    initScrollListener()
-    nextTick(() => reinitPreline())
-  },
-  { immediate: true }
-)
 
 watch(
   () => props.takeOverBatch,
@@ -1238,8 +1297,6 @@ onMounted(() => {
   isMobile.value = window.innerWidth < 640
   document.addEventListener('click', handleClickOutside)
   reinitPreline()
-  scrollToBottom()
-  initScrollListener()
 })
 
 onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
@@ -1363,45 +1420,19 @@ defineExpose({
         <input type="file" ref="addMoreInput" multiple hidden accept="image/*" @change="handleAddMore" />
       </div>
 
-      <div class="flex-grow min-h-0 relative overflow-hidden" :class="{ hidden: isPreviewMode }">
-        <!-- Persistent Background Layer -->
-        <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-slate-100">
-          <div class="absolute inset-0 bg-slate-100 backdrop-blur-none"></div>
-        </div>
-
-        <simplebar id="chat-scroll-container" ref="chatContainer" class="h-full w-full relative z-10 bg-transparent">
-          <div class="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-white/5 pointer-events-none"></div>
-
-          <div v-if="props.isLoadingChat && props.chats.length === 0" class="relative z-10 flex flex-col gap-6 px-4 py-6 sm:px-8 sm:py-10">
-            <div v-for="n in 8" :key="n" class="flex w-full" :class="n % 2 === 0 ? 'justify-end' : 'justify-start'">
-              <div class="flex flex-col gap-2" :class="n % 2 === 0 ? 'items-end' : 'items-start'" style="max-width: 65%">
-                <div class="h-12 rounded-2xl bg-slate-200/60 animate-pulse border border-slate-100 shadow-sm" :style="{ width: 40 + ((n * 13) % 45) + '%', minWidth: '140px' }"></div>
-                <div class="h-3 w-16 rounded-full bg-slate-100 animate-pulse"></div>
-              </div>
-            </div>
-          </div>
-
-          <div v-else class="relative z-10 flex flex-col gap-4 px-4 py-4 sm:px-6 sm:py-6">
-            <template v-for="(chat, i) in chats" :key="chat.Message_Id || i">
-              <!-- Unread Messages Divider -->
-              <div v-if="i === firstUnreadIndex" class="flex items-center justify-center my-6 relative py-2 px-10">
-                <div class="absolute inset-x-0 h-px bg-bejo-200/50"></div>
-                <div class="relative bg-bejo-50 text-bejo-600 text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full border border-bejo-100 shadow-sm">Pesan Belum Terbaca</div>
-              </div>
-
-              <ChatBubble :id="'chat-message-' + i" :idx="i" :chat="chat" :chats="chats" :lastMessageId="props.lastMessageId" :highlight="searchChatQuery" :isActiveMatch="i === activeSearchChatIndex" :activeMatchIndex="activeSearchMatchIndex" @imageLoaded="scrollToBottom" @regenerateBrochure="handleRegenerateBrochure" />
-            </template>
-          </div>
-        </simplebar>
-
-        <Transition enter-active-class="transition duration-300 ease-out" enter-from-class="transform translate-y-4 opacity-0 scale-95" enter-to-class="transform translate-y-0 opacity-100 scale-100" leave-active-class="transition duration-200 ease-in" leave-from-class="transform translate-y-0 opacity-100 scale-100" leave-to-class="transform translate-y-4 opacity-0 scale-95">
-          <button v-if="showScrollToBottom" @click="scrollToBottom" class="absolute bottom-6 left-1/2 -translate-x-1/2 h-10 md:h-12 px-5 rounded-full bg-slate-400/50 backdrop-blur-md shadow-xl shadow-slate-900/10 border border-white/20 flex items-center gap-2 text-white hover:bg-slate-400/70 hover:scale-105 active:scale-95 transition-all z-50 group" title="Geser ke bawah">
-            <span class="text-xs md:text-sm font-black uppercase tracking-wider">Scroll</span>
-            <Icon icon="lucide:chevron-down" class="size-4 md:size-5 group-hover:animate-bounce" />
-            <div class="absolute inset-0 rounded-full bg-white/5 scale-0 group-hover:scale-100 transition-transform duration-500"></div>
-          </button>
-        </Transition>
-      </div>
+      <ChatHistory
+        ref="chatHistoryRef"
+        :chats="props.chats"
+        :isLoadingChat="props.isLoadingChat"
+        :lastMessageId="props.lastMessageId"
+        :highlight="searchChatQuery"
+        :activeSearchChatIndex="activeSearchChatIndex"
+        :activeMatchIndex="activeSearchMatchIndex"
+        :activeTab="props.activeTab"
+        :roomId="props.roomId"
+        :class="{ hidden: isPreviewMode }"
+        @regenerateBrochure="handleRegenerateBrochure"
+      />
 
       <div v-if="!isLoadingChat" class="p-1 md:p-3.5 bg-white border-t border-slate-50" :class="{ hidden: isPreviewMode }">
         <div v-if="!props.isTakenOver" class="w-full">

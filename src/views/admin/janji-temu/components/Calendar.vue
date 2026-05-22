@@ -52,8 +52,7 @@ const calendarOptions = computed<CalendarOptions>(() => ({
   plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin],
   initialView: 'dayGridMonth',
   locale: idLocale,
-  height: 'auto',
-  contentHeight: 650,
+  height: 700,
   aspectRatio: 1.8,
   headerToolbar: {
     left: isMobile.value ? 'prev,next' : 'prev,next,today',
@@ -62,7 +61,7 @@ const calendarOptions = computed<CalendarOptions>(() => ({
   },
   editable: true,
   selectable: true,
-  dayMaxEvents: true,
+  dayMaxEvents: 3,
   events: calendarEvents.value,
   eventClick(info: EventClickArg) {
     refreshCalendar()

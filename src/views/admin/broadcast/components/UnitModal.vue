@@ -51,8 +51,16 @@ const handleClose = () => {
 
 const formatPrice = (price: number) => {
   if (!price) return '-'
-  if (price >= 1000000000) return (price / 1000000000).toFixed(1) + ' M'
-  if (price >= 1000000) return (price / 1000000).toFixed(1) + ' Jt'
+  if (price >= 1000000000) {
+    const val = price / 1000000000
+    const rounded = Math.round(val * 100) / 100
+    return rounded.toString() + ' M'
+  }
+  if (price >= 1000000) {
+    const val = price / 1000000
+    const rounded = Math.round(val * 100) / 100
+    return rounded.toString() + ' Jt'
+  }
   return price.toLocaleString('id-ID')
 }
 </script>

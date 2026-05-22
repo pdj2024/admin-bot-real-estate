@@ -33,12 +33,18 @@ const previewMediaList = computed(() => {
   return selectedUnit.value.MediaUrls.filter((m: any) => selectedMediaIds.value.includes(m.No_Id_Media))
 })
 
-const resetBroadcast = () => {
-  activeTemplateIndex.value = null
-  message.value = ''
-  selectedUnit.value = null
-  selectedMediaIds.value = []
-  currentStep.value = 1
+const goToStep = (step: number) => {
+  if (step === 1) {
+    currentStep.value = 1
+  } else if (step === 2) {
+    openUnitModal()
+  } else if (step === 3) {
+    if (selectedUnit.value) {
+      currentStep.value = 3
+    } else {
+      openUnitModal()
+    }
+  }
 }
 
 const currentStep = ref(1) // Flow Steps: 1, 2, 3
@@ -178,27 +184,99 @@ const getPreviewContent = () => {
   return templates[previewTemplateIndex.value].content
 }
 
+const getPlaceholderLabel = (name: string) => {
+  const labels: Record<string, string> = {
+    // Template 1 (Elite Executive)
+    'NAMA_PRODUK_UPPER': 'Nama Properti',
+    'TAGLINE_DINAMIS': 'Slogan Promosi',
+    'KETERANGAN': 'Deskripsi Properti',
+    'SPEC_LOC': 'Lokasi Properti',
+    'SPEC_AREA': 'Luas Tanah & Bangunan',
+    'SPEC_DIM': 'Dimensi Properti',
+    'SPEC_BUILD': 'Jumlah Lantai',
+    'SPEC_BED': 'Kamar Tidur & Mandi',
+    'SPEC_CAR': 'Kapasitas Carport',
+    'SPEC_POWER': 'Daya Listrik',
+    'SPEC_LEGAL': 'Sertifikat & Legalitas',
+    'SPEC_ROW': 'Lebar Jalan (Row)',
+    'LIST_AKSES': 'Akses Terdekat',
+    'PRICE_JUAL_SECTION': 'Harga Jual',
+    'PRICE_SEWA_SECTION': 'Harga Sewa',
+
+    // Template 2 (Sultan Vibes)
+    'TAGLINE_DINAMIS_EMOJI': 'Slogan Promosi',
+    'HOOK_TEXT': 'Kalimat Penarik (Hook)',
+    'NAMA_PRODUK': 'Nama Properti',
+    'TIPE_STYLE': 'Gaya & Tipe Properti',
+    'POSISI_UNIT': 'Posisi Properti',
+    'DESC_PROMO_TEXT': 'Deskripsi Promosi',
+    'SPEC_LOC_EMOJI': 'Lokasi Properti',
+    'SPEC_AREA_DIM_EMOJI': 'Luas Tanah & Dimensi',
+    'SPEC_BUILD_EMOJI': 'Luas Bangunan',
+    'SPEC_BED_EMOJI': 'Jumlah Kamar Tidur',
+    'SPEC_BATH_EMOJI': 'Jumlah Kamar Mandi',
+    'SPEC_CAR_EMOJI': 'Kapasitas Carport',
+    'SPEC_POWER_EMOJI': 'Daya Listrik',
+    'SPEC_ROW_EMOJI': 'Lebar Jalan (Row)',
+    'SPEC_LEGAL_EMOJI': 'Sertifikat & Legalitas',
+    'LIST_AKSES_EMOJI': 'Akses Terdekat',
+    'PRICE_JUAL_EMOJI': 'Harga Jual',
+    'PRICE_SEWA_EMOJI': 'Harga Sewa',
+    'CTA_TEXT': 'Hubungi Kami (CTA)',
+
+    // Template 3 (Hot Listing Sultan)
+    'HOOK_TEXT_3': 'Kalimat Penarik (Hook)',
+    'DESC_PROMO_TEXT_3': 'Deskripsi Promosi',
+    'SPEC_AREA_DIM_3': 'Luas Tanah & Dimensi',
+    'SPEC_LB_3': 'Luas Bangunan',
+    'SPEC_BED_3': 'Jumlah Kamar Tidur',
+    'SPEC_BATH_3': 'Jumlah Kamar Mandi',
+    'SPEC_CAR_3': 'Kapasitas Carport',
+    'SPEC_POWER_3': 'Daya Listrik',
+    'SPEC_LEGAL_3': 'Sertifikat & Legalitas',
+    'BONUS_LIST_3': 'Bonus Properti',
+    'PRICE_JUAL_NEGO_3': 'Harga Jual',
+    'PRICE_SEWA_3': 'Harga Sewa',
+    'CTA_TEXT_3': 'Hubungi Kami (CTA)',
+    'ALAMAT': 'Alamat Lengkap'
+  }
+  return labels[name] || name.replace(/_/g, ' ')
+}
+
 const formatTemplatePreview = (content: string | null) => {
   if (!content) return ''
-  // Escape HTML characters
-  let escaped = content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-
-  // Highlight {{PLACEHOLDER}} tags with beautiful orange/bejo badges
-  escaped = escaped.replace(/\{\{([^}]+)\}\}/g, (_, name) => {
-    return `<span class="inline-block px-1.5 py-0.5 text-[10px] md:text-[11px] font-mono font-bold bg-amber-50 text-amber-700 border border-amber-200 rounded mx-0.5 leading-none shrink-0 align-middle my-0.5">${name}</span>`
+  
+  // 1. Temporary mask array for placeholders to avoid collision with styling tags (e.g. underscores in place holders)
+  // We use alphanumeric placeholders without any underscores to prevent regex collision
+  const masks: string[] = []
+  let formatted = content.replace(/\{\{([^}]+)\}\}/g, (_, name) => {
+    const maskId = `TPLMASKXYZ${masks.length}XYZ`
+    masks.push(name)
+    return maskId
   })
 
-  // Format *bold* as <strong>bold</strong>
-  escaped = escaped.replace(/\*([^*]+)\*/g, '<strong class="font-bold">$1</strong>')
+  // 2. Escape HTML characters
+  formatted = formatted.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
-  // Format _italic_ as <em>italic</em>
-  escaped = escaped.replace(/_([^_]+)_/g, '<em class="italic">$1</em>')
+  // 3. Format *bold* as <strong>bold</strong>
+  formatted = formatted.replace(/\*([^*]+)\*/g, '<strong class="font-bold">$1</strong>')
 
-  // Format ~strikethrough~ as <del>strikethrough</del>
-  escaped = escaped.replace(/~([^~]+)~/g, '<del class="line-through">$1</del>')
+  // 4. Format _italic_ as <em>italic</em>
+  formatted = formatted.replace(/_([^_]+)_/g, '<em class="italic">$1</em>')
 
-  // Convert newlines to br tags
-  return escaped.replace(/\n/g, '<br>')
+  // 5. Format ~strikethrough~ as <del>strikethrough</del>
+  formatted = formatted.replace(/~([^~]+)~/g, '<del class="line-through">$1</del>')
+
+  // 6. Restore placeholders back with beautiful styled HTML badges & user friendly text
+  masks.forEach((name, index) => {
+    const maskId = `TPLMASKXYZ${index}XYZ`
+    const cleanLabel = getPlaceholderLabel(name)
+    const badgeHtml = `<span class="inline-block px-2 py-0.5 text-[10px] md:text-[11px] font-mono font-bold bg-amber-50 text-amber-700 border border-amber-200 rounded mx-0.5 leading-none shrink-0 align-middle my-0.5">${cleanLabel}</span>`
+    formatted = formatted.replace(maskId, badgeHtml)
+  })
+
+  // 7. Convert newlines to br tags
+  return formatted.replace(/\n/g, '<br>')
 }
 
 const fetchRecipients = async () => {
@@ -400,7 +478,7 @@ const handleUnitSelected = (unit: any) => {
   if (unit.Harga_Sewa1 > 0) headerPrices.push(`🏷 *Harga Sewa: ${formatFullPrice(hargaSewa2)}${unitSewa}*`)
   const headerPriceDisplay = headerPrices.join('\n')
 
-  const unitInfoBody = `\n${header}
+  const unitInfoBody = `${header}
 🏠 *${unit.Nama_Produk}*
 📍 ${alamat}
 
@@ -427,11 +505,13 @@ const formatPrice = (price: number) => {
   if (!price) return '-'
   if (price >= 1000000000) {
     const v = price / 1000000000
-    return (v % 1 === 0 ? v.toString() : v.toFixed(1)) + ' M'
+    const rounded = Math.round(v * 100) / 100
+    return rounded.toString() + ' M'
   }
   if (price >= 1000000) {
     const v = price / 1000000
-    return (v % 1 === 0 ? v.toString() : v.toFixed(1)) + ' Jt'
+    const rounded = Math.round(v * 100) / 100
+    return rounded.toString() + ' Jt'
   }
   return price.toLocaleString('id-ID')
 }
@@ -457,7 +537,6 @@ const handleSend = async () => {
       if (data.StatusCode === 200) {
         success(data.Message || 'Broadcast sedang berjalan')
         isBroadcasting.value = true
-        selectedMediaIds.value = []
 
         // Parse "Estimasi selesai: X menit"
         const match = data.Message?.match(/Estimasi selesai: (\d+) menit/)
@@ -506,7 +585,6 @@ const handleTest = async () => {
       const { data } = await api.post('/api/broadcast/send', payload)
       if (data.StatusCode === 200) {
         success('Pesan test berhasil dikirim')
-        selectedMediaIds.value = []
       } else {
         fail(data.Message || 'Gagal mengirim test broadcast')
       }
@@ -573,334 +651,398 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <Vertical>
-    <div class="px-4 md:px-3 md:pt-0 pb-2 h-[calc(100vh-theme(spacing.topbar-height)-0.5rem)] flex flex-col overflow-hidden">
-      <!-- Steps 1 & 2: Select Template (Split layout with Live WhatsApp Mockup) -->
-      <div v-if="currentStep === 1 || currentStep === 2" class="flex-grow flex flex-col py-6 max-w-6xl mx-auto w-full min-h-0 overflow-y-auto custom-scrollbar">
-        <div class="text-center mb-6 shrink-0">
-          <span class="text-xs md:text-sm font-black text-bejo-600 bg-bejo-50 border border-bejo-100 px-4 py-1.5 rounded-full uppercase tracking-[0.25em]">Langkah 1 dari 3</span>
-          <h2 class="text-2xl md:text-3xl font-black text-slate-800 tracking-tight mt-3 uppercase">Pilih Template Pesan</h2>
-          <p class="text-sm md:text-base text-slate-400 font-bold uppercase tracking-wider mt-1">Pilih desain format pesan broadcast properti Anda</p>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full px-4 flex-grow items-start">
-          <!-- Left: Template Selector List (width: 5 cols on lg) -->
-          <div class="lg:col-span-5 flex flex-col gap-4">
-            <!-- Header for template choices -->
-            <div class="flex items-center gap-2 mb-1">
-              <Icon icon="lucide:list-filter" class="size-4 text-bejo-500" />
-              <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Daftar Pilihan Template</span>
+  <Vertical mainClass="flex flex-col flex-grow min-h-0 px-0 py-0 md:px-4 md:py-4">
+    <div class="px-4 md:px-3 md:pt-1 pb-4 flex flex-col flex-grow min-h-0 overflow-hidden lg:h-[calc(100vh-160px)]">
+      <!-- Unified Max-Width Wrapper -->
+      <div class="w-full flex flex-col flex-grow min-h-0 space-y-4 lg:h-full">
+        
+        <!-- Stepper Progress Card -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0">
+          <!-- Step 1 Card -->
+          <div 
+            @click="goToStep(1)"
+            :class="[
+              'group bg-white rounded-[1.5rem] p-4 border transition-all duration-300 cursor-pointer flex items-center justify-between',
+              currentStep === 1 
+                ? 'border-bejo-500 shadow-lg shadow-bejo-500/15 scale-[1.02] ring-1 ring-bejo-500/10' 
+                : 'border-slate-100 shadow-md shadow-slate-200/20 hover:border-bejo-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-200/30'
+            ]"
+          >
+            <div class="flex items-center gap-3.5">
+              <div 
+                :class="[
+                  'size-10 rounded-xl flex items-center justify-center text-white shadow-md transition-all duration-300 group-hover:rotate-6',
+                  currentStep === 1 ? 'bg-bejo-500 scale-105' : 'bg-slate-300 group-hover:bg-slate-400'
+                ]"
+              >
+                <Icon icon="lucide:list-filter" class="size-5" />
+              </div>
+              <div>
+                <h3 :class="['text-[10px] font-black uppercase tracking-widest leading-none mb-1', currentStep === 1 ? 'text-bejo-500' : 'text-slate-400 group-hover:text-bejo-500']">Langkah 1</h3>
+                <p class="text-sm font-black text-slate-800 leading-none uppercase tracking-wide">Pilih Template</p>
+              </div>
             </div>
-
-            <!-- Templates List Stack -->
-            <div class="space-y-3">
-              <div v-for="(tpl, idx) in templates" :key="idx" @click="previewTemplateIndex = idx" class="bg-white border rounded-2xl p-4 transition-all duration-300 cursor-pointer group flex flex-col text-left hover:scale-[1.01]" :class="previewTemplateIndex === idx ? 'border-bejo-500 ring-2 ring-bejo-500/10 shadow-lg shadow-bejo-500/5' : 'border-slate-100 hover:border-bejo-200'">
-                <div class="flex items-center justify-between mb-2">
-                  <div class="flex items-center gap-2">
-                    <span class="text-[11px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md" :class="previewTemplateIndex === idx ? 'bg-bejo-50 text-bejo-600' : 'bg-slate-50 text-slate-400 group-hover:text-bejo-500'"> Template {{ idx + 1 }} </span>
-                    <span v-if="idx === 1" class="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded uppercase tracking-wider">Recommended</span>
-                  </div>
-                  <div class="size-6 rounded-lg border flex items-center justify-center transition-colors shadow-sm" :class="previewTemplateIndex === idx ? 'bg-bejo-50 border-bejo-200 text-bejo-600' : 'bg-slate-50 border-slate-100 text-slate-400 group-hover:text-bejo-500'">
-                    <Icon :icon="previewTemplateIndex === idx ? 'lucide:check-circle-2' : 'lucide:circle'" class="size-3.5" />
-                  </div>
-                </div>
-                <h4 class="text-sm md:text-base font-black text-slate-800 uppercase tracking-tight leading-snug" :class="previewTemplateIndex === idx ? 'text-bejo-600' : 'group-hover:text-bejo-600'">
-                  {{ tpl.title }}
-                </h4>
-              </div>
-
-              <!-- Tanpa Template Selector -->
-              <div @click="previewTemplateIndex = null" class="bg-white border rounded-2xl p-4 transition-all duration-300 cursor-pointer group flex flex-col text-left hover:scale-[1.01]" :class="previewTemplateIndex === null ? 'border-bejo-500 ring-2 ring-bejo-500/10 shadow-lg shadow-bejo-500/5' : 'border-slate-100 hover:border-bejo-200'">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-[11px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md" :class="previewTemplateIndex === null ? 'bg-bejo-50 text-bejo-600' : 'bg-slate-50 text-slate-400 group-hover:text-bejo-500'"> Format Dasar </span>
-                  <div class="size-6 rounded-lg border flex items-center justify-center transition-colors shadow-sm" :class="previewTemplateIndex === null ? 'bg-bejo-50 border-bejo-200 text-bejo-600' : 'bg-slate-50 border-slate-100 text-slate-400 group-hover:text-bejo-500'">
-                    <Icon :icon="previewTemplateIndex === null ? 'lucide:check-circle-2' : 'lucide:circle'" class="size-3.5" />
-                  </div>
-                </div>
-                <h4 class="text-sm md:text-base font-black text-slate-800 uppercase tracking-tight leading-snug" :class="previewTemplateIndex === null ? 'text-bejo-600' : 'group-hover:text-bejo-600'">Tanpa Template</h4>
-              </div>
+            <div>
+              <Icon v-if="currentStep > 1" icon="lucide:check-circle" class="size-5 text-green-500" />
+              <span v-else class="size-2 rounded-full bg-bejo-500 animate-pulse"></span>
             </div>
           </div>
 
-          <!-- Right: WhatsApp Mockup Live Preview (width: 7 cols on lg) -->
-          <div class="lg:col-span-7 flex flex-col bg-white border border-slate-100 rounded-3xl shadow-xl shadow-slate-200/40 overflow-hidden">
-            <!-- Simulated WhatsApp Header -->
-            <div class="bg-[#f0f2f5] px-4 py-3 border-b border-slate-200/80 flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <div class="size-9 rounded-full bg-slate-300 flex items-center justify-center text-slate-600 font-black text-xs shadow-inner">WA</div>
-                <div>
-                  <h5 class="text-xs font-black text-slate-800 tracking-wide uppercase">Pratinjau Broadcast WA</h5>
-                  <div class="flex items-center gap-1 mt-0.5">
-                    <span class="size-1.5 bg-green-500 rounded-full animate-pulse"></span>
-                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Simulasi Live</span>
-                  </div>
-                </div>
+          <!-- Step 2 Card -->
+          <div 
+            @click="goToStep(2)"
+            :class="[
+              'group bg-white rounded-[1.5rem] p-4 border transition-all duration-300 cursor-pointer flex items-center justify-between',
+              currentStep === 2 
+                ? 'border-bejo-500 shadow-lg shadow-bejo-500/15 scale-[1.02] ring-1 ring-bejo-500/10' 
+                : 'border-slate-100 shadow-md shadow-slate-200/20 hover:border-bejo-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-200/30'
+            ]"
+          >
+            <div class="flex items-center gap-3.5">
+              <div 
+                :class="[
+                  'size-10 rounded-xl flex items-center justify-center text-white shadow-md transition-all duration-300 group-hover:rotate-6',
+                  currentStep === 2 ? 'bg-bejo-500 scale-105' : 'bg-slate-300 group-hover:bg-slate-400'
+                ]"
+              >
+                <Icon icon="lucide:home" class="size-5" />
               </div>
-              <div class="flex gap-3 text-slate-400">
-                <Icon icon="lucide:phone" class="size-4" />
-                <Icon icon="lucide:video" class="size-4" />
-                <Icon icon="lucide:more-vertical" class="size-4" />
-              </div>
-            </div>
-
-            <!-- WhatsApp Chat Message Container -->
-            <div class="bg-[#efeae2] p-5 relative min-h-[360px] max-h-[440px] overflow-y-auto custom-scrollbar flex flex-col justify-start">
-              <!-- Pattern overlay -->
-              <div class="absolute inset-0 opacity-5 pointer-events-none" style="background-image: radial-gradient(circle, #000 1px, transparent 1px); background-size: 16px 16px"></div>
-
-              <!-- WhatsApp Message Bubble -->
-              <div class="relative bg-[#d9fdd3] text-[#111b21] rounded-2xl rounded-tr-none px-4 py-3 shadow-md border border-[#d1f4cc] self-end max-w-[85%] text-left select-text z-10 animate-fade-in">
-                <!-- Content rendering formatted template -->
-                <div v-html="formatTemplatePreview(getPreviewContent())" class="text-xs md:text-sm leading-relaxed whitespace-pre-wrap text-slate-800"></div>
-
-                <!-- Chat tail -->
-                <div class="absolute top-0 right-0 transform translate-x-[45%] w-0 h-0 border-[6px] border-transparent border-l-[#d9fdd3] border-t-[#d9fdd3]"></div>
-
-                <!-- Metadata time/check status -->
-                <div class="text-right text-[9px] text-slate-400/80 mt-1 flex items-center justify-end gap-1 select-none font-medium font-mono">
-                  <span>12:00</span>
-                  <Icon icon="lucide:check-check" class="size-3 text-[#53bdeb]" />
-                </div>
+              <div>
+                <h3 :class="['text-[10px] font-black uppercase tracking-widest leading-none mb-1', currentStep === 2 ? 'text-bejo-500' : 'text-slate-400 group-hover:text-bejo-500']">Langkah 2</h3>
+                <p class="text-sm font-black text-slate-800 leading-none uppercase tracking-wide">Pilih Unit Properti</p>
               </div>
             </div>
-
-            <!-- Action Area / Confirm Selection button below WhatsApp mockup -->
-            <div class="p-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
-              <div class="flex items-center gap-1.5 text-slate-400">
-                <Icon icon="lucide:sparkles" class="size-4 text-bejo-500 animate-pulse" />
-                <span class="text-[10px] font-black uppercase tracking-widest">Sesuai dengan WA Client</span>
-              </div>
-              <button @click="selectTemplate(previewTemplateIndex)" class="px-6 py-3 bg-bejo-500 hover:bg-bejo-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-bejo-500/20 transition-all flex items-center gap-2 active:scale-95">
-                Gunakan Template & Lanjut
-                <Icon icon="lucide:arrow-right" class="size-3.5" />
-              </button>
+            <div class="flex items-center gap-2">
+              <span v-if="selectedUnit" class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded max-w-[100px] truncate">🏠 {{ selectedUnit.Nama_Produk }}</span>
+              <Icon v-if="currentStep > 2" icon="lucide:check-circle" class="size-5 text-green-500" />
+              <span v-else-if="!selectedUnit" class="size-2 rounded-full bg-slate-200" :class="currentStep === 2 ? 'bg-bejo-500 animate-pulse' : ''"></span>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- Step 3: Split Layout 2/3 (Input Message) + 1/3 (Live WA Mockup) -->
-      <div v-else-if="currentStep === 3" class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-5 flex-grow min-h-0">
-        <!-- Left Side: Message Input Area (2/3) -->
-        <div class="lg:col-span-2 flex flex-col min-h-0">
-          <div class="bg-white rounded-3xl border border-slate-100 shadow-2xl shadow-slate-200/40 overflow-hidden flex flex-col h-full">
-            <div class="p-5 md:p-6 flex-grow flex flex-col space-y-3 min-h-0">
-              <div class="flex items-center justify-between shrink-0">
-                <div class="flex items-center gap-4">
-                  <div class="flex items-center gap-2">
-                    <span class="text-xs font-black text-bejo-600 bg-bejo-50 border border-bejo-100 px-2.5 py-1 rounded-md uppercase tracking-wider">Langkah 3 dari 3</span>
-                    <span class="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Pesan Broadcast</span>
-                  </div>
-                  <div class="h-4 w-px bg-slate-100"></div>
-                  <div class="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-100">
-                    <div class="size-1.5 rounded-full" :class="waStatus === 'online' ? 'bg-green-500 animate-pulse' : 'bg-red-500'"></div>
-                    <span class="text-[10px] font-black uppercase tracking-widest" :class="waStatus === 'online' ? 'text-green-600' : 'text-red-600'"> WA GATEWAY: {{ waStatus }} </span>
-                  </div>
-                </div>
-                <div class="flex items-center gap-6">
-                  <label v-if="selectedUnit" class="flex items-center gap-2.5 cursor-pointer group">
-                    <span class="text-xs font-black text-slate-400 group-hover:text-bejo-600 uppercase tracking-widest transition-colors">Sertakan Gambar Produk?</span>
-                    <div class="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" v-model="showImage" class="sr-only peer" />
-                      <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-bejo-500 shadow-inner"></div>
-                    </div>
-                  </label>
-                  <button @click="openUnitModal" class="text-xs font-black text-bejo-600 hover:text-bejo-700 uppercase tracking-widest flex items-center gap-1.5 transition-colors">
-                    <Icon icon="lucide:home" class="size-3.5" />
-                    {{ selectedUnit ? 'Ganti Unit' : 'Pilih Unit' }}
-                  </button>
-                </div>
+          <!-- Step 3 Card -->
+          <div 
+            @click="goToStep(3)"
+            :class="[
+              'group bg-white rounded-[1.5rem] p-4 border transition-all duration-300 cursor-pointer flex items-center justify-between',
+              currentStep === 3 
+                ? 'border-bejo-500 shadow-lg shadow-bejo-500/15 scale-[1.02] ring-1 ring-bejo-500/10' 
+                : 'border-slate-100 shadow-md shadow-slate-200/20 hover:border-bejo-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-200/30'
+            ]"
+          >
+            <div class="flex items-center gap-3.5">
+              <div 
+                :class="[
+                  'size-10 rounded-xl flex items-center justify-center text-white shadow-md transition-all duration-300 group-hover:rotate-6',
+                  currentStep === 3 ? 'bg-bejo-500 scale-105' : 'bg-slate-300 group-hover:bg-slate-400'
+                ]"
+              >
+                <Icon icon="lucide:send" class="size-5" />
               </div>
-
-              <!-- Message Editor Toolbar -->
-              <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-2.5 rounded-2xl border border-slate-100 shrink-0">
-                <div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
-                  <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-1 shrink-0">Ganti Template:</span>
-                  <button v-for="(tpl, idx) in templates" :key="idx" @click="selectTemplate(idx)" class="px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-wider transition-all shrink-0" :class="activeTemplateIndex === idx ? 'bg-bejo-500 text-white border-bejo-500 shadow-sm' : 'bg-white border-slate-200 text-slate-600 hover:border-bejo-300 hover:text-bejo-600'">Tpl {{ idx + 1 }}</button>
-                  <button @click="selectTemplate(null)" class="px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-wider transition-all shrink-0" :class="activeTemplateIndex === null ? 'bg-bejo-500 text-white border-bejo-500 shadow-sm' : 'bg-white border-slate-200 text-slate-600 hover:border-bejo-300 hover:text-bejo-600'">Dasar</button>
-                </div>
-
-                <!-- Clean/Reset & Unit Info -->
-                <div class="flex items-center gap-3 sm:ml-auto">
-                  <span v-if="selectedUnit" class="text-[10px] font-bold text-slate-500 bg-slate-100/80 px-2.5 py-1 rounded-lg border border-slate-200/50 truncate max-w-[150px]"> 🏠 {{ selectedUnit.Nama_Produk }} </span>
-                  <button
-                    @click="resetBroadcast"
-                    class="px-3 py-1.5 text-[10px] font-black text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-xl border border-slate-200 hover:border-red-100 transition-all flex items-center gap-1.5 shrink-0"
-                  >
-                    <Icon icon="lucide:arrow-left" class="size-3" />
-                    Kembali
-                  </button>
-                </div>
+              <div>
+                <h3 :class="['text-[10px] font-black uppercase tracking-widest leading-none mb-1', currentStep === 3 ? 'text-bejo-500' : 'text-slate-400 group-hover:text-bejo-500']">Langkah 3</h3>
+                <p class="text-sm font-black text-slate-800 leading-none uppercase tracking-wide">Tulis & Kirim Pesan</p>
               </div>
-
-              <textarea ref="messageInput" v-model="message" placeholder="Tulis pesan Anda di sini atau sesuaikan pesan hasil template..." class="flex-grow w-full p-4 bg-slate-50/50 border border-slate-100 rounded-2xl text-sm font-medium text-slate-700 placeholder:text-slate-300 focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500/50 outline-none transition-all resize-none leading-relaxed custom-scrollbar"></textarea>
-
-              <!-- Product Image Selection Section -->
-              <div class="space-y-2 shrink-0">
-                <div class="flex items-center justify-between">
-                  <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Pilih Gambar dari Unit/Produk (Kosong = Kirim Gambar Pertama)</label>
-                  <span v-if="selectedUnit && selectedMediaIds.length > 0" class="text-[9px] font-bold text-bejo-600 bg-bejo-50 border border-bejo-100 px-2 py-0.5 rounded uppercase tracking-wider">{{ selectedMediaIds.length }} Terpilih</span>
-                </div>
-                <div class="relative">
-                  <!-- Container for Media List -->
-                  <div class="flex flex-nowrap gap-3 overflow-x-auto pb-2 custom-scrollbar">
-                    <template v-if="selectedUnit && showImage && selectedUnit.MediaUrls?.length > 0">
-                      <div v-for="media in selectedUnit.MediaUrls" :key="media.No_Id_Media" @click="toggleMediaSelection(media.No_Id_Media)" class="relative size-20 flex-shrink-0 group/img cursor-pointer rounded-2xl overflow-hidden border transition-all hover:scale-105" :class="selectedMediaIds.includes(media.No_Id_Media) ? 'border-bejo-500 ring-2 ring-bejo-500/20 shadow-md' : 'border-slate-200 hover:border-bejo-300'">
-                        <!-- Video/Image Thumbnail -->
-                        <div v-if="media.ContentType?.startsWith('video/')" class="size-full bg-slate-100">
-                          <video :src="`${media.Url || media.Id_Media}#t=0.001`" class="size-full object-cover" preload="metadata" playsinline muted></video>
-                          <div class="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
-                            <Icon icon="lucide:play" class="size-4 text-white fill-white/20" />
-                          </div>
-                        </div>
-                        <img v-else :src="media.Url || media.Id_Media" class="size-full object-cover" />
-                        
-                        <!-- Check Badge/Overlay -->
-                        <div class="absolute top-1.5 right-1.5 size-5 rounded-full flex items-center justify-center transition-all shadow-md" :class="selectedMediaIds.includes(media.No_Id_Media) ? 'bg-bejo-500 text-white' : 'bg-black/30 text-white/70 hover:bg-black/50'">
-                          <Icon :icon="selectedMediaIds.includes(media.No_Id_Media) ? 'lucide:check' : 'lucide:circle'" class="size-3" />
-                        </div>
-                      </div>
-                    </template>
-                    
-                    <!-- States: Not selected, disabled, empty -->
-                    <div v-else-if="!selectedUnit" class="flex-grow flex items-center h-20 px-4 border-2 border-dashed border-slate-100 rounded-2xl text-slate-400 text-[10px] font-black uppercase tracking-widest italic bg-slate-50/30 gap-2">
-                      <Icon icon="lucide:home" class="size-4 text-slate-300" />
-                      Pilih unit terlebih dahulu untuk menyertakan gambar produk
-                    </div>
-                    <div v-else-if="!showImage" class="flex-grow flex items-center h-20 px-4 border-2 border-dashed border-slate-100 rounded-2xl text-slate-400 text-[10px] font-black uppercase tracking-widest italic bg-slate-50/30 gap-2">
-                      <Icon icon="lucide:eye-off" class="size-4 text-slate-300" />
-                      Sertakan Gambar Produk dinonaktifkan
-                    </div>
-                    <div v-else class="flex-grow flex items-center h-20 px-4 border-2 border-dashed border-slate-100 rounded-2xl text-slate-400 text-[10px] font-black uppercase tracking-widest italic bg-slate-50/30 gap-2">
-                      <Icon icon="lucide:image-off" class="size-4 text-slate-300" />
-                      Unit ini tidak memiliki foto/media
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="flex flex-col sm:flex-row items-center gap-3 pt-3 shrink-0">
-                <!-- Send/Stop Toggle Button -->
-                <button v-if="!isBroadcasting" @click="handleSend" :disabled="isLoading || (!message.trim() && !selectedUnit) || recipients.length === 0" class="w-full sm:w-auto h-11 px-8 bg-bejo-500 hover:bg-bejo-600 disabled:bg-slate-200 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-bejo-500/20 transition-all flex items-center justify-center gap-2 active:scale-95">
-                  <Icon v-if="isLoading" icon="lucide:loader-2" class="size-4 animate-spin" />
-                  <Icon v-else icon="lucide:send" class="size-4" />
-                  Kirim Sekarang
-                </button>
-                <button v-else @click="handleStop" :disabled="isStopping" class="w-full sm:w-auto h-11 px-8 bg-red-500 hover:bg-red-600 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-red-500/20 transition-all flex items-center justify-center gap-2 active:scale-95">
-                  <Icon v-if="isStopping" icon="lucide:loader-2" class="size-4 animate-spin" />
-                  <Icon v-else icon="lucide:stop-circle" class="size-4" />
-                  Hentikan
-                </button>
-
-                <button @click="handleTest" :disabled="isLoading || isBroadcasting || (!message.trim() && !selectedUnit)" class="w-full sm:w-auto h-11 px-6 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 text-slate-500 rounded-xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 active:scale-95">
-                  <Icon v-if="isLoading" icon="lucide:loader-2" class="size-4 animate-spin" />
-                  <Icon v-else icon="lucide:smartphone" class="size-4" />
-                  Test (Ke Saya)
-                </button>
-
-                <button @click="isRecipientModalOpen = true" class="sm:ml-auto h-11 px-5 bg-slate-50 hover:bg-bejo-50 border border-slate-100 hover:border-bejo-200 text-slate-600 hover:text-bejo-600 rounded-xl font-black text-xs uppercase tracking-widest transition-all flex items-center gap-3 active:scale-95">
-                  <div class="flex items-center gap-1.5">
-                    <div class="size-2 rounded-full" :class="recipients.length > 0 ? 'bg-green-500 animate-pulse' : 'bg-slate-300'"></div>
-                    <span class="text-[10px] font-bold">{{ recipients.length }} Penerima Aktif</span>
-                  </div>
-                  <div class="w-px h-4 bg-slate-200"></div>
-                  <Icon icon="lucide:users" class="size-3.5" />
-                  Kelola
-                </button>
-              </div>
+            </div>
+            <div>
+              <span class="size-2 rounded-full bg-slate-200" :class="currentStep === 3 ? 'bg-bejo-500 animate-pulse' : ''"></span>
             </div>
           </div>
         </div>
 
-        <!-- Right Side: Live WA Mockup & Tips (1/3) -->
-        <div class="flex flex-col gap-4 min-h-0">
-          <!-- WhatsApp Live Mockup -->
-          <div class="bg-white rounded-3xl border border-slate-100 shadow-2xl shadow-slate-200/40 overflow-hidden flex flex-col flex-grow min-h-0">
-            <!-- Simulated WhatsApp Header -->
-            <div class="bg-[#f0f2f5] px-4 py-3 border-b border-slate-200/80 flex items-center justify-between shrink-0">
-              <div class="flex items-center gap-3">
-                <div class="size-8 rounded-full bg-slate-300 flex items-center justify-center text-slate-600 font-black text-[10px] shadow-inner">WA</div>
-                <div>
-                  <h5 class="text-[10px] font-black text-slate-800 tracking-wide uppercase">Hasil Broadcast WA</h5>
-                  <div class="flex items-center gap-1 mt-0.5">
-                    <span class="size-1.5 bg-green-500 rounded-full animate-pulse"></span>
-                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Live Preview</span>
+        <!-- Steps 1 & 2: Select Template (Split layout with Live WhatsApp Mockup) -->
+        <div v-if="currentStep === 1 || currentStep === 2" class="flex-grow flex flex-col min-h-0 overflow-y-auto lg:overflow-hidden custom-scrollbar lg:h-full">
+          <div class="mb-4 shrink-0 px-1">
+            <h2 class="text-base font-black text-slate-700 uppercase tracking-wider">
+              {{ currentStep === 1 ? 'Silakan Pilih Template Pesan' : 'Silakan Pilih Unit Properti' }}
+            </h2>
+            <p class="text-xs text-slate-400 font-bold uppercase tracking-wider mt-0.5">
+              {{ currentStep === 1 ? 'Pilih desain format pesan broadcast properti Anda' : 'Pilih unit properti untuk dimasukkan ke dalam pesan broadcast' }}
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full px-1 flex-grow min-h-0 items-stretch lg:h-full">
+            <!-- Left: Template Selector List (width: 5 cols on lg) -->
+            <div class="lg:col-span-5 bg-white border border-slate-100 rounded-[2rem] p-6 shadow-xl shadow-slate-200/50 flex flex-col gap-4 lg:h-full lg:min-h-0">
+              <!-- Header for template choices -->
+              <div class="flex items-center gap-2 mb-1 border-b border-slate-100 pb-3">
+                <Icon icon="lucide:list-filter" class="size-4 text-bejo-500" />
+                <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Daftar Pilihan Template</span>
+              </div>
+
+              <!-- Templates List Stack -->
+              <div class="space-y-3 lg:flex-grow lg:min-h-0 lg:overflow-y-auto custom-scrollbar pr-1">
+                <div v-for="(tpl, idx) in templates" :key="idx" @click="previewTemplateIndex = idx" class="border rounded-2xl p-4 transition-all duration-300 cursor-pointer group flex flex-col text-left hover:scale-[1.01]" :class="previewTemplateIndex === idx ? 'border-bejo-500 bg-bejo-50/10 ring-2 ring-bejo-500/10 shadow-md shadow-bejo-500/5' : 'bg-white border-slate-100 hover:border-bejo-200 hover:bg-slate-50/50'">
+                  <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2">
+                      <span class="text-[11px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md" :class="previewTemplateIndex === idx ? 'bg-bejo-50 text-bejo-600' : 'bg-slate-50 text-slate-400 group-hover:text-bejo-500'"> Template {{ idx + 1 }} </span>
+                      <span v-if="idx === 1" class="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded uppercase tracking-wider">Recommended</span>
+                    </div>
+                    <div class="size-6 rounded-lg border flex items-center justify-center transition-colors shadow-sm" :class="previewTemplateIndex === idx ? 'bg-bejo-50 border-bejo-200 text-bejo-600' : 'bg-slate-50 border-slate-100 text-slate-400 group-hover:text-bejo-500'">
+                      <Icon :icon="previewTemplateIndex === idx ? 'lucide:check-circle-2' : 'lucide:circle'" class="size-3.5" />
+                    </div>
                   </div>
+                  <h4 class="text-sm font-black text-slate-800 uppercase tracking-tight leading-snug" :class="previewTemplateIndex === idx ? 'text-bejo-600' : 'group-hover:text-bejo-600'">
+                    {{ tpl.title }}
+                  </h4>
+                </div>
+
+                <!-- Tanpa Template Selector -->
+                <div @click="previewTemplateIndex = null" class="border rounded-2xl p-4 transition-all duration-300 cursor-pointer group flex flex-col text-left hover:scale-[1.01]" :class="previewTemplateIndex === null ? 'border-bejo-500 bg-bejo-50/10 ring-2 ring-bejo-500/10 shadow-md shadow-bejo-500/5' : 'bg-white border-slate-100 hover:border-bejo-200 hover:bg-slate-50/50'">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-[11px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md" :class="previewTemplateIndex === null ? 'bg-bejo-50 text-bejo-600' : 'bg-slate-50 text-slate-400 group-hover:text-bejo-500'"> Format Dasar </span>
+                    <div class="size-6 rounded-lg border flex items-center justify-center transition-colors shadow-sm" :class="previewTemplateIndex === null ? 'bg-bejo-50 border-bejo-200 text-bejo-600' : 'bg-slate-50 border-slate-100 text-slate-400 group-hover:text-bejo-500'">
+                      <Icon :icon="previewTemplateIndex === null ? 'lucide:check-circle-2' : 'lucide:circle'" class="size-3.5" />
+                    </div>
+                  </div>
+                  <h4 class="text-sm font-black text-slate-800 uppercase tracking-tight leading-snug" :class="previewTemplateIndex === null ? 'text-bejo-600' : 'group-hover:text-bejo-600'">Tanpa Template</h4>
                 </div>
               </div>
-              <div class="flex gap-2 text-slate-400">
-                <Icon icon="lucide:phone" class="size-3.5" />
-                <Icon icon="lucide:video" class="size-3.5" />
+
+              <!-- Legend / Panduan Variabel -->
+              <div class="mt-2 pt-4 border-t border-slate-100 shrink-0">
+                <div class="bg-amber-50/50 border border-amber-100 rounded-2xl p-4">
+                  <div class="flex items-center gap-2 mb-2 text-amber-800">
+                    <Icon icon="lucide:info" class="size-4" />
+                    <span class="text-xs font-black uppercase tracking-wider">💡 Info Pratinjau</span>
+                  </div>
+                  <p class="text-[11px] text-slate-600 leading-relaxed font-medium">
+  Label oranye seperti <span class="inline-block px-1.5 py-0.5 font-bold bg-amber-50 text-amber-700 border border-amber-200 rounded text-[9px] leading-none align-middle mx-0.5">Jumlah Kamar Tidur</span> hanya <strong>contoh</strong>. 
+  Isinya akan otomatis terisi dengan data asli setelah Anda memilih unit di <strong>Langkah 2</strong>, namun tetap bisa Anda ubah kembali sebelum pesan dikirim.
+</p>
+                </div>
               </div>
             </div>
 
-            <!-- WhatsApp Chat Message Container -->
-            <div class="bg-[#efeae2] p-4 relative flex-grow overflow-y-auto custom-scrollbar flex flex-col justify-start min-h-[220px] space-y-3">
-              <!-- Pattern overlay -->
-              <div class="absolute inset-0 opacity-5 pointer-events-none" style="background-image: radial-gradient(circle, #000 1px, transparent 1px); background-size: 16px 16px"></div>
-
-              <!-- 1. Gambar/Video Produk Bubble (1 bubble per gambar) -->
-              <template v-if="showImage && selectedUnit && previewMediaList.length > 0">
-                <div v-for="(img, idx) in previewMediaList" :key="idx" class="relative bg-[#d9fdd3] text-[#111b21] rounded-2xl rounded-tr-none p-1.5 shadow-md border border-[#d1f4cc] self-end max-w-[90%] text-left select-text z-10">
-                  <div class="rounded-xl overflow-hidden border border-[#b4e6ad] max-w-full">
-                    <video v-if="img.ContentType?.startsWith('video/')" :src="img.Url || img.Id_Media" class="w-full max-h-48 object-cover" preload="metadata" muted></video>
-                    <img v-else :src="img.Url || img.Id_Media" class="w-full max-h-48 object-cover" />
+            <!-- Right: WhatsApp Mockup Live Preview (width: 7 cols on lg) -->
+            <div class="lg:col-span-7 flex flex-col bg-white border border-slate-100 rounded-[2rem] shadow-xl shadow-slate-200/50 overflow-hidden lg:h-full lg:min-h-0">
+              <!-- Simulated WhatsApp Header -->
+              <div class="bg-[#f0f2f5] px-4 py-3 border-b border-slate-200/80 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <div class="size-9 rounded-full bg-slate-300 flex items-center justify-center text-slate-600 font-black text-xs shadow-inner">WA</div>
+                  <div>
+                    <h5 class="text-xs font-black text-slate-800 tracking-wide uppercase">Pratinjau Broadcast WA</h5>
+                    <div class="flex items-center gap-1 mt-0.5">
+                      <span class="size-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                      <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Simulasi Live</span>
+                    </div>
                   </div>
+                </div>
+                <div class="flex gap-3 text-slate-400">
+                  <Icon icon="lucide:phone" class="size-4" />
+                  <Icon icon="lucide:video" class="size-4" />
+                  <Icon icon="lucide:more-vertical" class="size-4" />
+                </div>
+              </div>
+
+              <!-- WhatsApp Chat Message Container -->
+              <div class="bg-[#efeae2] p-5 relative lg:min-h-0 lg:max-h-none lg:flex-grow overflow-y-auto custom-scrollbar flex flex-col justify-start min-h-[360px]">
+                <!-- Pattern overlay -->
+                <div class="absolute inset-0 opacity-5 pointer-events-none" style="background-image: radial-gradient(circle, #000 1px, transparent 1px); background-size: 16px 16px"></div>
+
+                <!-- WhatsApp Message Bubble -->
+                <div class="relative bg-[#d9fdd3] text-[#111b21] rounded-2xl rounded-tr-none px-4 py-3 shadow-md border border-[#d1f4cc] self-end max-w-[85%] text-left select-text z-10 animate-fade-in">
+                  <!-- Content rendering formatted template -->
+                  <div v-html="formatTemplatePreview(getPreviewContent())" class="text-xs md:text-sm leading-relaxed whitespace-pre-wrap text-slate-800"></div>
+
                   <!-- Chat tail -->
                   <div class="absolute top-0 right-0 transform translate-x-[45%] w-0 h-0 border-[6px] border-transparent border-l-[#d9fdd3] border-t-[#d9fdd3]"></div>
+
                   <!-- Metadata time/check status -->
-                  <div class="text-right text-[8px] text-slate-400/80 mt-1 mr-1.5 pb-0.5 flex items-center justify-end gap-1 select-none font-medium font-mono">
+                  <div class="text-right text-[9px] text-slate-400/80 mt-1 flex items-center justify-end gap-1 select-none font-medium font-mono">
                     <span>12:00</span>
                     <Icon icon="lucide:check-check" class="size-3 text-[#53bdeb]" />
                   </div>
                 </div>
-              </template>
-
-              <!-- 2. Isi Pesan Bubble (Last) -->
-              <div v-if="message.trim()" class="relative bg-[#d9fdd3] text-[#111b21] rounded-2xl rounded-tr-none px-3.5 py-2.5 shadow-md border border-[#d1f4cc] self-end max-w-[90%] text-left select-text z-10">
-                <div v-html="formatTemplatePreview(message)" class="text-xs leading-relaxed whitespace-pre-wrap text-slate-800"></div>
-                <!-- Chat tail -->
-                <div class="absolute top-0 right-0 transform translate-x-[45%] w-0 h-0 border-[6px] border-transparent border-l-[#d9fdd3] border-t-[#d9fdd3]"></div>
-                <!-- Metadata time/check status -->
-                <div class="text-right text-[8px] text-slate-400/80 mt-1 flex items-center justify-end gap-1 select-none font-medium font-mono">
-                  <span>12:00</span>
-                  <Icon icon="lucide:check-check" class="size-3 text-[#53bdeb]" />
-                </div>
               </div>
 
-              <!-- Empty State Placeholder -->
-              <div v-if="!message.trim() && !(showImage && selectedUnit && previewMediaList.length > 0)" class="m-auto text-center p-4">
-                <Icon icon="lucide:message-square-dashed" class="size-8 text-slate-300 mx-auto mb-2" />
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tulis pesan untuk melihat pratinjau live</p>
+              <!-- Action Area / Confirm Selection button below WhatsApp mockup -->
+              <div class="p-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                <div class="flex items-center gap-1.5 text-slate-400">
+                  <Icon icon="lucide:sparkles" class="size-4 text-bejo-500 animate-pulse" />
+                  <span class="text-[10px] font-black uppercase tracking-widest">Sesuai dengan WA Client</span>
+                </div>
+                <button @click="selectTemplate(previewTemplateIndex)" class="px-6 py-3 bg-bejo-500 hover:bg-bejo-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-bejo-500/20 transition-all flex items-center gap-2 active:scale-95">
+                  Gunakan Template & Lanjut
+                  <Icon icon="lucide:arrow-right" class="size-3.5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Split Layout 2/3 (Input Message) + 1/3 (Live WA Mockup) -->
+        <div v-else-if="currentStep === 3" class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-5 flex-grow min-h-0 lg:h-full">
+          <!-- Left Side: Message Input Area (2/3) -->
+          <div class="lg:col-span-2 flex flex-col min-h-0 lg:h-full">
+            <div class="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col h-full">
+              <div class="p-5 md:p-6 flex-grow flex flex-col space-y-3 min-h-0">
+                <div class="flex items-center justify-between shrink-0">
+                  <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs font-black text-slate-700 uppercase tracking-widest">Pesan Broadcast</span>
+                    </div>
+                    <div class="h-4 w-px bg-slate-100"></div>
+                    <div class="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-100">
+                      <div class="size-1.5 rounded-full" :class="waStatus === 'online' ? 'bg-green-500 animate-pulse' : 'bg-red-500'"></div>
+                      <span class="text-[10px] font-black uppercase tracking-widest" :class="waStatus === 'online' ? 'text-green-600' : 'text-red-600'"> WA GATEWAY: {{ waStatus }} </span>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-6">
+                    <label v-if="selectedUnit" class="flex items-center gap-2.5 cursor-pointer group">
+                      <span class="text-xs font-black text-slate-400 group-hover:text-bejo-600 uppercase tracking-widest transition-colors">Sertakan Gambar?</span>
+                      <div class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" v-model="showImage" class="sr-only peer" />
+                        <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-bejo-500 shadow-inner"></div>
+                      </div>
+                    </label>
+                    <button @click="openUnitModal" class="text-xs font-black text-bejo-600 hover:text-bejo-700 uppercase tracking-widest flex items-center gap-1.5 transition-colors">
+                      <Icon icon="lucide:home" class="size-3.5" />
+                      {{ selectedUnit ? 'Ganti Unit' : 'Pilih Unit' }}
+                    </button>
+                  </div>
+                </div>
+
+                <textarea ref="messageInput" v-model="message" placeholder="Tulis pesan Anda di sini atau sesuaikan pesan hasil template..." class="flex-grow w-full p-4 bg-slate-50/50 border border-slate-100 rounded-2xl text-sm font-medium text-slate-700 placeholder:text-slate-300 focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500/50 outline-none transition-all resize-none leading-relaxed custom-scrollbar"></textarea>
+
+                <!-- Product Image Selection Section -->
+                <div class="space-y-2 shrink-0">
+                  <div class="flex items-center justify-between">
+                    <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Pilih Gambar dari Unit/Produk (Kosong = Kirim Gambar Pertama)</label>
+                    <span v-if="selectedUnit && selectedMediaIds.length > 0" class="text-[9px] font-bold text-bejo-600 bg-bejo-50 border border-bejo-100 px-2 py-0.5 rounded uppercase tracking-wider">{{ selectedMediaIds.length }} Terpilih</span>
+                  </div>
+                  <div class="relative">
+                    <!-- Container for Media List -->
+                    <div class="flex flex-nowrap gap-3 overflow-x-auto pb-2 custom-scrollbar">
+                      <template v-if="selectedUnit && showImage && selectedUnit.MediaUrls?.length > 0">
+                        <div v-for="media in selectedUnit.MediaUrls" :key="media.No_Id_Media" @click="toggleMediaSelection(media.No_Id_Media)" class="relative size-20 flex-shrink-0 group/img cursor-pointer rounded-2xl overflow-hidden border transition-all hover:scale-105" :class="selectedMediaIds.includes(media.No_Id_Media) ? 'border-bejo-500 ring-2 ring-bejo-500/20 shadow-md' : 'border-slate-200 hover:border-bejo-300'">
+                          <!-- Video/Image Thumbnail -->
+                          <div v-if="media.ContentType?.startsWith('video/')" class="size-full bg-slate-100">
+                            <video :src="`${media.Url || media.Id_Media}#t=0.001`" class="size-full object-cover" preload="metadata" playsinline muted></video>
+                            <div class="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
+                              <Icon icon="lucide:play" class="size-4 text-white fill-white/20" />
+                            </div>
+                          </div>
+                          <img v-else :src="media.Url || media.Id_Media" class="size-full object-cover" />
+                          
+                          <!-- Check Badge/Overlay -->
+                          <div class="absolute top-1.5 right-1.5 size-5 rounded-full flex items-center justify-center transition-all shadow-md" :class="selectedMediaIds.includes(media.No_Id_Media) ? 'bg-bejo-500 text-white' : 'bg-black/30 text-white/70 hover:bg-black/50'">
+                            <Icon :icon="selectedMediaIds.includes(media.No_Id_Media) ? 'lucide:check' : 'lucide:circle'" class="size-3" />
+                          </div>
+                        </div>
+                      </template>
+                      
+                      <!-- States: Not selected, disabled, empty -->
+                      <div v-else-if="!selectedUnit" class="flex-grow flex items-center h-20 px-4 border-2 border-dashed border-slate-100 rounded-2xl text-slate-400 text-[10px] font-black uppercase tracking-widest italic bg-slate-50/30 gap-2">
+                        <Icon icon="lucide:home" class="size-4 text-slate-300" />
+                        Pilih unit terlebih dahulu untuk menyertakan gambar produk
+                      </div>
+                      <div v-else-if="!showImage" class="flex-grow flex items-center h-20 px-4 border-2 border-dashed border-slate-100 rounded-2xl text-slate-400 text-[10px] font-black uppercase tracking-widest italic bg-slate-50/30 gap-2">
+                        <Icon icon="lucide:eye-off" class="size-4 text-slate-300" />
+                        Sertakan Gambar Produk dinonaktifkan
+                      </div>
+                      <div v-else class="flex-grow flex items-center h-20 px-4 border-2 border-dashed border-slate-100 rounded-2xl text-slate-400 text-[10px] font-black uppercase tracking-widest italic bg-slate-50/30 gap-2">
+                        <Icon icon="lucide:image-off" class="size-4 text-slate-300" />
+                        Unit ini tidak memiliki foto/media
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row items-center gap-3 pt-3 shrink-0">
+                  <!-- Send/Stop Toggle Button -->
+                  <button v-if="!isBroadcasting" @click="handleSend" :disabled="isLoading || (!message.trim() && !selectedUnit) || recipients.length === 0" class="w-full sm:w-auto h-11 px-8 bg-bejo-500 hover:bg-bejo-600 disabled:bg-slate-200 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-bejo-500/20 transition-all flex items-center justify-center gap-2 active:scale-95">
+                    <Icon v-if="isLoading" icon="lucide:loader-2" class="size-4 animate-spin" />
+                    <Icon v-else icon="lucide:send" class="size-4" />
+                    Kirim Sekarang
+                  </button>
+                  <button v-else @click="handleStop" :disabled="isStopping" class="w-full sm:w-auto h-11 px-8 bg-red-500 hover:bg-red-600 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-red-500/20 transition-all flex items-center justify-center gap-2 active:scale-95">
+                    <Icon v-if="isStopping" icon="lucide:loader-2" class="size-4 animate-spin" />
+                    <Icon v-else icon="lucide:stop-circle" class="size-4" />
+                    Hentikan
+                  </button>
+
+                  <button @click="handleTest" :disabled="isLoading || isBroadcasting || (!message.trim() && !selectedUnit)" class="w-full sm:w-auto h-11 px-6 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 text-slate-500 rounded-xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 active:scale-95">
+                    <Icon v-if="isLoading" icon="lucide:loader-2" class="size-4 animate-spin" />
+                    <Icon v-else icon="lucide:smartphone" class="size-4" />
+                    Test (Ke Saya)
+                  </button>
+
+                  <button @click="isRecipientModalOpen = true" class="sm:ml-auto h-11 px-5 bg-slate-50 hover:bg-bejo-50 border border-slate-100 hover:border-bejo-200 text-slate-600 hover:text-bejo-600 rounded-xl font-black text-xs uppercase tracking-widest transition-all flex items-center gap-3 active:scale-95">
+                    <div class="flex items-center gap-1.5">
+                      <div class="size-2 rounded-full" :class="recipients.length > 0 ? 'bg-green-500 animate-pulse' : 'bg-slate-300'"></div>
+                      <span class="text-[10px] font-bold">{{ recipients.length }} Penerima Aktif</span>
+                    </div>
+                    <div class="w-px h-4 bg-slate-200"></div>
+                    <Icon icon="lucide:users" class="size-3.5" />
+                    Kelola
+                  </button>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- Tips Card -->
-          <div class="p-6 bg-gradient-to-br from-bejo-50 to-white rounded-2xl text-slate-900 relative overflow-hidden border border-bejo-100 shadow-sm group">
-            <Icon icon="lucide:sparkles" class="absolute -right-4 -bottom-4 size-24 text-bejo-600/10 rotate-12 transition-transform duration-700 group-hover:scale-110 group-hover:rotate-0" />
-            <div class="relative z-10">
-              <div class="flex items-center gap-2 mb-2">
-                <div class="size-5 bg-bejo-600 rounded-lg flex items-center justify-center">
-                  <Icon icon="lucide:sparkles" class="size-2.5 text-white" />
+          <!-- Right Side: Live WA Mockup (1/3) -->
+          <div class="lg:col-span-1 flex flex-col min-h-0 lg:h-full">
+            <!-- WhatsApp Live Mockup -->
+            <div class="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col h-full">
+              <!-- Simulated WhatsApp Header -->
+              <div class="bg-[#f0f2f5] px-4 py-3 border-b border-slate-200/80 flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-3">
+                  <div class="size-8 rounded-full bg-slate-300 flex items-center justify-center text-slate-600 font-black text-[10px] shadow-inner">WA</div>
+                  <div>
+                    <h5 class="text-[10px] font-black text-slate-800 tracking-wide uppercase">Hasil Broadcast WA</h5>
+                    <div class="flex items-center gap-1 mt-0.5">
+                      <span class="size-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                      <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Live Preview</span>
+                    </div>
+                  </div>
                 </div>
-                <h5 class="text-xs font-black uppercase tracking-[0.2em] text-bejo-600">Tips Broadcast</h5>
+                <div class="flex gap-2 text-slate-400">
+                  <Icon icon="lucide:phone" class="size-3.5" />
+                  <Icon icon="lucide:video" class="size-3.5" />
+                </div>
               </div>
-              <p class="text-[13px] text-slate-500 leading-relaxed font-bold">Banyak fitur baru akan hadir segera.</p>
-              <ul class="space-y-2 relative z-10 text-[13px] text-slate-500 leading-relaxed font-bold">
-                <li class="flex gap-2">
-                  <Icon icon="lucide:check-circle-2" class="size-3 text-bejo-200 shrink-0 mt-0.5" />
-                  Pastikan nomor WhatsApp Server dalam keadaan online.
-                </li>
-                <li class="flex gap-2">
-                  <Icon icon="lucide:check-circle-2" class="size-3 text-bejo-200 shrink-0 mt-0.5" />
-                  Gunakan template yang menarik untuk meningkatkan respon.
-                </li>
-                <li class="flex gap-2">
-                  <Icon icon="lucide:check-circle-2" class="size-3 text-bejo-200 shrink-0 mt-0.5" />
-                  Jangan mengirim pesan terlalu sering untuk menghindari spam.
-                </li>
-              </ul>
+
+              <!-- WhatsApp Chat Message Container -->
+              <div class="bg-[#efeae2] p-4 relative flex-grow overflow-y-auto custom-scrollbar flex flex-col justify-start min-h-[220px] space-y-3">
+                <!-- Pattern overlay -->
+                <div class="absolute inset-0 opacity-5 pointer-events-none" style="background-image: radial-gradient(circle, #000 1px, transparent 1px); background-size: 16px 16px"></div>
+
+                <!-- 1. Gambar/Video Produk Bubble (1 bubble per gambar) -->
+                <template v-if="showImage && selectedUnit && previewMediaList.length > 0">
+                  <div v-for="(img, idx) in previewMediaList" :key="idx" class="relative bg-[#d9fdd3] text-[#111b21] rounded-2xl rounded-tr-none p-1.5 shadow-md border border-[#d1f4cc] self-end max-w-[90%] text-left select-text z-10">
+                    <div class="rounded-xl overflow-hidden border border-[#b4e6ad] max-w-full">
+                      <video v-if="img.ContentType?.startsWith('video/')" :src="img.Url || img.Id_Media" class="w-full max-h-48 object-cover" preload="metadata" muted></video>
+                      <img v-else :src="img.Url || img.Id_Media" class="w-full max-h-48 object-cover" />
+                    </div>
+                    <!-- Chat tail -->
+                    <div class="absolute top-0 right-0 transform translate-x-[45%] w-0 h-0 border-[6px] border-transparent border-l-[#d9fdd3] border-t-[#d9fdd3]"></div>
+                    <!-- Metadata time/check status -->
+                    <div class="text-right text-[8px] text-slate-400/80 mt-1 mr-1.5 pb-0.5 flex items-center justify-end gap-1 select-none font-medium font-mono">
+                      <span>12:00</span>
+                      <Icon icon="lucide:check-check" class="size-3 text-[#53bdeb]" />
+                    </div>
+                  </div>
+                </template>
+
+                <!-- 2. Isi Pesan Bubble (Last) -->
+                <div v-if="message.trim()" class="relative bg-[#d9fdd3] text-[#111b21] rounded-2xl rounded-tr-none px-3.5 py-2.5 shadow-md border border-[#d1f4cc] self-end max-w-[90%] text-left select-text z-10">
+                  <div v-html="formatTemplatePreview(message)" class="text-xs leading-relaxed whitespace-pre-wrap text-slate-800"></div>
+                  <!-- Chat tail -->
+                  <div class="absolute top-0 right-0 transform translate-x-[45%] w-0 h-0 border-[6px] border-transparent border-l-[#d9fdd3] border-t-[#d9fdd3]"></div>
+                  <!-- Metadata time/check status -->
+                  <div class="text-right text-[8px] text-slate-400/80 mt-1 flex items-center justify-end gap-1 select-none font-medium font-mono">
+                    <span>12:00</span>
+                    <Icon icon="lucide:check-check" class="size-3 text-[#53bdeb]" />
+                  </div>
+                </div>
+
+                <!-- Empty State Placeholder -->
+                <div v-if="!message.trim() && !(showImage && selectedUnit && previewMediaList.length > 0)" class="m-auto text-center p-4">
+                  <Icon icon="lucide:message-square-dashed" class="size-8 text-slate-300 mx-auto mb-2" />
+                  <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tulis pesan untuk melihat pratinjau live</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

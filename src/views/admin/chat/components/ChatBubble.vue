@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { Icon } from '@iconify/vue'
-import api from '@/services/axios'
-
-const imageUrl = ref<string>('')
 
 interface Chat {
   Message_Id: string
@@ -35,6 +32,7 @@ const props = defineProps<{
   highlight?: string
   isActiveMatch?: boolean
   activeMatchIndex?: number
+  resolvedImageUrl?: string
 }>()
 
 const emit = defineEmits(['imageLoaded', 'regenerateBrochure'])
@@ -123,9 +121,9 @@ const formattedMsg = computed(() => {
   return formatted
 })
 
-// === LOGIKA GAMBAR DIBUAT LEBIH BERSIH ===
+// === LOGIKA GAMBAR ===
 const imageSource = computed(() => {
-  if (imageUrl.value) return imageUrl.value
+  if (props.resolvedImageUrl) return props.resolvedImageUrl
   if (props.chat.Media_Url) return props.chat.Media_Url
   const msg = props.chat.Message || ''
   if (msg.includes('_data:image/')) {
@@ -133,6 +131,26 @@ const imageSource = computed(() => {
   }
   return ''
 })
+
+// Deteksi apakah gambar bersumber lokal (base64 atau blob URL)
+const isLocalImage = computed(() => {
+  const src = imageSource.value || ''
+  return src.startsWith('data:image') || src.startsWith('blob:')
+})
+const imgLoaded = ref(false)
+// imageDownloaded: false = tampilkan placeholder download (ala WA), true = load gambar asli
+const imageDownloaded = ref(false)
+
+// Reset ketika sumber gambar berubah (misal pindah chat)
+watch(imageSource, () => {
+  imgLoaded.value = false
+  // Hanya gambar lokal (base64/blob) yang otomatis terbuka (tidak perlu unduh/download step)
+  imageDownloaded.value = isLocalImage.value
+}, { immediate: true })
+
+const triggerImageDownload = () => {
+  imageDownloaded.value = true
+}
 
 const getBrochureFileName = (chat: any) => {
   if (!chat.Message) return chat.Id_Paket || (chat.No_Penawaran ? `Brosur_Properti_${chat.No_Penawaran}.pdf` : 'Brosur_Digital.pdf')
@@ -183,38 +201,7 @@ const downloadPDF = async (chat: any) => {
   }
 }
 
-const getMediaId = (paket?: string) => {
-  if (!paket) return ''
-  const parts = paket.split('_')
-  if (parts.length <= 2) return parts[parts.length - 1]
-  return parts.slice(2).join('_')
-}
-
-const getImageUrl = async (paket?: string) => {
-  const id = getMediaId(paket)
-  if (!id) return
-  try {
-    const { data } = await api.post('/api/mediacloud/read-url-batch', { ids: [id] }, { headers: { 'X-Jenis-User': 'admin' } })
-    imageUrl.value = data?.success?.[id]?.Url || ''
-  } catch (err: any) {
-    console.error('ERROR:', err)
-  }
-}
-
-watch(
-  () => props.chat.Id_Paket,
-  (val) => {
-    if (val) getImageUrl(val)
-  },
-  { immediate: true }
-)
-watch(
-  () => props.chat.No_Penawaran,
-  (val) => {
-    if (val) getImageUrl(val)
-  },
-  { immediate: true }
-)
+// GCS URL individual resolution is removed in favor of batch pre-resolving in ChatHistory.vue
 
 const showImagePreview = ref(false)
 </script>
@@ -268,8 +255,38 @@ const showImagePreview = ref(false)
 
       <div class="flex flex-col max-w-[85%] md:max-w-[70%]" :class="isMe ? 'items-end' : 'items-start'">
         <div class="px-3 py-1.5 md:px-4 md:py-2.5 rounded-2xl text-[13px] md:text-sm relative transition-all duration-300 hover:shadow-xl" :class="[bubbleStyle, isMe ? 'hover:translate-x-1' : 'hover:-translate-x-1']">
-          <div v-if="imageSource" class="mb-3 overflow-hidden rounded-xl border border-black/5 shadow-inner bg-slate-50/50">
-            <img :src="imageSource" @load="$emit('imageLoaded')" @click="showImagePreview = true" class="w-full h-auto object-cover max-h-72 hover:scale-105 transition-transform duration-500 cursor-pointer" />
+          <!-- Image Bubble -->
+          <div v-if="imageSource" class="mb-3 relative overflow-hidden rounded-xl border border-black/5 shadow-inner bg-slate-50/50">
+            <!-- Download placeholder (ala WhatsApp) — tampil jika belum di-klik -->
+            <div
+              v-if="!imageDownloaded"
+              @click="triggerImageDownload"
+              class="w-full min-h-[140px] flex flex-col items-center justify-center gap-2.5 cursor-pointer bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl transition-all duration-200 hover:from-slate-200 hover:to-slate-300 select-none py-8"
+            >
+              <div class="size-12 rounded-full bg-white/70 flex items-center justify-center shadow-inner border border-slate-200">
+                <Icon icon="lucide:image-down" class="size-6 text-slate-500" />
+              </div>
+              <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Ketuk untuk memuat gambar</span>
+            </div>
+
+            <!-- Gambar asli — hanya di-render setelah pengguna klik download -->
+            <template v-else>
+              <!-- Skeleton: ditampilkan selama gambar masih loading dari network -->
+              <div
+                v-if="!isLocalImage && !imgLoaded"
+                class="absolute inset-0 z-10 bg-gradient-to-br from-slate-100 to-slate-200 animate-pulse flex items-center justify-center rounded-xl"
+              >
+                <Icon icon="lucide:loader-2" class="size-8 text-slate-300 animate-spin" />
+              </div>
+              <img
+                :src="imageSource"
+                :loading="isLocalImage ? 'eager' : 'lazy'"
+                @load="imgLoaded = true; $emit('imageLoaded')"
+                @click="showImagePreview = true"
+                class="w-full h-auto object-cover max-h-72 hover:scale-105 transition-transform duration-500 cursor-pointer"
+                :style="!isLocalImage && !imgLoaded ? 'opacity: 0' : ''"
+              />
+            </template>
           </div>
 
           <!-- Brochure/Document Style -->

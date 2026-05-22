@@ -151,6 +151,9 @@ const joinUserChannel = async () => {
   }
 }
 
+// Cache room IDs yang sudah di-join agar tidak double-join saat switch tab
+const joinedRoomIds = new Set<string>()
+
 const joinRoom = async (bot: any, aktif: any, assign: any) => {
   if (signalRConnection.value?.state !== signalR.HubConnectionState.Connected) {
     console.warn('[SignalR] Koneksi belum siap, gagal join ke daftar room.')
@@ -161,26 +164,38 @@ const joinRoom = async (bot: any, aktif: any, assign: any) => {
   const idsAktif = Array.isArray(aktif) ? aktif : aktif?._value || []
   const idsAssign = Array.isArray(assign) ? assign : assign?._value || []
 
-  const joinMultipleRooms = async (roomIds: string[]) => {
+  const joinNewRoomsOnly = async (roomIds: string[]) => {
     if (!roomIds || roomIds.length === 0) return
+    // Hanya join room yang belum pernah di-join sebelumnya
+    const newRooms = roomIds.filter(id => !joinedRoomIds.has(id))
+    if (newRooms.length === 0) return
 
-    const promises = roomIds.map(
-      (id) => signalRConnection.value!.invoke('JoinRoom', id)
-    )
+    const promises = newRooms.map(id => {
+      joinedRoomIds.add(id)
+      return signalRConnection.value!.invoke('JoinRoom', id)
+    })
     await Promise.allSettled(promises)
   }
 
   if (currentActiveTab.value === 'bot') {
-    await joinMultipleRooms(idsBot)
+    await joinNewRoomsOnly(idsBot)
   } else if (currentActiveTab.value === 'chat_saya') {
-    await joinMultipleRooms([...idsAktif, ...idsAssign])
+    await joinNewRoomsOnly([...idsAktif, ...idsAssign])
   }
 }
 
 const handleAllRoomIds = async (bot: any, aktif: any, assign: any) => {
-  roomIdsBot.value = Array.isArray(bot) ? bot : bot?._value || []
-  roomIdsAktif.value = Array.isArray(aktif) ? aktif : aktif?._value || []
-  roomIdsAssign.value = Array.isArray(assign) ? assign : assign?._value || []
+  const newBot = Array.isArray(bot) ? bot : bot?._value || []
+  const newAktif = Array.isArray(aktif) ? aktif : aktif?._value || []
+  const newAssign = Array.isArray(assign) ? assign : assign?._value || []
+
+  // Skip jika IDs sama persis — tidak perlu update state & re-join
+  const isSame = (a: string[], b: string[]) => a.length === b.length && a.every((v, i) => v === b[i])
+  if (isSame(newBot, roomIdsBot.value) && isSame(newAktif, roomIdsAktif.value) && isSame(newAssign, roomIdsAssign.value)) return
+
+  roomIdsBot.value = newBot
+  roomIdsAktif.value = newAktif
+  roomIdsAssign.value = newAssign
 
   if (signalRConnection.value?.state === signalR.HubConnectionState.Connected) {
     await joinRoom(roomIdsBot.value, roomIdsAktif.value, roomIdsAssign.value)
@@ -195,8 +210,8 @@ const startSignalR = async () => {
   signalRConnection.value = new signalR.HubConnectionBuilder()
     .withUrl(hubUrl, {
       accessTokenFactory: () => token,
-      headers: { 'X-Jenis-User': role },
-      transport: signalR.HttpTransportType.LongPolling
+      headers: { 'X-Jenis-User': role }
+      // Tidak lock ke LongPolling — biarkan SignalR nego transport terbaik (WebSocket > SSE > LongPolling)
     })
     .withAutomaticReconnect()
     .build()

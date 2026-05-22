@@ -39,9 +39,21 @@ const getBase64ImageFromUrl = async (imageUrl: string, maxWidth = 1024, format =
 
 const formatPriceShort = (price: number) => {
   if (!price) return 'N/A'
-  if (price >= 1000000000) return (price / 1000000000).toFixed(1).replace('.0', '') + ' M'
-  if (price >= 1000000) return (price / 1000000).toFixed(1).replace('.0', '') + ' Jt'
-  if (price >= 1000) return (price / 1000).toFixed(1).replace('.0', '') + ' Rb'
+  if (price >= 1000000000) {
+    const val = price / 1000000000
+    const rounded = Math.round(val * 100) / 100
+    return rounded.toString() + ' M'
+  }
+  if (price >= 1000000) {
+    const val = price / 1000000
+    const rounded = Math.round(val * 100) / 100
+    return rounded.toString() + ' Jt'
+  }
+  if (price >= 1000) {
+    const val = price / 1000
+    const rounded = Math.round(val * 100) / 100
+    return rounded.toString() + ' Rb'
+  }
   return price.toString()
 }
 
