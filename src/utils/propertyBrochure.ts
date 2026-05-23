@@ -116,7 +116,7 @@ export const downloadBrochure = async (product: any, businessSettings: any, appS
       logoBase64 = await getBase64ImageFromUrl(logoUrl, 1024, 'image/png')
     }
 
-    const currentUrl = window.location.origin + '/properti/detail/' + product.Slug
+    const currentUrl = `https://wabotui.padajaya.biz.id/detail/${product.Slug}`
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(currentUrl)}`
     const qrBase64 = await getBase64ImageFromUrl(qrUrl)
 
@@ -136,10 +136,30 @@ export const downloadBrochure = async (product: any, businessSettings: any, appS
     // --- COLUMN 1 ---
     doc.setFillColor(primaryColor)
     doc.roundedRect(-10, -10, 50, 50, 10, 10, 'F')
+    
+    // Logo container
+    doc.setFillColor(255, 255, 255)
+    doc.roundedRect(3, 3, 29, 29, 4, 4, 'F')
+
     if (logoBase64) {
-      doc.setFillColor(255, 255, 255)
-      doc.roundedRect(3, 3, 29, 29, 4, 4, 'F')
       doc.addImage(logoBase64 as string, 'PNG', 5, 5, 25, 25)
+    } else {
+      // Draw home icon
+      doc.setDrawColor(212, 175, 55) // #d4af37 (Gold)
+      doc.setLineWidth(0.8)
+      doc.line(9, 17, 17.5, 9.5)
+      doc.line(17.5, 9.5, 26, 17)
+      doc.line(11, 16.5, 11, 25)
+      doc.line(11, 25, 24, 25)
+      doc.line(24, 25, 24, 16.5)
+
+      // Fallback text (appName/company name abbreviated or initials)
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(8)
+      doc.setTextColor(212, 175, 55)
+      const appName = businessSettings.appName || 'RUMAH BEJO'
+      const dispText = appName.length > 8 ? appName.substring(0, 7) + '.' : appName
+      doc.text(dispText.toUpperCase(), 17.5, 28, { align: 'center' })
     }
 
     // --- COLUMN 2 IMAGE (RENDERED FIRST TO PREVENT WHITE MASK OVERLAP) ---
@@ -147,7 +167,7 @@ export const downloadBrochure = async (product: any, businessSettings: any, appS
     const centerY = 58
     const rad = 35
 
-    drawDots(col2X + 15, 12, 5, 8)
+    drawDots(125, 12, 6, 9) // match top dots grid: width 28, height 17.5 at (125, 12)
 
     if (images[1]) {
       doc.addImage(images[1] as string, 'JPEG', centerX - rad, centerY - rad, rad * 2, rad * 2, undefined, 'FAST')
@@ -157,9 +177,9 @@ export const downloadBrochure = async (product: any, businessSettings: any, appS
 
       doc.setDrawColor(primaryColor)
       doc.setLineWidth(1.5)
-      doc.circle(centerX, centerY, rad + 1, 'S')
+      doc.circle(centerX, centerY, rad + 1.75, 'S') // HTML: left -1.75mm offset
       doc.setLineWidth(0.8)
-      doc.circle(centerX, centerY, rad + 5, 'S')
+      doc.circle(centerX, centerY, rad + 5.4, 'S') // HTML: left -5.4mm offset
     }
 
     doc.setFont('helvetica', 'bold')
@@ -190,7 +210,7 @@ export const downloadBrochure = async (product: any, businessSettings: any, appS
 
     doc.setTextColor(slateColor)
     let currentTitleY = 55
-    const titleLineStep = (titleFontSize * 0.35) + 2
+    const titleLineStep = titleFontSize * 0.35 + 2
     tLines.forEach((line: string) => {
       doc.text(line, col1X, currentTitleY)
       currentTitleY += titleLineStep
@@ -199,7 +219,7 @@ export const downloadBrochure = async (product: any, businessSettings: any, appS
     const subTitleY = currentTitleY + 2
     doc.setFontSize(10)
     doc.setTextColor(primaryColor)
-    doc.text(`Tawaran Eksklusif dari ${businessSettings.appName || 'Kami'}`, col1X, subTitleY)
+    doc.text(`Tawaran Eksklusif dari ${businessSettings.appName || 'Rumah Rejeki'}`, col1X, subTitleY)
 
     const spY = Math.max(80, subTitleY + 12)
     doc.setFillColor(darkOrange)
@@ -212,38 +232,49 @@ export const downloadBrochure = async (product: any, businessSettings: any, appS
     doc.setFontSize(9.5)
     doc.setFont('helvetica', 'normal')
     let aY = spY + 16
-    const pts = product.Akses_Jalan || ['Lokasi strategis & akses mudah', 'Desain arsitektur modern', 'Fasilitas premium lengkap', 'Nilai investasi tinggi']
+    const pts = product.Akses_Jalan || ['3 Menit ke Pondok Indah Mall', '5 Menit ke RS Pondok Indah', '10 Menit ke Tol JORR', '5 Menit ke Jakarta Intercultural School']
     pts.slice(0, 4).forEach((p: string) => {
+      // Circle
       doc.setDrawColor(primaryColor)
       doc.setLineWidth(0.5)
       doc.circle(col1X + 4, aY - 1.5, 2.5, 'S')
-      doc.line(col1X + 3, aY - 1.5, col1X + 3.8, aY - 0.5)
-      doc.line(col1X + 3.8, aY - 0.5, col1X + 5.5, aY - 2.5)
+      
+      // Checkmark: path starts relative to box
+      doc.line(col1X + 3, aY - 1.5, col1X + 3.8, aY - 0.75)
+      doc.line(col1X + 3.8, aY - 0.75, col1X + 5, aY - 2.25)
+      
       const pLines = doc.splitTextToSize(p, 72)
       doc.text(pLines, col1X + 10, aY)
-      aY += (pLines.length * 4) + 4
+      aY += pLines.length * 3.5 + 3.5 // margin-bottom: 3.5mm in HTML
     })
 
+    const imgY = Math.max(135, aY)
+    
+    // Outer white container with orange border
+    doc.setFillColor(255, 255, 255)
+    doc.setDrawColor(primaryColor)
+    doc.setLineWidth(1)
+    doc.roundedRect(col1X, imgY, 80, 50, 4, 4, 'FD')
+
     if (images[0]) {
-      const imgY = Math.max(135, aY + 3)
       try {
-        doc.addImage(images[0] as string, 'JPEG', col1X, imgY, 80, 50, undefined, 'FAST')
+        // Image is inset by 2.5mm inside the 80x50 border
+        doc.addImage(images[0] as string, 'JPEG', col1X + 2.5, imgY + 2.5, 75, 45, undefined, 'FAST')
+        
+        // Mask image sharp corners to give a border-radius: 2mm effect
+        doc.setDrawColor(255, 255, 255)
+        doc.setLineWidth(3) // 3mm border width to overlap edges
+        doc.roundedRect(col1X + 2.5, imgY + 2.5, 75, 45, 2, 2, 'S')
       } catch {}
-      doc.setDrawColor(255, 255, 255)
-      doc.setLineWidth(4)
-      doc.roundedRect(col1X, imgY, 80, 50, 4, 4, 'S')
-      doc.setDrawColor(primaryColor)
-      doc.setLineWidth(1)
-      doc.roundedRect(col1X, imgY, 80, 50, 4, 4, 'S')
     }
 
     // --- COLUMN 2 CONTENT ---
     const fY = 115
     doc.setFillColor(primaryColor)
-    doc.roundedRect(col2X + 5, fY, 60, 10, 3, 3, 'F')
+    doc.roundedRect(115, fY, 60, 10, 3, 3, 'F')
     doc.setTextColor(255, 255, 255)
     doc.setFontSize(10)
-    doc.text('FASILITAS LENGKAP', col2X + 35, fY + 6.5, { align: 'center' })
+    doc.text('FASILITAS LENGKAP', 145, fY + 6.5, { align: 'center' })
 
     const details = [
       { label: 'Tipe', value: product.Tipe || '-' },
@@ -252,18 +283,21 @@ export const downloadBrochure = async (product: any, businessSettings: any, appS
       { label: 'Kamar Mandi', value: product.Jumlah_Kamar_Mandi || '-' },
       { label: 'Carport', value: product.Jumlah_Carpot || '-' },
       { label: 'Listrik', value: product.Daya_Listrik ? `${product.Daya_Listrik} VA` : '-' }
-    ].filter(d => !(d.label === 'Lantai' && (d.value === '-' || !d.value)))
+    ].filter((d) => !(d.label === 'Lantai' && (d.value === '-' || !d.value)))
 
-    doc.setTextColor(slateColor)
-    doc.setFontSize(9)
-    doc.setFont('helvetica', 'normal')
     details.forEach((item, index) => {
       const isRight = index % 2 === 1
-      const x = isRight ? col2X + 40 : col2X + 2
+      const xCircle = isRight ? 150 : 112
+      const xText = isRight ? 154 : 116
       const y = 135 + Math.floor(index / 2) * 10
+      
       doc.setFillColor(darkOrange)
-      doc.circle(x - 1, y - 1, 1, 'F')
-      doc.text(`${item.label}: ${item.value}`, x + 2, y)
+      doc.circle(xCircle, y - 1.2, 1, 'F') // 1mm radius dot
+      
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(9)
+      doc.setTextColor(slateColor)
+      doc.text(`${item.label}: ${item.value}`, xText, y)
     })
 
     doc.setFont('helvetica', 'bold')
@@ -278,108 +312,236 @@ export const downloadBrochure = async (product: any, businessSettings: any, appS
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(9.5)
     doc.setTextColor(slateColor)
-    doc.text(product.Keterangan || 'Unit premium dengan privasi maksimal sekaligus pemandangan kota terbaik.', col2X, 187, { maxWidth: 70, align: 'justify', lineHeightFactor: 1.5 })
+    doc.text(product.Keterangan || 'Mansion megah bergaya arsitektur klasik Eropa yang dilengkapi kolam renang pribadi dan interior mewah berlapis marmer Italia.', col2X, 187, { maxWidth: 70, align: 'justify', lineHeightFactor: 1.45 })
 
     // --- COLUMN 3 ---
     doc.setFillColor(darkOrange)
-    doc.roundedRect(col3X + 10, 30, 45, 9, 2, 2, 'F')
+    doc.roundedRect(225, 30, 45, 9, 2, 2, 'F')
     doc.setTextColor(255, 255, 255)
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(9.5)
-    doc.text('PENAWARAN TERBATAS', col3X + 32.5, 36, { align: 'center' })
+    doc.text('PENAWARAN TERBATAS', 247.5, 36, { align: 'center' })
 
     let pY = 48
     const hasJual = product.Harga_Jual1 > 0 || product.Harga_Jual2 > 0
     const hasSewa = product.Harga_Sewa1 > 0 || product.Harga_Sewa2 > 0
     const isBoth = hasJual && hasSewa
 
-    const drawPriceBlock = (label: string, oldP: number, newP: number, isSewa: boolean) => {
-      doc.setFontSize(isBoth ? 8 : 9.5)
+    if (isBoth) {
+      // --- DUAL PRICE LAYOUT ---
+      // 1. HARGA JUAL
       doc.setFont('helvetica', 'normal')
+      doc.setFontSize(8)
+      doc.setTextColor(slateColor)
+      doc.text('HARGA JUAL:', col3X, pY)
+      
+      pY += 3.5
+      const oldJual = product.Harga_Jual1
+      const finalJual = product.Harga_Jual2
+      const hasPromoJual = appSettings.viewDiscount && oldJual > 0 && finalJual && finalJual > 0 && oldJual !== finalJual
+      
+      if (hasPromoJual) {
+        doc.setFont('helvetica', 'bold')
+        doc.setFontSize(10)
+        doc.setTextColor('#9ca3af') // Gray-400
+        const opStr = `Rp ${formatPriceShort(oldJual)}`
+        doc.text(opStr, col3X, pY)
+        
+        // Strikethrough
+        const tw = doc.getTextWidth(opStr)
+        doc.setDrawColor('#ef4444')
+        doc.setLineWidth(0.4)
+        doc.line(col3X - 0.5, pY - 1, col3X + tw + 0.5, pY - 1)
+        
+        // Promo Badge
+        doc.setFillColor('#ef4444')
+        doc.roundedRect(col3X + tw + 2, pY - 3, 11, 4, 0.8, 0.8, 'F')
+        doc.setTextColor(255, 255, 255)
+        doc.setFontSize(6)
+        doc.text('PROMO', col3X + tw + 7.5, pY - 0.2, { align: 'center' })
+        
+        pY += 6.5
+      } else {
+        pY += 1.5
+      }
+      
+      // Final Price Jual
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(18)
+      doc.setTextColor(primaryColor)
+      doc.text(`Rp ${formatPriceShort(finalJual || oldJual)}`, col3X, pY)
+      
+      pY += 5
+      
+      // Divider 1
+      doc.setDrawColor('#e2e8f0')
+      doc.setLineWidth(0.5)
+      doc.line(col3X, pY, col3X + 65, pY)
+      
+      pY += 5
+      
+      // 2. HARGA SEWA
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(8)
+      doc.setTextColor(slateColor)
+      doc.text('HARGA SEWA:', col3X, pY)
+      
+      pY += 3.5
+      const oldSewa = product.Harga_Sewa1
+      const finalSewa = product.Harga_Sewa2
+      const hasPromoSewa = appSettings.viewDiscount && oldSewa > 0 && finalSewa && finalSewa > 0 && oldSewa !== finalSewa
+      
+      if (hasPromoSewa) {
+        doc.setFont('helvetica', 'bold')
+        doc.setFontSize(10)
+        doc.setTextColor('#9ca3af') // Gray-400
+        const opStr = `Rp ${formatPriceShort(oldSewa)}`
+        doc.text(opStr, col3X, pY)
+        
+        // Strikethrough
+        const tw = doc.getTextWidth(opStr)
+        doc.setDrawColor('#ef4444')
+        doc.setLineWidth(0.4)
+        doc.line(col3X - 0.5, pY - 1, col3X + tw + 0.5, pY - 1)
+        
+        // Promo Badge
+        doc.setFillColor('#ef4444')
+        doc.roundedRect(col3X + tw + 2, pY - 3, 11, 4, 0.8, 0.8, 'F')
+        doc.setTextColor(255, 255, 255)
+        doc.setFontSize(6)
+        doc.text('PROMO', col3X + tw + 7.5, pY - 0.2, { align: 'center' })
+        
+        pY += 6.5
+      } else {
+        pY += 1.5
+      }
+      
+      // Final Price Sewa
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(18)
+      doc.setTextColor(primaryColor)
+      const finalSewaVal = finalSewa || oldSewa
+      const fsStr = `Rp ${formatPriceShort(finalSewaVal)}`
+      doc.text(fsStr, col3X, pY)
+      
+      const fsWidth = doc.getTextWidth(fsStr)
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(8)
+      doc.setTextColor(slateColor)
+      doc.text(product.Satuan_Minimal_Sewa ? `/ ${product.Satuan_Minimal_Sewa}` : '/ Tahun', col3X + fsWidth + 2, pY)
+      
+      pY += 5
+      
+      // Divider 2
+      doc.setDrawColor('#e2e8f0')
+      doc.setLineWidth(0.5)
+      doc.line(col3X, pY, col3X + 65, pY)
+      
+      pY += 7
+    } else {
+      // --- SINGLE PRICE LAYOUT ---
+      const label = 'DENGAN HANYA'
+      const oldP = hasJual ? product.Harga_Jual1 : product.Harga_Sewa1
+      const finalP = hasJual ? product.Harga_Jual2 : product.Harga_Sewa2
+      const isSewa = hasSewa
+      
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(9.5)
       doc.setTextColor(slateColor)
       doc.text(label, col3X, pY)
       
-      let promoOffset = 0
-      if (appSettings.viewDiscount && oldP > 0 && newP && newP > 0 && oldP !== newP) {
-        doc.setTextColor(156, 163, 175)
-        doc.setFontSize(isBoth ? 8 : 10)
+      pY += 4.5
+      
+      const hasPromo = appSettings.viewDiscount && oldP > 0 && finalP && finalP > 0 && oldP !== finalP
+      
+      if (hasPromo) {
         doc.setFont('helvetica', 'bold')
-        const op = `Rp ${formatPriceShort(oldP)}`
-        doc.text(op, col3X, pY + 4.5)
-        doc.setDrawColor(239, 68, 68)
-        doc.setLineWidth(0.5)
-        const tw = doc.getTextWidth(op)
-        doc.line(col3X - 1, pY + 3.2, col3X + tw + 1, pY + 3.2)
-        doc.setFillColor(239, 68, 68)
-        doc.roundedRect(col3X + tw + 3, pY + 1, 14, 4, 1, 1, 'F')
+        doc.setFontSize(10)
+        doc.setTextColor('#9ca3af') // Gray-400
+        const opStr = `Rp ${formatPriceShort(oldP)}`
+        doc.text(opStr, col3X, pY)
+        
+        // Strikethrough
+        const tw = doc.getTextWidth(opStr)
+        doc.setDrawColor('#ef4444')
+        doc.setLineWidth(0.4)
+        doc.line(col3X - 0.5, pY - 1, col3X + tw + 0.5, pY - 1)
+        
+        // Promo Badge
+        doc.setFillColor('#ef4444')
+        doc.roundedRect(col3X + tw + 2, pY - 3, 11, 4, 0.8, 0.8, 'F')
         doc.setTextColor(255, 255, 255)
-        doc.setFontSize(isBoth ? 5 : 6)
-        doc.text('PROMO', col3X + tw + 10, pY + 3.7, { align: 'center' })
-        promoOffset = isBoth ? 5.5 : 6.5
+        doc.setFontSize(6)
+        doc.text('PROMO', col3X + tw + 7.5, pY - 0.2, { align: 'center' })
+        
+        pY += 6.5
+      } else {
+        pY += 1.5
       }
-
-      const finalPriceY = pY + (isBoth ? 9 : 11) + promoOffset
-      doc.setFontSize(isBoth ? 18 : 24)
-      doc.setTextColor(primaryColor)
+      
+      // Final Price
       doc.setFont('helvetica', 'bold')
-      const finalPrice = newP || oldP
-      const finalPriceStr = `Rp ${formatPriceShort(finalPrice)}`
-      doc.text(finalPriceStr, col3X, finalPriceY)
-      const priceWidth = doc.getTextWidth(finalPriceStr)
-
+      doc.setFontSize(24)
+      doc.setTextColor(primaryColor)
+      const finalPStr = `Rp ${formatPriceShort(finalP || oldP)}`
+      doc.text(finalPStr, col3X, pY)
+      
       if (isSewa) {
-        doc.setFontSize(isBoth ? 7 : 8)
-        doc.setTextColor(slateColor)
+        const fsWidth = doc.getTextWidth(finalPStr)
         doc.setFont('helvetica', 'normal')
-        doc.text(product.Satuan_Minimal_Sewa ? `/ ${product.Satuan_Minimal_Sewa}` : '/ Tahun', col3X + priceWidth + 2, finalPriceY)
+        doc.setFontSize(8)
+        doc.setTextColor(slateColor)
+        doc.text(product.Satuan_Minimal_Sewa ? `/ ${product.Satuan_Minimal_Sewa}` : '/ Tahun', col3X + fsWidth + 2, pY - 1)
       }
-      pY += isBoth ? (15 + promoOffset) : (20 + promoOffset)
+      
+      pY += 18
+      
+      // Divider
+      doc.setDrawColor('#e2e8f0')
+      doc.setLineWidth(0.5)
+      doc.line(col3X, pY, col3X + 65, pY)
+      
+      pY += 7
     }
 
-    if (hasJual) {
-      drawPriceBlock(isBoth ? 'HARGA JUAL:' : 'DENGAN HANYA', product.Harga_Jual1, product.Harga_Jual2, false)
-      if (isBoth) {
-         doc.setDrawColor(226, 232, 240)
-         doc.setLineWidth(0.5)
-         doc.line(col3X, pY - 2, col3X + 65, pY - 2)
-         pY += 4
-      }
-    }
-    if (hasSewa) drawPriceBlock(isBoth ? 'HARGA SEWA:' : 'DENGAN HANYA', product.Harga_Sewa1, product.Harga_Sewa2, true)
-
-    const finalPY = Math.max(90, pY + 2)
-    doc.setDrawColor(226, 232, 240)
-    doc.setLineWidth(0.5)
-    doc.line(col3X, finalPY, col3X + 65, finalPY)
-
-    doc.setTextColor(100, 116, 139)
+    doc.setTextColor('#64748b')
     doc.setFontSize(8.5)
     doc.setFont('helvetica', 'normal')
-    doc.text('• UNIT TERBATAS & EKSKLUSIF', col3X, finalPY + 10)
-    doc.text('• BEBAS BIAYA SURAT-SURAT', col3X, finalPY + 17)
+    doc.text('• UNIT TERBATAS & EKSKLUSIF', col3X, pY)
+    doc.text('• BEBAS BIAYA SURAT-SURAT', col3X, pY + 6.5)
 
-    drawDots(col3X + 60, finalPY + 5, 6, 4)
+    drawDots(275, 95, 7, 5) // match right dots grid: width 14, height 21 at (275, 95)
 
     if (qrBase64) {
-      doc.addImage(qrBase64 as string, 'PNG', col3X + 15, 120, 35, 35)
+      doc.addImage(qrBase64 as string, 'PNG', 230, 120, 35, 35)
       doc.setFontSize(8)
       doc.setTextColor(primaryColor)
       doc.setFont('helvetica', 'bold')
-      doc.text('SCAN UNTUK DETAIL UNIT', col3X + 32.5, 162, { align: 'center' })
+      doc.text('SCAN UNTUK DETAIL UNIT', 247.5, 160, { align: 'center' })
     }
 
     doc.setFillColor(primaryColor)
-    doc.roundedRect(col3X - 20, height - 45, 120, 60, 10, 10, 'F')
+    doc.roundedRect(195, height - 45, 120, 60, 10, 10, 'F')
+    doc.setFillColor('#f97316')
+    doc.circle(width, height, 30, 'F')
+    doc.setFillColor(255, 255, 255)
+    doc.circle(width, height, 15, 'F')
+
     doc.setTextColor(255, 255, 255)
     doc.setFontSize(11)
     doc.setFont('helvetica', 'bold')
-    doc.text('HUBUNGI KAMI SEGERA', col3X - 5, height - 25)
+    doc.text('HUBUNGI KAMI SEGERA', 210, height - 26.2)
     doc.setFontSize(9.5)
-    
-    const waY = height - 18
-    doc.text(`WhatsApp: +${businessSettings.whatsapp || '-'}`, col3X - 5, waY)
-    const webY = height - 12
-    doc.text(`Website: ${window.location.host}`, col3X - 5, webY)
+    doc.setFont('helvetica', 'bold')
+
+    let waNum = String(businessSettings.whatsapp || '')
+    if (waNum && !waNum.startsWith('+')) {
+      waNum = '+' + waNum
+    }
+    const waY = height - 19.4
+    doc.text(`WhatsApp: ${waNum}`, 210, waY)
+    const webY = height - 14.6
+    doc.text(`Website: wabotui.padajaya.biz.id`, 210, webY)
 
     // Decorative Blobs
     doc.setGState(new (doc as any).GState({ opacity: 0.1 }))
