@@ -46,7 +46,7 @@ const teamMembers = [
       <!-- Breadcrumb -->
 
       <!-- Hero Banner -->
-      <div class="relative overflow-hidden rounded-[3.5rem] bg-white p-12 md:p-16 lg:p-20 shadow-xl shadow-bejo-600/5 border border-bejo-100">
+      <div class="relative overflow-hidden rounded-[2rem] md:rounded-[3.5rem] bg-white p-6 md:p-16 lg:p-20 shadow-xl shadow-bejo-600/5 border border-bejo-100">
         <!-- Dekorasi Background -->
         <div class="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-bejo-50 via-bejo-50/50 to-transparent"></div>
         <div class="absolute -right-20 -top-20 size-96 bg-gradient-to-br from-bejo-100 via-bejo-200 to-bejo-400 rounded-full blur-3xl opacity-40"></div>
@@ -64,7 +64,7 @@ const teamMembers = [
       </div>
 
       <!-- Content Misi Visi -->
-      <div class="bg-white rounded-[2.5rem] p-8 sm:p-12 lg:p-20 shadow-xl shadow-slate-200/40 border border-slate-100 mt-8 relative overflow-hidden">
+      <div class="bg-white rounded-[1.5rem] md:rounded-[2.5rem] p-6 sm:p-12 lg:p-20 shadow-xl shadow-slate-200/40 border border-slate-100 mt-8 relative overflow-hidden">
         <div class="absolute -top-40 -left-40 size-96 bg-bejo-50 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
         
         <div class="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center relative z-10">
@@ -88,7 +88,7 @@ const teamMembers = [
           </div>
           
           <div class="grid grid-cols-1 gap-6">
-            <div class="bg-bejo-50/20 border border-bejo-100/50 rounded-[2rem] p-8 flex gap-6 hover:shadow-xl hover:bg-white transition-all duration-300 group">
+            <div class="bg-bejo-50/20 border border-bejo-100/50 rounded-[1.5rem] md:rounded-[2rem] p-6 md:p-8 flex gap-6 hover:shadow-xl hover:bg-white transition-all duration-300 group">
               <div class="bg-white shadow-sm rounded-2xl size-16 flex items-center justify-center shrink-0 border border-bejo-100 group-hover:bg-bejo-500 group-hover:text-white transition-colors">
                 <Icon icon="lucide:target" class="size-8 text-bejo-600 group-hover:text-white" />
               </div>
@@ -100,7 +100,7 @@ const teamMembers = [
               </div>
             </div>
 
-            <div class="bg-bejo-50/20 border border-bejo-100/50 rounded-[2rem] p-8 flex gap-6 hover:shadow-xl hover:bg-white transition-all duration-300 group">
+            <div class="bg-bejo-50/20 border border-bejo-100/50 rounded-[1.5rem] md:rounded-[2rem] p-6 md:p-8 flex gap-6 hover:shadow-xl hover:bg-white transition-all duration-300 group">
               <div class="bg-white shadow-sm rounded-2xl size-16 flex items-center justify-center shrink-0 border border-bejo-100 group-hover:bg-bejo-500 group-hover:text-white transition-colors">
                 <Icon icon="lucide:rocket" class="size-8 text-bejo-600 group-hover:text-white" />
               </div>
@@ -137,7 +137,7 @@ const teamMembers = [
       </div>
 
       <!-- Tim Kami Section -->
-      <div class="bg-bejo-50/50 rounded-[3rem] p-8 sm:p-16 lg:p-24 border border-bejo-100 relative overflow-hidden">
+      <div class="bg-bejo-50/50 rounded-[2rem] md:rounded-[3rem] p-6 sm:p-16 lg:p-24 border border-bejo-100 relative overflow-hidden">
         <div class="absolute top-0 right-0 w-1/3 h-full bg-bejo-100 blur-[120px] pointer-events-none opacity-50"></div>
         
         <div class="flex flex-col lg:flex-row gap-12 lg:gap-20 items-center">

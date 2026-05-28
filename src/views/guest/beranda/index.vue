@@ -270,7 +270,7 @@
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          <div class="bg-white p-12 rounded-[3.5rem] border border-slate-100 hover:border-bejo-200 shadow-premium hover:shadow-bejo-premium transition-all duration-700 group relative overflow-hidden">
+          <div class="bg-white p-6 md:p-12 rounded-[2rem] md:rounded-[3.5rem] border border-slate-100 hover:border-bejo-200 shadow-premium hover:shadow-bejo-premium transition-all duration-700 group relative overflow-hidden">
             <div class="absolute -right-6 -top-6 size-32 bg-bejo-50 rounded-full group-hover:scale-150 transition-transform duration-700 -z-0"></div>
             <div class="relative z-10">
               <div class="size-20 rounded-3xl bg-bejo-50 text-bejo-600 flex items-center justify-center mb-10 group-hover:bg-bejo-600 group-hover:text-white transition-all shadow-sm">
@@ -280,7 +280,7 @@
               <p class="text-base font-medium text-slate-500 leading-relaxed opacity-80">Tersedia beragam pilihan rumah, ruko, apartemen hingga kavling tanah terbaik.</p>
             </div>
           </div>
-          <div class="bg-white p-12 rounded-[3.5rem] border border-slate-100 hover:border-bejo-200 shadow-premium hover:shadow-bejo-premium transition-all duration-700 group relative overflow-hidden">
+          <div class="bg-white p-6 md:p-12 rounded-[2rem] md:rounded-[3.5rem] border border-slate-100 hover:border-bejo-200 shadow-premium hover:shadow-bejo-premium transition-all duration-700 group relative overflow-hidden">
             <div class="absolute -right-6 -top-6 size-32 bg-bejo-50 rounded-full group-hover:scale-150 transition-transform duration-700 -z-0"></div>
             <div class="relative z-10">
               <div class="size-20 rounded-3xl bg-bejo-50 text-bejo-600 flex items-center justify-center mb-10 group-hover:bg-bejo-600 group-hover:text-white transition-all shadow-sm">
@@ -290,7 +290,7 @@
               <p class="text-base font-medium text-slate-500 leading-relaxed opacity-80">Cari kost atau sewa rumah jangka panjang dengan proses kontrak yang transparan.</p>
             </div>
           </div>
-          <div class="bg-white p-12 rounded-[3.5rem] border border-slate-100 hover:border-bejo-200 shadow-premium hover:shadow-bejo-premium transition-all duration-700 group relative overflow-hidden">
+          <div class="bg-white p-6 md:p-12 rounded-[2rem] md:rounded-[3.5rem] border border-slate-100 hover:border-bejo-200 shadow-premium hover:shadow-bejo-premium transition-all duration-700 group relative overflow-hidden">
             <div class="absolute -right-6 -top-6 size-32 bg-bejo-50 rounded-full group-hover:scale-150 transition-transform duration-700 -z-0"></div>
             <div class="relative z-10">
               <div class="size-20 rounded-3xl bg-bejo-50 text-bejo-600 flex items-center justify-center mb-10 group-hover:bg-bejo-600 group-hover:text-white transition-all shadow-sm">
@@ -300,7 +300,7 @@
               <p class="text-base font-medium text-slate-500 leading-relaxed opacity-80">Plafon pinjaman dan angsuran bulanan yang disesuaikan dengan profil finansial.</p>
             </div>
           </div>
-          <div class="bg-white p-12 rounded-[3.5rem] border border-slate-100 hover:border-bejo-200 shadow-premium hover:shadow-bejo-premium transition-all duration-700 group relative overflow-hidden">
+          <div class="bg-white p-6 md:p-12 rounded-[2rem] md:rounded-[3.5rem] border border-slate-100 hover:border-bejo-200 shadow-premium hover:shadow-bejo-premium transition-all duration-700 group relative overflow-hidden">
             <div class="absolute -right-6 -top-6 size-32 bg-bejo-50 rounded-full group-hover:scale-150 transition-transform duration-700 -z-0"></div>
             <div class="relative z-10">
               <div class="size-20 rounded-3xl bg-bejo-50 text-bejo-600 flex items-center justify-center mb-10 group-hover:bg-bejo-600 group-hover:text-white transition-all shadow-sm">
@@ -332,7 +332,7 @@
             <div class="absolute -top-6 -left-6 size-32 bg-slate-900/5 rounded-full -z-0"></div>
 
             <!-- Floating Property Info (Decoupled Loading) -->
-            <div v-if="randomProduct" class="absolute -bottom-6 -left-6 md:-left-12 w-72 md:w-80 bg-white rounded-[2.5rem] z-20 p-6 flex flex-col gap-4 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.12)] border border-slate-100 transform hover:-translate-y-3 transition-all duration-700">
+            <div v-if="randomProduct" class="absolute -bottom-6 left-4 md:-left-12 w-72 md:w-80 bg-white rounded-[2.5rem] z-20 p-6 flex flex-col gap-4 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.12)] border border-slate-100 transform hover:-translate-y-3 transition-all duration-700">
               <div class="flex items-center gap-5">
                 <!-- Thumbnail with Shimmer -->
                 <div class="size-14 rounded-2xl relative overflow-hidden bg-slate-100 shrink-0 shadow-sm">

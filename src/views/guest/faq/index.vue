@@ -62,7 +62,7 @@ onMounted(() => {
 
       <div class="w-full relative z-10">
         <!-- Hero Banner Section -->
-        <div class="relative overflow-hidden rounded-[3.5rem] bg-white p-12 md:p-16 lg:p-20 shadow-xl shadow-bejo-600/5 border border-bejo-100">
+        <div class="relative overflow-hidden rounded-[2rem] md:rounded-[3.5rem] bg-white p-6 md:p-16 lg:p-20 shadow-xl shadow-bejo-600/5 border border-bejo-100">
           <!-- Dekorasi Background -->
           <div class="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-bejo-50 via-bejo-50/50 to-transparent"></div>
           <div class="absolute -right-20 -top-20 size-96 bg-gradient-to-br from-bejo-100 via-bejo-200 to-bejo-400 rounded-full blur-3xl opacity-40"></div>

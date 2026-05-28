@@ -2,7 +2,7 @@
   <GuestLayout>
     <div class="mb-10 print:hidden space-y-10">
       <!-- Hero Section -->
-      <div class="relative overflow-hidden rounded-[3.5rem] bg-white border border-bejo-100 p-12 md:p-16 lg:p-20 shadow-xl shadow-bejo-600/5">
+      <div class="relative overflow-hidden rounded-[2rem] md:rounded-[3.5rem] bg-white border border-bejo-100 p-6 md:p-16 lg:p-20 shadow-xl shadow-bejo-600/5">
         <!-- Dekorasi Background -->
         <div class="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-bejo-50 via-bejo-50/50 to-transparent"></div>
         <div class="absolute -right-20 -top-20 size-96 bg-gradient-to-br from-bejo-100 via-bejo-200 to-bejo-400 rounded-full blur-3xl opacity-40"></div>
@@ -18,7 +18,7 @@
       </div>
 
       <!-- KPR Calculator Area -->
-      <div class="relative overflow-hidden rounded-[3.5rem] bg-white border border-bejo-100 shadow-2xl shadow-bejo-600/10">
+      <div class="relative overflow-hidden rounded-[2rem] md:rounded-[3.5rem] bg-white border border-bejo-100 shadow-2xl shadow-bejo-600/10">
         <!-- Mesh Gradient Background -->
         <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
           <div class="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-bejo-50 via-bejo-50/30 to-transparent"></div>
@@ -207,7 +207,7 @@
       <!-- END of KPR Calculator Area -->
 
       <!-- Persyaratan Section -->
-      <div class="bg-white border border-bejo-100/50 rounded-[2.5rem] shadow-xl shadow-bejo-600/5 p-6 sm:p-12 mb-10 overflow-hidden relative">
+      <div class="bg-white border border-bejo-100/50 rounded-[1.5rem] md:rounded-[2.5rem] shadow-xl shadow-bejo-600/5 p-6 sm:p-12 mb-10 overflow-hidden relative">
         <!-- Deco -->
         <div class="absolute -top-24 -right-24 size-48 bg-bejo-50 rounded-full blur-2xl"></div>
 
@@ -462,7 +462,7 @@ input[type='range']::-webkit-slider-runnable-track {
   width: 100%;
   height: 8px;
   cursor: pointer;
-  background: #f1f5f9;
+  background: transparent;
   border-radius: 4px;
 }
 </style>
