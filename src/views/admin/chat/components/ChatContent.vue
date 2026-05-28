@@ -258,7 +258,7 @@ watch(openTukarCS, (n) => {
 })
 
 const handleOpenAppointment = () => {
-  appointmentForm.value = { namaLengkap: username.value || '', noTelp: props.phoneNumber, lokasi: '', catatan: '', tanggal: '', waktu: '', properti: '', unitId: '', mediaId: '', mediaUrl: '', Room_Id: props.roomId }
+  appointmentForm.value = { namaLengkap: props.namaDisplay || username.value || '', noTelp: props.phoneNumber, lokasi: '', catatan: '', tanggal: '', waktu: '', waktuSelesai: '', properti: '', unitId: '', mediaId: '', mediaUrl: '', Room_Id: props.roomId }
   appointmentStage.value = 1
   openAppointment.value = true
   fetchProducts()
@@ -626,7 +626,7 @@ const generateBrochure = async (product: any) => {
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(18)
     doc.setTextColor(primaryColor)
-    doc.text(`Rp ${formatPrice(finalJual || oldJual)}`, col3X, pY)
+    doc.text(`Rp ${formatPrice(hasPromoJual ? finalJual : oldJual)}`, col3X, pY)
     
     pY += 5
     
@@ -677,8 +677,7 @@ const generateBrochure = async (product: any) => {
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(18)
     doc.setTextColor(primaryColor)
-    const finalSewaVal = finalSewa || oldSewa
-    const fsStr = `Rp ${formatPrice(finalSewaVal)}`
+    const fsStr = `Rp ${formatPrice(hasPromoSewa ? finalSewa : oldSewa)}`
     doc.text(fsStr, col3X, pY)
     
     const fsWidth = doc.getTextWidth(fsStr)
@@ -740,7 +739,7 @@ const generateBrochure = async (product: any) => {
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(24)
     doc.setTextColor(primaryColor)
-    const finalPStr = `Rp ${formatPrice(finalP || oldP)}`
+    const finalPStr = `Rp ${formatPrice(hasPromo ? finalP : oldP)}`
     doc.text(finalPStr, col3X, pY)
     
     if (isSewa) {
@@ -1731,6 +1730,7 @@ defineExpose({
         :isLoading="isLoadingAppointments"
         @update:formTanggal="(val) => (appointmentForm.tanggal = val)"
         @update:formWaktu="(val) => (appointmentForm.waktu = val)"
+        @update:formWaktuSelesai="(val) => (appointmentForm.waktuSelesai = val)"
         @update:formNamaLengkap="(val) => (appointmentForm.namaLengkap = val)"
         @update:formNoTelp="(val) => (appointmentForm.noTelp = val)"
         @update:formCatatan="(val) => (appointmentForm.catatan = val)"

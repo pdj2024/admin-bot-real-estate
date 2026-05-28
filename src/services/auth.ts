@@ -11,6 +11,16 @@ export const logout = async (isManual: boolean) => {
   localStorage.removeItem('token');
   localStorage.removeItem('refreshToken');
   localStorage.removeItem('user');
+  localStorage.removeItem('user_avatar');
+  localStorage.removeItem('user_phone');
+  localStorage.removeItem('email');
+  localStorage.removeItem('nama_user');
+  localStorage.removeItem('keterangan');
+  localStorage.removeItem('max_janji_per_hari');
+  localStorage.removeItem('status');
+  localStorage.removeItem('tgl_created');
+  localStorage.removeItem('no_id_media');
+  localStorage.removeItem('user_detail');
 
   const currentPath = router.currentRoute.value.fullPath;
   if (isManual) {

@@ -35,7 +35,7 @@
           <button @click="isTypeOpen = !isTypeOpen" class="w-full flex items-center justify-between gap-3 px-4 py-2 border border-bejo-100 rounded-xl bg-white text-sm font-bold hover:bg-bejo-50 hover:border-bejo-200 transition-all text-slate-700">
             <div class="flex items-center gap-2">
               <Icon icon="lucide:home" class="size-4 text-bejo-600" />
-              <span>{{ selectedType }}</span>
+              <span>{{ selectedTypeLocal }}</span>
             </div>
             <Icon icon="lucide:chevron-down" class="size-4 opacity-50" />
           </button>
@@ -44,7 +44,7 @@
             <div v-show="isTypeOpen" class="absolute left-0 sm:right-0 top-full mt-2 z-50 min-w-[180px] max-h-60 overflow-y-auto bg-white border border-slate-200 shadow-xl shadow-slate-200/50 p-2 rounded-2xl custom-scroll">
               <button @click="handleType('Semua Tipe')" class="dropdown-item">Semua Tipe</button>
               <hr class="my-2 border-slate-100" />
-              <button v-for="t in propertyTypes" :key="t" @click="handleType(t)" class="dropdown-item flex items-center justify-between">{{ t }} <Icon v-if="selectedType === t" icon="lucide:check" class="size-3 text-bejo-600" /></button>
+              <button v-for="t in propertyTypes" :key="t" @click="handleType(t)" class="dropdown-item flex items-center justify-between">{{ t }} <Icon v-if="selectedTypeLocal === t" icon="lucide:check" class="size-3 text-bejo-600" /></button>
             </div>
           </Transition>
         </div>
@@ -155,12 +155,12 @@ const sorting = ref<SortingState>([])
 const selectedSort = ref('Terbaru')
 const isTransaksiOpen = ref(false)
 const isTypeOpen = ref(false)
-const selectedType = ref('Semua Tipe')
 
 const props = defineProps<{
   isAdmin: boolean
   searchQuery: string
   transactionType: string
+  selectedType: string
   facilities: {
     kamarTidur: string
     kamarMandi: string
@@ -181,13 +181,20 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'openFilter'): void
   (e: 'update:transactionType', value: string): void
+  (e: 'update:selectedType', value: string): void
 }>()
+
+const selectedTypeLocal = ref(props.selectedType || 'Semua Tipe')
+watch(() => props.selectedType, (newVal) => {
+  selectedTypeLocal.value = newVal || 'Semua Tipe'
+})
 
 const propertyTypes = ['Rumah', 'Tanah', 'Ruko', 'Apartemen', 'Gudang', 'Villa', 'SOHO', 'Pabrik', 'Perkantoran', 'Hotel', 'Rumah Kos', 'Stand', 'Toko', 'Gedung', 'Condotel', 'Lain-lain']
 
 const resetFilters = () => {
   emit('update:transactionType', 'Semua Label')
-  selectedType.value = 'Semua Tipe'
+  selectedTypeLocal.value = 'Semua Tipe'
+  emit('update:selectedType', 'Semua Tipe')
   selectedSort.value = 'Terbaru'
   sorting.value = []
   // Jika filter adalah state internal, reset juga
@@ -284,13 +291,14 @@ const handleTransaksi = (type: string) => {
 }
 
 const handleType = (type: string) => {
-  selectedType.value = type
+  selectedTypeLocal.value = type
+  emit('update:selectedType', type)
   isTypeOpen.value = false
 }
 
 // Reset ke halaman pertama saat filter atau pencarian berubah
 watch(
-  [() => props.searchQuery, () => props.transactionType, selectedType, () => props.facilities, () => props.region, () => props.priceRange],
+  [() => props.searchQuery, () => props.transactionType, selectedTypeLocal, () => props.facilities, () => props.region, () => props.priceRange],
   () => {
     table.setPageIndex(0)
   },
@@ -301,7 +309,7 @@ const filteredProducts = usePropertyFilters(
   products,
   computed(() => props.searchQuery),
   computed(() => props.transactionType),
-  selectedType,
+  selectedTypeLocal,
   computed(() => props.facilities),
   computed(() => props.region),
   computed(() => props.priceRange),
@@ -353,7 +361,7 @@ const buildParams = () => {
 
   // Dynamic Filters from Props/State
   if (props.searchQuery) p.append('nama_produk', props.searchQuery)
-  if (selectedType.value && selectedType.value !== 'Semua Tipe') p.append('tipe', selectedType.value)
+  if (selectedTypeLocal.value && selectedTypeLocal.value !== 'Semua Tipe') p.append('tipe', selectedTypeLocal.value)
   
   // Transaction Type Mapping
   if (props.transactionType === 'Jual Saja') {
@@ -393,7 +401,7 @@ const fetchData = async (backgroundRefetch = false) => {
 // Watch for filter changes to refetch data
 let fetchTimeout: any = null
 watch(
-  [() => props.searchQuery, () => props.transactionType, selectedType, () => props.region.city, () => props.priceRange],
+  [() => props.searchQuery, () => props.transactionType, selectedTypeLocal, () => props.region.city, () => props.priceRange],
   () => {
     if (fetchTimeout) clearTimeout(fetchTimeout)
     fetchTimeout = setTimeout(() => {

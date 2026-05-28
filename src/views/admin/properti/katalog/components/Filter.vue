@@ -61,7 +61,7 @@
               <div id="content-transaksi" class="hs-accordion-content w-full overflow-hidden transition-[height] duration-300">
                 <div class="grid grid-cols-2 gap-2" :class="compact ? 'pt-2' : 'pt-4'">
                   <button 
-                    v-for="type in ['Semua', 'Jual', 'Sewa', 'Jual & Sewa']" 
+                    v-for="type in ['Semua', 'Jual', 'Sewa']" 
                     :key="type"
                     @click="$emit('update:transactionType', type)"
                     class="rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border text-center"

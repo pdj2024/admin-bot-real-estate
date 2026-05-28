@@ -58,10 +58,53 @@ const handleLogin = async (isQuick = false) => {
         role: data.Role_User
       }))
 
+      // Fetch admin details
+      try {
+        const detailRes = await api.get(`/api/admin/getAll?no_id=${data.No_Id}&orderby=Tgl_Created&orderdir=desc`)
+        if (detailRes.data && detailRes.data.StatusCode === 200 && detailRes.data.Data && detailRes.data.Data.length > 0) {
+          const adminDetail = detailRes.data.Data[0]
+          localStorage.setItem('email', adminDetail.Email)
+          localStorage.setItem('nama_user', adminDetail.Nama_User)
+          localStorage.setItem('nama_display', adminDetail.Nama_User || data.Nama_Display)
+          localStorage.setItem('user_phone', adminDetail.Telepon || '')
+          localStorage.setItem('role_user', adminDetail.Role_User)
+          localStorage.setItem('keterangan', adminDetail.Keterangan || '')
+          localStorage.setItem('max_janji_per_hari', String(adminDetail.Max_Janji_Per_Hari || 0))
+          localStorage.setItem('status', adminDetail.Status)
+          localStorage.setItem('tgl_created', adminDetail.Tgl_Created)
+          localStorage.setItem('no_id_media', adminDetail.No_Id_Media || '')
+
+          let avatarUrl = adminDetail.Id_Media || ''
+          const mediaId = adminDetail.No_Id_Media
+
+          if (avatarUrl && mediaId) {
+            try {
+              const checkRes = await fetch(avatarUrl, { method: 'HEAD' })
+              if (!checkRes.ok) {
+                const refreshRes = await api.post('/api/mediacloud/read-url-batch', {
+                  ids: [mediaId]
+                })
+                if (refreshRes.data && refreshRes.data.success && refreshRes.data.success[mediaId]) {
+                  avatarUrl = refreshRes.data.success[mediaId].Url
+                  adminDetail.Id_Media = avatarUrl
+                }
+              }
+            } catch (err) {
+              console.error('Gagal memverifikasi atau memperbarui URL avatar:', err)
+            }
+          }
+
+          localStorage.setItem('user_avatar', avatarUrl)
+          localStorage.setItem('user_detail', JSON.stringify(adminDetail))
+        }
+      } catch (err) {
+        console.error('Failed to fetch admin details:', err)
+      }
+
       // Quick Login / Remember Me logic
       if (rememberMe.value || isQuick) {
         localStorage.setItem('quick_login_data', JSON.stringify({
-          name: data.Nama_Display,
+          name: localStorage.getItem('nama_display') || data.Nama_Display,
           email: loginPayload.Email,
           password: loginPayload.Password,
           avatar: localStorage.getItem('user_avatar'),
@@ -71,7 +114,7 @@ const handleLogin = async (isQuick = false) => {
         localStorage.removeItem('quick_login_data')
       }
 
-      success(`Halo ${data.Nama_Display}! Selamat datang kembali`)
+      success(`Halo ${localStorage.getItem('nama_display') || data.Nama_Display}! Selamat datang kembali`)
       const redirectPath = (route.query.redirect as string) || '/dashboard'
       router.push(redirectPath)
     } else {

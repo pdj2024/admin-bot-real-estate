@@ -12,24 +12,27 @@ const stats = computed(() => {
   const todayCount = props.appointments.filter(a => a.Tanggal_Janji.split('T')[0] === today).length
   const pendingCount = props.appointments.filter(a => a.Status_Progress === 'baru').length
   const totalCount = props.appointments.length
+  const cancelledCount = props.appointments.filter(a => a.Status_Progress === 'batal').length
 
   return [
     { label: 'Janji Temu Hari Ini', value: todayCount.toString().padStart(2, '0'), icon: 'lucide:calendar-check', color: 'bejo' },
     { label: 'Menunggu Konfirmasi', value: pendingCount.toString().padStart(2, '0'), icon: 'lucide:clock', color: 'bejo' },
+    { label: 'Janji Temu Batal', value: cancelledCount.toString().padStart(2, '0'), icon: 'lucide:ban', color: 'bejo' },
     { label: 'Total Janji Temu', value: totalCount.toString().padStart(2, '0'), icon: 'lucide:users', color: 'bejo' },
   ]
 })
 
 const getIconBg = (color: string) => {
   const map: Record<string, string> = {
-    bejo: 'bg-bejo-500'
+    bejo: 'bg-bejo-500',
+    red: 'bg-red-500'
   }
   return map[color] || map.bejo
 }
 </script>
 
 <template>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
     <div 
       v-for="(item, idx) in stats" 
       :key="idx"

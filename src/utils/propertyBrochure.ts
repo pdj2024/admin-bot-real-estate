@@ -56,6 +56,97 @@ const formatPriceShort = (price: number) => {
   }
   return price.toString()
 }
+const drawPriceBlock = (
+  doc: jsPDF,
+  label: string,
+  harga1: number,
+  harga2: number,
+  isSewa: boolean,
+  satuanSewa: string,
+  showPromo: boolean,
+  startX: number,
+  startY: number,
+  isSingle: boolean
+): number => {
+  let y = startY
+
+  // Label Harga
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(isSingle ? 9.5 : 8)
+  doc.setTextColor(71, 85, 105) // slate-600 (softer color)
+  doc.text(label.toUpperCase(), startX, y)
+  y += 5.5
+
+  const hasDiscount = harga2 > 0 && harga1 > 0 && harga2 !== harga1
+  const hasPromo = showPromo && hasDiscount
+
+  let displayPrice = harga1
+  if (hasPromo) {
+    displayPrice = harga2
+  } else {
+    if (!showPromo) {
+      if (harga2 !== 0 && harga2 !== null && harga2 > 0) {
+        displayPrice = harga2
+      } else {
+        displayPrice = harga1
+      }
+    } else {
+      displayPrice = harga1
+    }
+  }
+
+  if (hasPromo) {
+    // 1. Old Price (Strikethrough)
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(9.5)
+    doc.setTextColor(156, 163, 175) // #9ca3af
+    const opStr = `Rp ${formatPriceShort(harga1)}`
+    doc.text(opStr, startX, y)
+
+    const tw = doc.getTextWidth(opStr)
+
+    // Soft red strikethrough line (thickness 0.3)
+    doc.setDrawColor(248, 113, 113) // #f87171
+    doc.setLineWidth(0.3)
+    doc.line(startX, y - 1.2, startX + tw, y - 1.2)
+
+    // 2. Soft Promo Badge (Light red background, dark red text)
+    const badgeW = 13
+    const badgeH = 4.2
+    const badgeX = startX + tw + 3
+    const badgeY = y - badgeH + 0.6
+
+    doc.setFillColor(254, 226, 226) // #fee2e2
+    doc.roundedRect(badgeX, badgeY, badgeW, badgeH, 0.8, 0.8, 'F')
+
+    doc.setTextColor(220, 38, 38) // #dc2626
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(5.5)
+    doc.text('PROMO', badgeX + badgeW / 2, badgeY + 3.0, { align: 'center' })
+
+    y += 6.5
+  }
+
+  // 3. Final Price
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(isSingle ? 22 : 17)
+  doc.setTextColor(235, 112, 31) // #EB701F (primaryColor)
+  
+  const priceStr = `Rp ${formatPriceShort(displayPrice)}`
+  doc.text(priceStr, startX, y)
+
+  if (isSewa) {
+    const pw = doc.getTextWidth(priceStr)
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(7.5)
+    doc.setTextColor(71, 85, 105) // slate-600
+    doc.text(satuanSewa || '/ Tahun', startX + pw + 2.5, y)
+  }
+
+  // Update Y coordinate after drawing this block
+  y += isSingle ? 11 : 8.5
+  return y
+}
 
 export const downloadBrochure = async (product: any, businessSettings: any, appSettings: any) => {
   try {
@@ -322,186 +413,45 @@ export const downloadBrochure = async (product: any, businessSettings: any, appS
     doc.setFontSize(9.5)
     doc.text('PENAWARAN TERBATAS', 247.5, 36, { align: 'center' })
 
-    let pY = 48
+    const showPromoFlag = !!(appSettings.View_Nilai_Diskon ?? appSettings.viewDiscount)
     const hasJual = product.Harga_Jual1 > 0 || product.Harga_Jual2 > 0
     const hasSewa = product.Harga_Sewa1 > 0 || product.Harga_Sewa2 > 0
     const isBoth = hasJual && hasSewa
 
+    let pY = 48
+
     if (isBoth) {
-      // --- DUAL PRICE LAYOUT ---
-      // 1. HARGA JUAL
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(8)
-      doc.setTextColor(slateColor)
-      doc.text('HARGA JUAL:', col3X, pY)
-      
-      pY += 3.5
-      const oldJual = product.Harga_Jual1
-      const finalJual = product.Harga_Jual2
-      const hasPromoJual = appSettings.viewDiscount && oldJual > 0 && finalJual && finalJual > 0 && oldJual !== finalJual
-      
-      if (hasPromoJual) {
-        doc.setFont('helvetica', 'bold')
-        doc.setFontSize(10)
-        doc.setTextColor('#9ca3af') // Gray-400
-        const opStr = `Rp ${formatPriceShort(oldJual)}`
-        doc.text(opStr, col3X, pY)
-        
-        // Strikethrough
-        const tw = doc.getTextWidth(opStr)
-        doc.setDrawColor('#ef4444')
-        doc.setLineWidth(0.4)
-        doc.line(col3X - 0.5, pY - 1, col3X + tw + 0.5, pY - 1)
-        
-        // Promo Badge
-        doc.setFillColor('#ef4444')
-        doc.roundedRect(col3X + tw + 2, pY - 3, 11, 4, 0.8, 0.8, 'F')
-        doc.setTextColor(255, 255, 255)
-        doc.setFontSize(6)
-        doc.text('PROMO', col3X + tw + 7.5, pY - 0.2, { align: 'center' })
-        
-        pY += 6.5
-      } else {
-        pY += 1.5
-      }
-      
-      // Final Price Jual
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(18)
-      doc.setTextColor(primaryColor)
-      doc.text(`Rp ${formatPriceShort(finalJual || oldJual)}`, col3X, pY)
-      
-      pY += 5
-      
-      // Divider 1
-      doc.setDrawColor('#e2e8f0')
+      // ── DUAL: Jual + Sewa ────────────────────────────────────────────────
+      pY = drawPriceBlock(doc, 'HARGA JUAL:', product.Harga_Jual1, product.Harga_Jual2, false, '', showPromoFlag, col3X, pY, false)
+
+      // Divider (margin-top: 2mm, margin-bottom: 2mm)
+      doc.setDrawColor(226, 232, 240)
+      doc.setLineWidth(0.5)
+      doc.line(col3X, pY - 2, col3X + 65, pY - 2)
+      pY += 3
+
+      pY = drawPriceBlock(doc, 'HARGA SEWA:', product.Harga_Sewa1, product.Harga_Sewa2, true, product.Satuan_Minimal_Sewa ? `/ ${product.Satuan_Minimal_Sewa}` : '/ Tahun', showPromoFlag, col3X, pY, false)
+
+      // Divider (margin-top: 4mm)
+      doc.setDrawColor(226, 232, 240)
       doc.setLineWidth(0.5)
       doc.line(col3X, pY, col3X + 65, pY)
-      
-      pY += 5
-      
-      // 2. HARGA SEWA
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(8)
-      doc.setTextColor(slateColor)
-      doc.text('HARGA SEWA:', col3X, pY)
-      
-      pY += 3.5
-      const oldSewa = product.Harga_Sewa1
-      const finalSewa = product.Harga_Sewa2
-      const hasPromoSewa = appSettings.viewDiscount && oldSewa > 0 && finalSewa && finalSewa > 0 && oldSewa !== finalSewa
-      
-      if (hasPromoSewa) {
-        doc.setFont('helvetica', 'bold')
-        doc.setFontSize(10)
-        doc.setTextColor('#9ca3af') // Gray-400
-        const opStr = `Rp ${formatPriceShort(oldSewa)}`
-        doc.text(opStr, col3X, pY)
-        
-        // Strikethrough
-        const tw = doc.getTextWidth(opStr)
-        doc.setDrawColor('#ef4444')
-        doc.setLineWidth(0.4)
-        doc.line(col3X - 0.5, pY - 1, col3X + tw + 0.5, pY - 1)
-        
-        // Promo Badge
-        doc.setFillColor('#ef4444')
-        doc.roundedRect(col3X + tw + 2, pY - 3, 11, 4, 0.8, 0.8, 'F')
-        doc.setTextColor(255, 255, 255)
-        doc.setFontSize(6)
-        doc.text('PROMO', col3X + tw + 7.5, pY - 0.2, { align: 'center' })
-        
-        pY += 6.5
-      } else {
-        pY += 1.5
-      }
-      
-      // Final Price Sewa
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(18)
-      doc.setTextColor(primaryColor)
-      const finalSewaVal = finalSewa || oldSewa
-      const fsStr = `Rp ${formatPriceShort(finalSewaVal)}`
-      doc.text(fsStr, col3X, pY)
-      
-      const fsWidth = doc.getTextWidth(fsStr)
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(8)
-      doc.setTextColor(slateColor)
-      doc.text(product.Satuan_Minimal_Sewa ? `/ ${product.Satuan_Minimal_Sewa}` : '/ Tahun', col3X + fsWidth + 2, pY)
-      
-      pY += 5
-      
-      // Divider 2
-      doc.setDrawColor('#e2e8f0')
-      doc.setLineWidth(0.5)
-      doc.line(col3X, pY, col3X + 65, pY)
-      
-      pY += 7
+      pY += 8
     } else {
-      // --- SINGLE PRICE LAYOUT ---
+      // ── SINGLE: Jual only or Sewa only ───────────────────────────────────
       const label = 'DENGAN HANYA'
       const oldP = hasJual ? product.Harga_Jual1 : product.Harga_Sewa1
       const finalP = hasJual ? product.Harga_Jual2 : product.Harga_Sewa2
-      const isSewa = hasSewa
-      
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(9.5)
-      doc.setTextColor(slateColor)
-      doc.text(label, col3X, pY)
-      
-      pY += 4.5
-      
-      const hasPromo = appSettings.viewDiscount && oldP > 0 && finalP && finalP > 0 && oldP !== finalP
-      
-      if (hasPromo) {
-        doc.setFont('helvetica', 'bold')
-        doc.setFontSize(10)
-        doc.setTextColor('#9ca3af') // Gray-400
-        const opStr = `Rp ${formatPriceShort(oldP)}`
-        doc.text(opStr, col3X, pY)
-        
-        // Strikethrough
-        const tw = doc.getTextWidth(opStr)
-        doc.setDrawColor('#ef4444')
-        doc.setLineWidth(0.4)
-        doc.line(col3X - 0.5, pY - 1, col3X + tw + 0.5, pY - 1)
-        
-        // Promo Badge
-        doc.setFillColor('#ef4444')
-        doc.roundedRect(col3X + tw + 2, pY - 3, 11, 4, 0.8, 0.8, 'F')
-        doc.setTextColor(255, 255, 255)
-        doc.setFontSize(6)
-        doc.text('PROMO', col3X + tw + 7.5, pY - 0.2, { align: 'center' })
-        
-        pY += 6.5
-      } else {
-        pY += 1.5
-      }
-      
-      // Final Price
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(24)
-      doc.setTextColor(primaryColor)
-      const finalPStr = `Rp ${formatPriceShort(finalP || oldP)}`
-      doc.text(finalPStr, col3X, pY)
-      
-      if (isSewa) {
-        const fsWidth = doc.getTextWidth(finalPStr)
-        doc.setFont('helvetica', 'normal')
-        doc.setFontSize(8)
-        doc.setTextColor(slateColor)
-        doc.text(product.Satuan_Minimal_Sewa ? `/ ${product.Satuan_Minimal_Sewa}` : '/ Tahun', col3X + fsWidth + 2, pY - 1)
-      }
-      
-      pY += 18
-      
-      // Divider
-      doc.setDrawColor('#e2e8f0')
+      const isSewaType = hasSewa
+
+      pY = drawPriceBlock(doc, label, oldP, finalP, isSewaType, product.Satuan_Minimal_Sewa ? `/ ${product.Satuan_Minimal_Sewa}` : '/ Tahun', showPromoFlag, col3X, pY, true)
+
+      // Divider (margin-top: 15mm)
+      pY += 6
+      doc.setDrawColor(226, 232, 240)
       doc.setLineWidth(0.5)
       doc.line(col3X, pY, col3X + 65, pY)
-      
-      pY += 7
+      pY += 8
     }
 
     doc.setTextColor('#64748b')

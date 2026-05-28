@@ -35,7 +35,7 @@ const props = defineProps<{
   resolvedImageUrl?: string
 }>()
 
-const emit = defineEmits(['imageLoaded', 'regenerateBrochure'])
+const emit = defineEmits(['imageLoaded', 'regenerateBrochure', 'previewImage'])
 
 const isMe = computed(() => {
   const role = (props.chat.Tipe_User || '').toLowerCase()
@@ -203,32 +203,10 @@ const downloadPDF = async (chat: any) => {
 
 // GCS URL individual resolution is removed in favor of batch pre-resolving in ChatHistory.vue
 
-const showImagePreview = ref(false)
 </script>
 
 <template>
   <div class="flex flex-col w-full animate-fade-in-up">
-    <!-- Image Preview Modal -->
-    <Teleport to="body">
-      <Transition
-        enter-active-class="transition duration-300 ease-out"
-        enter-from-class="opacity-0 scale-95"
-        enter-to-class="opacity-100 scale-100"
-        leave-active-class="transition duration-200 ease-in"
-        leave-from-class="opacity-100 scale-100"
-        leave-to-class="opacity-0 scale-95"
-      >
-        <div v-if="showImagePreview" class="fixed inset-0 z-[1000] flex items-center justify-center p-4 md:p-10" @click="showImagePreview = false">
-          <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
-          <div class="relative max-w-full max-h-full overflow-hidden rounded-2xl shadow-2xl animate-zoom-in" @click.stop>
-            <button @click="showImagePreview = false" class="absolute top-4 right-4 size-10 rounded-full bg-black/20 hover:bg-black/40 text-white backdrop-blur-md flex items-center justify-center transition-all z-10">
-              <Icon icon="lucide:x" class="size-6" />
-            </button>
-            <img :src="imageSource" class="max-w-full max-h-[90vh] object-contain shadow-2xl" />
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
     <div v-if="isNewDate" class="w-full my-5 flex items-center justify-center sticky top-2 z-10">
       <span class="divider-tanggal px-4 py-1.5 bg-white/70 backdrop-blur-md border border-white/50 rounded-full text-slate-500 text-[10px] font-extrabold shadow-sm uppercase tracking-widest transition-colors">
         {{ getDateChat(chat.Sent_At) }}
@@ -282,7 +260,7 @@ const showImagePreview = ref(false)
                 :src="imageSource"
                 :loading="isLocalImage ? 'eager' : 'lazy'"
                 @load="imgLoaded = true; $emit('imageLoaded')"
-                @click="showImagePreview = true"
+                @click="$emit('previewImage', imageSource)"
                 class="w-full h-auto object-cover max-h-72 hover:scale-105 transition-transform duration-500 cursor-pointer"
                 :style="!isLocalImage && !imgLoaded ? 'opacity: 0' : ''"
               />

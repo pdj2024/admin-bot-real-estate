@@ -1,26 +1,74 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { jsPDF } from 'jspdf'
 import { Icon } from '@iconify/vue'
-import Swal from 'sweetalert2'
 import { confirm, success, fail } from '@/utils/sweet-alert'
-import FullCalendar from '@fullcalendar/vue3'
-import dayGridPlugin from '@fullcalendar/daygrid'
-import timeGridPlugin from '@fullcalendar/timegrid'
-import interactionPlugin from '@fullcalendar/interaction'
-import idLocale from '@fullcalendar/core/locales/id'
-import type { CalendarOptions } from '@fullcalendar/core'
 import api from '@/services/axios'
 
 import { useSettings } from '@/stores/settings'
 
-const props = defineProps<{ openAppointment: boolean; appointment: any }>()
+const props = defineProps<{ openAppointment: boolean; appointment: any; appointments: any[] }>()
 const emit = defineEmits(['close', 'refresh', 'openChat'])
 
 const settingsStore = useSettings()
 const productData = ref<any>(null)
 const isLoadingProduct = ref(false)
 const isSendingBrochure = ref(false)
+const isCancelling = ref(false)
+const cancelReason = ref('')
+
+const getTimelineChain = (current: any) => {
+  if (!current || !props.appointments) return []
+  const chain: any[] = []
+  let item = current
+  const visited = new Set()
+  while (item) {
+    if (visited.has(item.No_Id)) break
+    visited.add(item.No_Id)
+    chain.unshift(item)
+    if (!item.Id_Janji_Lama) break
+    const parent = props.appointments.find((a) => a.No_Id === item.Id_Janji_Lama)
+    if (!parent) break
+    item = parent
+  }
+  return chain
+}
+
+const timelineChain = computed(() => getTimelineChain(props.appointment))
+const showTimelineDropdown = ref(false)
+const triggerRect = ref<DOMRect | null>(null)
+const toggleTimelineDropdown = (event: MouseEvent) => {
+  showTimelineDropdown.value = !showTimelineDropdown.value
+  if (showTimelineDropdown.value && event.currentTarget) {
+    triggerRect.value = (event.currentTarget as HTMLElement).getBoundingClientRect()
+  } else {
+    triggerRect.value = null
+  }
+}
+
+const headerBgClass = computed(() => {
+  const status = props.appointment?.Status_Progress
+  if (status === 'batal') return 'bg-red-500'
+  if (status === 'selesai') return 'bg-emerald-700' // Dark Green (emerald-700)
+  if (status === 'proses') return 'bg-amber-800' // Brown (amber-800)
+  if (status === 'dikonfirmasi') return 'bg-bejo-500' // Orange Bejo (bejo-500)
+  return 'bg-blue-500' // 'baru' / default
+})
+
+const statusBadgeClass = computed(() => {
+  const status = props.appointment?.Status_Progress
+  if (status === 'batal') return 'text-red-600'
+  if (status === 'selesai') return 'text-emerald-800' // Dark Green (emerald-800)
+  if (status === 'proses') return 'text-amber-900' // Brown (amber-900)
+  if (status === 'dikonfirmasi') return 'text-bejo-600' // Orange Bejo (bejo-600)
+  return 'text-blue-600'
+})
+
+const getStatusLabel = (status: string) => {
+  if (status === 'baru') return 'pengajuan'
+  if (status === 'selesai') return 'selesai'
+  return status
+}
 
 const getBase64ImageFromUrl = async (imageUrl: string, maxWidth = 1024, format = 'image/jpeg'): Promise<string | null> => {
   return new Promise((resolve) => {
@@ -138,7 +186,7 @@ const sendBrochure = async () => {
     // --- COLUMN 1 ---
     doc.setFillColor(primaryColor)
     doc.roundedRect(-10, -10, 50, 50, 10, 10, 'F')
-    
+
     // Logo container
     doc.setFillColor(255, 255, 255)
     doc.roundedRect(3, 3, 29, 29, 4, 4, 'F')
@@ -240,18 +288,18 @@ const sendBrochure = async () => {
       doc.setDrawColor(primaryColor)
       doc.setLineWidth(0.5)
       doc.circle(col1X + 4, aY - 1.5, 2.5, 'S')
-      
+
       // Checkmark: path starts relative to box
       doc.line(col1X + 3, aY - 1.5, col1X + 3.8, aY - 0.75)
       doc.line(col1X + 3.8, aY - 0.75, col1X + 5, aY - 2.25)
-      
+
       const pLines = doc.splitTextToSize(p, 72)
       doc.text(pLines, col1X + 10, aY)
       aY += pLines.length * 3.5 + 3.5 // margin-bottom: 3.5mm in HTML
     })
 
     const imgY = Math.max(135, aY)
-    
+
     // Outer white container with orange border
     doc.setFillColor(255, 255, 255)
     doc.setDrawColor(primaryColor)
@@ -262,7 +310,7 @@ const sendBrochure = async () => {
       try {
         // Image is inset by 2.5mm inside the 80x50 border
         doc.addImage(images[0] as string, 'JPEG', col1X + 2.5, imgY + 2.5, 75, 45, undefined, 'FAST')
-        
+
         // Mask image sharp corners to give a border-radius: 2mm effect
         doc.setDrawColor(255, 255, 255)
         doc.setLineWidth(3) // 3mm border width to overlap edges
@@ -292,10 +340,10 @@ const sendBrochure = async () => {
       const xCircle = isRight ? 150 : 112
       const xText = isRight ? 154 : 116
       const y = 135 + Math.floor(index / 2) * 10
-      
+
       doc.setFillColor(darkOrange)
       doc.circle(xCircle, y - 1.2, 1, 'F') // 1mm radius dot
-      
+
       doc.setFont('helvetica', 'normal')
       doc.setFontSize(9)
       doc.setTextColor(slateColor)
@@ -336,109 +384,108 @@ const sendBrochure = async () => {
       doc.setFontSize(8)
       doc.setTextColor(slateColor)
       doc.text('HARGA JUAL:', col3X, pY)
-      
+
       pY += 3.5
       const oldJual = productData.value.Harga_Jual1
       const finalJual = productData.value.Harga_Jual2
       const hasPromoJual = settingsStore.app.viewDiscount && oldJual > 0 && finalJual && finalJual > 0 && oldJual !== finalJual
-      
+
       if (hasPromoJual) {
         doc.setFont('helvetica', 'bold')
         doc.setFontSize(10)
         doc.setTextColor('#9ca3af') // Gray-400
         const opStr = `Rp ${formatPrice(oldJual)}`
         doc.text(opStr, col3X, pY)
-        
+
         // Strikethrough
         const tw = doc.getTextWidth(opStr)
         doc.setDrawColor('#ef4444')
         doc.setLineWidth(0.4)
         doc.line(col3X - 0.5, pY - 1, col3X + tw + 0.5, pY - 1)
-        
+
         // Promo Badge
         doc.setFillColor('#ef4444')
         doc.roundedRect(col3X + tw + 2, pY - 3, 11, 4, 0.8, 0.8, 'F')
         doc.setTextColor(255, 255, 255)
         doc.setFontSize(6)
         doc.text('PROMO', col3X + tw + 7.5, pY - 0.2, { align: 'center' })
-        
+
         pY += 6.5
       } else {
         pY += 1.5
       }
-      
+
       // Final Price Jual
       doc.setFont('helvetica', 'bold')
       doc.setFontSize(18)
       doc.setTextColor(primaryColor)
-      doc.text(`Rp ${formatPrice(finalJual || oldJual)}`, col3X, pY)
-      
+      doc.text(`Rp ${formatPrice(hasPromoJual ? finalJual : oldJual)}`, col3X, pY)
+
       pY += 5
-      
+
       // Divider 1
       doc.setDrawColor('#e2e8f0')
       doc.setLineWidth(0.5)
       doc.line(col3X, pY, col3X + 65, pY)
-      
+
       pY += 5
-      
+
       // 2. HARGA SEWA
       doc.setFont('helvetica', 'normal')
       doc.setFontSize(8)
       doc.setTextColor(slateColor)
       doc.text('HARGA SEWA:', col3X, pY)
-      
+
       pY += 3.5
       const oldSewa = productData.value.Harga_Sewa1
       const finalSewa = productData.value.Harga_Sewa2
       const hasPromoSewa = settingsStore.app.viewDiscount && oldSewa > 0 && finalSewa && finalSewa > 0 && oldSewa !== finalSewa
-      
+
       if (hasPromoSewa) {
         doc.setFont('helvetica', 'bold')
         doc.setFontSize(10)
         doc.setTextColor('#9ca3af') // Gray-400
         const opStr = `Rp ${formatPrice(oldSewa)}`
         doc.text(opStr, col3X, pY)
-        
+
         // Strikethrough
         const tw = doc.getTextWidth(opStr)
         doc.setDrawColor('#ef4444')
         doc.setLineWidth(0.4)
         doc.line(col3X - 0.5, pY - 1, col3X + tw + 0.5, pY - 1)
-        
+
         // Promo Badge
         doc.setFillColor('#ef4444')
         doc.roundedRect(col3X + tw + 2, pY - 3, 11, 4, 0.8, 0.8, 'F')
         doc.setTextColor(255, 255, 255)
         doc.setFontSize(6)
         doc.text('PROMO', col3X + tw + 7.5, pY - 0.2, { align: 'center' })
-        
+
         pY += 6.5
       } else {
         pY += 1.5
       }
-      
+
       // Final Price Sewa
       doc.setFont('helvetica', 'bold')
       doc.setFontSize(18)
       doc.setTextColor(primaryColor)
-      const finalSewaVal = finalSewa || oldSewa
-      const fsStr = `Rp ${formatPrice(finalSewaVal)}`
+      const fsStr = `Rp ${formatPrice(hasPromoSewa ? finalSewa : oldSewa)}`
       doc.text(fsStr, col3X, pY)
-      
+
       const fsWidth = doc.getTextWidth(fsStr)
       doc.setFont('helvetica', 'normal')
       doc.setFontSize(8)
       doc.setTextColor(slateColor)
       doc.text(productData.value.Satuan_Minimal_Sewa ? `/ ${productData.value.Satuan_Minimal_Sewa}` : '/ Tahun', col3X + fsWidth + 2, pY)
-      
+
       pY += 5
-      
+
       // Divider 2
       doc.setDrawColor('#e2e8f0')
       doc.setLineWidth(0.5)
       doc.line(col3X, pY, col3X + 65, pY)
-      
+
       pY += 7
     } else {
       // --- SINGLE PRICE LAYOUT ---
@@ -446,48 +493,48 @@ const sendBrochure = async () => {
       const oldP = hasJual ? productData.value.Harga_Jual1 : productData.value.Harga_Sewa1
       const finalP = hasJual ? productData.value.Harga_Jual2 : productData.value.Harga_Sewa2
       const isSewa = hasSewa
-      
+
       doc.setFont('helvetica', 'normal')
       doc.setFontSize(9.5)
       doc.setTextColor(slateColor)
       doc.text(label, col3X, pY)
-      
+
       pY += 4.5
-      
+
       const hasPromo = settingsStore.app.viewDiscount && oldP > 0 && finalP && finalP > 0 && oldP !== finalP
-      
+
       if (hasPromo) {
         doc.setFont('helvetica', 'bold')
         doc.setFontSize(10)
         doc.setTextColor('#9ca3af') // Gray-400
         const opStr = `Rp ${formatPrice(oldP)}`
         doc.text(opStr, col3X, pY)
-        
+
         // Strikethrough
         const tw = doc.getTextWidth(opStr)
         doc.setDrawColor('#ef4444')
         doc.setLineWidth(0.4)
         doc.line(col3X - 0.5, pY - 1, col3X + tw + 0.5, pY - 1)
-        
+
         // Promo Badge
         doc.setFillColor('#ef4444')
         doc.roundedRect(col3X + tw + 2, pY - 3, 11, 4, 0.8, 0.8, 'F')
         doc.setTextColor(255, 255, 255)
         doc.setFontSize(6)
         doc.text('PROMO', col3X + tw + 7.5, pY - 0.2, { align: 'center' })
-        
+
         pY += 6.5
       } else {
         pY += 1.5
       }
-      
+
       // Final Price
       doc.setFont('helvetica', 'bold')
       doc.setFontSize(24)
       doc.setTextColor(primaryColor)
-      const finalPStr = `Rp ${formatPrice(finalP || oldP)}`
+      const finalPStr = `Rp ${formatPrice(hasPromo ? finalP : oldP)}`
       doc.text(finalPStr, col3X, pY)
-      
+
       if (isSewa) {
         const fsWidth = doc.getTextWidth(finalPStr)
         doc.setFont('helvetica', 'normal')
@@ -495,14 +542,14 @@ const sendBrochure = async () => {
         doc.setTextColor(slateColor)
         doc.text(productData.value.Satuan_Minimal_Sewa ? `/ ${productData.value.Satuan_Minimal_Sewa}` : '/ Tahun', col3X + fsWidth + 2, pY - 1)
       }
-      
+
       pY += 18
-      
+
       // Divider
       doc.setDrawColor('#e2e8f0')
       doc.setLineWidth(0.5)
       doc.line(col3X, pY, col3X + 65, pY)
-      
+
       pY += 7
     }
 
@@ -621,6 +668,8 @@ const fetchProductDetails = async () => {
 watch(
   () => props.appointment?.No_Id,
   async () => {
+    isCancelling.value = false
+    cancelReason.value = ''
     await settingsStore.init()
     fetchProductDetails()
   },
@@ -648,22 +697,10 @@ const formatPrice = (price: number) => {
 }
 
 const openReschedule = ref(false)
-const openRescheduleForm = ref(false)
 const selectedDate = ref('')
 const startTime = ref('')
+const endTime = ref('')
 const rescheduleReason = ref('Reschedule by Admin')
-
-const calendarOptions = computed<CalendarOptions>(() => ({
-  plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
-  initialView: 'dayGridMonth',
-  locale: idLocale,
-  height: 'auto',
-  selectable: true,
-  dateClick: (info) => {
-    selectedDate.value = info.dateStr
-    openRescheduleForm.value = true
-  }
-}))
 
 const saveReschedule = async () => {
   try {
@@ -672,7 +709,7 @@ const saveReschedule = async () => {
       {
         Tanggal_Janji: selectedDate.value,
         Waktu_Janji: startTime.value,
-        Waktu_Selesai: null,
+        Waktu_Selesai: endTime.value || null,
         Alasan_Batal: rescheduleReason.value
       },
       {
@@ -680,7 +717,6 @@ const saveReschedule = async () => {
       }
     )
     success('Jadwal berhasil diperbarui')
-    openRescheduleForm.value = false
     openReschedule.value = false
     rescheduleReason.value = 'Reschedule by Admin'
     emit('refresh')
@@ -694,9 +730,18 @@ const showMoreActions = ref(false)
 const handleUpdateStatus = async (status: string) => {
   try {
     if (status === 'dikonfirmasi') {
-      await api.put(`/api/janjiTemu/confirm?no_id=${props.appointment.No_Id}`)
+      const adminId = localStorage.getItem('no_id') || ''
+      await api.put(`/api/janjiTemu/confirm?no_id=${props.appointment.No_Id}`, { Id_Admin: adminId })
     } else {
-      await api.put(`/api/janjiTemu/update-status?no_id=${props.appointment.No_Id}&status_progress=${status}`)
+      const payload = {
+        ...props.appointment,
+        Status_Progress: status,
+        Tanggal_Janji: null,
+        Waktu_Janji: null,
+        Waktu_Mulai: null,
+        Waktu_Selesai: null
+      }
+      await api.put(`/api/janjiTemu/update?no_id=${props.appointment.No_Id}`, payload)
     }
     success(`Status berhasil diperbarui menjadi ${status}`)
     emit('refresh')
@@ -707,34 +752,32 @@ const handleUpdateStatus = async (status: string) => {
   }
 }
 
-const cancelAppointment = async () => {
+const cancelAppointment = () => {
   showMoreActions.value = false
-  const { value: reason } = await Swal.fire({
-    title: 'Batalkan Janji Temu?',
-    input: 'textarea',
-    inputLabel: 'Masukkan alasan pembatalan',
-    inputPlaceholder: 'Contoh: User ganti jadwal atau tidak bisa dihubungi...',
-    showCancelButton: true,
-    confirmButtonColor: '#ef4444',
-    confirmButtonText: 'Ya, Batalkan!',
-    cancelButtonText: 'Kembali'
-  })
+  isCancelling.value = true
+  cancelReason.value = ''
+}
 
-  if (reason) {
-    try {
-      const payload = {
-        ...props.appointment,
-        Status_Progress: 'batal',
-        Alasan_Batal: reason
-      }
-      await api.put(`/api/janjiTemu/update?no_id=${props.appointment.No_Id}`, payload)
-      success('Janji temu telah dibatalkan')
-      emit('refresh')
-      emit('close')
-    } catch (error) {
-      console.error('Gagal membatalkan janji temu:', error)
-      fail('Gagal membatalkan janji temu')
+const submitCancellation = async () => {
+  if (!cancelReason.value.trim()) return
+  try {
+    const payload = {
+      ...props.appointment,
+      Status_Progress: 'batal',
+      Alasan_Batal: cancelReason.value,
+      Tanggal_Janji: null,
+      Waktu_Janji: null,
+      Waktu_Selesai: null
     }
+    await api.put(`/api/janjiTemu/update?no_id=${props.appointment.No_Id}`, payload)
+    success('Janji temu telah dibatalkan')
+    isCancelling.value = false
+    cancelReason.value = ''
+    emit('refresh')
+    emit('close')
+  } catch (error) {
+    console.error('Gagal membatalkan janji temu:', error)
+    fail('Gagal membatalkan janji temu')
   }
 }
 
@@ -762,12 +805,41 @@ const openInMaps = (query: string, isCoord = false) => {
   const url = isCoord ? `https://www.google.com/maps?q=${query}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`
   window.open(url, '_blank')
 }
+const dropdownRef = ref<HTMLElement | null>(null)
+
+const handleClickOutside = (event: MouseEvent) => {
+  if (showTimelineDropdown.value && dropdownRef.value) {
+    const target = event.target as HTMLElement
+    const clickedButton = target.closest('.px-3.py-1.5')
+    if (!dropdownRef.value.contains(target) && !clickedButton) {
+      showTimelineDropdown.value = false
+      triggerRect.value = null
+    }
+  }
+}
+
+const handleScroll = () => {
+  if (showTimelineDropdown.value) {
+    showTimelineDropdown.value = false
+    triggerRect.value = null
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+  document.addEventListener('scroll', handleScroll, true)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+  document.removeEventListener('scroll', handleScroll)
+})
 </script>
 
 <template>
   <div v-if="props.openAppointment" class="h-full">
     <div class="bg-white rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] overflow-hidden h-full flex flex-col">
-      <div class="relative p-8 pb-14 text-white transition-colors duration-500" :class="props.appointment.Status_Progress === 'batal' ? 'bg-red-500' : 'bg-bejo-500'">
+      <div class="relative p-8 pb-14 text-white transition-colors duration-500" :class="headerBgClass">
         <div class="flex justify-between items-center mb-6">
           <div class="flex items-center gap-3">
             <span class="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[9px] font-black uppercase tracking-[0.2em] border border-white/10"> #{{ props.appointment.No_Tracking }} </span>
@@ -776,8 +848,8 @@ const openInMaps = (query: string, isCoord = false) => {
             </button>
           </div>
           <div class="flex items-center gap-2">
-            <span class="px-3 py-1 bg-white text-bejo-600 rounded-full text-[9px] font-black uppercase tracking-[0.2em]">
-              {{ props.appointment.Status_Progress }}
+            <span class="px-3 py-1 bg-white rounded-full text-[9px] font-black uppercase tracking-[0.2em]" :class="statusBadgeClass">
+              {{ getStatusLabel(props.appointment.Status_Progress) }}
             </span>
             <button @click="$emit('close')" class="size-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all border border-white/5">
               <Icon icon="lucide:x" class="size-4" />
@@ -792,27 +864,27 @@ const openInMaps = (query: string, isCoord = false) => {
           <p class="text-xs font-bold text-white/70 uppercase tracking-widest">{{ new Date(props.appointment.Tanggal_Janji).toLocaleDateString('id-ID', { weekday: 'long' }) }} • {{ props.appointment.Waktu_Janji }} WIB</p>
         </div>
 
-        <div class="absolute -bottom-7 left-8 right-8 bg-white rounded-3xl p-4 flex items-center justify-between shadow-lg shadow-black/5">
-          <div class="flex items-center gap-3">
-            <div class="size-9 rounded-xl bg-bejo-600 text-white flex items-center justify-center font-black text-xs">
+        <div class="absolute -bottom-7 left-4 right-4 bg-white rounded-2xl p-3 flex items-center justify-between shadow-lg shadow-black/5 border border-slate-100/50">
+          <div class="flex items-center gap-2 min-w-0 flex-1">
+            <div class="size-8 rounded-lg bg-bejo-600 text-white flex items-center justify-center font-black text-xs shrink-0">
               {{ (props.appointment.Nama_Customer || 'C').charAt(0) }}
             </div>
-            <div class="flex flex-col">
-              <span class="text-[9px] font-black text-bejo-400 uppercase tracking-tight">Customer</span>
-              <span class="text-[11px] font-black text-slate-900 truncate max-w-[80px]">{{ props.appointment.Nama_Customer || props.appointment.Id_Customer }}</span>
+            <div class="flex flex-col min-w-0 flex-1">
+              <span class="text-[8px] font-black text-bejo-400 uppercase tracking-tight">Customer</span>
+              <span class="text-[10px] font-black text-slate-900 truncate" :title="props.appointment.Nama_Customer || props.appointment.Id_Customer">{{ props.appointment.Nama_Customer || props.appointment.Id_Customer }}</span>
             </div>
           </div>
 
-          <div class="flex flex-col items-center">
-            <Icon icon="lucide:users" class="size-4 text-slate-200" />
+          <div class="flex flex-col items-center px-1.5 shrink-0">
+            <Icon icon="lucide:users" class="size-3.5 text-slate-300" />
           </div>
 
-          <div class="flex items-center gap-3 text-right">
-            <div class="flex flex-col">
-              <span class="text-[9px] font-black text-slate-400 uppercase tracking-tight">Admin</span>
-              <span class="text-[11px] font-black text-slate-900 truncate max-w-[80px]">{{ props.appointment.Nama_Admin || props.appointment.Id_Admin || 'Admin' }}</span>
+          <div class="flex items-center gap-2 text-right min-w-0 flex-1 justify-end">
+            <div class="flex flex-col min-w-0 flex-1">
+              <span class="text-[8px] font-black text-slate-400 uppercase tracking-tight">Admin</span>
+              <span class="text-[10px] font-black text-slate-900 truncate" :title="props.appointment.Nama_Admin || props.appointment.Id_Admin || 'Admin'">{{ props.appointment.Nama_Admin || props.appointment.Id_Admin || 'Admin' }}</span>
             </div>
-            <div class="size-9 rounded-xl bg-slate-100 text-slate-500 border border-slate-200 flex items-center justify-center font-black text-xs">
+            <div class="size-8 rounded-lg bg-slate-100 text-slate-500 border border-slate-200 flex items-center justify-center font-black text-xs shrink-0">
               {{ (props.appointment.Nama_Admin || 'A').charAt(0) }}
             </div>
           </div>
@@ -825,7 +897,6 @@ const openInMaps = (query: string, isCoord = false) => {
             <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 group">
               <div class="flex justify-between items-center mb-2">
                 <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Lokasi</span>
-                <button @click="openInMaps(props.appointment.Lokasi_Pertemuan)" class="text-[8px] font-black text-bejo-500 hover:text-bejo-600 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">Cari di Maps <Icon icon="lucide:external-link" class="size-2" /></button>
               </div>
               <div class="flex items-center gap-2">
                 <Icon icon="lucide:map-pin" class="size-3.5 text-bejo-500" />
@@ -841,6 +912,11 @@ const openInMaps = (query: string, isCoord = false) => {
             </div>
           </div>
 
+          <div v-if="props.appointment.Keterangan" class="p-4 bg-amber-50/40 rounded-2xl border border-amber-100/60">
+            <span class="text-[9px] font-black text-amber-600 uppercase tracking-widest block mb-1">Catatan Pertemuan</span>
+            <p class="text-xs font-bold text-slate-700">"{{ props.appointment.Keterangan }}"</p>
+          </div>
+
           <div v-if="props.appointment.Alasan_Batal" class="p-4 bg-red-50 rounded-2xl border border-red-100">
             <span class="text-[9px] font-black text-red-400 uppercase tracking-widest block mb-1">Alasan Batal</span>
             <p class="text-xs font-bold text-red-600 italic">"{{ props.appointment.Alasan_Batal }}"</p>
@@ -852,10 +928,10 @@ const openInMaps = (query: string, isCoord = false) => {
             <div v-if="isLoadingProduct" class="h-20 bg-slate-50 rounded-2xl animate-pulse"></div>
 
             <a v-else-if="productData" :href="`/properti/${productData.Slug}`" target="_blank" class="flex gap-4 p-3 bg-white border border-slate-100 rounded-3xl hover:border-bejo-200 transition-all group cursor-pointer shadow-sm hover:shadow-md">
-              <img v-if="productData.MediaUrls?.[0]?.ThumbUrl || productData.MediaUrls?.[0]?.Id_Media" :src="productData.MediaUrls[0].ThumbUrl || productData.MediaUrls[0].Id_Media" class="size-20 rounded-2xl object-cover" />
+              <img v-if="productData.MediaUrls?.[0]?.ThumbUrl || productData.MediaUrls?.[0]?.Id_Media" :src="productData.MediaUrls[0].ThumbUrl || productData.MediaUrls[0].Id_Media" class="size-20 rounded-2xl object-cover shrink-0" />
               <div class="flex-1 min-w-0 flex flex-col justify-center">
                 <h4 class="text-xs font-black text-slate-900 truncate group-hover:text-bejo-600 transition-colors">{{ productData.Nama_Produk }}</h4>
-                <p class="text-[9px] font-medium text-slate-500 truncate mb-1">
+                <p class="text-[9px] font-medium text-slate-500 truncate mb-1.5">
                   {{ productData.Alamat }}<span v-if="productData.Nama_Kota">, {{ productData.Nama_Kota }}</span>
                 </p>
 
@@ -874,105 +950,206 @@ const openInMaps = (query: string, isCoord = false) => {
                   </div>
                 </div>
 
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-2">
-                    <span class="text-[9px] font-black text-bejo-600 bg-bejo-50 px-2 py-0.5 rounded">{{ productData.Tipe }}</span>
-                    <button @click.stop.prevent="openInMaps(`${productData.Latitude},${productData.Longitude}`, true)" class="text-[8px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded flex items-center gap-1 hover:bg-emerald-100 transition-colors"><Icon icon="lucide:navigation" class="size-2" /> Petunjuk Arah</button>
+                <div class="flex flex-col gap-1.5 mt-0.5">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="text-xs font-black text-emerald-600 whitespace-nowrap"> Rp {{ formatPrice(productData.Harga_Jual2 || productData.Harga_Sewa2 || productData.Harga_Jual1) }} </span>
+                    <span class="text-[9px] font-black text-bejo-600 bg-bejo-50 px-2 py-0.5 rounded shrink-0">{{ productData.Tipe }}</span>
                   </div>
-                  <span class="text-xs font-black text-emerald-600"> Rp {{ formatPrice(productData.Harga_Jual2 || productData.Harga_Sewa2 || productData.Harga_Jual1) }} </span>
+                  <button @click.stop.prevent="openInMaps(`${productData.Latitude},${productData.Longitude}`, true)" class="w-full text-center text-[8px] font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded flex items-center justify-center gap-1 hover:bg-emerald-100 transition-colors shrink-0"><Icon icon="lucide:navigation" class="size-2.5" /> Petunjuk Arah</button>
                 </div>
               </div>
             </a>
 
             <div v-else class="text-[10px] font-bold text-slate-400 italic px-1">Produk: {{ props.appointment.Nama_Produk }}</div>
+            <!-- Timeline Riwayat Janji Temu (Floating Dropdown) -->
+            <div v-if="timelineChain.length > 1" class="relative pt-4 border-t border-slate-100 flex justify-between items-center">
+              <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1"> Status Jadwal </span>
+              <div class="relative">
+                <button @click="toggleTimelineDropdown($event)" class="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200/60 rounded-xl text-[10px] font-black text-slate-600 uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-sm" :class="{ 'bg-bejo-50 border-bejo-200 text-bejo-600': showTimelineDropdown }">
+                  <Icon icon="lucide:history" class="size-3.5" :class="showTimelineDropdown ? 'text-bejo-500' : 'text-slate-500'" />
+                  Riwayat ({{ timelineChain.length }}x)
+                  <Icon icon="lucide:chevron-down" class="size-3 transition-transform" :class="{ 'rotate-180': showTimelineDropdown }" />
+                </button>
+
+                <!-- Dropdown Content (Floating Popover - Teleported to avoid clipping) -->
+                <Teleport to="body">
+                  <div
+                    v-if="showTimelineDropdown && triggerRect"
+                    ref="dropdownRef"
+                    class="absolute bg-white rounded-2xl shadow-2xl border border-slate-100 p-4.5 z-[1060] w-72 max-h-80 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2 duration-200 text-left"
+                    :style="{
+                      top: `${triggerRect.bottom + 6}px`,
+                      left: `${triggerRect.right - 288}px`
+                    }"
+                  >
+                    <span class="text-[11px] font-black text-slate-400 uppercase tracking-wider block mb-3 border-b border-slate-100 pb-2">Riwayat Reschedule</span>
+                    <div class="relative pl-4 border-l border-slate-100 ml-1.5 space-y-4">
+                      <div v-for="item in timelineChain" :key="item.No_Id" class="relative">
+                        <!-- Dot -->
+                        <div class="absolute -left-[21px] top-1 size-2.5 rounded-full border bg-white flex items-center justify-center z-10" :class="item.No_Id === props.appointment.No_Id ? 'border-bejo-500' : 'border-slate-300'">
+                          <div class="size-1.5 rounded-full" :class="item.No_Id === props.appointment.No_Id ? 'bg-bejo-500 font-bold' : 'bg-slate-350'"></div>
+                        </div>
+
+                        <div class="p-3 rounded-xl border text-xs font-bold" :class="item.No_Id === props.appointment.No_Id ? 'bg-bejo-50/20 border-bejo-100' : 'bg-slate-50 border-slate-100 text-slate-600'">
+                          <div class="flex justify-between items-center gap-1.5 mb-1.5 flex-wrap">
+                            <span class="text-[10px] font-mono font-black text-slate-450">#{{ item.No_Tracking }}</span>
+                            <span
+                              class="px-1.5 py-0.5 rounded-[4px] text-[9px] font-black uppercase tracking-wider font-mono shrink-0"
+                              :class="{
+                                'bg-blue-50 text-blue-700': item.Status_Progress === 'baru',
+                                'bg-bejo-50 text-bejo-700': item.Status_Progress === 'dikonfirmasi',
+                                'bg-amber-100 text-amber-900': item.Status_Progress === 'proses',
+                                'bg-emerald-50 text-emerald-800': item.Status_Progress === 'selesai',
+                                'bg-red-50 text-red-700': item.Status_Progress === 'batal'
+                              }"
+                            >
+                              {{ item.Status_Progress }}
+                            </span>
+                          </div>
+
+                          <div class="flex flex-col gap-1 mt-1 text-xs text-slate-600">
+                            <div class="flex items-center gap-1.5">
+                              <Icon icon="lucide:calendar" class="size-3.5 text-slate-400" />
+                              <span>{{ item.Tanggal_Janji.split('T')[0] }}</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                              <Icon icon="lucide:clock" class="size-3.5 text-slate-400" />
+                              <span>{{ item.Waktu_Janji }} WIB</span>
+                            </div>
+                          </div>
+
+                          <div v-if="item.Alasan_Batal" class="mt-2 p-2 bg-red-50/50 rounded border border-red-100/50 text-[10.5px] font-bold text-red-650 italic leading-snug">"{{ item.Alasan_Batal }}"</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Teleport>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="p-8 bg-white border-t border-slate-100 shrink-0">
-        <div class="grid grid-cols-2 gap-3 mb-4">
-          <button @click="$emit('openChat', props.appointment.Id_Customer)" class="px-4 py-3.5 bg-green-500 hover:bg-green-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 group">
-            <Icon icon="lucide:message-circle" class="size-4 group-hover:scale-110 transition-transform" />
-            Hubungi
-          </button>
-          <button v-if="props.appointment.Status_Progress !== 'batal'" @click="sendBrochure" :disabled="isSendingBrochure || !productData" class="px-4 py-3.5 bg-white hover:bg-bejo-50 text-bejo-600 border-2 border-bejo-100 hover:border-bejo-200 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 group disabled:opacity-50">
-            <Icon v-if="isSendingBrochure" icon="lucide:loader-2" class="size-4 animate-spin" />
-            <Icon v-else icon="lucide:file-text" class="size-4 group-hover:scale-110 transition-transform" />
-            Kirim Brosur
-          </button>
-          <button v-else @click="handleDelete" class="px-4 py-3.5 bg-red-500 hover:bg-red-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2">
-            <Icon icon="lucide:trash-2" class="size-4" />
-            Hapus Data
-          </button>
+      <div class="p-6 bg-white border-t border-slate-100 shrink-0">
+        <div v-if="isCancelling" class="space-y-4 animate-in fade-in duration-200">
+          <div class="text-center space-y-1">
+            <h4 class="text-lg font-black text-slate-800">Batalkan Janji Temu?</h4>
+            <p class="text-xs font-bold text-slate-400">Masukkan alasan pembatalan</p>
+          </div>
+          <textarea v-model="cancelReason" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:border-red-400 focus:ring-red-400 rounded-2xl text-xs font-bold min-h-[90px] text-slate-700 outline-none transition-all placeholder:text-slate-350" placeholder="Contoh: User ganti jadwal atau tidak bisa dihubungi..."></textarea>
+          <div class="flex items-center gap-3">
+            <button @click="isCancelling = false" class="flex-1 py-3 bg-slate-200 hover:bg-slate-100 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors">Kembali</button>
+            <button @click="submitCancellation" :disabled="!cancelReason.trim()" class="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors disabled:opacity-50">Ya, Batalkan!</button>
+          </div>
         </div>
 
-        <div v-if="props.appointment.Status_Progress !== 'batal'" class="flex items-center gap-3">
-          <div class="flex-1">
-            <button v-if="props.appointment.Status_Progress === 'baru'" @click="handleUpdateStatus('dikonfirmasi')" class="w-full px-4 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2">
-              <Icon icon="lucide:check-circle" class="size-4" />
-              Konfirmasi Janji
+        <div v-else>
+          <div class="grid grid-cols-2 gap-2 mb-3">
+            <button @click="$emit('openChat', props.appointment.Id_Customer)" class="px-2 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-xl text-[10px] font-black uppercase tracking-wide transition-all flex items-center justify-center gap-1.5 group whitespace-nowrap">
+              <Icon icon="lucide:message-circle" class="size-3.5 group-hover:scale-110 transition-transform shrink-0" />
+              Hubungi
             </button>
-            <button v-else-if="props.appointment.Status_Progress === 'dikonfirmasi'" @click="handleUpdateStatus('proses')" class="w-full px-4 py-3.5 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2">
-              <Icon icon="lucide:play-circle" class="size-4" />
-              Mulai Pertemuan
+            <button v-if="props.appointment.Status_Progress !== 'batal'" @click="sendBrochure" :disabled="isSendingBrochure || !productData" class="px-2 py-2.5 bg-white hover:bg-bejo-50 text-bejo-600 border-2 border-bejo-100 hover:border-bejo-200 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all flex items-center justify-center gap-1.5 group disabled:opacity-50 whitespace-nowrap">
+              <Icon v-if="isSendingBrochure" icon="lucide:loader-2" class="size-3.5 animate-spin shrink-0" />
+              <Icon v-else icon="lucide:file-text" class="size-3.5 group-hover:scale-110 transition-transform shrink-0" />
+              Kirim Brosur
             </button>
-            <button v-else-if="props.appointment.Status_Progress === 'proses'" @click="handleUpdateStatus('selesai')" class="w-full px-4 py-3.5 bg-violet-500 hover:bg-violet-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2">
-              <Icon icon="lucide:award" class="size-4" />
-              Selesaikan
+            <button v-else @click="handleDelete" class="px-2 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl text-[10px] font-black uppercase tracking-wide transition-all flex items-center justify-center gap-1.5 whitespace-nowrap">
+              <Icon icon="lucide:trash-2" class="size-3.5 shrink-0" />
+              Hapus Data
             </button>
-            <div v-else class="w-full py-3.5 bg-emerald-50 text-emerald-600 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-center border border-emerald-100">Janji Temu Selesai</div>
           </div>
 
-          <div class="relative">
-            <button @click="showMoreActions = !showMoreActions" class="size-12 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-500 transition-all flex items-center justify-center border border-slate-200/50">
-              <Icon icon="lucide:more-horizontal" class="size-5" />
-            </button>
-
-            <div v-if="showMoreActions" class="absolute bottom-full right-0 mb-4 w-48 bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-bottom-2 duration-200">
-              <button
-                @click="
-                  openReschedule = true;
-                  showMoreActions = false;
-                "
-                class="w-full px-5 py-3.5 text-left text-[11px] font-black text-slate-700 hover:bg-bejo-50 hover:text-bejo-600 transition-colors flex items-center gap-3 border-b border-slate-50"
-              >
-                <Icon icon="lucide:calendar-clock" class="size-4" />
-                Reschedule
+          <div v-if="props.appointment.Status_Progress !== 'batal'" class="flex items-center gap-2.5">
+            <div class="flex-1">
+              <button v-if="props.appointment.Status_Progress === 'baru'" @click="handleUpdateStatus('dikonfirmasi')" class="w-full px-3.5 py-2.5 bg-bejo-500 hover:bg-bejo-600 text-white rounded-xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2">
+                <Icon icon="lucide:check-circle" class="size-3.5" />
+                Konfirmasi Janji
               </button>
-              <button @click="cancelAppointment" class="w-full px-5 py-3.5 text-left text-[11px] font-black text-red-500 hover:bg-red-50 transition-colors flex items-center gap-3">
-                <Icon icon="lucide:ban" class="size-4" />
-                Batalkan Janji
+              <button v-else-if="props.appointment.Status_Progress === 'dikonfirmasi'" @click="handleUpdateStatus('proses')" class="w-full px-3.5 py-2.5 bg-amber-800 hover:bg-amber-900 text-white rounded-xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2">
+                <Icon icon="lucide:play-circle" class="size-3.5" />
+                Mulai Pertemuan
               </button>
+              <button v-else-if="props.appointment.Status_Progress === 'proses'" @click="handleUpdateStatus('selesai')" class="w-full px-3.5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2">
+                <Icon icon="lucide:award" class="size-3.5" />
+                Selesaikan
+              </button>
+              <div v-else class="w-full py-2.5 bg-emerald-50 text-emerald-700 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] text-center border border-emerald-100">Janji Temu Selesai</div>
             </div>
-            <div v-if="showMoreActions" @click="showMoreActions = false" class="fixed inset-0 z-40"></div>
+
+            <div v-if="props.appointment.Status_Progress !== 'selesai' && props.appointment.Status_Progress !== 'batal'" class="relative">
+              <button @click="showMoreActions = !showMoreActions" class="size-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 transition-all flex items-center justify-center border border-slate-200/50">
+                <Icon icon="lucide:more-horizontal" class="size-4.5" />
+              </button>
+
+              <div v-if="showMoreActions" class="absolute bottom-full right-0 mb-3 w-44 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                <button
+                  @click="
+                    selectedDate = props.appointment.Tanggal_Janji ? props.appointment.Tanggal_Janji.split('T')[0] : '',
+                    startTime = props.appointment.Waktu_Janji || '',
+                    endTime = props.appointment.Waktu_Selesai || '',
+                    openReschedule = true,
+                    showMoreActions = false
+                  "
+                  class="w-full px-4 py-2.5 text-left text-[11px] font-black text-slate-700 hover:bg-bejo-50 hover:text-bejo-600 transition-colors flex items-center gap-2.5 border-b border-slate-50"
+                >
+                  <Icon icon="lucide:calendar-clock" class="size-3.5" />
+                  Reschedule
+                </button>
+                <button @click="cancelAppointment" class="w-full px-4 py-2.5 text-left text-[11px] font-black text-red-500 hover:bg-red-50 transition-colors flex items-center gap-2.5">
+                  <Icon icon="lucide:ban" class="size-3.5" />
+                  Batalkan Janji
+                </button>
+              </div>
+              <div v-if="showMoreActions" @click="showMoreActions = false" class="fixed inset-0 z-40"></div>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div v-if="openReschedule" class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md">
-      <div class="bg-white rounded-[2.5rem] w-full max-w-lg p-10 shadow-2xl animate-in zoom-in duration-300">
-        <div class="flex justify-between items-center mb-8">
+    <div v-if="openReschedule" class="fixed inset-0 z-[999] flex items-center justify-center p-4 md:p-6 bg-slate-900/60 backdrop-blur-md">
+      <div class="bg-white rounded-[2.5rem] w-full max-w-lg p-6 md:p-10 shadow-2xl flex flex-col max-h-[90vh] animate-in zoom-in duration-300">
+        <div class="flex justify-between items-center mb-6 shrink-0">
           <h4 class="text-xl font-black text-slate-900">Pilih Jadwal Baru</h4>
-          <button @click="openReschedule = false" class="text-slate-400 hover:text-slate-900"><Icon icon="lucide:x" class="size-6" /></button>
+          <button @click="openReschedule = false" class="text-slate-400 hover:text-slate-900 transition-colors"><Icon icon="lucide:x" class="size-6" /></button>
         </div>
-        <FullCalendar :options="calendarOptions" class="mb-8" />
-        <div v-if="openRescheduleForm" class="space-y-6">
-          <div class="grid grid-cols-2 gap-4">
+        <div class="flex-1 overflow-y-auto pr-1.5 custom-scrollbar space-y-6">
+          <div class="space-y-6">
+            <!-- Tanggal -->
             <div>
               <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Tanggal</label>
-              <input v-model="selectedDate" type="date" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold" />
+              <div class="relative">
+                <input v-model="selectedDate" type="date" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-bejo-500/20 focus:border-bejo-500 outline-none transition-all" />
+                <Icon icon="lucide:calendar" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 size-4 pointer-events-none" />
+              </div>
             </div>
+
+            <!-- Waktu Mulai & Waktu Selesai -->
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Waktu Mulai</label>
+                <div class="relative">
+                  <input v-model="startTime" type="time" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-bejo-500/20 focus:border-bejo-500 outline-none transition-all" />
+                  <Icon icon="lucide:clock" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 size-4 pointer-events-none" />
+                </div>
+              </div>
+              <div>
+                <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Waktu Selesai</label>
+                <div class="relative">
+                  <input v-model="endTime" type="time" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-bejo-500/20 focus:border-bejo-500 outline-none transition-all" />
+                  <Icon icon="lucide:clock" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 size-4 pointer-events-none" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Alasan Perubahan Jadwal -->
             <div>
-              <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Pukul</label>
-              <input v-model="startTime" type="time" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold" />
+              <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Alasan Perubahan Jadwal</label>
+              <textarea v-model="rescheduleReason" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold min-h-[80px] focus:ring-2 focus:ring-bejo-500/20 focus:border-bejo-500 outline-none transition-all" placeholder="Masukkan alasan reschedule..."></textarea>
             </div>
+            <button @click="saveReschedule" class="w-full py-4 bg-bejo-500 hover:bg-bejo-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-bejo-500/30 transition-all active:scale-[0.98]">Simpan Jadwal Baru</button>
           </div>
-          <div>
-            <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Alasan Perubahan Jadwal</label>
-            <textarea v-model="rescheduleReason" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold min-h-[80px]" placeholder="Masukkan alasan reschedule..."></textarea>
-          </div>
-          <button @click="saveReschedule" class="w-full py-4 bg-bejo-500 hover:bg-bejo-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-bejo-500/30">Simpan Jadwal Baru</button>
         </div>
       </div>
     </div>

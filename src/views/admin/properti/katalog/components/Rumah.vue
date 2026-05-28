@@ -26,6 +26,17 @@ const typeFilter = ref('Semua')
 const isTypeOpen = ref(false)
 const isLoading = ref(true)
 
+const customers = ref<any[]>([])
+const showTxModal = ref(false)
+const txProduct = ref<any>(null)
+const txStatus = ref('')
+const txDate = ref('')
+const txCustomerId = ref('')
+const txSearchCustomer = ref('')
+const isTxCustomerDropdownOpen = ref(false)
+const isSavingTx = ref(false)
+
+
 const props = defineProps<{
   searchQuery: string
   facilities: {
@@ -205,6 +216,32 @@ const buildParams = () => {
   return p.toString()
 }
 
+const fetchCustomers = async () => {
+  try {
+    const { data } = await api.get('/api/customer/getAll', {
+      headers: {
+        'X-Jenis-User': 'Admin',
+        'Api-Key': 'realestate_key_2024'
+      }
+    })
+    customers.value = data.Data || []
+  } catch (err) {
+    console.error('Gagal mengambil data customer:', err)
+  }
+}
+
+const resolveCustomerNames = (rawProducts: any[]) => {
+  return rawProducts.map((p: any) => {
+    if (p.Id_Customer) {
+      const found = customers.value.find((c: any) => c.No_Id === p.Id_Customer)
+      if (found) {
+        p.Nama_Customer = found.Nama_Display || found.Nama_Customer || found.Nama
+      }
+    }
+    return p
+  })
+}
+
 const fetchData = async (backgroundRefetch = false) => {
   if (!backgroundRefetch) isLoading.value = true
   try {
@@ -212,7 +249,8 @@ const fetchData = async (backgroundRefetch = false) => {
     const { data } = await api.get(`/api/realEstate/getAll?${query}`, {
       headers: { 'X-Jenis-User': 'admin' }
     })
-    products.value = data.Data || []
+    const rawProducts = data.Data || []
+    products.value = resolveCustomerNames(rawProducts)
   } catch (err: any) {
     console.error('FETCH_ERROR:', err.message)
     products.value = []
@@ -244,6 +282,18 @@ const updateStatusTransaksi = async (product: any, newStatus: string) => {
   const isDisplayStatus = ['Aktif', 'Draft'].includes(newStatus)
   const statusLabel = isDisplayStatus ? 'display' : 'properti'
 
+  if (newStatus === 'Terjual' || newStatus === 'Tersewa') {
+    txProduct.value = { ...product }
+    txStatus.value = newStatus
+    txDate.value = new Date().toISOString().split('T')[0]
+    txCustomerId.value = product.Id_Customer || ''
+    const foundCust = customers.value.find((c: any) => c.No_Id === product.Id_Customer)
+    txSearchCustomer.value = foundCust ? foundCust.Nama_Display : ''
+    showTxModal.value = true
+    activeDropdownId.value = null
+    return
+  }
+
   confirm(`Apakah Anda yakin ingin mengubah status ${statusLabel} menjadi ${newStatus}?`, async () => {
     try {
       if (isDisplayStatus) {
@@ -266,6 +316,57 @@ const updateStatusTransaksi = async (product: any, newStatus: string) => {
       console.error('Gagal mengubah status:', error)
     }
   })
+}
+
+const selectTxCustomer = (customer: any) => {
+  txCustomerId.value = customer.No_Id
+  txSearchCustomer.value = customer.Nama_Display
+  isTxCustomerDropdownOpen.value = false
+}
+
+const filteredTxCustomers = computed(() => {
+  if (!txSearchCustomer.value) return customers.value
+  const query = txSearchCustomer.value.toLowerCase()
+  return customers.value.filter((c: any) => {
+    return (
+      c.Nama_Display?.toLowerCase().includes(query) ||
+      c.UserName?.toLowerCase().includes(query) ||
+      c.Email?.toLowerCase().includes(query)
+    )
+  })
+})
+
+const submitTransaction = async () => {
+  if (!txProduct.value) return
+  if (!txCustomerId.value) {
+    fail('Silakan pilih customer terlebih dahulu.')
+    return
+  }
+  if (!txDate.value) {
+    fail('Silakan pilih tanggal transaksi.')
+    return
+  }
+
+  isSavingTx.value = true
+  try {
+    const updatedProduct = { ...txProduct.value }
+    updatedProduct.Status_Properti = txStatus.value
+    updatedProduct.Status_Display = 'Draft'
+    updatedProduct.Id_Customer = txCustomerId.value
+    updatedProduct.Tanggal_Transaksi = txDate.value
+
+    await api.put('/api/realEstate/update?no_id=' + updatedProduct.No_Id, updatedProduct, {
+      headers: { 'X-Jenis-User': 'admin' }
+    })
+    showTxModal.value = false
+    success(`Transaksi berhasil dicatat`)
+    await fetchData(true)
+  } catch (error) {
+    console.error('Gagal menyimpan transaksi:', error)
+    fail('Gagal menyimpan detail transaksi.')
+  } finally {
+    isSavingTx.value = false
+  }
 }
 
 const setSort = (type: string) => {
@@ -322,10 +423,12 @@ window.addEventListener('click', (e) => {
     isSortOpen.value = false
     isTransactionOpen.value = false
     isTypeOpen.value = false
+    isTxCustomerDropdownOpen.value = false
   }
 })
 
 onMounted(async () => {
+  await fetchCustomers()
   await fetchData()
   nextTick(() => {
     window.HSStaticMethods?.autoInit()
@@ -491,6 +594,135 @@ defineExpose({ openAddModal })
         <button @click="handlePageChange('next')" :disabled="!table.getCanNextPage()" class="btn-pagination">Next</button>
       </nav>
     </div>
+
+    <!-- Modal Detail Transaksi (Terjual / Tersewa) -->
+    <Transition 
+      enter-active-class="transition duration-300 ease-out" 
+      enter-from-class="opacity-0" 
+      enter-to-class="opacity-100" 
+      leave-active-class="transition duration-200 ease-in" 
+      leave-from-class="opacity-100" 
+      leave-to-class="opacity-0"
+    >
+      <div v-show="showTxModal" class="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div class="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl border border-slate-50 overflow-hidden flex flex-col z-10 animate-fade-in-up">
+          <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-white">
+            <div class="flex items-center gap-3">
+              <div class="size-10 rounded-2xl bg-gradient-to-br from-bejo-50 to-bejo-100 flex items-center justify-center text-bejo-600 shadow-sm border border-bejo-100/50">
+                <Icon :icon="txStatus === 'Terjual' ? 'lucide:badge-check' : 'lucide:key'" class="size-5" />
+              </div>
+              <div>
+                <h3 class="text-slate-900 font-extrabold text-base tracking-tight leading-tight">Detail Transaksi {{ txStatus }}</h3>
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Simpan informasi penjualan/penyewaan</p>
+              </div>
+            </div>
+            <button @click="showTxModal = false" class="size-8 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all border border-slate-100 shadow-sm active:scale-95">
+              <Icon icon="lucide:x" class="size-5" />
+            </button>
+          </div>
+
+          <div class="px-6 py-6 space-y-4 bg-slate-50/10">
+            <!-- Info Unit -->
+            <div v-if="txProduct" class="p-3.5 bg-bejo-50/30 border border-bejo-100/50 rounded-2xl">
+              <span class="text-[9px] font-black text-bejo-600 uppercase tracking-wider block mb-1">Unit Properti</span>
+              <span class="font-extrabold text-slate-800 text-sm block leading-snug">{{ txProduct.Nama_Produk }}</span>
+              <span class="text-xs font-semibold text-slate-400 block mt-0.5">{{ txProduct.Alamat }}</span>
+            </div>
+
+            <!-- Pilih Customer (Searchable Dropdown) -->
+            <div class="space-y-1.5 relative">
+              <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Pilih Customer</label>
+              <div class="relative">
+                <input 
+                  type="text" 
+                  v-model="txSearchCustomer" 
+                  placeholder="Cari nama/username customer..." 
+                  class="w-full border border-slate-200 rounded-xl py-2.5 pl-10 pr-10 text-xs font-bold text-slate-700 bg-white focus:ring-4 focus:ring-bejo-600/10 focus:border-bejo-600 transition-all outline-none"
+                  @focus="isTxCustomerDropdownOpen = true"
+                />
+                <Icon icon="lucide:user" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 size-4 pointer-events-none" />
+                
+                <button 
+                  v-if="txCustomerId" 
+                  type="button"
+                  @click="txCustomerId = ''; txSearchCustomer = ''"
+                  class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-500"
+                >
+                  <Icon icon="lucide:x" class="size-4" />
+                </button>
+                <button 
+                  v-else
+                  type="button"
+                  @click.stop="isTxCustomerDropdownOpen = !isTxCustomerDropdownOpen"
+                  class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                >
+                  <Icon :icon="isTxCustomerDropdownOpen ? 'lucide:chevron-up' : 'lucide:chevron-down'" class="size-4" />
+                </button>
+              </div>
+
+              <!-- Customer Dropdown List -->
+              <Transition
+                enter-active-class="transition duration-100 ease-out"
+                enter-from-class="transform scale-95 opacity-0"
+                enter-to-class="transform scale-100 opacity-100"
+                leave-active-class="transition duration-75 ease-in"
+                leave-from-class="transform scale-100 opacity-100"
+                leave-to-class="transform scale-95 opacity-0"
+              >
+                <div 
+                  v-show="isTxCustomerDropdownOpen" 
+                  class="absolute z-[1000] left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-2xl max-h-48 overflow-y-auto custom-scroll p-1.5"
+                >
+                  <div v-if="filteredTxCustomers.length === 0" class="p-3 text-center text-xs text-slate-400 font-bold uppercase tracking-wider">
+                    Customer tidak ditemukan
+                  </div>
+                  <button
+                    v-for="c in filteredTxCustomers"
+                    :key="c.No_Id"
+                    type="button"
+                    @click="selectTxCustomer(c)"
+                    class="w-full text-left px-3.5 py-2.5 text-xs font-bold text-slate-700 rounded-xl hover:bg-bejo-50 hover:text-bejo-600 transition-all flex items-center justify-between"
+                    :class="txCustomerId === c.No_Id ? 'bg-bejo-50 text-bejo-600' : ''"
+                  >
+                    <div class="flex flex-col">
+                      <span>{{ c.Nama_Display }}</span>
+                      <span class="text-[9px] text-slate-400 font-semibold mt-0.5">@{{ c.UserName }} | {{ c.Email }}</span>
+                    </div>
+                    <Icon v-if="txCustomerId === c.No_Id" icon="lucide:check" class="size-4 text-bejo-600" />
+                  </button>
+                </div>
+              </Transition>
+            </div>
+
+            <!-- Tanggal Transaksi -->
+            <div class="space-y-1.5">
+              <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tanggal Transaksi</label>
+              <div class="relative">
+                <input 
+                  type="date" 
+                  v-model="txDate" 
+                  class="w-full border border-slate-200 rounded-xl py-2.5 pl-10 pr-4 text-xs font-bold text-slate-700 bg-white focus:ring-4 focus:ring-bejo-600/10 focus:border-bejo-600 transition-all outline-none"
+                />
+                <Icon icon="lucide:calendar" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 size-4 pointer-events-none" />
+              </div>
+            </div>
+          </div>
+
+          <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-3 bg-white">
+            <button @click="showTxModal = false" class="px-5 py-2.5 text-xs font-black text-slate-400 hover:text-red-500 uppercase tracking-widest transition-colors">Batal</button>
+            <button 
+              :disabled="isSavingTx || !txCustomerId || !txDate" 
+              @click="submitTransaction" 
+              class="px-6 py-2.5 bg-bejo-600 hover:bg-bejo-700 disabled:opacity-50 text-white text-xs font-black rounded-xl shadow-lg shadow-bejo-600/20 active:scale-95 transition-all flex items-center gap-2 uppercase tracking-widest"
+            >
+              <Icon v-if="isSavingTx" icon="lucide:loader-2" class="size-4 animate-spin" />
+              <Icon v-else icon="lucide:save" class="size-4" />
+              {{ isSavingTx ? 'Menyimpan...' : 'Simpan' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
 
     <Modal v-model:showModal="isModalOpen" :itemData="selectedItem" @success="fetchData" />
   </div>

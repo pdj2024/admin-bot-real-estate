@@ -11,6 +11,33 @@ const props = defineProps<{
 
 const activeMediaIndex = ref(0)
 
+// Touch Swipe Handler
+const touchStartX = ref(0)
+const touchEndX = ref(0)
+
+const handleTouchStart = (e: TouchEvent) => {
+  touchStartX.value = e.changedTouches[0].screenX
+}
+
+const handleTouchEnd = (e: TouchEvent) => {
+  touchEndX.value = e.changedTouches[0].screenX
+  handleSwipe()
+}
+
+const handleSwipe = () => {
+  if (media.value.length <= 1) return
+  const swipeThreshold = 50
+  const diffX = touchEndX.value - touchStartX.value
+  
+  if (Math.abs(diffX) > swipeThreshold) {
+    if (diffX > 0) {
+      activeMediaIndex.value = (activeMediaIndex.value - 1 + media.value.length) % media.value.length
+    } else {
+      activeMediaIndex.value = (activeMediaIndex.value + 1) % media.value.length
+    }
+  }
+}
+
 const media = computed(() => {
   if (!props.product?.MediaUrls) return []
   return props.product.MediaUrls.map(m => ({
@@ -86,9 +113,12 @@ const handleShare = () => {
     <!-- Media Showcase -->
     <div class="card bg-white rounded-[2.5rem] overflow-hidden shadow-premium border-none relative group/main">
       <!-- Main Display -->
-      <div class="aspect-[4/3] relative bg-slate-100 overflow-hidden">
-        <Transition name="fade" mode="out-in">
-          <div :key="activeMediaIndex" class="size-full">
+      <div 
+        @touchstart="handleTouchStart"
+        @touchend="handleTouchEnd"
+        class="aspect-[4/3] relative bg-slate-100 overflow-hidden"
+      >
+          <div class="size-full">
             <template v-if="!product">
               <div class="size-full animate-pulse bg-slate-200"></div>
             </template>
@@ -115,7 +145,6 @@ const handleShare = () => {
                </div>
             </template>
           </div>
-        </Transition>
 
         <!-- Navigation Buttons -->
         <div v-if="media.length > 1" class="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-between px-4 opacity-0 group-hover/main:opacity-100 transition-opacity z-20 pointer-events-none">

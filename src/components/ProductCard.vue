@@ -123,6 +123,18 @@
         {{ product.Tipe }} &bull; Tipe {{ product.Luas_Bangunan }}
       </p>
 
+      <!-- Transaction Info Badge/Banner if Sold or Rented -->
+      <div v-if="!isLoading && (product.Status_Properti === 'Terjual' || product.Status_Properti === 'Tersewa')" class="mb-4 p-3.5 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col gap-1.5 text-[11px] font-bold text-slate-500">
+        <div class="flex items-center gap-1.5">
+          <Icon icon="lucide:user" class="size-3.5 text-bejo-600" />
+          <span>a/n: <strong class="text-slate-800">{{ product.Nama_Customer || product.Id_Customer || '-' }}</strong></span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <Icon icon="lucide:calendar" class="size-3.5 text-bejo-600" />
+          <span>Tanggal: <strong class="text-slate-800">{{ product.Tanggal_Transaksi ? product.Tanggal_Transaksi.split('T')[0] : '-' }}</strong></span>
+        </div>
+      </div>
+
       <!-- Specs Details -->
       <div v-if="!props.hideSpecs" class="mb-4 relative">
         <div v-if="isLoading" class="h-10 w-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer rounded-xl"></div>

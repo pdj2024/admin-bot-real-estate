@@ -56,8 +56,20 @@ const performRefresh = async (): Promise<string | null> => {
 const handleLogout = () => {
   localStorage.removeItem('token')
   localStorage.removeItem('refreshToken')
-  // We keep some items like 'nama_display' if needed, or clear all
-  // localStorage.clear()
+  localStorage.removeItem('no_id')
+  localStorage.removeItem('nama_display')
+  localStorage.removeItem('role_user')
+  localStorage.removeItem('user')
+  localStorage.removeItem('user_avatar')
+  localStorage.removeItem('user_phone')
+  localStorage.removeItem('email')
+  localStorage.removeItem('nama_user')
+  localStorage.removeItem('keterangan')
+  localStorage.removeItem('max_janji_per_hari')
+  localStorage.removeItem('status')
+  localStorage.removeItem('tgl_created')
+  localStorage.removeItem('no_id_media')
+  localStorage.removeItem('user_detail')
   
   if (router.currentRoute.value.meta.requiresAuth || router.currentRoute.value.name === 'Login') {
     router.push({ name: 'Login', query: { expired: '1', redirect: router.currentRoute.value.fullPath } })

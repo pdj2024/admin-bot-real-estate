@@ -19,6 +19,12 @@ export const menuItems: MenuItemType[] = [
     url: '/dashboard'
   },
   {
+    key: 'performa',
+    label: 'Performa',
+    icon: 'lucide:line-chart',
+    url: '/performa'
+  },
+  {
     key: 'chat',
     label: 'Chat',
     icon: 'lucide:messages-square',

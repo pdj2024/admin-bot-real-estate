@@ -37,7 +37,7 @@
                 </button>
                 <div id="content-transaksi" class="hs-accordion-content w-full overflow-hidden transition-[height] duration-300">
                   <div class="grid grid-cols-2 gap-2 pt-4">
-                    <button v-for="type in ['Semua Label', 'Jual Saja', 'Sewa Saja', 'Jual & Sewa']" :key="type" @click="$emit('update:transactionType', type)" class="px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border text-center" :class="transactionType === type ? 'bg-bejo-600 text-white border-bejo-600 shadow-lg shadow-bejo-600/20' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-bejo-300 hover:bg-bejo-50 hover:text-bejo-600'">
+                    <button v-for="type in ['Semua Label', 'Jual Saja', 'Sewa Saja']" :key="type" @click="$emit('update:transactionType', type)" class="px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border text-center" :class="transactionType === type ? 'bg-bejo-600 text-white border-bejo-600 shadow-lg shadow-bejo-600/20' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-bejo-300 hover:bg-bejo-50 hover:text-bejo-600'">
                       {{ type }}
                     </button>
                   </div>

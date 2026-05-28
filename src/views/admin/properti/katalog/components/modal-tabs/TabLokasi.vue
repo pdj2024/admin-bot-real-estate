@@ -148,10 +148,18 @@ const updateDropdownStyles = (type: 'kota' | 'area' | 'prio') => {
 
   if (targetRef) {
     const rect = (targetRef as any).$el.getBoundingClientRect()
-    dropdownStyles.value[type] = {
-      top: `${rect.bottom + 8}px`,
-      left: `${rect.left}px`,
-      width: `${rect.width}px`
+    if (type === 'prio') {
+      dropdownStyles.value[type] = {
+        bottom: `${window.innerHeight - rect.top + 8}px`,
+        left: `${rect.left}px`,
+        width: `${rect.width}px`
+      }
+    } else {
+      dropdownStyles.value[type] = {
+        top: `${rect.bottom + 8}px`,
+        left: `${rect.left}px`,
+        width: `${rect.width}px`
+      }
     }
   }
 }

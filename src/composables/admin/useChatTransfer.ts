@@ -2,6 +2,25 @@ import { ref, computed } from 'vue'
 import api from '@/services/axios'
 import { confirm, success, fail } from '@/utils/sweet-alert'
 
+/** Konversi getDay() JS ke format API (1=Senin ... 7=Minggu) */
+const getTodayHari = (): number => {
+  const jsDay = new Date().getDay() // 0=Minggu, 1=Senin, ..., 6=Sabtu
+  return jsDay === 0 ? 7 : jsDay
+}
+
+/** Cek apakah jam sekarang dalam rentang jam_mulai – jam_selesai (format "HH:MM:SS" atau "HH:MM") */
+const isNowInRange = (jamMulai: string, jamSelesai: string): boolean => {
+  const now = new Date()
+  const nowMinutes = now.getHours() * 60 + now.getMinutes()
+
+  const toMinutes = (t: string) => {
+    const [h, m] = t.split(':').map(Number)
+    return h * 60 + m
+  }
+
+  return nowMinutes >= toMinutes(jamMulai) && nowMinutes <= toMinutes(jamSelesai)
+}
+
 export function useChatTransfer(props: any, emit: any, sendChat: any) {
   const adminsList = ref<any[]>([])
   const searchCS = ref('')
@@ -10,8 +29,31 @@ export function useChatTransfer(props: any, emit: any, sendChat: any) {
   const fetchAdmins = async () => {
     isFetchingAdmins.value = true
     try {
-      const res = await api.get('/api/admin/getAll?orderby=Tgl_Created&orderdir=desc', { headers: { 'X-Jenis-User': 'admin' } })
-      adminsList.value = res.data.Data || []
+      const hari = getTodayHari()
+
+      // 1. Ambil jadwal kerja hari ini
+      const jadwalRes = await api.get(
+        `/api/admin/jadwal/getAll?hari=${hari}&orderby=no_id&orderdir=desc`,
+        { headers: { 'X-Jenis-User': 'admin' } }
+      )
+      const jadwalList: any[] = jadwalRes.data.Data || []
+
+      // 2. Filter hanya yang masuk & jam sekarang dalam rentang kerja
+      const activeAdminIds = new Set(
+        jadwalList
+          .filter(j => !j.Is_Libur && isNowInRange(j.Jam_Mulai, j.Jam_Selesai))
+          .map(j => j.Id_Admin)
+      )
+
+      // 3. Ambil semua data admin
+      const adminRes = await api.get(
+        '/api/admin/getAll?orderby=Tgl_Created&orderdir=desc',
+        { headers: { 'X-Jenis-User': 'admin' } }
+      )
+      const allAdmins: any[] = adminRes.data.Data || []
+
+      // 4. Hanya tampilkan admin yang sedang bertugas saat ini
+      adminsList.value = allAdmins.filter(a => activeAdminIds.has(a.No_Id))
     } catch {
       fail('Gagal mengambil data admin')
     } finally {
@@ -71,3 +113,4 @@ export function useChatTransfer(props: any, emit: any, sendChat: any) {
     handleTransferChat
   }
 }
+

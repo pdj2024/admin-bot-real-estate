@@ -1,91 +1,138 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
-import { Icon } from '@iconify/vue'
-import { prospectOptions, prospectSeries } from './data'
+import { ref, onMounted, computed, watch } from 'vue'
+import api from '@/services/axios'
 import VueApexCharts from 'vue3-apexcharts'
+import type { ApexOptions } from 'apexcharts'
+
+const props = withDefaults(
+  defineProps<{
+    startDate?: string
+    endDate?: string
+  }>(),
+  {
+    startDate: '2026-01-01',
+    endDate: '2026-12-31'
+  }
+)
 
 const isLoading = ref(true)
-const timeFilter = ref('Bulan Ini')
-const isDownloading = ref(false)
-const showDropdown = ref(false)
 
-const handleDownload = () => {
-  isDownloading.value = true
-  
-  // Simulate creating and downloading a file
-  setTimeout(() => {
-    const content = "Laporan Analitik Prospek\nRentang: " + timeFilter.value + "\nTotal Prospek: 722\nTotal Visit: 315";
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Laporan_Prospek_${timeFilter.value.replace(/ /g, '_')}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
-    
-    isDownloading.value = false
-  }, 1500)
+const newAppointments = ref<any[]>([])
+const finishedAppointments = ref<any[]>([])
+
+const getMonthIndex = (dateStr: string) => {
+  if (!dateStr) return -1
+  const parts = dateStr.split('T')[0].split('-')
+  if (parts.length < 2) return -1
+  const month = parseInt(parts[1], 10)
+  return month - 1 // 0-11
 }
 
-const closeDropdown = (e: MouseEvent) => {
-  if (!(e.target as HTMLElement).closest('.filter-dropdown')) {
-    showDropdown.value = false
+const monthlyNewData = computed(() => {
+  const counts = Array(12).fill(0)
+  newAppointments.value.forEach(item => {
+    const idx = getMonthIndex(item.Tanggal_Janji)
+    if (idx >= 0 && idx < 12) {
+      counts[idx]++
+    }
+  })
+  return counts
+})
+
+const monthlyFinishedData = computed(() => {
+  const counts = Array(12).fill(0)
+  finishedAppointments.value.forEach(item => {
+    const idx = getMonthIndex(item.Tanggal_Janji)
+    if (idx >= 0 && idx < 12) {
+      counts[idx]++
+    }
+  })
+  return counts
+})
+
+const fetchAnalyticsData = async () => {
+  isLoading.value = true
+  try {
+    const [resNew, resFinished] = await Promise.all([
+      api.get(`/api/janjiTemu/getAll?tanggal_mulai=${props.startDate}&tanggal_selesai=${props.endDate}&status_progress=baru&orderby=no_id&orderdir=desc`, {
+        headers: { 'X-Jenis-User': 'admin' }
+      }),
+      api.get(`/api/janjiTemu/getAll?tanggal_mulai=${props.startDate}&tanggal_selesai=${props.endDate}&status_progress=selesai&orderby=no_id&orderdir=desc`, {
+        headers: { 'X-Jenis-User': 'admin' }
+      })
+    ])
+    newAppointments.value = resNew.data.Data || []
+    finishedAppointments.value = resFinished.data.Data || []
+  } catch (error) {
+    console.error('Gagal mengambil data analitik kunjungan:', error)
+  } finally {
+    isLoading.value = false
   }
 }
 
-onMounted(() => {
-  window.addEventListener('click', closeDropdown)
-  setTimeout(() => {
-    isLoading.value = false
-  }, 1500)
-})
+watch(() => [props.startDate, props.endDate], fetchAnalyticsData)
 
-onUnmounted(() => {
-  window.removeEventListener('click', closeDropdown)
-})
+const series = computed(() => [
+  {
+    name: 'Janji Temu Baru',
+    data: monthlyNewData.value
+  },
+  {
+    name: 'Kunjungan Selesai',
+    data: monthlyFinishedData.value
+  }
+])
+
+const chartOptions = computed<ApexOptions>(() => ({
+  chart: {
+    type: 'area',
+    height: 280,
+    toolbar: { show: false },
+    fontFamily: 'inherit'
+  },
+  stroke: { curve: 'smooth', width: 3 },
+  fill: {
+    type: 'gradient',
+    gradient: {
+      shadeIntensity: 1,
+      opacityFrom: 0.35,
+      opacityTo: 0.02,
+      stops: [20, 100]
+    }
+  },
+  colors: ['#ef8c4c', '#6366f1'], // Brand Bejo Orange & Premium Indigo
+  dataLabels: { enabled: false },
+  grid: {
+    borderColor: '#f1f5f9',
+    strokeDashArray: 4,
+    padding: { left: 10, right: 10, bottom: 0 }
+  },
+  xaxis: {
+    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'],
+    axisBorder: { show: false },
+    axisTicks: { show: false },
+    labels: { style: { colors: '#94a3b8', fontWeight: 600 } }
+  },
+  yaxis: {
+    labels: { style: { colors: '#94a3b8', fontWeight: 600 } }
+  },
+  legend: {
+    position: 'top',
+    horizontalAlign: 'right',
+    fontWeight: 700,
+    markers: { size: 6 }
+  }
+}))
+
+onMounted(fetchAnalyticsData)
 </script>
 
 <template>
   <div class="card bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/50 h-full">
     <div class="flex items-center justify-between mb-8">
       <div>
-        <h4 class="text-lg font-black text-slate-900 leading-tight">Analitik Prospek</h4>
-        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Performa Marketing & Kunjungan</p>
-      </div>
-      <div class="flex gap-2">
-        <div class="relative filter-dropdown">
-          <button 
-            @click.stop="showDropdown = !showDropdown"
-            class="px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold text-slate-600 hover:bg-white hover:border-bejo-200 transition-all flex items-center gap-2"
-          >
-            {{ timeFilter }}
-            <Icon icon="lucide:chevron-down" class="size-3" />
-          </button>
-          <!-- Click-based Dropdown -->
-          <div 
-            v-if="showDropdown"
-            class="absolute top-full right-0 mt-2 w-48 bg-white border border-slate-100 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] p-2 z-[50] animate-in fade-in zoom-in-95 duration-200"
-          >
-            <button 
-              v-for="opt in ['Bulan Ini', '3 Bulan Terakhir', 'Tahun Ini']" 
-              :key="opt"
-              @click="timeFilter = opt; showDropdown = false"
-              class="w-full text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-bejo-600 hover:bg-bejo-50 rounded-xl transition-all flex items-center justify-between"
-            >
-              {{ opt }}
-              <Icon v-if="timeFilter === opt" icon="lucide:check" class="size-3 text-bejo-600" />
-            </button>
-          </div>
-        </div>
-        <button 
-          @click="handleDownload"
-          :disabled="isDownloading"
-          class="p-2 bg-bejo-500 text-white rounded-xl shadow-lg shadow-bejo-500/20 hover:-translate-y-1 transition-all disabled:opacity-50"
-        >
-           <Icon :icon="isDownloading ? 'lucide:loader-2' : 'lucide:download'" :class="{'animate-spin': isDownloading}" class="size-4" />
-        </button>
+        <h4 class="text-lg font-black text-slate-900 leading-tight">Analitik Kunjungan</h4>
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Grafik Kunjungan Baru dan Selesai</p>
       </div>
     </div>
 
@@ -102,17 +149,17 @@ onUnmounted(() => {
 
     <template v-else>
       <div class="-mx-4">
-        <VueApexCharts type="area" height="264" :options="prospectOptions" :series="prospectSeries" />
+        <VueApexCharts type="area" height="264" :options="chartOptions" :series="series" />
       </div>
 
-      <div class="mt-6 pt-6 border-t border-slate-50 grid grid-cols-2 gap-4">
+      <div class="mt-6 pt-6 border-t border-slate-100 grid grid-cols-2 gap-4">
         <div class="flex items-center gap-3">
-          <div class="size-2 rounded-full bg-bejo-200"></div>
-          <span class="text-xs font-bold text-slate-600">Total Prospek: <span class="text-slate-900">722</span></span>
+          <div class="size-2.5 rounded-full bg-[#ef8c4c]"></div>
+          <span class="text-xs font-black text-slate-500 uppercase tracking-wide">Total Janji Temu Baru: <span class="text-slate-900 font-bold ml-1">{{ newAppointments.length }}</span></span>
         </div>
-        <div class="flex items-center gap-3">
-          <div class="size-2 rounded-full bg-bejo-600"></div>
-          <span class="text-xs font-bold text-slate-600">Total Visit: <span class="text-slate-900">315</span></span>
+        <div class="flex items-center gap-3 justify-end">
+          <div class="size-2.5 rounded-full bg-[#6366f1]"></div>
+          <span class="text-xs font-black text-slate-500 uppercase tracking-wide">Total Kunjungan Selesai: <span class="text-slate-900 font-bold ml-1">{{ finishedAppointments.length }}</span></span>
         </div>
       </div>
     </template>

@@ -426,7 +426,7 @@ const preProcessChat = (chat: Chat): Chat => {
     .replace(/```(.*?)```/gs, '$1') // Monospace
 
   // 2. formatMessage logic:
-  let processedMsg = rawMsg.replace(/\n/g, ' ')
+  let processedMsg = rawMsg.replace('_X7#mQ9!vW2_', ' ').replace(/\n/g, ' ')
 
   const base64IdxFormat = processedMsg.indexOf('_data:image/')
   if (base64IdxFormat !== -1) {

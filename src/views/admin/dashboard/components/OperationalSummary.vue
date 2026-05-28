@@ -38,19 +38,27 @@ const fetchData = async () => {
 
     // 1. Admin Stats
     stats.value[0].value = admins.length
-    const adminAktif = admins.filter((a: any) => a.Status_User === 'Aktif').length
+    const adminAktif = admins.filter((a: any) => a.Status?.toLowerCase() === 'aktif').length
     const adminNon = admins.length - adminAktif
     stats.value[0].subValue = `${adminAktif} / ${adminNon}`
     
     // 2. Customer Stats
     stats.value[1].value = customers.length
-    const custAktif = customers.filter((c: any) => c.Status_User === 'Aktif').length
+    const custAktif = customers.filter((c: any) => c.Status?.toLowerCase() === 'aktif').length
     const custNon = customers.length - custAktif
     stats.value[1].subValue = `${custAktif} / ${custNon}`
 
     // 3. Chat Stats
-    stats.value[2].value = chatBot.length + chatSaya.length
-    stats.value[2].subValue = `${chatBot.length} / ${chatSaya.length}`
+    const userId = localStorage.getItem('no_id') || ''
+    const activeBotRooms = chatBot.filter((item: any) => item.Room_Id).length
+    const activeChatSayaRooms = chatSaya.filter((item: any) => {
+      if (item.Status !== 'aktif' || !item.Id_Lawan || !item.Telepon_User_Lawan) return false
+      const userIds = item.User_Ids || []
+      return userIds.includes(userId)
+    }).length
+
+    stats.value[2].value = activeBotRooms + activeChatSayaRooms
+    stats.value[2].subValue = `${activeBotRooms} / ${activeChatSayaRooms}`
 
     // 4. Wilayah Stats
     stats.value[3].value = (resKota.data.Data || []).length

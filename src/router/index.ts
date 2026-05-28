@@ -92,6 +92,15 @@ const router = createRouter({
       component: () => import('@/views/admin/dashboard/index.vue')
     },
     {
+      path: '/performa',
+      name: 'Performa',
+      meta: {
+        title: 'Performa Agen',
+        requiresAuth: true
+      },
+      component: () => import('@/views/admin/performa/index.vue')
+    },
+    {
       path: '/chat',
       name: 'Chat',
       meta: {

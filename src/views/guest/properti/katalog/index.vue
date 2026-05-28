@@ -61,7 +61,7 @@
         </aside>
 
         <section class="xl:col-span-3">
-          <Rumah @openFilter="toggleFilter" :searchQuery="searchQuery" :facilities="facilities" :region="region" :priceRange="priceRange" v-model:transactionType="transactionType" :isAdmin="isAdmin" />
+          <Rumah @openFilter="toggleFilter" :searchQuery="searchQuery" v-model:selectedType="selectedType" :facilities="facilities" :region="region" :priceRange="priceRange" v-model:transactionType="transactionType" :isAdmin="isAdmin" />
         </section>
       </div>
     </div>
@@ -89,6 +89,7 @@ const router = useRouter()
 // State untuk mengontrol filter-filter
 const isFilterOpen = ref(false)
 const searchQuery = ref('')
+const selectedType = ref('Semua Tipe')
 const facilities = ref({
   kamarTidur: '',
   kamarMandi: '',
@@ -126,6 +127,10 @@ onMounted(() => {
   // Handle query params for region
   const queryProv = route.query.province as string
   const queryCity = route.query.city as string
+  const queryType = route.query.type as string
+  const queryLabel = route.query.label as string
+  const queryPriceMin = route.query.priceMin as string
+  const queryPriceMax = route.query.priceMax as string
 
   let hasFilter = false
 
@@ -144,6 +149,30 @@ onMounted(() => {
 
   if (queryCity) {
     region.value.city = queryCity
+    hasFilter = true
+  }
+
+  if (queryType) {
+    selectedType.value = queryType
+    hasFilter = true
+  }
+
+  if (queryLabel) {
+    if (queryLabel.toLowerCase() === 'sewa') {
+      transactionType.value = 'Sewa Saja'
+    } else if (queryLabel.toLowerCase() === 'jual') {
+      transactionType.value = 'Jual Saja'
+    }
+    hasFilter = true
+  }
+
+  if (queryPriceMin) {
+    priceRange.value.min = queryPriceMin
+    hasFilter = true
+  }
+
+  if (queryPriceMax) {
+    priceRange.value.max = queryPriceMax
     hasFilter = true
   }
 

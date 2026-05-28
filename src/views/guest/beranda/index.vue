@@ -48,27 +48,78 @@
                 <div class="h-10 w-px bg-slate-100 hidden md:block"></div>
 
                 <!-- City Filter -->
-                <div class="w-full md:w-60 px-6 py-2 flex items-center gap-3 group/select relative">
+                <div id="city-select-container" class="w-full md:w-60 px-6 py-2 flex items-center gap-3 group/select relative cursor-pointer">
                   <Icon icon="lucide:map-pin" class="size-5 text-slate-400 group-hover/select:text-bejo-600 transition-colors" />
-                  <select 
-                    v-model="selectedCity"
-                    class="w-full bg-transparent border-none focus:ring-0 text-slate-800 font-bold text-sm cursor-pointer py-2 appearance-none pr-8"
+                  <div @click="isCityDropdownOpen = !isCityDropdownOpen" class="w-full bg-transparent border-none text-slate-800 font-bold text-sm py-2 pr-8 select-none truncate">
+                    {{ selectedCity || 'Semua Kota' }}
+                  </div>
+                  <Icon icon="lucide:chevron-down" class="absolute right-6 size-4 text-slate-400 pointer-events-none transition-transform duration-300" :class="isCityDropdownOpen ? 'rotate-180 text-bejo-600' : ''" />
+
+                  <!-- Custom Dropdown Menu -->
+                  <Transition
+                    enter-active-class="transition duration-150 ease-out"
+                    enter-from-class="transform scale-95 opacity-0 translate-y-2"
+                    enter-to-class="transform scale-100 opacity-100 translate-y-0"
+                    leave-active-class="transition duration-100 ease-in"
+                    leave-from-class="transform scale-100 opacity-100 translate-y-0"
+                    leave-to-class="transform scale-95 opacity-0 translate-y-2"
                   >
-                    <option value="">Semua Kota</option>
-                    <option v-for="city in uniqueCities" :key="city" :value="city">{{ city }}</option>
-                  </select>
-                  <Icon icon="lucide:chevron-down" class="absolute right-6 size-4 text-slate-400 pointer-events-none" />
+                    <div v-show="isCityDropdownOpen" class="absolute right-0 bottom-full mb-2 bg-white border border-slate-100 shadow-2xl rounded-2xl overflow-hidden z-[100] max-h-60 overflow-y-auto custom-scroll py-2 flex flex-col gap-1.5 w-72 md:w-80">
+                      <button 
+                        @click.stop="selectCity('')" 
+                        class="w-full text-left px-4 py-3 text-xs font-bold rounded-xl transition-all leading-relaxed"
+                        :class="!selectedCity ? 'bg-bejo-50 text-bejo-700 font-black' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+                      >
+                        Semua Kota
+                      </button>
+                      <button 
+                        v-for="city in uniqueCities" 
+                        :key="city" 
+                        @click.stop="selectCity(city)" 
+                        class="w-full text-left px-3 py-1 text-xs font-bold rounded-xl transition-all leading-relaxed"
+                        :class="selectedCity === city ? 'bg-bejo-50 text-bejo-700 font-black' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+                      >
+                        {{ city }}
+                      </button>
+                    </div>
+                  </Transition>
                 </div>
 
                 <button @click="handleHeroSearch" class="w-full md:w-auto px-10 py-4 md:py-4.5 bg-bejo-600 hover:bg-bejo-700 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-bejo-600/20 flex items-center justify-center gap-3">
                   Cari Unit
                 </button>
               </div>
-              <!-- Trending Tags -->
-              <div class="flex flex-wrap items-center justify-center gap-3 mt-6">
-                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Populer:</span>
-                <button @click="quickSearch('Rumah')" class="px-4 py-1.5 bg-bejo-50 hover:bg-bejo-600 hover:text-white text-bejo-700 text-[10px] font-black rounded-full border border-bejo-100 transition-all uppercase tracking-wider">Rumah</button>
-                <button @click="quickSearch('Apartemen')" class="px-4 py-1.5 bg-bejo-50 hover:bg-bejo-600 hover:text-white text-bejo-700 text-[10px] font-black rounded-full border border-bejo-100 transition-all uppercase tracking-wider">Apartemen</button>
+              <!-- Trending Tags Carousel -->
+              <div class="flex items-center justify-center gap-3 mt-6 select-none">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-1 shrink-0">Populer:</span>
+                
+                <!-- Prev Button -->
+                <button @click="prevTags" class="size-6 rounded-full bg-bejo-50 hover:bg-bejo-600 hover:text-white text-bejo-700 flex items-center justify-center border border-bejo-100 transition-all shrink-0 hover:scale-110 active:scale-90">
+                  <Icon icon="lucide:chevron-left" class="size-3" />
+                </button>
+
+                <!-- Tags List with Transition -->
+                <div class="flex items-center overflow-hidden px-1 h-8">
+                  <TransitionGroup 
+                    name="list" 
+                    tag="div" 
+                    class="flex items-center gap-2 relative h-full"
+                  >
+                    <button 
+                      v-for="tag in visibleTags" 
+                      :key="tag.label" 
+                      @click="tag.action()" 
+                      class="px-4 py-1.5 bg-bejo-50 hover:bg-bejo-600 hover:text-white text-bejo-700 text-[10px] font-black rounded-full border border-bejo-100 transition-all uppercase tracking-wider whitespace-nowrap hover:scale-105 active:scale-95 duration-300"
+                    >
+                      {{ tag.label }}
+                    </button>
+                  </TransitionGroup>
+                </div>
+
+                <!-- Next Button -->
+                <button @click="nextTags" class="size-6 rounded-full bg-bejo-50 hover:bg-bejo-600 hover:text-white text-bejo-700 flex items-center justify-center border border-bejo-100 transition-all shrink-0 hover:scale-110 active:scale-90">
+                  <Icon icon="lucide:chevron-right" class="size-3" />
+                </button>
               </div>
             </div>
 
@@ -383,7 +434,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import GuestLayout from '@/layouts/guest.vue'
@@ -391,6 +442,19 @@ import api from '@/services/axios'
 import ProductCard from '@/components/ProductCard.vue'
 import IndonesiaMap from './components/IndonesiaMap.vue'
 import { useSettings } from '@/stores/settings'
+
+const isCityDropdownOpen = ref(false)
+const selectCity = (city: string) => {
+  selectedCity.value = city
+  isCityDropdownOpen.value = false
+}
+
+const handleClickOutside = (e: MouseEvent) => {
+  const target = e.target as HTMLElement
+  if (!target.closest('#city-select-container')) {
+    isCityDropdownOpen.value = false
+  }
+}
 
 const scrollContainer = ref<HTMLElement | null>(null)
 
@@ -457,15 +521,53 @@ const isRandomProductImageLoaded = ref(false)
 
 const heroSearch = ref('')
 const selectedCity = ref('')
-const uniqueCities = computed(() => {
-  const cities = allProducts.value.map(p => p.Nama_Kota).filter(Boolean)
+const uniqueCities = computed<string[]>(() => {
+  const cities = allProducts.value.map(p => p.Nama_Kota).filter((c): c is string => !!c)
   return Array.from(new Set(cities)).sort()
 })
+
+const popularTags = [
+  { label: 'Rumah', action: () => routeToKatalog({ type: 'Rumah' }) },
+  { label: 'Apartemen', action: () => routeToKatalog({ type: 'Apartemen' }) },
+  { label: 'Sewa', action: () => routeToKatalog({ label: 'Sewa' }) },
+  { label: 'Jual', action: () => routeToKatalog({ label: 'Jual' }) },
+  { label: 'Under 2M', action: () => routeToKatalog({ priceMax: '2000000000' }) },
+  { label: 'Mewah', action: () => routeToKatalog({ priceMin: '5000000000' }) }
+]
+
+const activeTagIndex = ref(0)
+const visibleTags = computed(() => {
+  const result = []
+  for (let i = 0; i < 3; i++) {
+    const idx = (activeTagIndex.value + i) % popularTags.length
+    result.push(popularTags[idx])
+  }
+  return result
+})
+
+const nextTags = () => {
+  activeTagIndex.value = (activeTagIndex.value + 1) % popularTags.length
+}
+
+const prevTags = () => {
+  activeTagIndex.value = (activeTagIndex.value - 1 + popularTags.length) % popularTags.length
+}
+
+let tagInterval: any = null
 
 const handleHeroSearch = () => {
   const query: any = {}
   if (heroSearch.value.trim()) query.search = heroSearch.value.trim()
-  if (selectedCity.value) query.city = selectedCity.value
+  
+  if (selectedCity.value) {
+    const parts = selectedCity.value.split(',')
+    if (parts.length > 1) {
+      query.city = parts[0].trim()
+      query.province = parts[1].trim()
+    } else {
+      query.city = selectedCity.value
+    }
+  }
   
   router.push({
     path: '/katalog',
@@ -473,10 +575,10 @@ const handleHeroSearch = () => {
   })
 }
 
-const quickSearch = (tag: string) => {
+const routeToKatalog = (filterParams: { type?: string, label?: string, priceMin?: string, priceMax?: string }) => {
   router.push({
     path: '/katalog',
-    query: { search: tag }
+    query: filterParams
   })
 }
 
@@ -611,11 +713,38 @@ const fetchData = async () => {
 
 onMounted(() => {
   fetchData()
+  window.addEventListener('click', handleClickOutside)
+  tagInterval = setInterval(nextTags, 4000)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('click', handleClickOutside)
+  if (tagInterval) clearInterval(tagInterval)
 })
 </script>
 
 <style scoped>
 @reference "@/assets/css/style.css";
+
+/* List Transition for Carousel Tags */
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.list-enter-from {
+  opacity: 0;
+  transform: translateY(12px) scale(0.9);
+}
+.list-leave-to {
+  opacity: 0;
+  transform: translateY(-12px) scale(0.9);
+}
+.list-leave-active {
+  position: absolute;
+}
+.list-move {
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
 .custom-scroll {
   scrollbar-width: thin;
@@ -638,6 +767,15 @@ onMounted(() => {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+.select-no-arrow {
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+}
+.select-no-arrow::-ms-expand {
+  display: none !important;
 }
 
 @keyframes scroll-hint {

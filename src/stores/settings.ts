@@ -115,6 +115,8 @@ export const useSettings = defineStore('settings', () => {
 
       if (data.StatusCode === 200 && data.Data.length > 0) {
         const defaults = data.Data[0]
+        localStorage.setItem('nilai_default', JSON.stringify(defaults))
+        
         app.isMaintenance = defaults.Is_Maintenance
         app.viewDiscount = defaults.View_Nilai_Diskon ?? true
         bot.isActive = defaults.Bot_Active
@@ -175,6 +177,17 @@ export const useSettings = defineStore('settings', () => {
         const storedBot = localStorage.getItem('bot_settings')
         if (storedBot) {
           Object.assign(bot, JSON.parse(storedBot))
+        }
+
+        const storedDefaults = localStorage.getItem('nilai_default')
+        if (storedDefaults) {
+          const defaults = JSON.parse(storedDefaults)
+          app.isMaintenance = defaults.Is_Maintenance
+          app.viewDiscount = defaults.View_Nilai_Diskon ?? true
+          bot.isActive = defaults.Bot_Active
+          theme.sidebarType = defaults.Sidebar_Type || theme.sidebarType
+          theme.primaryColor = (defaults.Primary_Color || theme.primaryColor).toUpperCase()
+          theme.secondaryColor = (defaults.Secondary_Color || theme.secondaryColor).toUpperCase()
         }
 
         const storedApp = localStorage.getItem('app_global_status')

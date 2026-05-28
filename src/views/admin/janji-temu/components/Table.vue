@@ -55,11 +55,18 @@ const handleUpdateStatus = async (item: any, newStatus: string) => {
   confirm(`Ubah status progress menjadi ${newStatus}?`, async () => {
     try {
       if (newStatus === 'dikonfirmasi') {
-        await api.put(`/api/janjiTemu/confirm?no_id=${item.No_Id}`, null, {
+        const adminId = localStorage.getItem('no_id') || ''
+        await api.put(`/api/janjiTemu/confirm?no_id=${item.No_Id}`, { Id_Admin: adminId }, {
           headers: { 'X-Jenis-User': 'admin' }
         })
       } else {
-        const payload = { ...item, Status_Progress: newStatus }
+        const payload = { 
+          ...item, 
+          Status_Progress: newStatus,
+          Tanggal_Janji: null,
+          Waktu_Janji: null,
+          Waktu_Selesai: null
+        }
         await api.put(`/api/janjiTemu/update?no_id=${item.No_Id}`, payload, {
           headers: { 'X-Jenis-User': 'admin' }
         })
@@ -318,21 +325,21 @@ if (typeof window !== 'undefined') {
                 <span
                   class="px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider inline-flex items-center gap-2 font-mono"
                   :class="{
-                    'bg-bejo-50 text-bejo-700': row.original.Status_Progress === 'baru',
-                    'bg-emerald-100 text-emerald-700': row.original.Status_Progress === 'selesai',
-                    'bg-red-100 text-red-700': row.original.Status_Progress === 'batal',
-                    'bg-blue-100 text-blue-700': row.original.Status_Progress === 'proses',
-                    'bg-violet-100 text-violet-700': row.original.Status_Progress === 'dikonfirmasi'
+                    'bg-blue-50 text-blue-700': row.original.Status_Progress === 'baru',
+                    'bg-bejo-50 text-bejo-700': row.original.Status_Progress === 'dikonfirmasi',
+                    'bg-amber-100 text-amber-900': row.original.Status_Progress === 'proses',
+                    'bg-emerald-50 text-emerald-800': row.original.Status_Progress === 'selesai',
+                    'bg-red-50 text-red-700': row.original.Status_Progress === 'batal'
                   }"
                 >
                   <div
                     class="size-2 rounded-full shrink-0"
                     :class="{
-                      'bg-bejo-500': row.original.Status_Progress === 'baru',
-                      'bg-emerald-500': row.original.Status_Progress === 'selesai',
-                      'bg-red-500': row.original.Status_Progress === 'batal',
-                      'bg-blue-500': row.original.Status_Progress === 'proses',
-                      'bg-violet-500': row.original.Status_Progress === 'dikonfirmasi'
+                      'bg-blue-500': row.original.Status_Progress === 'baru',
+                      'bg-bejo-500': row.original.Status_Progress === 'dikonfirmasi',
+                      'bg-amber-800': row.original.Status_Progress === 'proses',
+                      'bg-emerald-600': row.original.Status_Progress === 'selesai',
+                      'bg-red-500': row.original.Status_Progress === 'batal'
                     }"
                   ></div>
                   {{ row.original.Status_Progress }}
@@ -386,11 +393,11 @@ if (typeof window !== 'undefined') {
                               <span
                                 class="px-2 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider font-mono"
                                 :class="{
-                                  'bg-bejo-50 text-bejo-700': item.Status_Progress === 'baru',
-                                  'bg-emerald-100 text-emerald-700': item.Status_Progress === 'selesai',
-                                  'bg-red-100 text-red-700': item.Status_Progress === 'batal',
-                                  'bg-blue-100 text-blue-700': item.Status_Progress === 'proses',
-                                  'bg-violet-100 text-violet-700': item.Status_Progress === 'dikonfirmasi'
+                                  'bg-blue-50 text-blue-700': item.Status_Progress === 'baru',
+                                  'bg-bejo-50 text-bejo-700': item.Status_Progress === 'dikonfirmasi',
+                                  'bg-amber-100 text-amber-900': item.Status_Progress === 'proses',
+                                  'bg-emerald-50 text-emerald-800': item.Status_Progress === 'selesai',
+                                  'bg-red-50 text-red-700': item.Status_Progress === 'batal'
                                 }"
                               >
                                 {{ item.Status_Progress }}
@@ -433,11 +440,11 @@ if (typeof window !== 'undefined') {
                               <span
                                 class="px-2 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider font-mono"
                                 :class="{
-                                  'bg-bejo-50 text-bejo-700': item.Status_Progress === 'baru',
-                                  'bg-emerald-100 text-emerald-700': item.Status_Progress === 'selesai',
-                                  'bg-red-100 text-red-700': item.Status_Progress === 'batal',
-                                  'bg-blue-100 text-blue-700': item.Status_Progress === 'proses',
-                                  'bg-violet-100 text-violet-700': item.Status_Progress === 'dikonfirmasi'
+                                  'bg-blue-50 text-blue-700': item.Status_Progress === 'baru',
+                                  'bg-bejo-50 text-bejo-700': item.Status_Progress === 'dikonfirmasi',
+                                  'bg-amber-100 text-amber-900': item.Status_Progress === 'proses',
+                                  'bg-emerald-50 text-emerald-800': item.Status_Progress === 'selesai',
+                                  'bg-red-50 text-red-700': item.Status_Progress === 'batal'
                                 }"
                               >
                                 {{ item.Status_Progress }}

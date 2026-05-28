@@ -50,7 +50,11 @@ const emit = defineEmits<{
           </button>
         </div>
 
-        <div v-if="filteredAdmins && filteredAdmins.length === 0 && !isFetchingAdmins" class="flex flex-col items-center justify-center py-8 text-slate-400"></div>
+        <div v-if="filteredAdmins && filteredAdmins.length === 0 && !isFetchingAdmins" class="flex flex-col items-center justify-center py-8 gap-2 text-slate-400">
+          <Icon icon="lucide:moon" class="size-8 text-slate-300" />
+          <p class="text-xs font-bold text-slate-400 text-center">Tidak ada CS yang sedang bertugas saat ini</p>
+          <p class="text-[10px] text-slate-300 font-medium text-center">Silakan coba lagi di jam kerja</p>
+        </div>
       </div>
     </div>
   </div>

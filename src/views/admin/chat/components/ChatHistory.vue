@@ -26,9 +26,23 @@ const newMessagesCount = ref(0)
 const scrollEl = ref<HTMLElement | null>(null)
 const mediaUrlCache = ref<Record<string, string>>({})
 
+// Infinite Scroll / Lazy Load Pagination
+const visibleCount = ref(40)
+const visibleChats = computed(() => {
+  return props.chats.slice(-visibleCount.value)
+})
+
+// Global Image Preview Modal State
+const previewImageUrl = ref('')
+const showImagePreview = ref(false)
+const openImagePreview = (url: string) => {
+  previewImageUrl.value = url
+  showImagePreview.value = true
+}
+
 const firstUnreadIndex = computed(() => {
   if (props.activeTab !== 'chat_saya') return -1
-  return props.chats.findIndex((chat) => chat.Tipe_User === 'customer' && chat.Send_Status === 'delivered')
+  return visibleChats.value.findIndex((chat) => chat.Tipe_User === 'customer' && chat.Send_Status === 'delivered')
 })
 
 const getScrollElement = (): HTMLElement | null => {
@@ -52,6 +66,21 @@ const handleScroll = () => {
   // Reset new messages badge count when scrolled to the bottom
   if (!showScrollToBottom.value) {
     newMessagesCount.value = 0
+  }
+
+  // Infinite Scroll: Load older messages when scrolling near the top
+  if (scrollTop < 100 && visibleCount.value < props.chats.length) {
+    const previousScrollHeight = el.scrollHeight
+    const previousScrollTop = el.scrollTop
+    
+    // Load 40 more messages
+    visibleCount.value = Math.min(props.chats.length, visibleCount.value + 40)
+    
+    // Scroll Anchoring: keep scroll position stable while prepending items
+    nextTick(() => {
+      const newScrollHeight = el.scrollHeight
+      el.scrollTop = previousScrollTop + (newScrollHeight - previousScrollHeight)
+    })
   }
 }
 
@@ -187,12 +216,14 @@ watch(
     if (newLength === 0) {
       newMessagesCount.value = 0
       showScrollToBottom.value = false
+      visibleCount.value = 40
       return
     }
 
     if (!oldLength || oldLength === 0) {
       // Initial load: scroll to bottom, clear counts
       newMessagesCount.value = 0
+      visibleCount.value = 40
       scrollToBottom()
       return
     }
@@ -200,6 +231,9 @@ watch(
     const lastChat = props.chats[newLength - 1]
     const myId = localStorage.getItem('no_id') || ''
     const isSentByMe = String(lastChat.Sender_Id) === String(myId)
+
+    // Expand visible count to make sure the newly arrived message is included in the DOM
+    visibleCount.value++
 
     if (isSentByMe) {
       scrollToBottom()
@@ -221,6 +255,7 @@ watch(
     scrollEl.value = null
     showScrollToBottom.value = false
     newMessagesCount.value = 0
+    visibleCount.value = 40 // Reset on room change
     initScrollListener()
   },
   { immediate: true }
@@ -262,7 +297,7 @@ defineExpose({
       </div>
 
       <div v-else class="relative z-10 flex flex-col gap-4 px-4 py-4 sm:px-6 sm:py-6">
-        <template v-for="(chat, i) in chats" :key="chat.Message_Id || i">
+        <template v-for="(chat, i) in visibleChats" :key="chat.Message_Id || i">
           <!-- Unread Messages Divider -->
           <div v-if="i === firstUnreadIndex" class="flex items-center justify-center my-6 relative py-2 px-10">
             <div class="absolute inset-x-0 h-px bg-bejo-200/50"></div>
@@ -275,14 +310,15 @@ defineExpose({
             :id="'chat-message-' + i"
             :idx="i"
             :chat="chat"
-            :chats="chats"
+            :chats="visibleChats"
             :lastMessageId="lastMessageId"
             :highlight="highlight"
             :isActiveMatch="i === activeSearchChatIndex"
             :activeMatchIndex="activeMatchIndex"
             :resolvedImageUrl="getResolvedImageUrl(chat)"
-            @imageLoaded="scrollToBottom"
+            @imageLoaded="() => { if (!showScrollToBottom) scrollToBottom() }"
             @regenerateBrochure="$emit('regenerateBrochure', chat)"
+            @previewImage="openImagePreview"
           />
         </template>
       </div>
@@ -314,6 +350,28 @@ defineExpose({
         </div>
       </button>
     </Transition>
+
+    <!-- Global Image Preview Modal (One instance instead of one per bubble) -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition duration-300 ease-out"
+        enter-from-class="opacity-0 scale-95"
+        enter-to-class="opacity-100 scale-100"
+        leave-active-class="transition duration-200 ease-in"
+        leave-from-class="opacity-100 scale-100"
+        leave-to-class="opacity-0 scale-95"
+      >
+        <div v-if="showImagePreview" class="fixed inset-0 z-[1100] flex items-center justify-center p-4 md:p-10" @click="showImagePreview = false">
+          <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+          <div class="relative max-w-full max-h-full overflow-hidden rounded-2xl shadow-2xl animate-zoom-in" @click.stop>
+            <button @click="showImagePreview = false" class="absolute top-4 right-4 size-10 rounded-full bg-black/20 hover:bg-black/40 text-white backdrop-blur-md flex items-center justify-center transition-all z-10">
+              <Icon icon="lucide:x" class="size-6" />
+            </button>
+            <img :src="previewImageUrl" class="max-w-full max-h-[90vh] object-contain shadow-2xl" />
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 

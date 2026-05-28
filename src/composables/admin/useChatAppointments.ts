@@ -21,6 +21,7 @@ export function useChatAppointments(props: any, sendChat: any) {
     catatan: '',
     tanggal: '',
     waktu: '',
+    waktuSelesai: '',
     properti: '',
     unitId: '',
     mediaId: '',
@@ -93,7 +94,7 @@ export function useChatAppointments(props: any, sendChat: any) {
     events: allAppointments.value
       .filter(item => item.Status_Progress !== 'batal')
       .map((item) => ({
-        title: item.Id_Customer,
+        title: item.Waktu_Janji ? item.Waktu_Janji.slice(0, 5) : '',
         start: `${item.Tanggal_Janji.split('T')[0]}T${item.Waktu_Janji}`,
         backgroundColor: '#94a3b8',
         borderColor: '#94a3b8',
@@ -137,11 +138,13 @@ export function useChatAppointments(props: any, sendChat: any) {
         Tipe_Pertemuan: 'offline',
         Tanggal_Janji: f.tanggal,
         Waktu_Janji: f.waktu.length === 5 ? f.waktu + ':00' : f.waktu,
-        Waktu_Selesai: null,
+        Waktu_Selesai: f.waktuSelesai ? (f.waktuSelesai.length === 5 ? f.waktuSelesai + ':00' : f.waktuSelesai) : null,
         Lokasi_Pertemuan: f.lokasi,
-        Keterangan: f.catatan,
+        Keterangan: f.catatan || null,
         Status: 'aktif',
-        Status_Progress: 'baru'
+        Status_Progress: 'baru',
+        Id_Janji_Lama: null,
+        Alasan_Batal: null
       }, { headers: { 'X-Jenis-User': 'admin' } })
 
       // 2. Handle Image URL for WA

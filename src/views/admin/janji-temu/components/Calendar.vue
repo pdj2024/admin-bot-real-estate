@@ -19,11 +19,11 @@ const props = defineProps<{
 const calendarEvents = computed(() => {
   return props.appointments.map(item => {
     // Determine color based on Status_Progress
-    let color = '#ca6d2c' // Default Bejo
-    if (item.Status_Progress === 'selesai') color = '#10b981' // Emerald
+    let color = '#3b82f6' // Blue for 'baru' (pengajuan)
+    if (item.Status_Progress === 'selesai') color = '#047857' // Dark Green (emerald-700)
     if (item.Status_Progress === 'batal') color = '#ef4444' // Red
-    if (item.Status_Progress === 'proses') color = '#3b82f6' // Blue
-    if (item.Status_Progress === 'dikonfirmasi') color = '#8b5cf6' // Violet
+    if (item.Status_Progress === 'proses') color = '#78350f' // Brown (amber-900)
+    if (item.Status_Progress === 'dikonfirmasi') color = '#ef8c4c' // Orange Bejo (bejo-500)
     
     let className = 'event-baru'
     if (item.Status_Progress === 'selesai') className = 'event-selesai'
@@ -45,14 +45,14 @@ const calendarEvents = computed(() => {
   })
 })
 
-const calendarColClass = computed(() => (props.appointmentOpen ? 'xl:col-span-3' : 'xl:col-span-4'))
+const calendarColClass = computed(() => (props.appointmentOpen ? 'lg:col-span-8 xl:col-span-9' : 'lg:col-span-12'))
 const fullCalendarRef = ref<InstanceType<typeof FullCalendar> | null>(null)
 
 const calendarOptions = computed<CalendarOptions>(() => ({
   plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin],
   initialView: 'dayGridMonth',
   locale: idLocale,
-  height: 700,
+  height: 'auto',
   aspectRatio: 1.8,
   headerToolbar: {
     left: isMobile.value ? 'prev,next' : 'prev,next,today',
@@ -204,80 +204,80 @@ onMounted(() => {
   border: 1px solid #f1f5f9;
 }
 
-/* Event Status: baru (Bejo Orange/Amber theme) */
+/* Event Status: baru (Blue for pengajuan) */
 :deep(.event-baru) {
-  background-color: #fff9e6 !important;
-  border-color: #ffe0b2 !important;
-  color: #ca6d2c !important;
-}
-:deep(.event-baru.fc-v-event) {
-  border-left: 4px solid #ca6d2c !important;
-}
-:deep(.event-baru .fc-event-main), :deep(.event-baru .fc-event-title) {
-  color: #ca6d2c !important;
-}
-:deep(.fc-list-event.event-baru:hover td) {
-  background-color: #fff9e6 !important;
-}
-:deep(.fc-list-event.event-baru .fc-list-event-dot) {
-  border-color: #ca6d2c !important;
-}
-
-/* Event Status: dikonfirmasi (Violet/Purple) */
-:deep(.event-dikonfirmasi) {
-  background-color: #f3e8ff !important;
-  border-color: #e9d5ff !important;
-  color: #7e22ce !important;
-}
-:deep(.event-dikonfirmasi.fc-v-event) {
-  border-left: 4px solid #8b5cf6 !important;
-}
-:deep(.event-dikonfirmasi .fc-event-main), :deep(.event-dikonfirmasi .fc-event-title) {
-  color: #7e22ce !important;
-}
-:deep(.fc-list-event.event-dikonfirmasi:hover td) {
-  background-color: #f3e8ff !important;
-}
-:deep(.fc-list-event.event-dikonfirmasi .fc-list-event-dot) {
-  border-color: #8b5cf6 !important;
-}
-
-/* Event Status: proses (Blue) */
-:deep(.event-proses) {
   background-color: #eff6ff !important;
   border-color: #bfdbfe !important;
   color: #1d4ed8 !important;
 }
-:deep(.event-proses.fc-v-event) {
+:deep(.event-baru.fc-v-event) {
   border-left: 4px solid #3b82f6 !important;
 }
-:deep(.event-proses .fc-event-main), :deep(.event-proses .fc-event-title) {
+:deep(.event-baru .fc-event-main), :deep(.event-baru .fc-event-title) {
   color: #1d4ed8 !important;
 }
-:deep(.fc-list-event.event-proses:hover td) {
+:deep(.fc-list-event.event-baru:hover td) {
   background-color: #eff6ff !important;
 }
-:deep(.fc-list-event.event-proses .fc-list-event-dot) {
+:deep(.fc-list-event.event-baru .fc-list-event-dot) {
   border-color: #3b82f6 !important;
 }
 
-/* Event Status: selesai (Emerald/Green) */
+/* Event Status: dikonfirmasi (Orange Bejo) */
+:deep(.event-dikonfirmasi) {
+  background-color: #fef8f4 !important;
+  border-color: #fbe2d2 !important;
+  color: #c95d18 !important;
+}
+:deep(.event-dikonfirmasi.fc-v-event) {
+  border-left: 4px solid #ef8c4c !important;
+}
+:deep(.event-dikonfirmasi .fc-event-main), :deep(.event-dikonfirmasi .fc-event-title) {
+  color: #c95d18 !important;
+}
+:deep(.fc-list-event.event-dikonfirmasi:hover td) {
+  background-color: #fef8f4 !important;
+}
+:deep(.fc-list-event.event-dikonfirmasi .fc-list-event-dot) {
+  border-color: #ef8c4c !important;
+}
+
+/* Event Status: proses (Brown) */
+:deep(.event-proses) {
+  background-color: #fef3c7 !important;
+  border-color: #fde68a !important;
+  color: #78350f !important;
+}
+:deep(.event-proses.fc-v-event) {
+  border-left: 4px solid #92400e !important;
+}
+:deep(.event-proses .fc-event-main), :deep(.event-proses .fc-event-title) {
+  color: #78350f !important;
+}
+:deep(.fc-list-event.event-proses:hover td) {
+  background-color: #fef3c7 !important;
+}
+:deep(.fc-list-event.event-proses .fc-list-event-dot) {
+  border-color: #78350f !important;
+}
+
+/* Event Status: selesai (Dark Green) */
 :deep(.event-selesai) {
   background-color: #ecfdf5 !important;
   border-color: #a7f3d0 !important;
-  color: #047857 !important;
+  color: #065f46 !important;
 }
 :deep(.event-selesai.fc-v-event) {
-  border-left: 4px solid #10b981 !important;
+  border-left: 4px solid #047857 !important;
 }
 :deep(.event-selesai .fc-event-main), :deep(.event-selesai .fc-event-title) {
-  color: #047857 !important;
+  color: #065f46 !important;
 }
 :deep(.fc-list-event.event-selesai:hover td) {
   background-color: #ecfdf5 !important;
 }
 :deep(.fc-list-event.event-selesai .fc-list-event-dot) {
-  border-color: #10b981 !important;
+  border-color: #047857 !important;
 }
 
 /* Event Status: batal (Red) */
