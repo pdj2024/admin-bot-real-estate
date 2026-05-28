@@ -281,8 +281,57 @@ const handleUpdatePassword = async () => {
   })
 }
 
+const loadingSchedules = ref(false)
+const scheduleList = ref<any[]>([])
+
+const days = [
+  { name: 'Senin', num: 1 },
+  { name: 'Selasa', num: 2 },
+  { name: 'Rabu', num: 3 },
+  { name: 'Kamis', num: 4 },
+  { name: 'Jumat', num: 5 },
+  { name: 'Sabtu', num: 6 },
+  { name: 'Minggu', num: 7 }
+]
+
+const fetchSchedules = async () => {
+  loadingSchedules.value = true
+  try {
+    const { data } = await api.get('/api/admin/jadwal/getAll?orderby=no_id&orderdir=desc', {
+      headers: { 'X-Jenis-User': 'Admin' }
+    })
+    const list = data.Data || []
+    const filtered = list.filter((s: any) => s.Id_Admin === currentAdminId.value)
+    
+    scheduleList.value = []
+    days.forEach(d => {
+      const match = filtered.find((s: any) => s.Hari === d.num)
+      if (match) {
+        scheduleList.value.push({
+          Hari: d.name,
+          Jam_Mulai: match.Jam_Mulai ? match.Jam_Mulai.slice(0, 5) : '08:00',
+          Jam_Selesai: match.Jam_Selesai ? match.Jam_Selesai.slice(0, 5) : '17:00',
+          Is_Libur: match.Is_Libur === true || match.Is_Libur === 'true' || match.Is_Libur === 1
+        })
+      } else {
+        scheduleList.value.push({
+          Hari: d.name,
+          Jam_Mulai: '08:00',
+          Jam_Selesai: '17:00',
+          Is_Libur: d.num === 7
+        })
+      }
+    })
+  } catch (error) {
+    console.error('Gagal mengambil jadwal kerja admin:', error)
+  } finally {
+    loadingSchedules.value = false
+  }
+}
+
 onMounted(() => {
   fetchProfile()
+  fetchSchedules()
 })
 </script>
 
@@ -408,6 +457,46 @@ onMounted(() => {
               <Icon v-else icon="lucide:save" class="size-4" />
               {{ isSavingProfile ? 'Menyimpan...' : 'Simpan Profil' }}
             </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- JADWAL & JAM KERJA -->
+      <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
+        <div class="px-8 py-5 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="size-8 rounded-lg bg-bejo-500 flex items-center justify-center text-white shadow-lg shadow-bejo-500/20">
+              <Icon icon="lucide:calendar-range" class="size-4" />
+            </div>
+            <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest">Jadwal & Jam Kerja</h4>
+          </div>
+        </div>
+
+        <div class="p-8 space-y-6">
+          <div v-if="loadingSchedules" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 animate-pulse">
+            <div v-for="i in 7" :key="i" class="h-20 bg-slate-50 rounded-2xl border border-slate-100"></div>
+          </div>
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div 
+              v-for="sched in scheduleList" 
+              :key="sched.Hari"
+              class="p-5 border rounded-2xl transition-all duration-300 flex items-center justify-between"
+              :class="sched.Is_Libur ? 'bg-red-50/10 border-red-100' : 'bg-slate-50/40 border-slate-100 hover:border-bejo-100 hover:bg-white hover:shadow-md hover:shadow-slate-100'"
+            >
+              <div class="flex flex-col gap-1">
+                <span class="text-sm font-black text-slate-800">{{ sched.Hari }}</span>
+                <span class="text-xs font-bold" :class="sched.Is_Libur ? 'text-red-500' : 'text-slate-500'">
+                  <template v-if="sched.Is_Libur">Libur</template>
+                  <template v-else>{{ sched.Jam_Mulai }} — {{ sched.Jam_Selesai }} WIB</template>
+                </span>
+              </div>
+              <div 
+                class="size-8 rounded-lg flex items-center justify-center border shadow-sm"
+                :class="sched.Is_Libur ? 'bg-red-50 border-red-100 text-red-500' : 'bg-green-50 border-green-100 text-green-600'"
+              >
+                <Icon :icon="sched.Is_Libur ? 'lucide:calendar-x' : 'lucide:calendar-check'" class="size-4.5" />
+              </div>
+            </div>
           </div>
         </div>
       </div>
