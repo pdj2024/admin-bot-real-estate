@@ -60,7 +60,7 @@ const getSectionLabel = (key: string) => {
 
 <template>
   <Vertical>
-    <div class="p-0 md:p-3 md:pt-1 pb-32 space-y-6 md:space-y-8 relative">
+    <div class="p-4 md:p-3 md:pt-1 pb-32 space-y-6 md:space-y-8 relative">
       <!-- Welcome Section -->
       <GreetingsBanner v-if="sections.greetings" @open-settings="showSettings = true" />
 

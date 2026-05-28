@@ -1,7 +1,7 @@
 <template>
   <GuestLayout>
     <div class="mb-10 print:hidden space-y-10">
-      <div class="relative overflow-hidden rounded-[3.5rem] bg-white border border-bejo-100 p-12 md:p-16 lg:p-20 shadow-premium">
+      <div class="relative overflow-hidden rounded-[2rem] md:rounded-[3.5rem] bg-white border border-bejo-100 p-6 md:p-16 lg:p-20 shadow-premium">
         <!-- Mesh Gradient Background -->
         <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
           <div class="absolute -top-[30%] -right-[10%] size-[600px] bg-bejo-100/40 rounded-full blur-[100px]"></div>

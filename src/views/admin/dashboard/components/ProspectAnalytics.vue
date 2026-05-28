@@ -152,12 +152,12 @@ onMounted(fetchAnalyticsData)
         <VueApexCharts type="area" height="264" :options="chartOptions" :series="series" />
       </div>
 
-      <div class="mt-6 pt-6 border-t border-slate-100 grid grid-cols-2 gap-4">
+      <div class="mt-6 pt-6 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div class="flex items-center gap-3">
           <div class="size-2.5 rounded-full bg-[#ef8c4c]"></div>
           <span class="text-xs font-black text-slate-500 uppercase tracking-wide">Total Janji Temu Baru: <span class="text-slate-900 font-bold ml-1">{{ newAppointments.length }}</span></span>
         </div>
-        <div class="flex items-center gap-3 justify-end">
+        <div class="flex items-center gap-3 sm:justify-end">
           <div class="size-2.5 rounded-full bg-[#6366f1]"></div>
           <span class="text-xs font-black text-slate-500 uppercase tracking-wide">Total Kunjungan Selesai: <span class="text-slate-900 font-bold ml-1">{{ finishedAppointments.length }}</span></span>
         </div>

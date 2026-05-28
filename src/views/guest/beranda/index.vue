@@ -3,7 +3,7 @@
     <!-- Hero Section Beranda -->
     <section class="relative pt-6 pb-6 bg-white">
       <div class="w-full !px-4 sm:!px-8 lg:!px-10">
-        <div class="relative overflow-hidden rounded-[3.5rem] bg-white border border-bejo-100 shadow-premium px-8 pt-8 pb-12 md:px-24 md:pt-16 md:pb-16 lg:px-32 lg:pt-20 lg:pb-20 flex flex-col justify-center items-center min-h-[75vh]">
+        <div class="relative overflow-hidden rounded-[2rem] md:rounded-[3.5rem] bg-white border border-bejo-100 shadow-premium px-5 py-8 md:px-24 md:pt-16 md:pb-16 lg:px-32 lg:pt-20 lg:pb-20 flex flex-col justify-center items-center min-h-[75vh]">
           <!-- Mesh Gradient Background -->
           <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <div class="absolute -top-[20%] -right-[10%] size-[800px] bg-bejo-100/50 rounded-full blur-[120px] animate-pulse"></div>
@@ -133,7 +133,7 @@
 
           <!-- Stats Section (Premium Redesign) -->
           <div class="relative z-20 w-full max-w-6xl mt-20 px-4 md:px-0">
-            <div class="w-full mx-auto bg-white/60 backdrop-blur-3xl rounded-[3.5rem] p-10 md:p-14 shadow-premium border border-white grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 relative overflow-hidden">
+            <div class="w-full mx-auto bg-white/60 backdrop-blur-3xl rounded-[2rem] md:rounded-[3.5rem] p-6 md:p-14 shadow-premium border border-white grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 relative overflow-hidden">
               <!-- Glow Effect inside Stats -->
               <div class="absolute -top-24 -left-24 size-48 bg-bejo-100 rounded-full blur-[80px] opacity-40"></div>
               <div class="absolute -bottom-24 -right-24 size-48 bg-bejo-200 rounded-full blur-[80px] opacity-30"></div>

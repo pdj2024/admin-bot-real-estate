@@ -157,7 +157,7 @@ onMounted(async () => {
 
 <template>
   <Vertical>
-    <div class="p-0 md:p-3 py-10 pb-32 max-w-[1440px] mx-auto w-full">
+    <div class="p-4 md:p-3 py-10 pb-32 max-w-[1440px] mx-auto w-full">
 
       <div class="grid lg:grid-cols-12 grid-cols-1 gap-5">
         <SidebarProduct 

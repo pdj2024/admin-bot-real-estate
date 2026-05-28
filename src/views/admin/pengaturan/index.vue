@@ -175,7 +175,7 @@ const handleResetAppearance = async () => {
 
 <template>
   <Vertical>
-    <div class="p-0 md:p-3 md:pt-1 pb-32">
+    <div class="p-4 md:p-3 md:pt-1 pb-32">
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
       
       <!-- Left Sidebar Navigation (Sticky) -->

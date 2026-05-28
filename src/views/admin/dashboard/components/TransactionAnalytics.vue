@@ -155,12 +155,12 @@ onMounted(fetchTransactionData)
         <VueApexCharts type="bar" height="264" :options="chartOptions" :series="series" />
       </div>
 
-      <div class="mt-6 pt-6 border-t border-slate-100 grid grid-cols-2 gap-4">
+      <div class="mt-6 pt-6 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div class="flex items-center gap-3">
           <div class="size-2.5 rounded-full bg-[#ef8c4c]"></div>
           <span class="text-xs font-black text-slate-500 uppercase tracking-wide">Total Terjual: <span class="text-slate-900 font-bold ml-1">{{ totalSold }}</span></span>
         </div>
-        <div class="flex items-center gap-3 justify-end">
+        <div class="flex items-center gap-3 sm:justify-end">
           <div class="size-2.5 rounded-full bg-[#3b82f6]"></div>
           <span class="text-xs font-black text-slate-500 uppercase tracking-wide">Total Tersewa: <span class="text-slate-900 font-bold ml-1">{{ totalRented }}</span></span>
         </div>

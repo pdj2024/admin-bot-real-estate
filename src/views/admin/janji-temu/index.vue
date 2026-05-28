@@ -230,7 +230,7 @@ const handleRefresh = () => {
 
 <template>
   <Vertical>
-    <div class="p-0 md:p-3 md:pt-1 pb-24 space-y-4">
+    <div class="p-4 md:p-3 md:pt-1 pb-24 space-y-4">
       <!-- Title Section Removed -->
 
       <!-- Stats Overview -->

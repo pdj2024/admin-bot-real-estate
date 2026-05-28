@@ -197,7 +197,7 @@ onMounted(async () => {
 
 <template>
   <Vertical>
-    <div class="p-0 md:p-3 md:pt-1 pb-24 space-y-4">
+    <div class="p-4 md:p-3 md:pt-1 pb-24 space-y-4">
       
       <!-- Action Panel & Filters -->
       <div class="bg-white rounded-[2.5rem] p-6 md:p-8 border border-slate-100 shadow-xl shadow-slate-200/40 space-y-6">
