@@ -606,14 +606,14 @@ const generateBrochure = async (product: any) => {
       
       // Strikethrough
       const tw = doc.getTextWidth(opStr)
-      doc.setDrawColor('#ef4444')
+      doc.setDrawColor('#000000')
       doc.setLineWidth(0.4)
       doc.line(col3X - 0.5, pY - 1, col3X + tw + 0.5, pY - 1)
       
       // Promo Badge
-      doc.setFillColor('#ef4444')
+      doc.setFillColor('#cbd5e1') // bg-slate-300
       doc.roundedRect(col3X + tw + 2, pY - 3, 11, 4, 0.8, 0.8, 'F')
-      doc.setTextColor(255, 255, 255)
+      doc.setTextColor(0, 0, 0)
       doc.setFontSize(6)
       doc.text('PROMO', col3X + tw + 7.5, pY - 0.2, { align: 'center' })
       
@@ -657,14 +657,14 @@ const generateBrochure = async (product: any) => {
       
       // Strikethrough
       const tw = doc.getTextWidth(opStr)
-      doc.setDrawColor('#ef4444')
+      doc.setDrawColor('#000000')
       doc.setLineWidth(0.4)
       doc.line(col3X - 0.5, pY - 1, col3X + tw + 0.5, pY - 1)
       
       // Promo Badge
-      doc.setFillColor('#ef4444')
+      doc.setFillColor('#cbd5e1') // bg-slate-300
       doc.roundedRect(col3X + tw + 2, pY - 3, 11, 4, 0.8, 0.8, 'F')
-      doc.setTextColor(255, 255, 255)
+      doc.setTextColor(0, 0, 0)
       doc.setFontSize(6)
       doc.text('PROMO', col3X + tw + 7.5, pY - 0.2, { align: 'center' })
       
@@ -719,18 +719,18 @@ const generateBrochure = async (product: any) => {
       
       // Strikethrough
       const tw = doc.getTextWidth(opStr)
-      doc.setDrawColor('#ef4444')
+      doc.setDrawColor('#000000')
       doc.setLineWidth(0.4)
       doc.line(col3X - 0.5, pY - 1, col3X + tw + 0.5, pY - 1)
       
       // Promo Badge
-      doc.setFillColor('#ef4444')
+      doc.setFillColor('#cbd5e1') // bg-slate-300
       doc.roundedRect(col3X + tw + 2, pY - 3, 11, 4, 0.8, 0.8, 'F')
-      doc.setTextColor(255, 255, 255)
+      doc.setTextColor(0, 0, 0)
       doc.setFontSize(6)
       doc.text('PROMO', col3X + tw + 7.5, pY - 0.2, { align: 'center' })
       
-      pY += 6.5
+      pY += 9.5
     } else {
       pY += 1.5
     }

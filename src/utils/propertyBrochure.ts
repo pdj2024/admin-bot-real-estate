@@ -99,32 +99,32 @@ const drawPriceBlock = (
     // 1. Old Price (Strikethrough)
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(9.5)
-    doc.setTextColor(156, 163, 175) // #9ca3af
+    doc.setTextColor('#9ca3af') // Gray-400
     const opStr = `Rp ${formatPriceShort(harga1)}`
     doc.text(opStr, startX, y)
 
     const tw = doc.getTextWidth(opStr)
 
-    // Soft red strikethrough line (thickness 0.3)
-    doc.setDrawColor(248, 113, 113) // #f87171
-    doc.setLineWidth(0.3)
-    doc.line(startX, y - 1.2, startX + tw, y - 1.2)
+    // Black strikethrough line
+    doc.setDrawColor('#000000')
+    doc.setLineWidth(0.4)
+    doc.line(startX - 0.5, y - 1, startX + tw + 0.5, y - 1)
 
-    // 2. Soft Promo Badge (Light red background, dark red text)
-    const badgeW = 13
-    const badgeH = 4.2
-    const badgeX = startX + tw + 3
-    const badgeY = y - badgeH + 0.6
+    // 2. Promo Badge (Solid grey background, black text)
+    const badgeW = 11
+    const badgeH = 4
+    const badgeX = startX + tw + 2
+    const badgeY = y - 3
 
-    doc.setFillColor(254, 226, 226) // #fee2e2
+    doc.setFillColor('#cbd5e1') // bg-slate-300
     doc.roundedRect(badgeX, badgeY, badgeW, badgeH, 0.8, 0.8, 'F')
 
-    doc.setTextColor(220, 38, 38) // #dc2626
+    doc.setTextColor(0, 0, 0) // black text
     doc.setFont('helvetica', 'bold')
-    doc.setFontSize(5.5)
-    doc.text('PROMO', badgeX + badgeW / 2, badgeY + 3.0, { align: 'center' })
+    doc.setFontSize(6)
+    doc.text('PROMO', badgeX + badgeW / 2, y - 0.2, { align: 'center' })
 
-    y += 6.5
+    y += isSingle ? 9.5 : 6.5
   }
 
   // 3. Final Price
