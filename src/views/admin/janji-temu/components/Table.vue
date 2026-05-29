@@ -56,12 +56,16 @@ const handleUpdateStatus = async (item: any, newStatus: string) => {
     try {
       if (newStatus === 'dikonfirmasi') {
         const adminId = localStorage.getItem('no_id') || ''
-        await api.put(`/api/janjiTemu/confirm?no_id=${item.No_Id}`, { Id_Admin: adminId }, {
-          headers: { 'X-Jenis-User': 'admin' }
-        })
+        await api.put(
+          `/api/janjiTemu/confirm?no_id=${item.No_Id}`,
+          { Id_Admin: adminId },
+          {
+            headers: { 'X-Jenis-User': 'admin' }
+          }
+        )
       } else {
-        const payload = { 
-          ...item, 
+        const payload = {
+          ...item,
           Status_Progress: newStatus,
           Tanggal_Janji: null,
           Waktu_Janji: null,
@@ -282,7 +286,7 @@ if (typeof window !== 'undefined') {
               <td class="px-8 py-6">
                 <div class="flex items-center gap-2">
                   <span class="text-sm font-bold text-slate-800 bg-slate-100 px-2.5 py-1 rounded-lg">#{{ row.original.No_Tracking }}</span>
-                  <Icon v-if="row.original.Id_Janji_Lama" icon="lucide:history" class="size-4 text-bejo-500" />
+                  <Icon v-if="row.original.Id_Janji_Lama" icon="lucide:clipboard-list" class="size-4 text-bejo-500" />
                 </div>
               </td>
 

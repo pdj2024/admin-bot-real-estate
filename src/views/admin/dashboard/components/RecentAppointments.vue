@@ -70,7 +70,7 @@ const getStatusBadgeClass = (status: string) => {
   return 'bg-red-50 text-red-700' // batal
 }
 
-const triggerRect = ref<{ bottom: number, right: number } | null>(null)
+const triggerRect = ref<{ bottom: number; right: number } | null>(null)
 const toggleTimeline = (noId: string, event?: MouseEvent) => {
   if (expandedRowId.value === noId) {
     expandedRowId.value = null
@@ -93,12 +93,12 @@ const navigateToDetail = () => {
 
 // Filtering reschedules: if an appointment's No_Id is referenced in any other appointment's Id_Janji_Lama, it's a parent reschedule item and should be hidden.
 const filteredAppointments = computed(() => {
-  const childIds = appointments.value.map(a => a.Id_Janji_Lama).filter(Boolean)
-  return appointments.value.filter(a => !childIds.includes(a.No_Id))
+  const childIds = appointments.value.map((a) => a.Id_Janji_Lama).filter(Boolean)
+  return appointments.value.filter((a) => !childIds.includes(a.No_Id))
 })
 
 const selectedAppointment = computed(() => {
-  return appointments.value.find(a => a.No_Id === expandedRowId.value) || null
+  return appointments.value.find((a) => a.No_Id === expandedRowId.value) || null
 })
 
 // Pagination computations
@@ -155,14 +155,9 @@ onUnmounted(() => {
         <h4 class="text-lg font-black text-slate-900 leading-tight">Jadwal Kunjungan Lokasi</h4>
         <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Agenda survei properti</p>
       </div>
-      <RouterLink 
-        to="/janji-temu"
-        class="px-5 py-2.5 bg-slate-55 hover:bg-bejo-50 text-slate-600 hover:text-bejo-600 text-xs font-black uppercase tracking-widest rounded-xl transition-all border border-slate-100 hover:border-bejo-200"
-      >
-        Lihat Semua
-      </RouterLink>
+      <RouterLink to="/janji-temu" class="px-5 py-2.5 bg-slate-55 hover:bg-bejo-50 text-slate-600 hover:text-bejo-600 text-xs font-black uppercase tracking-widest rounded-xl transition-all border border-slate-100 hover:border-bejo-200"> Lihat Semua </RouterLink>
     </div>
-    
+
     <div class="overflow-x-auto">
       <table class="min-w-full border-collapse">
         <thead>
@@ -221,11 +216,7 @@ onUnmounted(() => {
         </tbody>
         <tbody v-else class="divide-y divide-slate-50">
           <template v-for="visit in paginatedAppointments" :key="visit.No_Id">
-            <tr 
-              @click="toggleTimeline(visit.No_Id)"
-              class="group hover:bg-slate-50/40 transition-all cursor-pointer"
-              :class="{'bg-slate-50/20': expandedRowId === visit.No_Id}"
-            >
+            <tr @click="toggleTimeline(visit.No_Id)" class="group hover:bg-slate-50/40 transition-all cursor-pointer" :class="{ 'bg-slate-50/20': expandedRowId === visit.No_Id }">
               <!-- Customer Column -->
               <td class="px-8 py-6">
                 <div class="flex items-center gap-4">
@@ -271,20 +262,11 @@ onUnmounted(() => {
               <!-- Actions -->
               <td class="px-8 py-6 text-right relative" @click.stop>
                 <div class="flex items-center gap-2 justify-end">
-                  <button 
-                    @click="toggleTimeline(visit.No_Id, $event)"
-                    class="p-2.5 bg-slate-50 text-slate-400 hover:text-bejo-600 hover:bg-bejo-50 border border-slate-200 shadow-sm rounded-xl transition-all relative z-[10]"
-                    :class="{'text-bejo-600 bg-bejo-50 border-bejo-200': expandedRowId === visit.No_Id}"
-                    title="Riwayat Jadwal"
-                  >
-                     <Icon icon="lucide:history" class="size-4" />
+                  <button @click="toggleTimeline(visit.No_Id, $event)" class="p-2.5 bg-slate-50 text-slate-400 hover:text-bejo-600 hover:bg-bejo-50 border border-slate-200 shadow-sm rounded-xl transition-all relative z-[10]" :class="{ 'text-bejo-600 bg-bejo-50 border-bejo-200': expandedRowId === visit.No_Id }" title="Riwayat Jadwal">
+                    <Icon icon="lucide:clipboard-list" class="size-4" />
                   </button>
-                  <button 
-                    @click="navigateToDetail()"
-                    class="p-2.5 bg-slate-50 text-slate-400 hover:text-bejo-600 hover:bg-bejo-50 border border-slate-200 shadow-sm rounded-xl transition-all"
-                    title="Detail Janji Temu"
-                  >
-                     <Icon icon="lucide:arrow-right" class="size-4" />
+                  <button @click="navigateToDetail()" class="p-2.5 bg-slate-50 text-slate-400 hover:text-bejo-600 hover:bg-bejo-50 border border-slate-200 shadow-sm rounded-xl transition-all" title="Detail Janji Temu">
+                    <Icon icon="lucide:arrow-right" class="size-4" />
                   </button>
                 </div>
               </td>
@@ -298,11 +280,7 @@ onUnmounted(() => {
     <div v-if="filteredAppointments.length > 0" class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-8 py-5 border-t border-slate-50">
       <div class="flex items-center gap-2">
         <span class="text-xs font-bold text-slate-500">Tampilkan</span>
-        <select 
-          v-model="itemsPerPage" 
-          @change="changePage(1)"
-          class="px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 outline-none cursor-pointer focus:border-bejo-400"
-        >
+        <select v-model="itemsPerPage" @change="changePage(1)" class="px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 outline-none cursor-pointer focus:border-bejo-400">
           <option :value="5">5 baris</option>
           <option :value="10">10 baris</option>
           <option :value="20">20 baris</option>
@@ -311,29 +289,15 @@ onUnmounted(() => {
       </div>
 
       <div class="flex items-center gap-1.5">
-        <button 
-          @click="changePage(Math.max(1, currentPage - 1))"
-          :disabled="currentPage === 1"
-          class="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200/50 rounded-xl text-slate-600 disabled:opacity-50 disabled:hover:bg-slate-50 transition-colors"
-        >
+        <button @click="changePage(Math.max(1, currentPage - 1))" :disabled="currentPage === 1" class="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200/50 rounded-xl text-slate-600 disabled:opacity-50 disabled:hover:bg-slate-50 transition-colors">
           <Icon icon="lucide:chevron-left" class="size-4" />
         </button>
-        
-        <button 
-          v-for="p in totalPages" 
-          :key="p"
-          @click="changePage(p)"
-          class="px-3.5 py-1.5 rounded-xl text-xs font-black transition-all"
-          :class="currentPage === p ? 'bg-bejo-500 text-white shadow-md shadow-bejo-500/10' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/50'"
-        >
+
+        <button v-for="p in totalPages" :key="p" @click="changePage(p)" class="px-3.5 py-1.5 rounded-xl text-xs font-black transition-all" :class="currentPage === p ? 'bg-bejo-500 text-white shadow-md shadow-bejo-500/10' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/50'">
           {{ p }}
         </button>
 
-        <button 
-          @click="changePage(Math.min(totalPages, currentPage + 1))"
-          :disabled="currentPage === totalPages"
-          class="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200/50 rounded-xl text-slate-600 disabled:opacity-50 disabled:hover:bg-slate-50 transition-colors"
-        >
+        <button @click="changePage(Math.min(totalPages, currentPage + 1))" :disabled="currentPage === totalPages" class="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200/50 rounded-xl text-slate-600 disabled:opacity-50 disabled:hover:bg-slate-50 transition-colors">
           <Icon icon="lucide:chevron-right" class="size-4" />
         </button>
       </div>
@@ -341,7 +305,8 @@ onUnmounted(() => {
 
     <!-- Modal Teleport for Timeline Dropdown outside the table layout positioned below button -->
     <Teleport to="body">
-      <div v-if="expandedRowId && selectedAppointment && triggerRect" 
+      <div
+        v-if="expandedRowId && selectedAppointment && triggerRect"
         ref="dropdownRef"
         class="absolute bg-white rounded-2xl shadow-2xl p-5 z-[1060] border border-slate-100 w-80 text-left animate-in fade-in slide-in-from-top-1 duration-150"
         :style="{
@@ -350,11 +315,11 @@ onUnmounted(() => {
         }"
       >
         <span class="text-[11px] font-black text-slate-400 uppercase tracking-widest block mb-4 border-b border-slate-150 pb-2">Riwayat Reschedule</span>
-        
+
         <div class="relative pl-4 space-y-4">
           <!-- Vertical Axis Line -->
           <div class="absolute left-[3.5px] top-1.5 bottom-1.5 w-0.5 bg-slate-100"></div>
-          
+
           <div v-for="item in getTimelineChain(selectedAppointment)" :key="item.No_Id" class="relative">
             <!-- Dot Point -->
             <div class="absolute left-[-18.5px] top-4.5 size-2.5 rounded-full bg-white border-2 flex items-center justify-center transition-all duration-300 z-10" :class="item.No_Id === selectedAppointment.No_Id ? 'border-bejo-500 scale-110 shadow shadow-bejo-500/20' : 'border-slate-300'">
@@ -369,12 +334,8 @@ onUnmounted(() => {
                   {{ getStatusConfig(item.Status_Progress).label }}
                 </span>
               </div>
-              <p class="text-[12px] font-black text-slate-800 flex items-center gap-1.5">
-                <span>🗓️</span> {{ item.Tanggal_Janji.split('T')[0] }}
-              </p>
-              <p class="text-[11px] font-bold text-slate-500 mt-1 flex items-center gap-1.5">
-                <span>⏰</span> {{ item.Waktu_Janji }} WIB
-              </p>
+              <p class="text-[12px] font-black text-slate-800 flex items-center gap-1.5"><span>🗓️</span> {{ item.Tanggal_Janji.split('T')[0] }}</p>
+              <p class="text-[11px] font-bold text-slate-500 mt-1 flex items-center gap-1.5"><span>⏰</span> {{ item.Waktu_Janji }} WIB</p>
               <div v-if="item.Alasan_Batal" class="mt-2 pt-2 border-t border-red-150 text-[10px] font-bold text-red-650 bg-red-50/10 p-1.5 rounded-lg">
                 <span class="text-[8px] font-black uppercase tracking-wider block text-red-500 mb-0.5">Alasan:</span>
                 <span class="italic">"{{ item.Alasan_Batal }}"</span>
@@ -384,6 +345,5 @@ onUnmounted(() => {
         </div>
       </div>
     </Teleport>
-
   </div>
 </template>
