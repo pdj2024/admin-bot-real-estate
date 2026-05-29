@@ -94,7 +94,9 @@ const facilities = ref({
   kamarTidur: '',
   kamarMandi: '',
   carport: '',
-  lantai: ''
+  lantai: '',
+  rowJalanMin: '',
+  rowJalanMax: ''
 })
 const region = ref({
   province: '',

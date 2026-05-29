@@ -356,7 +356,7 @@ onMounted(async () => {
                   </span>
                 </td>
                 <td class="px-6 py-4.5 text-right text-xs font-bold text-slate-500">
-                  {{ new Date(item.Last_Updated).toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) }}
+                  {{ new Date(item.Last_Updated).toTimeString().split(' ')[0] }}
                   <span class="block text-[9px] text-slate-400 mt-0.5">{{ new Date(item.Last_Updated).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) }}</span>
                 </td>
               </tr>

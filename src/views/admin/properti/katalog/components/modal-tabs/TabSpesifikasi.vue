@@ -14,6 +14,7 @@ const specs = [
   { key: 'Jumlah_Kamar_Tidur', label: 'Jumlah KT', icon: 'lucide:bed' },
   { key: 'Jumlah_Kamar_Mandi', label: 'Jumlah KM', icon: 'lucide:bath' },
   { key: 'Jumlah_Carpot', label: 'Carport', icon: 'lucide:car' },
+  { key: 'Row_Jalan', label: 'Row Jalan (Mobil)', icon: 'lucide:road' },
   { key: 'Daya_Listrik', label: 'Listrik (W)', icon: 'lucide:zap' }
 ] as const
 
@@ -149,7 +150,7 @@ const addAkses = () => {
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
           <BaseFormGroup v-for="s in specs" :key="s.key" :label="s.label.toUpperCase()" :icon="s.icon">
-            <input v-model="form[s.key]" type="number" class="field-input !pl-11" placeholder="0" />
+            <input v-model="form[s.key]" type="number" :step="s.key === 'Row_Jalan' ? '0.1' : '1'" class="field-input !pl-11" :placeholder="s.key === 'Row_Jalan' ? '0.0' : '0'" />
           </BaseFormGroup>
         </div>
       </div>

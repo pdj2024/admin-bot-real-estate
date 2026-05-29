@@ -120,7 +120,7 @@ const getSectionLabel = (key: string) => {
       <!-- Operational Detail Section -->
       <div v-if="sections.recentAppointments" class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-stretch">
         <div class="xl:col-span-12 flex flex-col">
-          <RecentAppointments class="h-full" />
+          <RecentAppointments :startDate="startDate" :endDate="endDate" class="h-full" />
         </div>
       </div>
 

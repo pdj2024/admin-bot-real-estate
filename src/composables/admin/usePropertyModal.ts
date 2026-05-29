@@ -42,6 +42,7 @@ export interface RealEstateForm {
   Harga_Jual2: number
   Harga_Sewa1: number
   Harga_Sewa2: number
+  Row_Jalan?: number
   Keterangan: string
   Slug: string
   Latitude: string
@@ -245,6 +246,7 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
     Jumlah_Kamar_Tidur: 0,
     Jumlah_Kamar_Mandi: 0,
     Jumlah_Carpot: 0,
+    Row_Jalan: 0,
     Daya_Listrik: 0,
     Status_Display: 'Aktif',
     Status_Properti: 'Tersedia',
@@ -507,6 +509,7 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
         Jumlah_Kamar_Tidur: String(form.value.Jumlah_Kamar_Tidur || '0'),
         Jumlah_Kamar_Mandi: String(form.value.Jumlah_Kamar_Mandi || '0'),
         Jumlah_Carpot: String(form.value.Jumlah_Carpot || '0'),
+        Row_Jalan: form.value.Row_Jalan ? Number(form.value.Row_Jalan) : 0,
         Daya_Listrik: String(form.value.Daya_Listrik || '0'),
         File_Image: [...new Set([...(form.value.File_Image || []), ...newMediaIds])], 
         Flag_Sewa: form.value.Status_Transaksi?.includes('Sewa') ? 'Ya' : 'Tidak' 

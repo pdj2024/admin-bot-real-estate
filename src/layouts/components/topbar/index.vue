@@ -1,10 +1,16 @@
 <template>
   <div class="app-header min-h-topbar-height flex items-center sticky top-0 z-50 bg-(--topbar-background) border-b border-default-200">
     <div class="w-full flex items-center justify-between px-6">
-      <div class="flex items-center gap-5">
+      <div class="flex items-center gap-4">
         <button id="button-toggle-menu" class="hs-overlay btn btn-icon size-8 hover:bg-default-150 rounded" @click="toggleSideNav">
           <Icon icon="lucide:align-left" class="iconify text-xl" />
         </button>
+        <div class="hidden lg:flex items-center gap-3 pl-3 border-l border-default-200">
+          <div class="h-4 w-1.5 rounded-full bg-primary"></div>
+          <span class="text-slate-800 font-extrabold text-[14px] tracking-wider uppercase">
+            {{ pageTitle }}
+          </span>
+        </div>
       </div>
       <div class="flex items-center gap-3">
         <UserProfile />
@@ -14,10 +20,14 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import UserProfile from './components/UserProfile.vue'
 import { useLayout } from '@/stores/layout'
 
+const route = useRoute()
+const pageTitle = computed(() => (route.meta?.title || route.name || '') as string)
 const { layout, setSideNavSize, toggleMobileMenu } = useLayout()
 
 const toggleSideNav = () => {

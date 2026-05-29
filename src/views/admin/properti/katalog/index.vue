@@ -11,7 +11,9 @@ const facilities = ref({
   kamarTidur: '',
   kamarMandi: '',
   carport: '',
-  lantai: ''
+  lantai: '',
+  rowJalanMin: '',
+  rowJalanMax: ''
 })
 const region = ref({
   province: '',
@@ -98,7 +100,7 @@ onMounted(() => {
             @openFilter="toggleFilter" 
             @resetFilter="() => {
               searchQuery = '';
-              facilities = { kamarTidur: '', kamarMandi: '', carport: '', lantai: '' };
+              facilities = { kamarTidur: '', kamarMandi: '', carport: '', lantai: '', rowJalanMin: '', rowJalanMax: '' };
               region = { province: '', city: '', provinceId: '' };
               priceRange = { min: '', max: '' };
               transactionType = 'Semua';

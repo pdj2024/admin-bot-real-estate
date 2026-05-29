@@ -344,6 +344,40 @@
               </div>
             </div>
 
+            <div class="hs-accordion active" id="filter-row-jalan">
+              <button class="hs-accordion-toggle flex items-center justify-between w-full font-semibold text-xs uppercase tracking-widest text-slate-500 pb-2 border-b border-slate-200 mt-2" aria-expanded="true" aria-controls="content-row-jalan">
+                Lebar Jalan (Row Jalan)
+                <Icon icon="lucide:chevron-down" class="size-4 hs-accordion-active:rotate-180 transition-transform" />
+              </button>
+              <div id="content-row-jalan" class="hs-accordion-content w-full overflow-hidden transition-[height] duration-300">
+                <div class="flex items-center gap-2 pt-4">
+                  <div class="relative flex-1">
+                    <Icon icon="lucide:road" class="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
+                    <input 
+                      :value="facilities.rowJalanMin"
+                      @input="(e) => handleFacilityInput('rowJalanMin', (e.target as HTMLInputElement).value)"
+                      type="number" 
+                      step="0.1"
+                      class="w-full pl-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:border-bejo-600 focus:bg-white transition-all outline-none focus:ring-4 focus:ring-bejo-600/10 placeholder:font-medium text-slate-700" 
+                      placeholder="Min (Mbl)" 
+                    />
+                  </div>
+                  <span class="text-slate-300 font-bold">-</span>
+                  <div class="relative flex-1">
+                    <Icon icon="lucide:road" class="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
+                    <input 
+                      :value="facilities.rowJalanMax"
+                      @input="(e) => handleFacilityInput('rowJalanMax', (e.target as HTMLInputElement).value)"
+                      type="number" 
+                      step="0.1"
+                      class="w-full pl-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:border-bejo-600 focus:bg-white transition-all outline-none focus:ring-4 focus:ring-bejo-600/10 placeholder:font-medium text-slate-700" 
+                      placeholder="Max (Mbl)" 
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
 
@@ -373,6 +407,8 @@ interface Props {
     kamarMandi: string | number
     carport: string | number
     lantai: string | number
+    rowJalanMin?: string | number
+    rowJalanMax?: string | number
   }
   region: {
     province: string
@@ -541,7 +577,9 @@ const clearAll = () => {
     kamarTidur: '',
     kamarMandi: '',
     carport: '',
-    lantai: ''
+    lantai: '',
+    rowJalanMin: '',
+    rowJalanMax: ''
   })
   emit('update:region', { province: '', city: '', provinceId: '' })
   emit('update:priceRange', { min: '', max: '' })

@@ -85,6 +85,7 @@ export interface Product {
   Jumlah_Kamar_Tidur: number
   Jumlah_Kamar_Mandi: number
   Jumlah_Carpot: number
+  Row_Jalan?: number
   Daya_Listrik: number
   Status_Display: string
   Status_Properti: string
@@ -113,6 +114,9 @@ export interface Product {
   Kelurahan?: string
   Kecamatan?: string
   Nama_Provinsi?: string
+  Id_Customer?: string
+  Nama_Customer?: string
+  Tanggal_Transaksi?: string
 }
 
 const product = ref<Product | null>(null)
@@ -128,6 +132,24 @@ const fetchData = async (currentSlug: string) => {
     })
     
     const mainProduct = exactData.Data[0]
+    
+    // Resolve customer name if Id_Customer exists
+    if (mainProduct && mainProduct.Id_Customer) {
+      try {
+        const { data: custData } = await api.get('/api/customer/getAll', {
+          headers: {
+            'X-Jenis-User': 'Admin',
+            'Api-Key': 'realestate_key_2024'
+          }
+        })
+        const found = (custData.Data || []).find((c: any) => c.No_Id === mainProduct.Id_Customer)
+        if (found) {
+          mainProduct.Nama_Customer = found.Nama_Display || found.Nama_Customer || found.Nama
+        }
+      } catch (err) {
+        console.error('Gagal mengambil customer info:', err)
+      }
+    }
     
     // 2. Fetch suggestions (keep catalog-ready filters)
     const { data: suggestionData } = await api.get('/api/realEstate/getAll?status_display=aktif&status_properti=Tersedia&orderby=no_id&orderdir=asc', {

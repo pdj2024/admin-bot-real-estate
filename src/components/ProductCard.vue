@@ -123,18 +123,6 @@
         {{ product.Tipe }} &bull; Tipe {{ product.Luas_Bangunan }}
       </p>
 
-      <!-- Transaction Info Badge/Banner if Sold or Rented -->
-      <div v-if="!isLoading && (product.Status_Properti === 'Terjual' || product.Status_Properti === 'Tersewa')" class="mb-4 p-3.5 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col gap-1.5 text-[11px] font-bold text-slate-500">
-        <div class="flex items-center gap-1.5">
-          <Icon icon="lucide:user" class="size-3.5 text-bejo-600" />
-          <span>a/n: <strong class="text-slate-800">{{ product.Nama_Customer || product.Id_Customer || '-' }}</strong></span>
-        </div>
-        <div class="flex items-center gap-1.5">
-          <Icon icon="lucide:calendar" class="size-3.5 text-bejo-600" />
-          <span>Tanggal: <strong class="text-slate-800">{{ product.Tanggal_Transaksi ? product.Tanggal_Transaksi.split('T')[0] : '-' }}</strong></span>
-        </div>
-      </div>
-
       <!-- Specs Details -->
       <div v-if="!props.hideSpecs" class="mb-4 relative">
         <div v-if="isLoading" class="h-10 w-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer rounded-xl"></div>
@@ -160,46 +148,89 @@
                 <div v-for="i in 4" :key="i" class="h-8 w-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-shimmer rounded-lg"></div>
               </template>
               <template v-else>
-                <div v-if="product.Luas_Tanah != 0" class="flex items-center gap-2">
+                <div v-if="product.Luas_Tanah != 0" class="flex items-center gap-2 cursor-help" title="Luas Tanah">
                   <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0">
                     <Icon icon="lucide:land-plot" class="size-3.5 text-bejo-600" />
                   </div>
                   <span class="text-xs font-bold text-slate-700">LT {{ product.Luas_Tanah || 0 }} m²</span>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 cursor-help" title="Luas Bangunan">
                   <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0">
                     <Icon icon="lucide:home" class="size-3.5 text-bejo-600" />
                   </div>
                   <span class="text-xs font-bold text-slate-700">LB {{ product.Luas_Bangunan || 0 }} m²</span>
                 </div>
-                <div class="flex items-center gap-2">
-                  <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0">
-                    <Icon icon="lucide:layers" class="size-3.5 text-bejo-600" />
-                  </div>
-                  <span class="text-xs font-bold text-slate-700">{{ product.Jumlah_Lantai || 0 }} Lt</span>
-                </div>
-                <div class="flex items-center gap-2">
-                  <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0">
-                    <Icon icon="lucide:car" class="size-3.5 text-bejo-600" />
-                  </div>
-                  <span class="text-xs font-bold text-slate-700">{{ product.Jumlah_Carpot || 0 }} Mobil</span>
-                </div>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 cursor-help" title="Kamar Tidur">
                   <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0">
                     <Icon icon="lucide:bed" class="size-3.5 text-bejo-600" />
                   </div>
                   <span class="text-xs font-bold text-slate-700">{{ product.Jumlah_Kamar_Tidur || 0 }} KT</span>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 cursor-help" title="Kamar Mandi">
                   <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0">
                     <Icon icon="lucide:bath" class="size-3.5 text-bejo-600" />
                   </div>
                   <span class="text-xs font-bold text-slate-700">{{ product.Jumlah_Kamar_Mandi || 0 }} KM</span>
                 </div>
+                <div class="flex items-center gap-2 cursor-help" title="Jumlah Lantai">
+                  <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0">
+                    <Icon icon="lucide:layers" class="size-3.5 text-bejo-600" />
+                  </div>
+                  <span class="text-xs font-bold text-slate-700">{{ product.Jumlah_Lantai || 0 }} Lt</span>
+                </div>
+                <div class="flex items-center gap-2 cursor-help" title="Carport">
+                  <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0">
+                    <Icon icon="lucide:car" class="size-3.5 text-bejo-600" />
+                  </div>
+                  <span class="text-xs font-bold text-slate-700">{{ product.Jumlah_Carpot || 0 }} Mobil</span>
+                </div>
+                <div v-if="product.Row_Jalan && Number(product.Row_Jalan) > 0" class="flex items-center gap-2 cursor-help" title="Lebar Jalan (Row)">
+                  <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0">
+                    <Icon icon="lucide:road" class="size-3.5 text-bejo-600" />
+                  </div>
+                  <span class="text-xs font-bold text-slate-700">{{ product.Row_Jalan }} Mobil</span>
+                </div>
               </template>
             </div>
           </div>
         </Transition>
+      </div>
+
+      
+      <div v-if="!isLoading && (product.Status_Properti === 'Terjual' || product.Status_Properti === 'Tersewa')" 
+           :class="[
+             'mb-4 p-3.5 border rounded-2xl flex flex-col gap-1.5 text-[11px] font-bold transition-all',
+             product.Status_Properti === 'Terjual' 
+               ? 'bg-emerald-50/20 border-emerald-100/50 text-emerald-800' 
+               : 'bg-bejo-100/20 border-bejo-200/50 text-bejo-600'
+           ]"
+      >
+        <div class="flex items-center gap-1.5">
+          <span :class="[
+            'px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest',
+            product.Status_Properti === 'Terjual' 
+              ? 'bg-emerald-100/70 text-emerald-800' 
+              : 'bg-bejo-100/70 text-bejo-800'
+          ]">
+            {{ product.Status_Properti }}
+          </span>
+        </div>
+        
+        <div class="flex items-center gap-2 mt-0.5">
+          <Icon icon="lucide:user" :class="product.Status_Properti === 'Terjual' ? 'text-emerald-600' : 'text-bejo-600'" class="size-3.5" />
+          <span class="text-slate-500">
+            {{ product.Status_Properti === 'Terjual' ? 'Pembeli' : 'Penyewa' }}: 
+            <strong class="text-slate-800 font-extrabold">{{ product.Nama_Customer || product.Id_Customer || '-' }}</strong>
+          </span>
+        </div>
+        
+        <div class="flex items-center gap-2">
+          <Icon icon="lucide:calendar" :class="product.Status_Properti === 'Terjual' ? 'text-emerald-600' : 'text-bejo-600'" class="size-3.5" />
+          <span class="text-slate-500">
+            Tanggal: 
+            <strong class="text-slate-800 font-extrabold">{{ product.Tanggal_Transaksi ? product.Tanggal_Transaksi.split('T')[0] : '-' }}</strong>
+          </span>
+        </div>
       </div>
 
       <!-- Pricing Info -->

@@ -69,6 +69,7 @@ export interface Product {
   Jumlah_Kamar_Tidur: number
   Jumlah_Kamar_Mandi: number
   Jumlah_Carpot: number
+  Row_Jalan?: number
   Daya_Listrik: number
   Status_Display: string
   Status_Properti: string
@@ -95,6 +96,9 @@ export interface Product {
   Nama_Area?: string
   Kelurahan?: string
   Kecamatan?: string
+  Id_Customer?: string
+  Nama_Customer?: string
+  Tanggal_Transaksi?: string
 }
 
 const fetchData = async () => {
@@ -103,7 +107,27 @@ const fetchData = async () => {
     const { data } = await api.get('/api/realEstate/getAll?slug=' + slug, {
       headers: { 'X-Jenis-User': 'admin' }
     })
-    product.value = data.Data[0]
+    const mainProduct = data.Data[0]
+    
+    // Resolve customer name if Id_Customer exists
+    if (mainProduct && mainProduct.Id_Customer) {
+      try {
+        const { data: custData } = await api.get('/api/customer/getAll', {
+          headers: {
+            'X-Jenis-User': 'Admin',
+            'Api-Key': 'realestate_key_2024'
+          }
+        })
+        const found = (custData.Data || []).find((c: any) => c.No_Id === mainProduct.Id_Customer)
+        if (found) {
+          mainProduct.Nama_Customer = found.Nama_Display || found.Nama_Customer || found.Nama
+        }
+      } catch (err) {
+        console.error('Gagal mengambil customer info:', err)
+      }
+    }
+
+    product.value = mainProduct
   } catch (err) {
     console.error(err)
   } finally {

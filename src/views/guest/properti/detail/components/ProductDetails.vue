@@ -80,6 +80,43 @@ const formatCurrency = (value: number) => {
           <div v-else-if="!product" class="mt-4 h-6 w-20 bg-slate-100 rounded-full animate-pulse"></div>
         </div>
 
+        <!-- Buyer/Tenant Identity Banner if Sold or Rented -->
+        <div v-if="product && (product.Status_Properti === 'Terjual' || product.Status_Properti === 'Tersewa')" 
+             :class="[
+               'mb-8 p-6 border rounded-[2rem] flex flex-col gap-2.5 text-xs font-bold transition-all shadow-sm',
+               product.Status_Properti === 'Terjual' 
+                 ? 'bg-emerald-50/20 border-emerald-100/50 text-emerald-800' 
+                 : 'bg-blue-50/20 border-blue-100/50 text-blue-800'
+             ]"
+        >
+          <div class="flex items-center gap-1.5">
+            <span :class="[
+              'px-3 py-1 rounded-xl text-[9px] font-black uppercase tracking-widest',
+              product.Status_Properti === 'Terjual' 
+                ? 'bg-emerald-100 text-emerald-800' 
+                : 'bg-blue-100 text-blue-800'
+            ]">
+              {{ product.Status_Properti }}
+            </span>
+          </div>
+          
+          <div class="flex items-center gap-3 mt-1">
+            <Icon icon="lucide:user" :class="product.Status_Properti === 'Terjual' ? 'text-emerald-600' : 'text-blue-600'" class="size-4.5" />
+            <span class="text-slate-500">
+              {{ product.Status_Properti === 'Terjual' ? 'Pembeli' : 'Penyewa' }}: 
+              <strong class="text-slate-800 font-extrabold text-sm">{{ product.Nama_Customer || product.Id_Customer || '-' }}</strong>
+            </span>
+          </div>
+          
+          <div class="flex items-center gap-3">
+            <Icon icon="lucide:calendar" :class="product.Status_Properti === 'Terjual' ? 'text-emerald-600' : 'text-blue-600'" class="size-4.5" />
+            <span class="text-slate-500">
+              Tanggal Transaksi: 
+              <strong class="text-slate-800 font-extrabold text-sm">{{ product.Tanggal_Transaksi ? product.Tanggal_Transaksi.split('T')[0] : '-' }}</strong>
+            </span>
+          </div>
+        </div>
+
         <!-- Pricing Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
           <div v-show="!product || product?.Status_Transaksi?.includes('Jual')" class="bg-slate-50/50 p-6 rounded-3xl border border-slate-100 relative group overflow-hidden">
@@ -130,7 +167,7 @@ const formatCurrency = (value: number) => {
         <div class="mb-14">
           <h6 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
              <div class="w-8 h-[2px] bg-slate-200 rounded-full"></div>
-             Ringkasan Properti
+             Spesifikasi Properti
           </h6>
           <PropertySpecsGrid :product="product" />
         </div>
@@ -185,6 +222,7 @@ const formatCurrency = (value: number) => {
                   { label: 'Daya Listrik', val: product ? (product.Daya_Listrik.toLocaleString('id-ID') + ' Watt') : null },
                   { label: 'Tipe Unit', val: product?.Tipe },
                   { label: 'Sertifikat', val: product?.Jenis_Sertifikat },
+                  { label: 'Lebar Jalan (Row)', val: product?.Row_Jalan ? (product.Row_Jalan + ' Mobil') : '-' },
                   { label: 'Minimal Sewa', val: (product?.minimal_sewa || (product as any)?.Minimal_Sewa) ? ((product?.minimal_sewa || (product as any)?.Minimal_Sewa) + ' ' + (product?.Satuan_Minimal_Sewa || '')) : '-', show: !product || product?.Status_Transaksi?.includes('Sewa') }
                 ].filter(i => i.show !== false)" :key="item.label" class="hover:bg-slate-50 transition-colors">
                   <td class="px-8 py-5 text-slate-500 bg-slate-50/50 w-1/3 italic">{{ item.label }}</td>

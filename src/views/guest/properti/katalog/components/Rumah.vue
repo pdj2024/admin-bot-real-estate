@@ -166,6 +166,8 @@ const props = defineProps<{
     kamarMandi: string
     carport: string
     lantai: string
+    rowJalanMin?: string
+    rowJalanMax?: string
   }
   region: {
     province: string
@@ -227,6 +229,7 @@ export interface Product {
   Jumlah_Kamar_Tidur: number
   Jumlah_Kamar_Mandi: number
   Jumlah_Carpot: number
+  Row_Jalan?: number
   Daya_Listrik: number
   Status_Display: string
   Status_Properti: string
@@ -379,6 +382,8 @@ const buildParams = () => {
   }
   if (props.priceRange.min) p.append('harga_min', props.priceRange.min)
   if (props.priceRange.max) p.append('harga_max', props.priceRange.max)
+  if (props.facilities.rowJalanMin) p.append('row_jalan_min', String(props.facilities.rowJalanMin))
+  if (props.facilities.rowJalanMax) p.append('row_jalan_max', String(props.facilities.rowJalanMax))
 
   return p.toString()
 }
@@ -401,7 +406,7 @@ const fetchData = async (backgroundRefetch = false) => {
 // Watch for filter changes to refetch data
 let fetchTimeout: any = null
 watch(
-  [() => props.searchQuery, () => props.transactionType, selectedTypeLocal, () => props.region.city, () => props.priceRange],
+  [() => props.searchQuery, () => props.transactionType, selectedTypeLocal, () => props.region.city, () => props.priceRange, () => props.facilities],
   () => {
     if (fetchTimeout) clearTimeout(fetchTimeout)
     fetchTimeout = setTimeout(() => {

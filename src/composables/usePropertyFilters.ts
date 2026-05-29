@@ -5,6 +5,8 @@ export interface FacilitiesFilter {
   kamarMandi: string | number
   carport: string | number
   lantai: string | number
+  rowJalanMin?: string | number
+  rowJalanMax?: string | number
 }
 
 export interface RegionFilter {
@@ -90,6 +92,12 @@ export function usePropertyFilters(
       }
       if (facilitiesFilter.value.lantai) {
         result = result.filter((p) => (p.Jumlah_Lantai || 0) >= Number(facilitiesFilter.value.lantai))
+      }
+      if (facilitiesFilter.value.rowJalanMin) {
+        result = result.filter((p) => (p.Row_Jalan || 0) >= Number(facilitiesFilter.value.rowJalanMin))
+      }
+      if (facilitiesFilter.value.rowJalanMax) {
+        result = result.filter((p) => (p.Row_Jalan || 0) <= Number(facilitiesFilter.value.rowJalanMax))
       }
     }
 

@@ -84,6 +84,38 @@ onMounted(() => {
   <div :class="calendarColClass" class="h-full transition-all duration-500 min-h-0">
     <div class="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/50 h-full overflow-hidden">
       <FullCalendar ref="fullCalendarRef" :options="calendarOptions" />
+      
+      <!-- Color Legend for Status Categories -->
+      <div class="mt-6 pt-6 border-t border-slate-100 flex flex-wrap items-center gap-x-6 gap-y-3">
+        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Kategori Status:</span>
+        <div class="flex flex-wrap gap-2.5">
+          <!-- Baru -->
+          <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-extrabold bg-[#eff6ff] border border-[#bfdbfe] text-[#1d4ed8]">
+            <span class="size-2 rounded-full bg-[#3b82f6]"></span>
+            Baru
+          </div>
+          <!-- Dikonfirmasi -->
+          <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-extrabold bg-[#fef8f4] border border-[#fbe2d2] text-[#c95d18]">
+            <span class="size-2 rounded-full bg-[#ef8c4c]"></span>
+            Dikonfirmasi
+          </div>
+          <!-- Proses -->
+          <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-extrabold bg-[#fef3c7] border border-[#fde68a] text-[#78350f]">
+            <span class="size-2 rounded-full bg-[#92400e]"></span>
+            Proses
+          </div>
+          <!-- Selesai -->
+          <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-extrabold bg-[#ecfdf5] border border-[#a7f3d0] text-[#065f46]">
+            <span class="size-2 rounded-full bg-[#047857]"></span>
+            Selesai
+          </div>
+          <!-- Batal -->
+          <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-extrabold bg-[#fef2f2] border border-[#fecaca] text-[#b91c1c]">
+            <span class="size-2 rounded-full bg-[#ef4444]"></span>
+            Batal
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>

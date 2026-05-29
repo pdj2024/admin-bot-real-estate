@@ -7,20 +7,21 @@ defineProps<{
 }>()
 
 const specs = [
-  { icon: 'lucide:land-plot', label: 'L. Tanah', key: 'Luas_Tanah', suffix: ' m²' },
-  { icon: 'lucide:home', label: 'L. Bangunan', key: 'Luas_Bangunan', suffix: ' m²' },
-  { icon: 'lucide:layers', label: 'Lantai', key: 'Jumlah_Lantai' },
-  { icon: 'lucide:car', label: 'Carport', key: 'Jumlah_Carpot' },
-  { icon: 'lucide:bed', label: 'K. Tidur', key: 'Jumlah_Kamar_Tidur' },
-  { icon: 'lucide:bath', label: 'K. Mandi', key: 'Jumlah_Kamar_Mandi' }
+  { icon: 'lucide:land-plot', label: 'Luas Tanah', key: 'Luas_Tanah', suffix: ' m²' },
+  { icon: 'lucide:home', label: 'Luas Bangunan', key: 'Luas_Bangunan', suffix: ' m²' },
+  { icon: 'lucide:bed', label: 'Kamar Tidur', key: 'Jumlah_Kamar_Tidur', suffix: ' KT' },
+  { icon: 'lucide:bath', label: 'Kamar Mandi', key: 'Jumlah_Kamar_Mandi', suffix: ' KM' },
+  { icon: 'lucide:layers', label: 'Lantai', key: 'Jumlah_Lantai', suffix: ' Lt' },
+  { icon: 'lucide:car', label: 'Carport', key: 'Jumlah_Carpot', suffix: ' Mobil' },
+  { icon: 'lucide:road', label: 'Row Jalan', key: 'Row_Jalan', suffix: ' Mobil' }
 ]
 </script>
 
 <template>
-  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
     <template v-for="(spec, idx) in specs" :key="idx">
       <div
-        v-if="!product || (spec.key !== 'Luas_Tanah' || Number(product.Luas_Tanah) > 0)"
+        v-if="!product || ((spec.key !== 'Luas_Tanah' || Number(product.Luas_Tanah) > 0) && (spec.key !== 'Row_Jalan' || (product.Row_Jalan && Number(product.Row_Jalan) > 0)))"
         class="flex flex-col items-center p-5 rounded-3xl border border-slate-50 transition-all hover:bg-slate-50/50 hover:shadow-xl hover:shadow-slate-200/20 bg-white group"
       >
         <div class="p-3 bg-slate-50 rounded-2xl mb-4 shadow-sm border border-slate-50 group-hover:scale-110 group-hover:text-bejo-600 transition-all duration-500" :class="!product ? 'bg-slate-200 border-none animate-pulse' : ''">
@@ -28,7 +29,7 @@ const specs = [
           <div v-else class="size-6 opacity-0"></div>
         </div>
         
-        <span class="text-[9px] uppercase font-black mb-1.5 tracking-widest text-center" 
+        <span class="text-[9px] uppercase font-black mb-1.5 tracking-widest text-center whitespace-nowrap" 
               :class="!product ? 'text-transparent bg-slate-200 rounded animate-pulse w-12 select-none' : 'text-slate-400'">
           {{ spec.label }}
         </span>

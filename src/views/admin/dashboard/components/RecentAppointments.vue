@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useRouter } from 'vue-router'
 import api from '@/services/axios'
@@ -13,10 +13,15 @@ const expandedRowId = ref<string | null>(null)
 const currentPage = ref(1)
 const itemsPerPage = ref(5)
 
+const props = defineProps<{
+  startDate: string
+  endDate: string
+}>()
+
 const fetchAppointments = async () => {
   isLoading.value = true
   try {
-    const { data } = await api.get('/api/janjiTemu/getAll?tanggal_mulai=2026-01-01&tanggal_selesai=2026-12-31&orderby=no_id&orderdir=desc', {
+    const { data } = await api.get(`/api/janjiTemu/getAll?tanggal_mulai=${props.startDate}&tanggal_selesai=${props.endDate}&orderby=no_id&orderdir=desc`, {
       headers: { 'X-Jenis-User': 'admin' }
     })
     appointments.value = data.Data || []
@@ -26,6 +31,11 @@ const fetchAppointments = async () => {
     isLoading.value = false
   }
 }
+
+watch([() => props.startDate, () => props.endDate], () => {
+  currentPage.value = 1
+  fetchAppointments()
+})
 
 const getTimelineChain = (current: any) => {
   if (!current || !appointments.value.length) return []
@@ -193,6 +203,19 @@ onUnmounted(() => {
             </td>
             <td class="px-8 py-6 text-right">
               <div class="size-10 bg-slate-50 rounded-xl ml-auto"></div>
+            </td>
+          </tr>
+        </tbody>
+        <tbody v-else-if="filteredAppointments.length === 0">
+          <tr>
+            <td colspan="6" class="py-16 text-center">
+              <div class="flex flex-col items-center justify-center">
+                <div class="size-16 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center text-slate-300 mb-4">
+                  <Icon icon="lucide:calendar-x" class="size-8" />
+                </div>
+                <h5 class="text-sm font-black text-slate-700">Tidak ada jadwal kunjungan</h5>
+                <p class="text-xs font-bold text-slate-450 mt-1">Tidak ditemukan agenda survei lokasi pada rentang tanggal tersebut</p>
+              </div>
             </td>
           </tr>
         </tbody>
