@@ -13,7 +13,10 @@
         :class="layout.isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'"
       >
         <div class="p-6 pb-4 border-b border-slate-100 flex justify-between items-center">
-            <img :src="settingsStore.business.Logo_Company || settingsStore.business.Logo || logo" alt="Logo" class="h-8 w-auto" />
+            <div class="flex items-center gap-2">
+              <img :src="settingsStore.business.Logo_Company || settingsStore.business.Logo || logo" alt="Logo" class="h-8 w-auto" />
+              <span class="text-base font-black text-slate-900 tracking-tight">{{ settingsStore.business.appName }}</span>
+            </div>
             <button @click="layoutStore.toggleMobileMenu()" class="p-1.5 text-bejo-600 hover:text-bejo-700 bg-bejo-50 hover:bg-bejo-100 rounded-lg transition-colors border border-bejo-100">
               <Icon icon="lucide:x" class="size-4" />
             </button>

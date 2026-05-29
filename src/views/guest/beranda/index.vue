@@ -145,7 +145,7 @@
           </div>
 
           <!-- Stats Section (Premium Redesign) -->
-          <div class="relative z-20 w-full max-w-6xl mt-12 md:mt-20 px-4 md:px-0">
+          <div class="relative z-20 w-full max-w-6xl mt-1.5 mb-6 md:mt-20 md:mb-0 px-4 md:px-0">
             <div class="w-full mx-auto bg-white/60 backdrop-blur-3xl rounded-[2rem] md:rounded-[3.5rem] p-4 md:p-14 shadow-premium border border-white grid grid-cols-3 md:grid-cols-3 gap-3 md:gap-8 relative overflow-hidden">
               <!-- Glow Effect inside Stats -->
               <div class="absolute -top-24 -left-24 size-48 bg-bejo-100 rounded-full blur-[80px] opacity-40"></div>
@@ -198,7 +198,7 @@
       <div class="absolute inset-0 opacity-[0.01] pointer-events-none" style="background-image: url('https://www.transparenttextures.com/patterns/white-diamond.png')"></div>
 
       <div class="w-full !px-2.5 sm:!px-8 lg:!px-12 relative z-10">
-        <div class="flex flex-col md:flex-row justify-between items-end mb-4 md:mb-8 gap-4 md:gap-8">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-4 md:mb-8 gap-4 md:gap-8">
           <div class="max-w-2xl space-y-2 md:space-y-4">
             <div class="text-bejo-600 font-black uppercase tracking-[0.3em] text-[10px] flex items-center gap-2">
               <div class="w-8 h-[2px] bg-bejo-500"></div>

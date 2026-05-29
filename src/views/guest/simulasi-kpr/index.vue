@@ -37,27 +37,27 @@
               <p class="text-slate-500 font-medium text-sm leading-relaxed">Atur parameter di bawah ini untuk melihat simulasi pembiayaan properti Anda secara akurat.</p>
             </div>
 
-            <div class="space-y-6">
+            <div class="space-y-4">
               <!-- Harga Properti -->
-              <div class="group bg-white rounded-3xl p-6 border border-slate-100 shadow-sm transition-all hover:border-bejo-200">
-                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-1 group-focus-within:text-bejo-600 transition-colors">Harga Properti</label>
+              <div class="group bg-white rounded-3xl p-4 md:p-6 border border-slate-100 shadow-sm transition-all hover:border-bejo-200">
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1 group-focus-within:text-bejo-600 transition-colors">Harga Properti</label>
                 <div class="relative">
-                  <span class="absolute inset-y-0 left-5 flex items-center justify-center text-slate-400 font-bold text-xl">Rp</span>
-                  <input type="text" :value="formatCurrency(propertyPrice)" @input="setPropertyPrice" class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-5 pl-14 text-2xl font-black text-slate-900 shadow-inner focus:outline-none focus:ring-4 focus:ring-bejo-500/10 focus:bg-white focus:border-bejo-200 transition-all" placeholder="0" />
+                  <span class="absolute inset-y-0 left-4 flex items-center justify-center text-slate-400 font-bold text-lg">Rp</span>
+                  <input type="text" :value="formatCurrency(propertyPrice)" @input="setPropertyPrice" class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 pl-12 text-lg sm:text-2xl font-black text-slate-900 shadow-inner focus:outline-none focus:ring-4 focus:ring-bejo-500/10 focus:bg-white focus:border-bejo-200 transition-all" placeholder="0" />
                 </div>
               </div>
 
               <!-- Uang Muka -->
-              <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-6 transition-all hover:border-bejo-200">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div class="bg-white rounded-3xl p-4 md:p-6 border border-slate-100 shadow-sm space-y-4 transition-all hover:border-bejo-200">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Uang Muka (DP)</label>
                   <div class="flex items-center gap-3">
                     <div class="relative w-24">
-                      <input type="number" v-model.number="dpPercentage" min="0" max="100" class="w-full bg-bejo-50 border border-bejo-100 rounded-xl px-3 py-2 pr-8 text-sm font-black text-bejo-700 focus:outline-none focus:ring-2 focus:ring-bejo-500/20" />
-                      <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-bejo-400 font-black text-[10px]">%</span>
+                      <input type="number" v-model.number="dpPercentage" min="0" max="100" class="w-full bg-bejo-50 border border-bejo-100 rounded-xl px-2.5 py-1.5 pr-7 text-xs font-black text-bejo-700 focus:outline-none focus:ring-2 focus:ring-bejo-500/20" />
+                      <span class="absolute right-2 top-1/2 -translate-y-1/2 text-bejo-400 font-black text-[9px]">%</span>
                     </div>
-                    <div class="h-6 w-[1px] bg-slate-100 hidden sm:block"></div>
-                    <span class="text-sm font-bold text-slate-400">Rp {{ formatCurrencyShort(dpValue) }}</span>
+                    <div class="h-5 w-[1px] bg-slate-100 hidden sm:block"></div>
+                    <span class="text-xs font-bold text-slate-400">Rp {{ formatCurrencyShort(dpValue) }}</span>
                   </div>
                 </div>
                 <div class="relative pt-1 px-1">
@@ -65,27 +65,26 @@
                     type="range" 
                     v-model.number="dpPercentage" 
                     min="0" max="100" step="1" 
-                    class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-bejo-600"
+                    class="w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-bejo-600"
                     :style="{ background: `linear-gradient(to right, #f47b20 ${dpPercentage}%, #f1f5f9 ${dpPercentage}%)` }"
                   />
-                  <div class="flex justify-between mt-3 text-[9px] font-black text-slate-300 uppercase tracking-widest">
+                  <div class="flex justify-between mt-2 text-[8px] font-black text-slate-300 uppercase tracking-widest">
                     <span>0%</span>
-                    <span>25%</span>
                     <span>50%</span>
-                    <span>75%</span>
                     <span>100%</span>
                   </div>
                 </div>
               </div>
 
-              <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-6 transition-all hover:border-bejo-200">
-                <!-- Tenor Control -->
-                <div class="space-y-6">
-                  <div class="flex items-center justify-between">
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tenor (Waktu)</label>
-                    <div class="relative w-28">
-                      <input type="number" v-model.number="years" min="1" max="35" class="w-full bg-bejo-50 border border-bejo-100 rounded-xl px-3 py-2 pr-12 text-sm font-black text-bejo-700 focus:outline-none focus:ring-2 focus:ring-bejo-500/20" />
-                      <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-bejo-400 font-black text-[10px]">THN</span>
+              <!-- Tenor & Suku Bunga (Side by Side Grid) -->
+              <div class="grid grid-cols-2 gap-4">
+                <!-- Tenor Card -->
+                <div class="bg-white rounded-3xl p-4 md:p-6 border border-slate-100 shadow-sm space-y-4 transition-all hover:border-bejo-200">
+                  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tenor</label>
+                    <div class="relative w-full sm:w-28">
+                      <input type="number" v-model.number="years" min="1" max="35" class="w-full bg-bejo-50 border border-bejo-100 rounded-xl px-2 py-1.5 pr-10 text-xs font-black text-bejo-700 focus:outline-none focus:ring-2 focus:ring-bejo-500/20" />
+                      <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-bejo-400 font-black text-[9px]">THN</span>
                     </div>
                   </div>
                   <div class="relative pt-1 px-1">
@@ -93,34 +92,33 @@
                       type="range" 
                       v-model.number="years" 
                       min="1" max="35" step="1" 
-                      class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-bejo-600"
+                      class="w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-bejo-600"
                       :style="{ background: `linear-gradient(to right, #f47b20 ${((years - 1) / (35 - 1)) * 100}%, #f1f5f9 ${((years - 1) / (35 - 1)) * 100}%)` }"
                     />
-                    <div class="flex justify-between mt-3 text-[9px] font-black text-slate-300 uppercase tracking-widest">
+                    <div class="flex justify-between mt-2 text-[8px] font-black text-slate-300 uppercase tracking-widest">
                       <span>1 Thn</span>
-                      <span>15 Thn</span>
                       <span>35 Thn</span>
                     </div>
                   </div>
                 </div>
-              </div>
-              <!-- Tenor & Suku Bunga (Optimized Row) -->
-              <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-8 transition-all hover:border-bejo-200">
-                <!-- Suku Bunga Control -->
-                <div class="space-y-4">
-                  <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Suku Bunga Fixed</label>
-                  <div class="relative flex items-center">
-                    <input 
-                      type="text" 
-                      :value="interestRateDisplay"
-                      @input="handleInterestRateInput"
-                      class="w-full bg-slate-50 border border-slate-100 rounded-xl px-5 py-3 pr-12 text-lg font-black text-slate-900 focus:outline-none focus:ring-4 focus:ring-bejo-500/10 focus:bg-white transition-all" 
-                    />
-                    <span class="absolute right-4 text-slate-400 font-black">%</span>
+
+                <!-- Suku Bunga Card -->
+                <div class="bg-white rounded-3xl p-4 md:p-6 border border-slate-100 shadow-sm space-y-4 transition-all hover:border-bejo-200 flex flex-col justify-between">
+                  <div class="space-y-2">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Bunga Fixed</label>
+                    <div class="relative flex items-center">
+                      <input 
+                        type="text" 
+                        :value="interestRateDisplay"
+                        @input="handleInterestRateInput"
+                        class="w-full bg-slate-50 border border-slate-100 rounded-xl px-3 py-1.5 pr-8 text-sm font-black text-slate-900 focus:outline-none focus:ring-4 focus:ring-bejo-500/10 focus:bg-white transition-all" 
+                      />
+                      <span class="absolute right-3 text-slate-400 font-black text-xs">%</span>
+                    </div>
                   </div>
-                  <div class="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-xl border border-slate-100">
-                    <Icon icon="lucide:info" class="size-3 text-bejo-400" />
-                    <p class="text-[9px] font-bold text-slate-400 leading-tight">Rata-rata suku bunga bank saat ini berkisar antara 3-9%.</p>
+                  <div class="flex items-center gap-1.5 px-2 py-1 bg-slate-50 rounded-lg border border-slate-100">
+                    <Icon icon="lucide:info" class="size-3 text-bejo-400 shrink-0" />
+                    <p class="text-[8px] font-bold text-slate-400 leading-tight">Acuan 3-9%.</p>
                   </div>
                 </div>
               </div>
@@ -138,7 +136,7 @@
               <p class="text-bejo-600/60 text-xs font-black uppercase tracking-widest">Ringkasan Pembiayaan</p>
             </div>
 
-            <div class="bg-white rounded-[2.5rem] p-8 sm:p-10 shadow-2xl shadow-bejo-600/10 text-slate-900 relative overflow-hidden flex-grow flex flex-col border border-bejo-100">
+            <div class="bg-white rounded-[2rem] md:rounded-[2.5rem] p-5 md:p-10 shadow-2xl shadow-bejo-600/10 text-slate-900 relative overflow-hidden flex-grow flex flex-col border border-bejo-100">
               <!-- Dekorasi -->
               <div class="absolute -right-20 -top-20 size-64 bg-bejo-100 rounded-full blur-[120px] opacity-40 pointer-events-none"></div>
               <div class="absolute -left-20 -bottom-20 size-64 bg-bejo-50 rounded-full blur-[100px] opacity-30 pointer-events-none"></div>
@@ -146,63 +144,61 @@
               <div class="relative z-10 flex flex-col h-full">
 
                 <!-- Main Result -->
-                <div class="mb-10 text-center">
+                <div class="mb-5 md:mb-10 text-center">
                   <span class="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-2 block">Cicilan Per Bulan</span>
-                  <div class="text-4xl sm:text-5xl font-black text-slate-900 tracking-tighter mb-3"><span class="text-bejo-600 text-2xl mr-1">Rp</span>{{ formatCurrency(Math.round(angsuran)) }}</div>
-                  <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-bejo-50 rounded-full border border-bejo-100 text-[10px] font-black text-bejo-700">
+                  <div class="text-3xl sm:text-5xl font-black text-slate-900 tracking-tighter mb-2 md:mb-3"><span class="text-bejo-600 text-xl sm:text-2xl mr-1">Rp</span>{{ formatCurrency(Math.round(angsuran)) }}</div>
+                  <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-bejo-50 rounded-full border border-bejo-100 text-[9px] sm:text-[10px] font-black text-bejo-700">
                     <Icon icon="lucide:calendar" class="size-3" />
                     Bunga Fixed {{ interestRateDisplay }}% Selama Tenor
                   </div>
                 </div>
 
-                <div class="space-y-8 flex-grow">
+                <div class="space-y-4 md:space-y-8 flex-grow">
                   <!-- Chart Area -->
-                  <div class="relative flex flex-col items-center justify-center p-6 bg-bejo-50/30 rounded-3xl border border-bejo-100/50 backdrop-blur-sm">
-                    <ApexChart height="240" width="100%" :options="chartOptions" :series="chartSeries" />
+                  <div class="relative flex flex-col items-center justify-center p-4 md:p-6 bg-bejo-50/30 rounded-3xl border border-bejo-100/50 backdrop-blur-sm">
+                    <ApexChart height="200" width="100%" :options="chartOptions" :series="chartSeries" />
 
                     <!-- Legend Custom -->
-                    <div class="grid grid-cols-2 gap-4 w-full mt-4">
+                    <div class="grid grid-cols-2 gap-3 md:gap-4 w-full mt-3 md:mt-4">
                       <div class="flex items-center gap-2">
-                        <div class="size-2.5 rounded-full bg-bejo-600"></div>
+                        <div class="size-2 rounded-full bg-bejo-600"></div>
                         <div class="flex flex-col">
-                          <span class="text-[9px] font-black text-slate-400 uppercase">Pokok Pinjaman</span>
-                          <span class="text-xs font-black text-slate-800">Rp {{ formatCurrencyShort(totalPinjaman) }}</span>
+                          <span class="text-[8px] md:text-[9px] font-black text-slate-400 uppercase">Pokok Pinjaman</span>
+                          <span class="text-[10px] md:text-xs font-black text-slate-800">Rp {{ formatCurrencyShort(totalPinjaman) }}</span>
                         </div>
                       </div>
                       <div class="flex items-center gap-2">
-                        <div class="size-2.5 rounded-full bg-bejo-200"></div>
+                        <div class="size-2 rounded-full bg-bejo-200"></div>
                         <div class="flex flex-col">
-                          <span class="text-[9px] font-black text-slate-400 uppercase">Total Bunga</span>
-                          <span class="text-xs font-black text-slate-800">Rp {{ formatCurrencyShort(totalBunga) }}</span>
+                          <span class="text-[8px] md:text-[9px] font-black text-slate-400 uppercase">Total Bunga</span>
+                          <span class="text-[10px] md:text-xs font-black text-slate-800">Rp {{ formatCurrencyShort(totalBunga) }}</span>
                         </div>
                       </div>
                     </div>
                   </div>
 
                   <!-- Small Metrics -->
-                  <div class="grid grid-cols-2 gap-4">
-                    <div class="p-4 bg-white rounded-2xl border border-bejo-100 shadow-sm">
-                      <span class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1 block">Total Pinjaman</span>
-                      <div class="text-sm font-black text-slate-900">Rp {{ formatCurrencyShort(totalPinjaman) }}</div>
+                  <div class="grid grid-cols-2 gap-3 md:gap-4">
+                    <div class="p-3 md:p-4 bg-white rounded-2xl border border-bejo-100 shadow-sm">
+                      <span class="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1 block">Total Pinjaman</span>
+                      <div class="text-xs md:text-sm font-black text-slate-900">Rp {{ formatCurrencyShort(totalPinjaman) }}</div>
                     </div>
-                    <div class="p-4 bg-white rounded-2xl border border-bejo-100 shadow-sm">
-                      <span class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1 block">Masa Tenor</span>
-                      <div class="text-sm font-black text-slate-900">{{ years }} Tahun</div>
+                    <div class="p-3 md:p-4 bg-white rounded-2xl border border-bejo-100 shadow-sm">
+                      <span class="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1 block">Masa Tenor</span>
+                      <div class="text-xs md:text-sm font-black text-slate-900">{{ years }} Tahun</div>
                     </div>
                   </div>
 
-                  <button @click="handleKprWa" class="w-full bg-bejo-600 hover:bg-bejo-700 text-white py-5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-xl shadow-bejo-600/30 flex items-center justify-center gap-3 active:scale-95 group">
-                    <Icon icon="ic:baseline-whatsapp" class="size-6 transition-transform group-hover:scale-110" />
+                  <button @click="handleKprWa" class="w-full bg-bejo-600 hover:bg-bejo-700 text-white py-3.5 md:py-5 rounded-2xl font-black text-xs md:text-sm uppercase tracking-widest transition-all shadow-xl shadow-bejo-600/30 flex items-center justify-center gap-3 active:scale-95 group">
+                    <Icon icon="ic:baseline-whatsapp" class="size-5 md:size-6 transition-transform group-hover:scale-110" />
                     Konsultasikan Sekarang
                   </button>
+                  <p class="mt-4 md:mt-8 text-[9px] md:text-[10px] font-bold text-slate-400 leading-relaxed text-center italic">*Simulasi ini hanya perkiraan. Suku bunga dan tenor dapat berubah sewaktu-waktu sesuai kebijakan bank.</p>
                 </div>
-
-                <p class="mt-8 text-[10px] font-bold text-slate-400 leading-relaxed text-center italic">*Simulasi ini hanya perkiraan. Suku bunga dan tenor dapat berubah sewaktu-waktu sesuai kebijakan bank.</p>
               </div>
             </div>
           </div>
         </div>
-        <!-- END of Inner Grid Container -->
       </div>
       <!-- END of KPR Calculator Area -->
 
