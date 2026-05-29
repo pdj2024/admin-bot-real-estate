@@ -97,10 +97,10 @@ Buat file `.env` di direktori utama proyek untuk mendefinisikan URL API backend 
 
 ```env
 # URL REST API Backend
-VITE_API_BASE_URL=[https://wabotapi.padajaya.biz.id](https://wabotapi.padajaya.biz.id)
+VITE_API_BASE_URL=https://wabotapi.padajaya.biz.id
 
 # URL SignalR Hub untuk Live Chat WhatsApp
-VITE_SIGNALR_HUB_URL=[https://wabotapi.padajaya.biz.id/chatHub](https://wabotapi.padajaya.biz.id/chatHub)
+VITE_SIGNALR_HUB_URL=https://wabotapi.padajaya.biz.id/chatHub
 ```
 
 ---
@@ -117,39 +117,44 @@ Pastikan Anda sudah menginstal **Node.js** versi `^20.19.0` atau `>=22.12.0` ser
 
 1.  **Kloning Repositori:**
 
-````bash
-    git clone [https://github.com/pdj2024/admin-bot-real-estate.git](https://github.com/pdj2024/admin-bot-real-estate.git)
-    cd admin-bot-real-estate
-    ```
+```bash
+git clone https://github.com/pdj2024/admin-bot-real-estate.git
+cd admin-bot-real-estate
+```
 
 2.  **Instalasi Dependensi:**
+
 ```bash
-    npm install
-    ```
+npm install
+```
 
 3.  **Jalankan Server Pengembangan (Localhost):**
+
 ```bash
-    npm run dev
-    ```
+npm run dev
+```
     Setelah server berjalan, Anda dapat mengakses aplikasi melalui peramban di alamat yang tertera (biasanya `http://localhost:5173`).
 
 4.  **Build untuk Production:**
     Perintah ini akan melakukan pengecekan tipe TypeScript dan melakukan kompilasi file aset menjadi bundle yang telah dioptimasi di dalam folder `/dist`:
+
 ```bash
-    npm run build
-    ```
+npm run build
+```
 
 5.  **Linting Kode:**
     Untuk mendeteksi kesalahan sintaksis dan memperbaikinya secara otomatis berdasarkan standar aturan ESLint:
+
 ```bash
-    npm run lint
-    ```
+npm run lint
+```
 
 6.  **Formatting Kode:**
     Merapikan spasi dan struktur baris kode menggunakan Prettier di seluruh folder `src`:
+
 ```bash
-    npm run format
-    ```
+npm run format
+```
 
 ---
 
@@ -172,26 +177,26 @@ Berikut adalah contoh konfigurasi blok server dasar untuk **Nginx** di sistem Li
 
 1. Pastikan Anda sudah menjalankan perintah `npm run build` dan memindahkan isi dari folder `/dist` ke direktori web Anda (contoh: `/var/www/html/wabotui`).
 2. Buat/edit file konfigurasi Nginx:
+
 ```nginx
-    server {
-        listen 80;
-        server_name domain-anda.com;
+server {
+    listen 80;
+    server_name domain-anda.com;
 
-        root /var/www/html/wabotui;
-        index index.html;
+    root /var/www/html/wabotui;
+    index index.html;
 
-        location / {
-            # Memastikan Vue Router menangani routing secara mandiri
-            try_files $uri $uri/ /index.html;
-        }
-
-        # Opsional: Pengaturan cache untuk aset statis
-        location ~* \.(?:ico|css|js|gif|jpe?g|png|woff2?|eot|ttf|svg)$ {
-            expires 6M;
-            access_log off;
-            add_header Cache-Control "public";
-        }
+    location / {
+        # Memastikan Vue Router menangani routing secara mandiri
+        try_files $uri $uri/ /index.html;
     }
-    ```
+
+    # Opsional: Pengaturan cache untuk aset statis
+    location ~* \.(?:ico|css|js|gif|jpe?g|png|woff2?|eot|ttf|svg)$ {
+        expires 6M;
+        access_log off;
+        add_header Cache-Control "public";
+    }
+}
+```
 3. Mulai ulang Nginx: `sudo systemctl restart nginx`.
-````
