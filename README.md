@@ -131,7 +131,7 @@ npm install
 3.  **Jalankan Server Pengembangan (Localhost):**
 
 ```bash
-npm run dev
+npm run dev -- --port 5000
 ```
     Setelah server berjalan, Anda dapat mengakses aplikasi melalui peramban di alamat yang tertera (biasanya `http://localhost:5173`).
 
