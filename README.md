@@ -1,135 +1,159 @@
-# WA Bot Real Estate (Vue.js 3 + Vite + TypeScript)
+# Dasbor & Katalog Properti Real Estate Terintegrasi Bot WhatsApp (Vue.js 3 + Vite + TypeScript)
 
-A modern, high-performance web application designed for real estate agencies, featuring a public guest catalog, an interactive mortgage simulator, and a comprehensive admin control panel integrated with a WhatsApp automation bot.
-
----
-
-## 🚀 Tech Stack & Libraries
-
-This project is built using a modern frontend architecture with the following core tools:
-
-*   **Core Framework:** [Vue.js 3](https://vuejs.org/) (Composition API, `<script setup>`)
-*   **Build Tool:** [Vite 7](https://vite.dev/)
-*   **Language:** [TypeScript](https://www.typescriptlang.org/)
-*   **Styling & UI:** 
-    *   [Tailwind CSS v4](https://tailwindcss.com/) (using the new `@tailwindcss/vite` compiler)
-    *   [Preline UI](https://preline.co/) (Tailwind-based component utility library)
-    *   [Iconify](https://iconify.design/) (Customizable vector icon set integrations)
-*   **State Management:** [Pinia](https://pinia.vuejs.org/) (with `pinia-plugin-persistedstate` for browser storage sync)
-*   **Routing:** [Vue Router 4](https://router.vuejs.org/)
-*   **Tables:** [TanStack Vue Table v8](https://tanstack.com/table) (highly performant search, sorting, and pagination logic)
-*   **Charts & Metrics:** [Vue3 ApexCharts](https://apexcharts.com/)
-*   **Real-Time Capabilities:** [Microsoft SignalR](https://learn.microsoft.com/en-us/aspnet/core/signalr/introduction) (for real-time chat & notifications from the WhatsApp bot server)
-*   **PDF Generation:** [jsPDF](https://github.com/parallax/jsPDF) & [jsPDF-AutoTable](https://github.com/simonbengtsson/jsPDF-AutoTable) (for generating and downloading dynamic property brochures)
-*   **Other UX Enhancers:**
-    *   [FullCalendar](https://fullcalendar.io/) (for appointment schedule management)
-    *   [Swiper](https://swiperjs.com/) (smooth property carousels)
-    *   [Flatpickr](https://flatpickr.js.org/) (clean date & time pickers)
-    *   [Dropzone](https://www.dropzone.dev/) (drag-and-drop media upload)
-    *   [SweetAlert2](https://sweetalert2.github.io/) (beautiful modal alerts)
+Aplikasi web modern berkinerja tinggi yang dirancang untuk agen real estate. Aplikasi ini memiliki dua fungsionalitas utama: Katalog Publik untuk pengunjung umum (Guest Portal) dilengkapi dengan simulasi KPR interaktif, dan Dasbor Administrator (Admin Portal) untuk pengelolaan data properti, manajemen janji temu, penyiapan brosur otomatis, serta modul Live Chat WhatsApp yang terintegrasi secara *real-time*.
 
 ---
 
-## 🌟 Key Features
+## 🛠️ Fitur Utama
 
-The application is divided into two primary zones:
+Aplikasi ini dibagi menjadi dua portal utama dengan fungsi sebagai berikut:
 
-### 1. Guest Portal (Public)
-*   **Interactive Homepage:** Features visual property slideshows, featured listings, and a quick-search filter.
-*   **Property Catalog:** Fully searchable catalog filtering properties by transaction type (Jual, Sewa), property type (Rumah, Ruko, Tanah, dll.), city/region, price range, and interior specs (bedrooms, bathrooms, carports, levels) with TanStack-powered pagination.
-*   **Detail Property View:** Showcases rich details, specifications, structural highlights, and geographical mapping.
-*   **Mortgage Simulator (Simulasi KPR):** Dynamic interactive sliders for loan amount, down payment, interest rate, and term duration, showing instant monthly payment estimates.
-*   **FAQ & Contact Us Pages:** Provides agency information, maps, and direct inquiry capabilities.
+### 1. Portal Pengunjung (Guest Portal)
+*   **Halaman Beranda Dinamis:** Menampilkan visual properti pilihan menggunakan carousel (*Swiper*), properti terbaru, serta fitur pencarian cepat.
+*   **Katalog Properti Interaktif:** Pengunjung dapat mencari properti berdasarkan:
+    *   Tipe Transaksi (Jual, Sewa, atau keduanya).
+    *   Tipe Unit (Rumah, Ruko, Apartemen, Tanah, dll.).
+    *   Lokasi kota/wilayah.
+    *   Rentang harga minimum dan maksimum.
+    *   Spesifikasi unit (jumlah kamar tidur, kamar mandi, lantai, dan garasi/carport).
+    *   Urutan pencarian (Terbaru, Termurah, Termahal, Luas Terbesar) menggunakan modul tabel *TanStack Vue Table*.
+*   **Detail Properti Lengkap:** Deskripsi terperinci, spesifikasi teknis, sertifikat, daya listrik, foto & video promosi, serta peta lokasi.
+*   **Simulasi KPR:** Kalkulator angsuran interaktif yang memungkinkan calon pembeli menggeser nilai harga properti, uang muka (DP), suku bunga, dan jangka waktu pinjaman (tenor) untuk melihat estimasi cicilan per bulan secara instan.
+*   **Halaman Informasi Tambahan:** Kontak Agen, Tentang Kami, dan halaman Tanya Jawab (FAQ).
 
-### 2. Admin Portal (Restricted)
-*   **Analytics Dashboard:** Visualizes sales performance, property distribution, client growth, and agent performance via interactive ApexCharts.
-*   **WhatsApp Live Chat:** Direct real-time communication module with WhatsApp contacts utilizing SignalR websocket connections to the bot API.
-*   **Broadcast Manager:** Allows administrators to manage bulk WhatsApp campaigns and templates.
-*   **Appointment Scheduler (Janji Temu):** Drag-and-drop calendar planner to schedule, view, and organize customer property viewings.
-*   **Property Listings Manager:** CRUD operations for properties, including multi-photo/video uploads, draft/active display visibility toggles, and status updates (Tersedia, Terjual, Tersewa).
-*   **Brochure PDF Generator:** Generates professional, print-ready PDF brochures with discount-pricing formats, strikethrough lines, dynamic property specs, and agent contacts on the fly.
-*   **Data Management Panel:** Control panels to manage Admins, Sales Agents, Customers, Regions (Wilayah), Custom Amenities Icons, and Transaction Status.
-*   **System Settings:** Access configurations for global business rules, toggle Maintenance Mode, and configure default mock-up brochure values.
+### 2. Portal Administrator (Admin Portal)
+*   **Dasbor Analitik (Analytics):** Visualisasi performa penjualan, statistik status properti (Tersedia, Terjual, Tersewa), statistik agen sales, dan pertumbuhan data customer dalam bentuk grafik interaktif menggunakan *ApexCharts*.
+*   **WhatsApp Live Chat (Real-time):** Mengobrol secara langsung dengan customer melalui integrasi API WhatsApp Bot yang disinkronkan secara *real-time* via koneksi websocket *SignalR*.
+*   **Manajer Broadcast:** Mengirim pesan broadcast massal ke nomor WhatsApp pelanggan berdasarkan template pesan yang dapat disesuaikan.
+*   **Kalender Janji Temu (Event Scheduler):** Jadwal survei properti terintegrasi menggunakan *FullCalendar* untuk mempermudah koordinasi waktu kunjungan antara agen sales, admin, dan calon pembeli.
+*   **Manajemen Unit Properti (CRUD):**
+    *   Menambah, mengubah, dan menghapus unit properti dengan unggahan file gambar dan video secara serentak (*Dropzone*).
+    *   Mengubah status tayang (*Status Display*: Aktif, Draft).
+    *   Mengubah status properti (*Status Properti*: Tersedia, Terjual, Tersewa) beserta pencatatan nama customer pembeli dan tanggal transaksinya.
+*   **Generator Brosur PDF Otomatis:** Membuat brosur cetak resmi untuk setiap unit dalam format PDF secara instan (*jsPDF*), lengkap dengan harga coret promo, badge promosi, ikon fasilitas properti, kontak agen, dan logo bisnis.
+*   **Manajemen Data Master (Kelola Data):**
+    *   Data Admin, Sales, Customer, Data Wilayah (Provinsi & Kota), Ikon Fasilitas Properti, dan Status Transaksi.
+*   **Pengaturan Aplikasi (Settings):** Pengaturan profil bisnis, nomor WhatsApp gateway, konfigurasi brosur bawaan, dan aktivasi **Mode Perbaikan (Maintenance Mode)** secara global.
 
 ---
 
-## 📁 Project Structure
+## 💻 Tech Stack & Library Pendukung
+
+Aplikasi ini dibangun menggunakan arsitektur frontend modern dan didukung oleh library-library berikut:
+
+*   **Framework Utama:** [Vue.js 3](https://vuejs.org/) (Composition API, `<script setup>`)
+*   **Alat Build:** [Vite 7](https://vite.dev/) untuk proses bundel cepat dan modul HMR.
+*   **Bahasa:** [TypeScript](https://www.typescriptlang.org/) untuk keamanan tipe data (*type safety*).
+*   **Gaya & Antarmuka (UI/UX):**
+    *   [Tailwind CSS v4](https://tailwindcss.com/) dengan compiler baru `@tailwindcss/vite` untuk optimasi build CSS.
+    *   [Preline UI](https://preline.co/) untuk komponen navigasi, dropdown, modal, dan elemen form siap pakai.
+    *   [Iconify](https://iconify.design/) sebagai penyedia ribuan ikon vektor secara dinamis (seperti ikon `lucide`).
+*   **Manajemen State:** [Pinia](https://pinia.vuejs.org/) dengan bantuan plugin `pinia-plugin-persistedstate` agar data pengaturan dan otentikasi tetap tersimpan di penyimpanan browser (LocalStorage).
+*   **Navigasi:** [Vue Router 4](https://router.vuejs.org/)
+*   **Sinkronisasi Real-Time:** [@microsoft/signalr](https://learn.microsoft.com/en-us/aspnet/core/signalr/introduction) untuk mendengarkan pesan masuk baru pada modul obrolan tanpa perlu memuat ulang halaman.
+*   **Penyusunan PDF:** [jsPDF](https://github.com/parallax/jsPDF) & [jsPDF-AutoTable](https://github.com/simonbengtsson/jsPDF-AutoTable).
+
+---
+
+## 📁 Struktur Folder Proyek
+
+Berikut adalah gambaran ringkas struktur direktori utama di dalam proyek:
 
 ```bash
 wa-bot-vue/
-├── .agent/              # AI coding helper workflow rules and scripts
+├── .agent/              # Konfigurasi asisten AI & skrip otomatisasi
+├── public/              # Aset statis publik (favicon, logo awal)
 ├── src/
-│   ├── assets/          # Static assets & stylesheets (e.g. global style.css)
-│   ├── components/      # Shared reusable components (e.g. ProductCard.vue, CompareModal.vue)
-│   ├── composables/     # Shared logic & composition functions (e.g. usePropertyFilters.ts)
-│   ├── config/          # Global configuration constants
-│   ├── layouts/         # Layout systems (Admin layout, Guest layout, Blank/Auth layout)
-│   ├── router/          # Vue Router configurations (includes Auth & Maintenance route guards)
-│   ├── services/        # HTTP client instances (Axios configurations)
-│   ├── stores/          # Pinia store modules (settings, authentication, etc.)
-│   ├── types/           # TypeScript type definitions and interfaces
-│   ├── utils/           # Utility helpers (PDF brochure drawers, currency formatters)
-│   └── views/           # Page view modules:
-│       ├── admin/       # Administrator features (chat, broadcast, dashboard, properti)
-│       ├── guest/       # Public guest features (beranda, katalog, simulasi-kpr)
-│       ├── auth/        # Login pages
-│       └── errors/      # Error pages (403, 404, Server Error, Maintenance Mode)
-├── index.html
-├── package.json
-├── vite.config.ts
-└── tsconfig.json
+│   ├── assets/          # Aset desain, font, dan file styling global (style.css)
+│   ├── components/      # Komponen Vue yang dapat digunakan kembali (shared components)
+│   │   ├── ProductCard.vue   # Card unit properti dengan badge Akses Jalan
+│   │   └── common/           # Komponen utilitas penunjang (seperti modul perbandingan properti)
+│   ├── composables/     # Logika reaktif Vue yang diekstrak (contoh: usePropertyFilters.ts)
+│   ├── config/          # Definisi konstanta konfigurasi global aplikasi
+│   ├── layouts/         # Layout halaman (AdminLayout, GuestLayout, BlankLayout untuk login)
+│   ├── router/          # Pengaturan rute navigasi dan logika penjaga rute (Route Guards)
+│   ├── services/        # Klien HTTP (Axios) untuk komunikasi dengan REST API
+│   ├── stores/          # State management (Pinia) seperti settings.ts untuk konfigurasi global
+│   ├── types/           # Deklarasi interface dan tipe data TypeScript
+│   ├── utils/           # Fungsi utilitas (format mata uang, generator PDF brosur)
+│   └── views/           # Halaman tampilan aplikasi:
+│       ├── admin/       # Fitur dasbor admin (chat, broadcast, janji temu, kelola-data, properti)
+│       ├── guest/       # Fitur sisi pengunjung (beranda, katalog, simulasi-kpr, faq, kontak)
+│       ├── auth/        # Halaman masuk (login)
+│       └── errors/      # Tampilan error (403, 404, 500, Maintenance)
+├── index.html           # File template HTML utama
+├── vite.config.ts       # Konfigurasi build Vite 7 & Tailwind CSS v4
+├── tsconfig.json        # Pengaturan TypeScript compiler
+└── package.json         # Metadata proyek, daftar skrip perintah, dan pustaka dependensi
 ```
 
 ---
 
-## 🛠️ Getting Started & Installation
+## ⚙️ Konfigurasi Environment (`.env`)
 
-### Prerequisites
-*   **Node.js:** `^20.19.0` or `>=22.12.0` is recommended.
-*   **Package Manager:** `npm` (packaged lock file is provided), `yarn`, or `bun`.
+Buat file `.env` di direktori utama proyek untuk mendefinisikan URL API backend dan WebSocket SignalR Anda:
 
-### Step-by-Step Setup
+```env
+# URL REST API Backend
+VITE_API_BASE_URL=https://wabotapi.padajaya.biz.id
 
-1.  **Clone the Repository:**
+# URL SignalR Hub untuk Live Chat WhatsApp
+VITE_SIGNALR_HUB_URL=https://wabotapi.padajaya.biz.id/chatHub
+```
+
+---
+
+## 🚀 Langkah Instalasi & Pengoperasian
+
+Ikuti petunjuk di bawah ini untuk menjalankan proyek ini di lingkungan lokal Anda:
+
+### Prasyarat
+Pastikan Anda sudah menginstal **Node.js** versi `^20.19.0` atau `>=22.12.0` serta manajer paket seperti `npm` atau `yarn`.
+
+### Langkah-langkah:
+
+1.  **Kloning Repositori:**
     ```bash
     git clone https://github.com/pdj2024/admin-bot-real-estate.git
     cd admin-bot-real-estate
     ```
 
-2.  **Install Dependencies:**
+2.  **Instal Dependensi Pustaka:**
     ```bash
     npm install
     ```
 
-3.  **Local Development Server:**
-    Run the Vite development server with hot-reload support:
+3.  **Jalankan Server Pengembangan (Lokal):**
     ```bash
     npm run dev
     ```
-    Once running, open the local server URL (usually `http://localhost:5173`) in your browser.
+    Setelah server berjalan, Anda dapat mengakses aplikasi melalui peramban di alamat yang tertera (biasanya `http://localhost:5173`).
 
-4.  **Production Compilation:**
-    Perform type-checking and compile/minify assets for a production bundle:
+4.  **Kompilasi untuk Kebutuhan Produksi:**
+    Perintah ini akan melakukan pengecekan tipe TypeScript dan melakukan kompilasi file aset menjadi bundle yang telah dioptimasi di dalam folder `/dist`:
     ```bash
     npm run build
     ```
-    The compiled build outputs to the `/dist` directory.
 
-5.  **Linting & Code Formatting:**
-    Check and auto-fix eslint syntax rule errors:
+5.  **Pengecekan Kode (Linting):**
+    Untuk mendeteksi kesalahan sintaksis dan memperbaikinya secara otomatis berdasarkan standar aturan ESLint:
     ```bash
     npm run lint
     ```
-    Re-format code styling with Prettier:
+
+6.  **Merapikan Format Kode (Formatting):**
+    Merapikan spasi dan struktur baris kode menggunakan Prettier di seluruh folder `src`:
     ```bash
     npm run format
     ```
 
 ---
 
-## 🛡️ Router Guards & Configuration
+## 🔒 Keamanan Rute & Mode Perbaikan (Route Guards)
 
-The routing system (`src/router/index.ts`) ensures the security of the dashboard:
-*   **Authentication Check (`requiresAuth`):** Protects administrative routes and automatically redirects unauthenticated users to `/login`.
-*   **Auto Token Refresh:** Refreshes tokens proactively on the initial admin page request to maintain seamless API sessions.
-*   **Maintenance Bypass:** Redirects visitors to `/maintenance` when the system is set to maintenance status, while allowing logged-in administrators to browse and work regularly.
+Sistem routing (`src/router/index.ts`) dilengkapi dengan pengontrol alur otomatis:
+*   **Proteksi Halaman Admin (`requiresAuth`):** Rute admin secara otomatis memeriksa ketersediaan token akses. Jika tidak valid atau kosong, pengguna akan diarahkan ke halaman `/login`.
+*   **Pembaruan Token Otomatis (*Auto Token Refresh*):** Sebelum memasuki halaman admin pertama kali, sistem akan mengirimkan permintaan ke API backend `/api/auth/refresh` untuk memperbarui token kedaluwarsa secara mulus tanpa mengganggu pengguna.
+*   **Mode Perbaikan (*Maintenance Mode*):** 
+    *   Jika status aplikasi diatur ke mode perbaikan oleh administrator, semua pengunjung umum (guest) yang mengakses halaman publik akan otomatis dialihkan ke halaman khusus `/maintenance`.
+    *   Administrator yang sudah masuk ke sistem tetap diizinkan mengakses katalog publik dan dasbor untuk melakukan pemantauan atau perubahan data.
