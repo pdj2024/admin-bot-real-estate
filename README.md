@@ -133,7 +133,7 @@ npm install
 ```bash
 npm run dev -- --port 5000
 ```
-    Setelah server berjalan, Anda dapat mengakses aplikasi melalui peramban di alamat yang tertera (biasanya `http://localhost:5173`).
+    Setelah server berjalan, Anda dapat mengakses aplikasi melalui peramban di alamat yang tertera (biasanya `http://localhost:5000`).
 
 4.  **Build untuk Production:**
     Perintah ini akan melakukan pengecekan tipe TypeScript dan melakukan kompilasi file aset menjadi bundle yang telah dioptimasi di dalam folder `/dist`:
