@@ -6,9 +6,10 @@ import listPlugin from '@fullcalendar/list'
 import interactionPlugin from '@fullcalendar/interaction'
 import idLocale from '@fullcalendar/core/locales/id'
 import type { CalendarOptions, EventClickArg } from '@fullcalendar/core'
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 
 const isMobile = ref(false)
+const windowWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1024)
 const emit = defineEmits(['openAppointment'])
 
 const props = defineProps<{
@@ -48,41 +49,69 @@ const calendarEvents = computed(() => {
 const calendarColClass = computed(() => (props.appointmentOpen ? 'lg:col-span-8 xl:col-span-9' : 'lg:col-span-12'))
 const fullCalendarRef = ref<InstanceType<typeof FullCalendar> | null>(null)
 
-const calendarOptions = computed<CalendarOptions>(() => ({
-  plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin],
-  initialView: 'dayGridMonth',
-  locale: idLocale,
-  height: 'auto',
-  aspectRatio: 1.8,
-  headerToolbar: {
-    left: isMobile.value ? 'prev,next' : 'prev,next,today',
-    center: 'title',
-    right: isMobile.value ? '' : 'dayGridMonth,timeGridWeek,listWeek'
-  },
-  editable: true,
-  selectable: true,
-  dayMaxEvents: 3,
-  events: calendarEvents.value,
-  eventClick(info: EventClickArg) {
-    refreshCalendar()
-    const event = info.event
-    const data = event.extendedProps
-    emit('openAppointment', data)
+const calendarOptions = computed<CalendarOptions>(() => {
+  const width = windowWidth.value
+  let aspect = 1.8
+  let defaultView = 'dayGridMonth'
+  
+  if (width < 640) {
+    aspect = 0.85 // Taller on mobile portrait
+    defaultView = 'listWeek' // List view is vastly superior on compact mobile
+  } else if (width < 1024) {
+    aspect = 1.25 // Tablet portrait
+    defaultView = 'dayGridMonth'
   }
-}))
+
+  return {
+    plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin],
+    initialView: defaultView,
+    locale: idLocale,
+    height: 'auto',
+    aspectRatio: aspect,
+    headerToolbar: {
+      left: width < 768 ? 'prev,next' : 'prev,next,today',
+      center: 'title',
+      right: width < 768 ? 'dayGridMonth,listWeek' : 'dayGridMonth,timeGridWeek,listWeek'
+    },
+    editable: true,
+    selectable: true,
+    dayMaxEvents: width < 640 ? 2 : 3,
+    events: calendarEvents.value,
+    eventClick(info: EventClickArg) {
+      refreshCalendar()
+      const event = info.event
+      const data = event.extendedProps
+      emit('openAppointment', data)
+    }
+  }
+})
 
 const refreshCalendar = () => fullCalendarRef.value?.getApi().updateSize()
 defineExpose({ refreshCalendar })
 
-onMounted(() => {
-  isMobile.value = window.innerWidth < 640
+const handleResize = () => {
+  windowWidth.value = window.innerWidth
+  isMobile.value = window.innerWidth < 768
   refreshCalendar()
+}
+
+onMounted(() => {
+  windowWidth.value = window.innerWidth
+  isMobile.value = window.innerWidth < 768
+  window.addEventListener('resize', handleResize)
+  setTimeout(() => {
+    refreshCalendar()
+  }, 100)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleResize)
 })
 </script>
 
 <template>
   <div :class="calendarColClass" class="h-full transition-all duration-500 min-h-0">
-    <div class="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/50 h-full overflow-hidden">
+    <div class="bg-white rounded-3xl sm:rounded-[2.5rem] p-4 sm:p-6 md:p-8 border border-slate-100 shadow-xl shadow-slate-200/50 h-full overflow-hidden">
       <FullCalendar ref="fullCalendarRef" :options="calendarOptions" />
       
       <!-- Color Legend for Status Categories -->
@@ -135,6 +164,15 @@ onMounted(() => {
   --fc-page-bg-color: transparent;
   
   font-family: inherit;
+}
+
+:deep(.fc-header-toolbar) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.75rem !important;
 }
 
 :deep(.fc .fc-toolbar-title) {
@@ -400,5 +438,95 @@ onMounted(() => {
 
 :deep(.fc-more-popover .fc-popover-body .fc-daygrid-event:last-child) {
   margin-bottom: 0 !important;
+}
+
+/* ==========================================================================
+   Responsive Overrides for Mobile (412x861) and Tablet Viewports
+   ========================================================================== */
+@media (max-width: 768px) {
+  /* Dynamic Grid layout for header to prevent overlapping/clashing */
+  :deep(.fc-header-toolbar) {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    grid-template-areas: 
+      "title title"
+      "nav views" !important;
+    gap: 10px !important;
+    margin-bottom: 1.25rem !important;
+  }
+  
+  :deep(.fc-toolbar-chunk:nth-child(1)) {
+    grid-area: nav;
+    justify-self: start;
+    display: flex;
+    gap: 4px;
+  }
+  
+  :deep(.fc-toolbar-chunk:nth-child(2)) {
+    grid-area: title;
+    justify-self: center;
+    margin-bottom: 2px;
+  }
+  
+  :deep(.fc-toolbar-chunk:nth-child(3)) {
+    grid-area: views;
+    justify-self: end;
+    display: flex;
+    gap: 4px;
+  }
+
+  :deep(.fc .fc-toolbar-title) {
+    font-size: 1.05rem !important;
+  }
+
+  :deep(.fc .fc-button) {
+    padding: 0.4rem 0.75rem !important;
+    font-size: 0.75rem !important;
+    border-radius: 0.65rem !important;
+  }
+
+  :deep(.fc-col-header-cell) {
+    padding: 0.5rem 0 !important;
+  }
+
+  :deep(.fc-col-header-cell-cushion) {
+    font-size: 0.7rem !important;
+    letter-spacing: 0.05em !important;
+  }
+
+  :deep(.fc-daygrid-day-number) {
+    font-size: 0.75rem !important;
+    padding: 4px 6px !important;
+  }
+
+  :deep(.fc-daygrid-event) {
+    padding: 2px 4px !important;
+    font-size: 0.65rem !important;
+    border-radius: 4px !important;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  
+  /* Scrollable/Clean FullCalendar scrollgrid wrapper */
+  :deep(.fc-scrollgrid) {
+    border-radius: 1rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  :deep(.fc-header-toolbar) {
+    gap: 8px !important;
+  }
+  
+  :deep(.fc .fc-toolbar-title) {
+    font-size: 0.95rem !important;
+  }
+  
+  :deep(.fc .fc-button) {
+    padding: 0.35rem 0.6rem !important;
+    font-size: 0.7rem !important;
+    border-radius: 0.5rem !important;
+  }
 }
 </style>

@@ -175,56 +175,58 @@ onUnmounted(() => {
 
 <template>
   <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-    <div class="px-8 py-5 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <div class="size-8 rounded-lg bg-bejo-500 flex items-center justify-center text-white shadow-lg shadow-bejo-500/20">
+    <div class="px-4 sm:px-8 py-5 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="size-8 rounded-lg bg-bejo-500 flex items-center justify-center text-white shadow-lg shadow-bejo-500/20 shrink-0">
               <Icon icon="lucide:settings-2" class="size-4" />
             </div>
-            <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest">Pengaturan Sistem</h4>
+            <h4 class="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-widest truncate">Pengaturan Sistem</h4>
           </div>
         </div>
-    <div class="px-8 pb-8 space-y-8">
+    <div class="px-4 sm:px-8 pb-8 space-y-6">
       <!-- WA Gateway Card -->
       <div 
         class="p-6 rounded-[2rem] border-2 transition-all duration-500"
         :class="isGatewayActive ? 'bg-bejo-50 border-bejo-200' : 'bg-slate-50 border-slate-100'"
       >
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div class="flex gap-5">
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex items-start gap-3 sm:gap-5 min-w-0">
             <div 
-              class="size-14 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transition-transform duration-500"
+              class="size-12 sm:size-14 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transition-transform duration-500"
               :class="isGatewayActive ? 'bg-bejo-500 text-white shadow-bejo-500/20' : 'bg-white text-slate-400 border border-slate-100'"
             >
-              <Icon icon="lucide:radio" class="size-7" :class="{ 'animate-pulse': wahaStatus?.status === 'WORKING' }" />
+              <Icon icon="lucide:radio" class="size-6 sm:size-7" :class="{ 'animate-pulse': wahaStatus?.status === 'WORKING' }" />
             </div>
-            <div>
-              <div class="flex items-center gap-2 mb-1">
-                <h5 class="text-base font-black text-slate-900">WhatsApp Gateway</h5>
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-2 mb-1">
+                <h5 class="text-sm sm:text-base font-black text-slate-900 leading-tight">WhatsApp Gateway</h5>
                 <span 
-                  class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest"
+                  class="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest shrink-0"
                   :class="wahaStatus?.status === 'WORKING' ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'"
                 >
                   {{ wahaStatus?.status === 'WORKING' ? 'Online' : 'Offline' }}
                 </span>
               </div>
-              <p class="text-xs text-slate-500 font-medium leading-relaxed max-w-md">
+              <p class="text-[11px] sm:text-xs text-slate-500 font-medium leading-relaxed">
                 Layanan penghubung sistem dengan server WhatsApp (WAHA Service).
               </p>
             </div>
           </div>
           
-          <label class="relative inline-flex items-center cursor-pointer group" :class="{ 'opacity-50 pointer-events-none': isProcessing }">
-            <input 
-              type="checkbox" 
-              :checked="isGatewayActive"
-              @change="handleToggleGateway"
-              class="sr-only peer" 
-            />
-            <div class="w-20 h-10 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:start-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-8 after:w-9 after:transition-all peer-checked:bg-green-500 shadow-inner group-hover:scale-105 transition-transform"></div>
-            <div v-if="isProcessing" class="absolute inset-0 flex items-center justify-center">
-               <Icon icon="lucide:loader-2" class="size-5 animate-spin text-white z-10" />
-            </div>
-          </label>
+          <div class="shrink-0">
+            <label class="relative inline-flex items-center cursor-pointer group" :class="{ 'opacity-50 pointer-events-none': isProcessing }">
+              <input 
+                type="checkbox" 
+                :checked="isGatewayActive"
+                @change="handleToggleGateway"
+                class="sr-only peer" 
+              />
+              <div class="w-14 h-7 sm:w-20 sm:h-10 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] sm:after:top-[4px] after:start-[2px] sm:after:start-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 sm:after:h-8 after:w-6 sm:after:w-9 after:transition-all peer-checked:bg-green-500 shadow-inner group-hover:scale-105 transition-transform"></div>
+              <div v-if="isProcessing" class="absolute inset-0 flex items-center justify-center">
+                 <Icon icon="lucide:loader-2" class="size-4 animate-spin text-white z-10" />
+              </div>
+            </label>
+          </div>
         </div>
 
         <!-- Connection Detail (QR/Session) -->
@@ -233,19 +235,21 @@ onUnmounted(() => {
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <!-- Left: QR/Status -->
               <div class="space-y-6">
-                <div v-if="wahaStatus?.status === 'WORKING'" class="flex items-center gap-4 p-4 bg-white rounded-2xl border border-slate-100">
-                  <div class="size-12 rounded-xl bg-emerald-50 flex items-center justify-center">
-                    <Icon icon="lucide:user-check" class="size-6 text-emerald-600" />
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <h6 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-0.5">Sesi Aktif</h6>
-                    <p class="text-sm font-black text-slate-800 truncate">{{ wahaStatus.me?.pushName || 'WhatsApp Bot' }}</p>
-                    <p class="text-xs font-bold text-slate-500 mt-0.5">{{ wahaStatus.me?.id?.split('@')[0] }}</p>
+                <div v-if="wahaStatus?.status === 'WORKING'" class="flex flex-col sm:flex-row sm:items-center gap-4 p-4 bg-white rounded-2xl border border-slate-100">
+                  <div class="flex items-center gap-4 flex-1 min-w-0 w-full">
+                    <div class="size-12 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
+                      <Icon icon="lucide:user-check" class="size-6 text-emerald-600" />
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <h6 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-0.5">Sesi Aktif</h6>
+                      <p class="text-sm font-black text-slate-800 truncate">{{ wahaStatus.me?.pushName || 'WhatsApp Bot' }}</p>
+                      <p class="text-xs font-bold text-slate-500 mt-0.5">{{ wahaStatus.me?.id?.split('@')[0] }}</p>
+                    </div>
                   </div>
                   <button 
                     @click="handleWahaLogout" 
                     :disabled="isLoggingOut"
-                    class="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-xs font-black uppercase tracking-widest hover:bg-red-100 transition-all flex items-center gap-2"
+                    class="w-full sm:w-auto px-4 py-2 bg-red-50 text-red-600 rounded-lg text-xs font-black uppercase tracking-widest hover:bg-red-100 transition-all flex items-center justify-center gap-2 shrink-0"
                   >
                     <Icon v-if="isLoggingOut" icon="lucide:loader-2" class="animate-spin size-3" />
                     Logout
@@ -303,31 +307,33 @@ onUnmounted(() => {
         class="p-6 rounded-[2rem] border-2 transition-all duration-500"
         :class="settingsStore.bot.isActive ? 'bg-bejo-50 border-bejo-200' : 'bg-slate-50 border-slate-100'"
       >
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div class="flex gap-5">
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex items-start gap-3 sm:gap-5 min-w-0">
             <div 
-              class="size-14 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transition-transform duration-500"
+              class="size-12 sm:size-14 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transition-transform duration-500"
               :class="settingsStore.bot.isActive ? 'bg-emerald-500 text-white shadow-bejo-500/20' : 'bg-white text-slate-400 border border-slate-100'"
             >
-              <Icon :icon="settingsStore.bot.isActive ? 'lucide:bot' : 'lucide:message-square-off'" class="size-7" />
+              <Icon :icon="settingsStore.bot.isActive ? 'lucide:bot' : 'lucide:message-square-off'" class="size-6 sm:size-7" />
             </div>
-            <div>
-              <h5 class="text-base font-black text-slate-900 mb-1">Aktifkan Bot</h5>
-              <p class="text-xs text-slate-500 font-medium leading-relaxed max-w-md">
+            <div class="min-w-0 flex-1">
+              <h5 class="text-sm sm:text-base font-black text-slate-900 mb-1 leading-tight">Aktifkan Bot</h5>
+              <p class="text-[11px] sm:text-xs text-slate-500 font-medium leading-relaxed">
                 Aktifkan asisten otomatis untuk menangani pertanyaan pembeli via WhatsApp secara cerdas.
               </p>
             </div>
           </div>
           
-          <label class="relative inline-flex items-center cursor-pointer group" :class="{ 'opacity-50 pointer-events-none': isProcessing }">
-            <input 
-              type="checkbox" 
-              v-model="settingsStore.bot.isActive" 
-              @change="handleToggleBot"
-              class="sr-only peer" 
-            />
-            <div class="w-20 h-10 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:start-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-8 after:w-9 after:transition-all peer-checked:bg-green-500 shadow-inner group-hover:scale-105 transition-transform"></div>
-          </label>
+          <div class="shrink-0">
+            <label class="relative inline-flex items-center cursor-pointer group" :class="{ 'opacity-50 pointer-events-none': isProcessing }">
+              <input 
+                type="checkbox" 
+                v-model="settingsStore.bot.isActive" 
+                @change="handleToggleBot"
+                class="sr-only peer" 
+              />
+              <div class="w-14 h-7 sm:w-20 sm:h-10 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] sm:after:top-[4px] after:start-[2px] sm:after:start-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 sm:after:h-8 after:w-6 sm:after:w-9 after:transition-all peer-checked:bg-green-500 shadow-inner group-hover:scale-105 transition-transform"></div>
+            </label>
+          </div>
         </div>
       </div>
 
@@ -336,31 +342,33 @@ onUnmounted(() => {
         class="p-6 rounded-[2rem] border-2 transition-all duration-500"
         :class="settingsStore.app.isMaintenance ? 'bg-bejo-50 border-bejo-200' : 'bg-slate-50 border-slate-100'"
       >
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div class="flex gap-5">
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex items-start gap-3 sm:gap-5 min-w-0">
             <div 
-              class="size-14 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transition-transform duration-500"
+              class="size-12 sm:size-14 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transition-transform duration-500"
               :class="settingsStore.app.isMaintenance ? 'bg-bejo-500 text-white rotate-12' : 'bg-white text-slate-400 border border-slate-100'"
             >
-              <Icon :icon="settingsStore.app.isMaintenance ? 'lucide:hammer' : 'lucide:rocket'" class="size-7" />
+              <Icon :icon="settingsStore.app.isMaintenance ? 'lucide:hammer' : 'lucide:rocket'" class="size-6 sm:size-7" />
             </div>
-            <div>
-              <h5 class="text-base font-black text-slate-900 mb-1">Mode Perbaikan (Maintenance)</h5>
-              <p class="text-xs text-slate-500 font-medium leading-relaxed max-w-md">
+            <div class="min-w-0 flex-1">
+              <h5 class="text-sm sm:text-base font-black text-slate-900 mb-1 leading-tight">Mode Perbaikan (Maintenance)</h5>
+              <p class="text-[11px] sm:text-xs text-slate-500 font-medium leading-relaxed">
                 Aktifkan ini untuk menonaktifkan seluruh akses pengunjung dan menampilkan halaman perbaikan profesional. Admin tetap bisa login & mengelola data.
               </p>
             </div>
           </div>
           
-          <label class="relative inline-flex items-center cursor-pointer group">
-            <input 
-              type="checkbox" 
-              v-model="settingsStore.app.isMaintenance" 
-              @change="handleToggleMaintenance"
-              class="sr-only peer" 
-            />
-            <div class="w-20 h-10 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:start-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-8 after:w-9 after:transition-all peer-checked:bg-green-500 shadow-inner group-hover:scale-105 transition-transform"></div>
-          </label>
+          <div class="shrink-0">
+            <label class="relative inline-flex items-center cursor-pointer group">
+              <input 
+                type="checkbox" 
+                v-model="settingsStore.app.isMaintenance" 
+                @change="handleToggleMaintenance"
+                class="sr-only peer" 
+              />
+              <div class="w-14 h-7 sm:w-20 sm:h-10 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] sm:after:top-[4px] after:start-[2px] sm:after:start-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 sm:after:h-8 after:w-6 sm:after:w-9 after:transition-all peer-checked:bg-green-500 shadow-inner group-hover:scale-105 transition-transform"></div>
+            </label>
+          </div>
         </div>
 
         <!-- Warning Message -->
@@ -377,31 +385,33 @@ onUnmounted(() => {
         class="p-6 rounded-[2rem] border-2 transition-all duration-500"
         :class="settingsStore.app.viewDiscount ? 'bg-bejo-50 border-bejo-200' : 'bg-slate-50 border-slate-100'"
       >
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div class="flex gap-5">
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex items-start gap-3 sm:gap-5 min-w-0">
             <div 
-              class="size-14 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transition-transform duration-500"
+              class="size-12 sm:size-14 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transition-transform duration-500"
               :class="settingsStore.app.viewDiscount ? 'bg-bejo-500 text-white shadow-bejo-500/20' : 'bg-white text-slate-400 border border-slate-100'"
             >
-              <Icon icon="lucide:tag" class="size-7" />
+              <Icon icon="lucide:tag" class="size-6 sm:size-7" />
             </div>
-            <div>
-              <h5 class="text-base font-black text-slate-900 mb-1">Tampilkan Harga Sebelum Diskon</h5>
-              <p class="text-xs text-slate-500 font-medium leading-relaxed max-w-md">
+            <div class="min-w-0 flex-1">
+              <h5 class="text-sm sm:text-base font-black text-slate-900 mb-1 leading-tight">Tampilkan Harga Sebelum Diskon</h5>
+              <p class="text-[11px] sm:text-xs text-slate-500 font-medium leading-relaxed">
                 Jika diaktifkan, sistem akan menampilkan harga asli yang dicoret di samping harga promo.
               </p>
             </div>
           </div>
           
-          <label class="relative inline-flex items-center cursor-pointer group" :class="{ 'opacity-50 pointer-events-none': isProcessing }">
-            <input 
-              type="checkbox" 
-              v-model="settingsStore.app.viewDiscount" 
-              @change="handleToggleDiscount"
-              class="sr-only peer" 
-            />
-            <div class="w-20 h-10 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:start-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-8 after:w-9 after:transition-all peer-checked:bg-green-500 shadow-inner group-hover:scale-105 transition-transform"></div>
-          </label>
+          <div class="shrink-0">
+            <label class="relative inline-flex items-center cursor-pointer group" :class="{ 'opacity-50 pointer-events-none': isProcessing }">
+              <input 
+                type="checkbox" 
+                v-model="settingsStore.app.viewDiscount" 
+                @change="handleToggleDiscount"
+                class="sr-only peer" 
+              />
+              <div class="w-14 h-7 sm:w-20 sm:h-10 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] sm:after:top-[4px] after:start-[2px] sm:after:start-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 sm:after:h-8 after:w-6 sm:after:w-9 after:transition-all peer-checked:bg-green-500 shadow-inner group-hover:scale-105 transition-transform"></div>
+            </label>
+          </div>
         </div>
       </div>
 

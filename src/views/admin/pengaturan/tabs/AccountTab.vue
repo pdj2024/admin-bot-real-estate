@@ -345,12 +345,12 @@ onMounted(() => {
     <template v-else>
       <!-- PROFIL AKUN ADMIN -->
       <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
-        <div class="px-8 py-5 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <div class="size-8 rounded-lg bg-bejo-500 flex items-center justify-center text-white shadow-lg shadow-bejo-500/20">
+        <div class="px-4 sm:px-8 py-5 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="size-8 rounded-lg bg-bejo-500 flex items-center justify-center text-white shadow-lg shadow-bejo-500/20 shrink-0">
               <Icon icon="lucide:user-cog" class="size-4" />
             </div>
-            <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest">Akun Saya</h4>
+            <h4 class="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-widest truncate">Akun Saya</h4>
           </div>
         </div>
 
@@ -451,7 +451,7 @@ onMounted(() => {
             <button 
               :disabled="isSavingProfile" 
               @click="handleUpdateProfile" 
-              class="px-8 py-3 bg-bejo-600 hover:bg-bejo-700 text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-xl shadow-bejo-900/20 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
+              class="px-8 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-xl shadow-green-500/20 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
             >
               <Icon v-if="isSavingProfile" icon="lucide:loader-2" class="size-4 animate-spin" />
               <Icon v-else icon="lucide:save" class="size-4" />
@@ -463,12 +463,12 @@ onMounted(() => {
 
       <!-- JADWAL & JAM KERJA -->
       <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
-        <div class="px-8 py-5 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <div class="size-8 rounded-lg bg-bejo-500 flex items-center justify-center text-white shadow-lg shadow-bejo-500/20">
+        <div class="px-4 sm:px-8 py-5 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="size-8 rounded-lg bg-bejo-500 flex items-center justify-center text-white shadow-lg shadow-bejo-500/20 shrink-0">
               <Icon icon="lucide:calendar-range" class="size-4" />
             </div>
-            <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest">Jadwal & Jam Kerja</h4>
+            <h4 class="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-widest truncate">Jadwal & Jam Kerja</h4>
           </div>
         </div>
 
@@ -503,11 +503,11 @@ onMounted(() => {
 
       <!-- KEAMANAN & PASSWORD -->
       <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
-        <div class="px-8 py-5 border-b border-slate-50 bg-slate-50/50 flex items-center gap-3">
-          <div class="size-8 rounded-lg bg-orange-500 flex items-center justify-center text-white shadow-lg shadow-orange-500/20">
+        <div class="px-4 sm:px-8 py-5 border-b border-slate-50 bg-slate-50/50 flex items-center gap-3 min-w-0">
+          <div class="size-8 rounded-lg bg-orange-500 flex items-center justify-center text-white shadow-lg shadow-orange-500/20 shrink-0">
             <Icon icon="lucide:shield-alert" class="size-4" />
           </div>
-          <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest">Keamanan & Ganti Sandi</h4>
+          <h4 class="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-widest truncate">Keamanan & Ganti Sandi</h4>
         </div>
 
         <div class="p-8 space-y-8">
@@ -555,7 +555,7 @@ onMounted(() => {
             <button 
               :disabled="isLoadingPassword" 
               @click="handleUpdatePassword" 
-              class="px-8 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-xl shadow-orange-500/20 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
+              class="px-8 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-xl shadow-green-500/20 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
             >
               <Icon v-if="isLoadingPassword" icon="lucide:loader-2" class="size-4 animate-spin" />
               <Icon v-else icon="lucide:refresh-cw" class="size-4" />

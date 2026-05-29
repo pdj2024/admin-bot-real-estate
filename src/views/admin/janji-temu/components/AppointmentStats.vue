@@ -32,19 +32,19 @@ const getIconBg = (color: string) => {
 </script>
 
 <template>
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
     <div 
       v-for="(item, idx) in stats" 
       :key="idx"
-      class="group bg-white rounded-3xl p-4 border border-slate-100 shadow-lg shadow-slate-200/30 transition-all duration-300"
+      class="group bg-white rounded-2xl sm:rounded-3xl p-3 sm:p-4 border border-slate-100 shadow-lg shadow-slate-200/30 transition-all duration-300"
     >
-      <div class="flex items-center gap-4">
-        <div :class="`size-10 rounded-xl flex items-center justify-center text-white shadow-md transition-transform group-hover:rotate-6 ${getIconBg(item.color)}`">
-           <Icon :icon="item.icon" class="size-5" />
+      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3.5">
+        <div :class="`size-8 sm:size-10 rounded-lg sm:rounded-xl flex items-center justify-center text-white shadow-md transition-transform group-hover:rotate-6 ${getIconBg(item.color)} shrink-0`">
+           <Icon :icon="item.icon" class="size-4 sm:size-5" />
         </div>
-        <div>
-          <h2 class="text-xl font-black text-slate-900 leading-none mb-1">{{ item.value }}</h2>
-          <p class="text-xs font-black uppercase tracking-widest text-slate-400 leading-none">{{ item.label }}</p>
+        <div class="min-w-0">
+          <h2 class="text-base sm:text-xl font-black text-slate-900 leading-none mb-1">{{ item.value }}</h2>
+          <p class="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400 leading-tight block truncate sm:whitespace-normal">{{ item.label }}</p>
         </div>
       </div>
     </div>

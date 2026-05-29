@@ -51,6 +51,7 @@ const currentStep = ref(1) // Flow Steps: 1, 2, 3
 const message = ref('')
 const isRecipientModalOpen = ref(false)
 const isUnitModalOpen = ref(false)
+const isPreviewModalOpen = ref(false)
 const activeTemplateIndex = ref<number | null>(null)
 const previewTemplateIndex = ref<number | null>(1) // Default to template 2 (Sultan Vibes) for preview
 const showImage = ref(true)
@@ -652,105 +653,127 @@ onUnmounted(() => {
 
 <template>
   <Vertical mainClass="flex flex-col flex-grow min-h-0 px-0 py-0 md:px-4 md:py-4">
-    <div class="px-4 md:px-3 md:pt-1 pb-4 flex flex-col flex-grow min-h-0 overflow-hidden lg:h-[calc(100vh-160px)]">
+    <div class="px-2 sm:px-4 md:px-3 md:pt-1 pb-4 flex flex-col flex-grow min-h-0 overflow-y-auto md:overflow-hidden md:h-[calc(100vh-120px)] lg:h-[calc(100vh-160px)]">
       <!-- Unified Max-Width Wrapper -->
-      <div class="w-full flex flex-col flex-grow min-h-0 space-y-4 lg:h-full">
+      <div class="w-full flex flex-col flex-grow min-h-0 space-y-4 md:h-full">
         
         <!-- Stepper Progress Card -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0">
+        <div class="flex items-center justify-between gap-1.5 sm:gap-4 shrink-0 mt-3 md:mt-0">
           <!-- Step 1 Card -->
           <div 
             @click="goToStep(1)"
             :class="[
-              'group bg-white rounded-[1.5rem] p-4 border transition-all duration-300 cursor-pointer flex items-center justify-between',
+              'flex-grow flex-1 group bg-white rounded-xl sm:rounded-[1.5rem] p-2.5 sm:p-4 border transition-all duration-300 cursor-pointer flex items-center justify-center md:justify-between',
               currentStep === 1 
                 ? 'border-bejo-500 shadow-lg shadow-bejo-500/15 scale-[1.02] ring-1 ring-bejo-500/10' 
                 : 'border-slate-100 shadow-md shadow-slate-200/20 hover:border-bejo-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-200/30'
             ]"
           >
-            <div class="flex items-center gap-3.5">
-              <div 
-                :class="[
-                  'size-10 rounded-xl flex items-center justify-center text-white shadow-md transition-all duration-300 group-hover:rotate-6',
-                  currentStep === 1 ? 'bg-bejo-500 scale-105' : 'bg-slate-300 group-hover:bg-slate-400'
-                ]"
-              >
-                <Icon icon="lucide:list-filter" class="size-5" />
+            <div class="flex items-center gap-2 sm:gap-3.5">
+              <div class="relative">
+                <div 
+                  :class="[
+                    'size-8 sm:size-10 rounded-xl flex items-center justify-center text-white shadow-md transition-all duration-300 group-hover:rotate-6',
+                    currentStep === 1 ? 'bg-bejo-500 scale-105' : 'bg-slate-300 group-hover:bg-slate-400'
+                  ]"
+                >
+                  <Icon icon="lucide:list-filter" class="size-4 sm:size-5" />
+                </div>
+                <!-- Number indicator for mobile -->
+                <div class="md:hidden absolute -top-1.5 -left-1.5 size-4 bg-slate-800 text-white rounded-full flex items-center justify-center text-[9px] font-bold border border-white">1</div>
               </div>
-              <div>
-                <h3 :class="['text-[10px] font-black uppercase tracking-widest leading-none mb-1', currentStep === 1 ? 'text-bejo-500' : 'text-slate-400 group-hover:text-bejo-500']">Langkah 1</h3>
-                <p class="text-sm font-black text-slate-800 leading-none uppercase tracking-wide">Pilih Template</p>
+              <div class="hidden md:block">
+                <h3 :class="['text-[8px] sm:text-[10px] font-black uppercase tracking-widest leading-none mb-1', currentStep === 1 ? 'text-bejo-500' : 'text-slate-400 group-hover:text-bejo-500']">Langkah 1</h3>
+                <p class="text-xs sm:text-sm font-black text-slate-800 leading-none uppercase tracking-wide">Pilih Template</p>
               </div>
             </div>
-            <div>
-              <Icon v-if="currentStep > 1" icon="lucide:check-circle" class="size-5 text-green-500" />
-              <span v-else class="size-2 rounded-full bg-bejo-500 animate-pulse"></span>
+            <div class="hidden md:block">
+              <Icon v-if="currentStep > 1" icon="lucide:check-circle" class="size-4 sm:size-5 text-green-500" />
+              <span v-else class="size-1.5 sm:size-2 rounded-full bg-bejo-500 animate-pulse"></span>
             </div>
+          </div>
+
+          <!-- Separator 1 -->
+          <div class="flex items-center justify-center text-slate-300 shrink-0">
+            <Icon icon="lucide:chevrons-right" class="size-4 sm:size-5" />
           </div>
 
           <!-- Step 2 Card -->
           <div 
             @click="goToStep(2)"
             :class="[
-              'group bg-white rounded-[1.5rem] p-4 border transition-all duration-300 cursor-pointer flex items-center justify-between',
+              'flex-grow flex-1 group bg-white rounded-xl sm:rounded-[1.5rem] p-2.5 sm:p-4 border transition-all duration-300 cursor-pointer flex items-center justify-center md:justify-between',
               currentStep === 2 
                 ? 'border-bejo-500 shadow-lg shadow-bejo-500/15 scale-[1.02] ring-1 ring-bejo-500/10' 
                 : 'border-slate-100 shadow-md shadow-slate-200/20 hover:border-bejo-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-200/30'
             ]"
           >
-            <div class="flex items-center gap-3.5">
-              <div 
-                :class="[
-                  'size-10 rounded-xl flex items-center justify-center text-white shadow-md transition-all duration-300 group-hover:rotate-6',
-                  currentStep === 2 ? 'bg-bejo-500 scale-105' : 'bg-slate-300 group-hover:bg-slate-400'
-                ]"
-              >
-                <Icon icon="lucide:home" class="size-5" />
+            <div class="flex items-center gap-2 sm:gap-3.5">
+              <div class="relative">
+                <div 
+                  :class="[
+                    'size-8 sm:size-10 rounded-xl flex items-center justify-center text-white shadow-md transition-all duration-300 group-hover:rotate-6',
+                    currentStep === 2 ? 'bg-bejo-500 scale-105' : 'bg-slate-300 group-hover:bg-slate-400'
+                  ]"
+                >
+                  <Icon icon="lucide:home" class="size-4 sm:size-5" />
+                </div>
+                <!-- Number indicator for mobile -->
+                <div class="md:hidden absolute -top-1.5 -left-1.5 size-4 bg-slate-800 text-white rounded-full flex items-center justify-center text-[9px] font-bold border border-white">2</div>
               </div>
-              <div>
-                <h3 :class="['text-[10px] font-black uppercase tracking-widest leading-none mb-1', currentStep === 2 ? 'text-bejo-500' : 'text-slate-400 group-hover:text-bejo-500']">Langkah 2</h3>
-                <p class="text-sm font-black text-slate-800 leading-none uppercase tracking-wide">Pilih Unit Properti</p>
+              <div class="hidden md:block">
+                <h3 :class="['text-[8px] sm:text-[10px] font-black uppercase tracking-widest leading-none mb-1', currentStep === 2 ? 'text-bejo-500' : 'text-slate-400 group-hover:text-bejo-500']">Langkah 2</h3>
+                <p class="text-xs sm:text-sm font-black text-slate-800 leading-none uppercase tracking-wide">Pilih Unit Properti</p>
               </div>
             </div>
-            <div class="flex items-center gap-2">
-              <span v-if="selectedUnit" class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded max-w-[100px] truncate">🏠 {{ selectedUnit.Nama_Produk }}</span>
-              <Icon v-if="currentStep > 2" icon="lucide:check-circle" class="size-5 text-green-500" />
-              <span v-else-if="!selectedUnit" class="size-2 rounded-full bg-slate-200" :class="currentStep === 2 ? 'bg-bejo-500 animate-pulse' : ''"></span>
+            <div class="hidden md:flex items-center gap-1.5 sm:gap-2">
+              <span v-if="selectedUnit" class="text-[9px] sm:text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 sm:px-2 py-0.5 rounded max-w-[80px] sm:max-w-[100px] truncate">🏠 {{ selectedUnit.Nama_Produk }}</span>
+              <Icon v-if="currentStep > 2" icon="lucide:check-circle" class="size-4 sm:size-5 text-green-500" />
+              <span v-else-if="!selectedUnit" class="size-1.5 sm:size-2 rounded-full bg-slate-200" :class="currentStep === 2 ? 'bg-bejo-500 animate-pulse' : ''"></span>
             </div>
+          </div>
+
+          <!-- Separator 2 -->
+          <div class="flex items-center justify-center text-slate-300 shrink-0">
+            <Icon icon="lucide:chevrons-right" class="size-4 sm:size-5" />
           </div>
 
           <!-- Step 3 Card -->
           <div 
             @click="goToStep(3)"
             :class="[
-              'group bg-white rounded-[1.5rem] p-4 border transition-all duration-300 cursor-pointer flex items-center justify-between',
+              'flex-grow flex-1 group bg-white rounded-xl sm:rounded-[1.5rem] p-2.5 sm:p-4 border transition-all duration-300 cursor-pointer flex items-center justify-center md:justify-between',
               currentStep === 3 
                 ? 'border-bejo-500 shadow-lg shadow-bejo-500/15 scale-[1.02] ring-1 ring-bejo-500/10' 
                 : 'border-slate-100 shadow-md shadow-slate-200/20 hover:border-bejo-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-200/30'
             ]"
           >
-            <div class="flex items-center gap-3.5">
-              <div 
-                :class="[
-                  'size-10 rounded-xl flex items-center justify-center text-white shadow-md transition-all duration-300 group-hover:rotate-6',
-                  currentStep === 3 ? 'bg-bejo-500 scale-105' : 'bg-slate-300 group-hover:bg-slate-400'
-                ]"
-              >
-                <Icon icon="lucide:send" class="size-5" />
+            <div class="flex items-center gap-2 sm:gap-3.5">
+              <div class="relative">
+                <div 
+                  :class="[
+                    'size-8 sm:size-10 rounded-xl flex items-center justify-center text-white shadow-md transition-all duration-300 group-hover:rotate-6',
+                    currentStep === 3 ? 'bg-bejo-500 scale-105' : 'bg-slate-300 group-hover:bg-slate-400'
+                  ]"
+                >
+                  <Icon icon="lucide:send" class="size-4 sm:size-5" />
+                </div>
+                <!-- Number indicator for mobile -->
+                <div class="md:hidden absolute -top-1.5 -left-1.5 size-4 bg-slate-800 text-white rounded-full flex items-center justify-center text-[9px] font-bold border border-white">3</div>
               </div>
-              <div>
-                <h3 :class="['text-[10px] font-black uppercase tracking-widest leading-none mb-1', currentStep === 3 ? 'text-bejo-500' : 'text-slate-400 group-hover:text-bejo-500']">Langkah 3</h3>
-                <p class="text-sm font-black text-slate-800 leading-none uppercase tracking-wide">Tulis & Kirim Pesan</p>
+              <div class="hidden md:block">
+                <h3 :class="['text-[8px] sm:text-[10px] font-black uppercase tracking-widest leading-none mb-1', currentStep === 3 ? 'text-bejo-500' : 'text-slate-400 group-hover:text-bejo-500']">Langkah 3</h3>
+                <p class="text-xs sm:text-sm font-black text-slate-800 leading-none uppercase tracking-wide">Tulis & Kirim Pesan</p>
               </div>
             </div>
-            <div>
-              <span class="size-2 rounded-full bg-slate-200" :class="currentStep === 3 ? 'bg-bejo-500 animate-pulse' : ''"></span>
+            <div class="hidden md:block">
+              <span class="size-1.5 sm:size-2 rounded-full bg-slate-200" :class="currentStep === 3 ? 'bg-bejo-500 animate-pulse' : ''"></span>
             </div>
           </div>
         </div>
 
         <!-- Steps 1 & 2: Select Template (Split layout with Live WhatsApp Mockup) -->
-        <div v-if="currentStep === 1 || currentStep === 2" class="flex-grow flex flex-col min-h-0 overflow-y-auto lg:overflow-hidden custom-scrollbar lg:h-full">
+        <div v-if="currentStep === 1 || currentStep === 2" class="flex-grow flex flex-col min-h-0 overflow-y-auto md:overflow-hidden custom-scrollbar md:h-full">
           <div class="mb-4 shrink-0 px-1">
             <h2 class="text-base font-black text-slate-700 uppercase tracking-wider">
               {{ currentStep === 1 ? 'Silakan Pilih Template Pesan' : 'Silakan Pilih Unit Properti' }}
@@ -760,9 +783,9 @@ onUnmounted(() => {
             </p>
           </div>
 
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full px-1 flex-grow min-h-0 items-stretch lg:h-full">
-            <!-- Left: Template Selector List (width: 5 cols on lg) -->
-            <div class="lg:col-span-5 bg-white border border-slate-100 rounded-[2rem] p-6 shadow-xl shadow-slate-200/50 flex flex-col gap-4 lg:h-full lg:min-h-0">
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-6 w-full px-1 flex-grow min-h-0 items-stretch md:h-full">
+            <!-- Left: Template Selector List (width: 5 cols on md) -->
+            <div class="md:col-span-5 bg-white border border-slate-100 rounded-2xl sm:rounded-[2rem] p-4 sm:p-6 shadow-xl shadow-slate-200/50 flex flex-col gap-4 md:h-full md:min-h-0">
               <!-- Header for template choices -->
               <div class="flex items-center gap-2 mb-1 border-b border-slate-100 pb-3">
                 <Icon icon="lucide:list-filter" class="size-4 text-bejo-500" />
@@ -770,7 +793,7 @@ onUnmounted(() => {
               </div>
 
               <!-- Templates List Stack -->
-              <div class="space-y-3 lg:flex-grow lg:min-h-0 lg:overflow-y-auto custom-scrollbar pr-1">
+              <div class="space-y-3 md:flex-grow md:min-h-0 md:overflow-y-auto custom-scrollbar pr-1">
                 <div v-for="(tpl, idx) in templates" :key="idx" @click="previewTemplateIndex = idx" class="border rounded-2xl p-4 transition-all duration-300 cursor-pointer group flex flex-col text-left hover:scale-[1.01]" :class="previewTemplateIndex === idx ? 'border-bejo-500 bg-bejo-50/10 ring-2 ring-bejo-500/10 shadow-md shadow-bejo-500/5' : 'bg-white border-slate-100 hover:border-bejo-200 hover:bg-slate-50/50'">
                   <div class="flex items-center justify-between mb-2">
                     <div class="flex items-center gap-2">
@@ -806,15 +829,27 @@ onUnmounted(() => {
                     <span class="text-xs font-black uppercase tracking-wider">💡 Info Pratinjau</span>
                   </div>
                   <p class="text-[11px] text-slate-600 leading-relaxed font-medium">
-  Label oranye seperti <span class="inline-block px-1.5 py-0.5 font-bold bg-amber-50 text-amber-700 border border-amber-200 rounded text-[9px] leading-none align-middle mx-0.5">Jumlah Kamar Tidur</span> hanya <strong>contoh</strong>. 
-  Isinya akan otomatis terisi dengan data asli setelah Anda memilih unit di <strong>Langkah 2</strong>, namun tetap bisa Anda ubah kembali sebelum pesan dikirim.
-</p>
+                    Label oranye seperti <span class="inline-block px-1.5 py-0.5 font-bold bg-amber-50 text-amber-700 border border-amber-200 rounded text-[9px] leading-none align-middle mx-0.5">Jumlah Kamar Tidur</span> hanya <strong>contoh</strong>. 
+                    Isinya akan otomatis terisi dengan data asli setelah Anda memilih unit di <strong>Langkah 2</strong>, namun tetap bisa Anda ubah kembali sebelum pesan dikirim.
+                  </p>
                 </div>
+              </div>
+
+              <!-- Mobile Action Button (only visible on screens < md) -->
+              <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between md:hidden shrink-0">
+                <div class="flex items-center gap-1.5 text-slate-400">
+                  <Icon icon="lucide:sparkles" class="size-4 text-bejo-500 animate-pulse" />
+                  <span class="text-[10px] font-black uppercase tracking-widest">Selesai</span>
+                </div>
+                <button @click="selectTemplate(previewTemplateIndex)" class="px-5 py-3 bg-bejo-500 hover:bg-bejo-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-bejo-500/20 transition-all flex items-center gap-2 active:scale-95">
+                  {{ currentStep === 1 ? 'Gunakan Template & Lanjut' : 'Gunakan Unit & Lanjut' }}
+                  <Icon icon="lucide:arrow-right" class="size-3.5" />
+                </button>
               </div>
             </div>
 
-            <!-- Right: WhatsApp Mockup Live Preview (width: 7 cols on lg) -->
-            <div class="lg:col-span-7 flex flex-col bg-white border border-slate-100 rounded-[2rem] shadow-xl shadow-slate-200/50 overflow-hidden lg:h-full lg:min-h-0">
+            <!-- Right: WhatsApp Mockup Live Preview (width: 7 cols on md, hidden on mobile) -->
+            <div class="hidden md:flex md:col-span-7 flex-col bg-white border border-slate-100 rounded-2xl sm:rounded-[2rem] shadow-xl shadow-slate-200/50 overflow-hidden md:h-full md:min-h-0">
               <!-- Simulated WhatsApp Header -->
               <div class="bg-[#f0f2f5] px-4 py-3 border-b border-slate-200/80 flex items-center justify-between">
                 <div class="flex items-center gap-3">
@@ -835,7 +870,7 @@ onUnmounted(() => {
               </div>
 
               <!-- WhatsApp Chat Message Container -->
-              <div class="bg-[#efeae2] p-5 relative lg:min-h-0 lg:max-h-none lg:flex-grow overflow-y-auto custom-scrollbar flex flex-col justify-start min-h-[360px]">
+              <div class="bg-[#efeae2] p-5 relative md:min-h-0 md:max-h-none md:flex-grow overflow-y-auto custom-scrollbar flex flex-col justify-start min-h-[360px]">
                 <!-- Pattern overlay -->
                 <div class="absolute inset-0 opacity-5 pointer-events-none" style="background-image: radial-gradient(circle, #000 1px, transparent 1px); background-size: 16px 16px"></div>
 
@@ -862,7 +897,7 @@ onUnmounted(() => {
                   <span class="text-[10px] font-black uppercase tracking-widest">Sesuai dengan WA Client</span>
                 </div>
                 <button @click="selectTemplate(previewTemplateIndex)" class="px-6 py-3 bg-bejo-500 hover:bg-bejo-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-bejo-500/20 transition-all flex items-center gap-2 active:scale-95">
-                  Gunakan Template & Lanjut
+                  {{ currentStep === 1 ? 'Gunakan Template & Lanjut' : 'Gunakan Unit & Lanjut' }}
                   <Icon icon="lucide:arrow-right" class="size-3.5" />
                 </button>
               </div>
@@ -871,31 +906,31 @@ onUnmounted(() => {
         </div>
 
         <!-- Step 3: Split Layout 2/3 (Input Message) + 1/3 (Live WA Mockup) -->
-        <div v-else-if="currentStep === 3" class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-5 flex-grow min-h-0 lg:h-full">
+        <div v-else-if="currentStep === 3" class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 flex-grow min-h-0 md:h-full">
           <!-- Left Side: Message Input Area (2/3) -->
-          <div class="lg:col-span-2 flex flex-col min-h-0 lg:h-full">
-            <div class="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col h-full">
-              <div class="p-5 md:p-6 flex-grow flex flex-col space-y-3 min-h-0">
-                <div class="flex items-center justify-between shrink-0">
-                  <div class="flex items-center gap-4">
+          <div class="md:col-span-2 flex flex-col min-h-0 md:h-full">
+            <div class="bg-white rounded-2xl sm:rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col h-full">
+              <div class="p-3.5 sm:p-5 md:p-6 flex-grow flex flex-col space-y-2 sm:space-y-3 min-h-0">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+                  <div class="flex flex-wrap items-center gap-2 sm:gap-4 min-w-0">
                     <div class="flex items-center gap-2">
                       <span class="text-xs font-black text-slate-700 uppercase tracking-widest">Pesan Broadcast</span>
                     </div>
-                    <div class="h-4 w-px bg-slate-100"></div>
-                    <div class="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-100">
+                    <div class="hidden sm:block h-4 w-px bg-slate-100"></div>
+                    <div class="flex items-center gap-2 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-slate-50 border border-slate-100 shrink-0">
                       <div class="size-1.5 rounded-full" :class="waStatus === 'online' ? 'bg-green-500 animate-pulse' : 'bg-red-500'"></div>
-                      <span class="text-[10px] font-black uppercase tracking-widest" :class="waStatus === 'online' ? 'text-green-600' : 'text-red-600'"> WA GATEWAY: {{ waStatus }} </span>
+                      <span class="text-[9px] sm:text-[10px] font-black uppercase tracking-widest" :class="waStatus === 'online' ? 'text-green-600' : 'text-red-600'"> WA GATEWAY: {{ waStatus }} </span>
                     </div>
                   </div>
-                  <div class="flex items-center gap-6">
-                    <label v-if="selectedUnit" class="flex items-center gap-2.5 cursor-pointer group">
-                      <span class="text-xs font-black text-slate-400 group-hover:text-bejo-600 uppercase tracking-widest transition-colors">Sertakan Gambar?</span>
+                  <div class="flex flex-wrap items-center gap-3 sm:gap-6 shrink-0">
+                    <label v-if="selectedUnit" class="flex items-center gap-2 cursor-pointer group">
+                      <span class="text-[10px] sm:text-xs font-black text-slate-400 group-hover:text-bejo-600 uppercase tracking-widest transition-colors">Sertakan Gambar?</span>
                       <div class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" v-model="showImage" class="sr-only peer" />
-                        <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-bejo-500 shadow-inner"></div>
+                        <div class="w-8 h-4 sm:w-9 sm:h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 sm:after:h-4 sm:after:w-4 after:transition-all peer-checked:bg-bejo-500 shadow-inner"></div>
                       </div>
                     </label>
-                    <button @click="openUnitModal" class="text-xs font-black text-bejo-600 hover:text-bejo-700 uppercase tracking-widest flex items-center gap-1.5 transition-colors">
+                    <button @click="openUnitModal" class="text-[10px] sm:text-xs font-black text-bejo-600 hover:text-bejo-700 uppercase tracking-widest flex items-center gap-1.5 transition-colors">
                       <Icon icon="lucide:home" class="size-3.5" />
                       {{ selectedUnit ? 'Ganti Unit' : 'Pilih Unit' }}
                     </button>
@@ -948,33 +983,41 @@ onUnmounted(() => {
                   </div>
                 </div>
 
-                <div class="flex flex-col sm:flex-row items-center gap-3 pt-3 shrink-0">
+                <div class="grid grid-cols-2 sm:flex sm:flex-row sm:items-center gap-2 sm:gap-3 pt-2 sm:pt-3 shrink-0 w-full">
+                  <!-- Mobile-only View Preview Button -->
+                  <button @click="isPreviewModalOpen = true" class="md:hidden w-full h-10 px-2 sm:px-3 bg-blue-50 border border-blue-100 text-blue-600 hover:bg-blue-100 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 active:scale-95 whitespace-normal">
+                    <Icon icon="lucide:eye" class="size-4 shrink-0" />
+                    Pratinjau WA
+                  </button>
+
                   <!-- Send/Stop Toggle Button -->
-                  <button v-if="!isBroadcasting" @click="handleSend" :disabled="isLoading || (!message.trim() && !selectedUnit) || recipients.length === 0" class="w-full sm:w-auto h-11 px-8 bg-bejo-500 hover:bg-bejo-600 disabled:bg-slate-200 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-bejo-500/20 transition-all flex items-center justify-center gap-2 active:scale-95">
+                  <button v-if="!isBroadcasting" @click="handleSend" :disabled="isLoading || (!message.trim() && !selectedUnit) || recipients.length === 0" class="w-full sm:w-auto h-10 sm:h-11 px-2 sm:px-8 bg-bejo-500 hover:bg-bejo-600 disabled:bg-slate-200 text-white rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-widest shadow-lg shadow-bejo-500/20 transition-all flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95 whitespace-normal">
                     <Icon v-if="isLoading" icon="lucide:loader-2" class="size-4 animate-spin" />
-                    <Icon v-else icon="lucide:send" class="size-4" />
+                    <Icon v-else icon="lucide:send" class="size-4 shrink-0" />
                     Kirim Sekarang
                   </button>
-                  <button v-else @click="handleStop" :disabled="isStopping" class="w-full sm:w-auto h-11 px-8 bg-red-500 hover:bg-red-600 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-red-500/20 transition-all flex items-center justify-center gap-2 active:scale-95">
+                  <button v-else @click="handleStop" :disabled="isStopping" class="w-full sm:w-auto h-10 sm:h-11 px-2 sm:px-8 bg-red-500 hover:bg-red-600 text-white rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-widest shadow-lg shadow-red-500/20 transition-all flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95 whitespace-normal">
                     <Icon v-if="isStopping" icon="lucide:loader-2" class="size-4 animate-spin" />
-                    <Icon v-else icon="lucide:stop-circle" class="size-4" />
+                    <Icon v-else icon="lucide:stop-circle" class="size-4 shrink-0" />
                     Hentikan
                   </button>
 
-                  <button @click="handleTest" :disabled="isLoading || isBroadcasting || (!message.trim() && !selectedUnit)" class="w-full sm:w-auto h-11 px-6 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 text-slate-500 rounded-xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 active:scale-95">
+                  <button @click="handleTest" :disabled="isLoading || isBroadcasting || (!message.trim() && !selectedUnit)" class="w-full sm:w-auto h-10 sm:h-11 px-2 sm:px-6 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 text-slate-500 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 active:scale-95 whitespace-normal">
                     <Icon v-if="isLoading" icon="lucide:loader-2" class="size-4 animate-spin" />
-                    <Icon v-else icon="lucide:smartphone" class="size-4" />
-                    Test (Ke Saya)
+                    <Icon v-else icon="lucide:smartphone" class="size-4 shrink-0" />
+                    Test Kirim
                   </button>
 
-                  <button @click="isRecipientModalOpen = true" class="sm:ml-auto h-11 px-5 bg-slate-50 hover:bg-bejo-50 border border-slate-100 hover:border-bejo-200 text-slate-600 hover:text-bejo-600 rounded-xl font-black text-xs uppercase tracking-widest transition-all flex items-center gap-3 active:scale-95">
-                    <div class="flex items-center gap-1.5">
-                      <div class="size-2 rounded-full" :class="recipients.length > 0 ? 'bg-green-500 animate-pulse' : 'bg-slate-300'"></div>
-                      <span class="text-[10px] font-bold">{{ recipients.length }} Penerima Aktif</span>
+                  <button @click="isRecipientModalOpen = true" class="w-full sm:w-auto sm:ml-auto h-10 sm:h-11 px-2 sm:px-5 bg-slate-50 hover:bg-bejo-50 border border-slate-100 hover:border-bejo-200 text-slate-600 hover:text-bejo-600 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-widest transition-all flex items-center justify-center sm:justify-between gap-1.5 sm:gap-3 active:scale-95 whitespace-normal">
+                    <div class="flex items-center gap-1 min-w-0">
+                      <div class="size-1.5 sm:size-2 rounded-full shrink-0" :class="recipients.length > 0 ? 'bg-green-500 animate-pulse' : 'bg-slate-300'"></div>
+                      <span class="text-[9px] sm:text-[10px] font-bold truncate">
+                        {{ recipients.length }} <span class="hidden [@media(min-width:340px)]:inline">Penerima</span>
+                      </span>
                     </div>
-                    <div class="w-px h-4 bg-slate-200"></div>
-                    <Icon icon="lucide:users" class="size-3.5" />
-                    Kelola
+                    <div class="hidden sm:block w-px h-4 bg-slate-200"></div>
+                    <Icon icon="lucide:users" class="size-3.5 shrink-0" />
+                    <span class="sm:inline">Kelola</span>
                   </button>
                 </div>
               </div>
@@ -982,9 +1025,9 @@ onUnmounted(() => {
           </div>
 
           <!-- Right Side: Live WA Mockup (1/3) -->
-          <div class="lg:col-span-1 flex flex-col min-h-0 lg:h-full">
+          <div class="hidden md:flex md:col-span-1 flex-col min-h-0 md:h-full">
             <!-- WhatsApp Live Mockup -->
-            <div class="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col h-full">
+            <div class="bg-white rounded-2xl sm:rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col h-full">
               <!-- Simulated WhatsApp Header -->
               <div class="bg-[#f0f2f5] px-4 py-3 border-b border-slate-200/80 flex items-center justify-between shrink-0">
                 <div class="flex items-center gap-3">
@@ -1053,6 +1096,69 @@ onUnmounted(() => {
     <RecipientModal :show="isRecipientModalOpen" @close="isRecipientModalOpen = false" @updated="fetchRecipients" />
 
     <UnitModal :show="isUnitModalOpen" @close="handleUnitModalClose" @selected="handleUnitSelected" />
+
+    <!-- Mobile Preview Modal -->
+    <div v-if="isPreviewModalOpen" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" @click.self="isPreviewModalOpen = false">
+      <div class="bg-white rounded-[2rem] border border-slate-100 shadow-2xl overflow-hidden flex flex-col w-full max-w-sm max-h-[85vh]">
+        <!-- Simulated WhatsApp Header -->
+        <div class="bg-[#f0f2f5] px-4 py-3 border-b border-slate-200/80 flex items-center justify-between shrink-0">
+          <div class="flex items-center gap-3">
+            <div class="size-8 rounded-full bg-slate-300 flex items-center justify-center text-slate-600 font-black text-[10px] shadow-inner">WA</div>
+            <div>
+              <h5 class="text-[10px] font-black text-slate-800 tracking-wide uppercase">Hasil Broadcast WA</h5>
+              <div class="flex items-center gap-1 mt-0.5">
+                <span class="size-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Pratinjau Pop-up</span>
+              </div>
+            </div>
+          </div>
+          <button @click="isPreviewModalOpen = false" class="size-8 rounded-full bg-slate-200 hover:bg-slate-300 flex items-center justify-center text-slate-600 transition-colors">
+            <Icon icon="lucide:x" class="size-4" />
+          </button>
+        </div>
+
+        <!-- WhatsApp Chat Message Container -->
+        <div class="bg-[#efeae2] p-4 relative flex-grow overflow-y-auto custom-scrollbar flex flex-col justify-start min-h-[300px] space-y-3">
+          <!-- Pattern overlay -->
+          <div class="absolute inset-0 opacity-5 pointer-events-none" style="background-image: radial-gradient(circle, #000 1px, transparent 1px); background-size: 16px 16px"></div>
+
+          <!-- 1. Gambar/Video Produk Bubble -->
+          <template v-if="showImage && selectedUnit && previewMediaList.length > 0">
+            <div v-for="(img, idx) in previewMediaList" :key="idx" class="relative bg-[#d9fdd3] text-[#111b21] rounded-2xl rounded-tr-none p-1.5 shadow-md border border-[#d1f4cc] self-end max-w-[90%] text-left select-text z-10">
+              <div class="rounded-xl overflow-hidden border border-[#b4e6ad] max-w-full">
+                <video v-if="img.ContentType?.startsWith('video/')" :src="img.Url || img.Id_Media" class="w-full max-h-48 object-cover" preload="metadata" muted></video>
+                <img v-else :src="img.Url || img.Id_Media" class="w-full max-h-48 object-cover" />
+              </div>
+              <div class="absolute top-0 right-0 transform translate-x-[45%] w-0 h-0 border-[6px] border-transparent border-l-[#d9fdd3] border-t-[#d9fdd3]"></div>
+              <div class="text-right text-[8px] text-slate-400/80 mt-1 mr-1.5 pb-0.5 flex items-center justify-end gap-1 select-none font-medium font-mono">
+                <span>12:00</span>
+                <Icon icon="lucide:check-check" class="size-3 text-[#53bdeb]" />
+              </div>
+            </div>
+          </template>
+
+          <!-- 2. Isi Pesan Bubble -->
+          <div v-if="message.trim()" class="relative bg-[#d9fdd3] text-[#111b21] rounded-2xl rounded-tr-none px-3.5 py-2.5 shadow-md border border-[#d1f4cc] self-end max-w-[90%] text-left select-text z-10">
+            <div v-html="formatTemplatePreview(message)" class="text-xs leading-relaxed whitespace-pre-wrap text-slate-800"></div>
+            <div class="absolute top-0 right-0 transform translate-x-[45%] w-0 h-0 border-[6px] border-transparent border-l-[#d9fdd3] border-t-[#d9fdd3]"></div>
+            <div class="text-right text-[8px] text-slate-400/80 mt-1 flex items-center justify-end gap-1 select-none font-medium font-mono">
+              <span>12:00</span>
+              <Icon icon="lucide:check-check" class="size-3 text-[#53bdeb]" />
+            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div v-if="!message.trim() && !(showImage && selectedUnit && previewMediaList.length > 0)" class="m-auto text-center p-4">
+            <Icon icon="lucide:message-square-dashed" class="size-8 text-slate-300 mx-auto mb-2" />
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tulis pesan untuk melihat pratinjau</p>
+          </div>
+        </div>
+
+        <div class="p-4 border-t border-slate-100 bg-slate-50/50 flex justify-end shrink-0">
+          <button @click="isPreviewModalOpen = false" class="px-5 py-2 bg-bejo-500 hover:bg-bejo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Tutup</button>
+        </div>
+      </div>
+    </div>
   </Vertical>
 </template>
 

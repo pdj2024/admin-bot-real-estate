@@ -143,14 +143,14 @@ onMounted(() => {
 <template>
   <div class="space-y-6">
     <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden min-h-[600px]">
-      <div class="px-8 py-5 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
-        <div class="flex items-center gap-3">
-          <div class="size-8 rounded-lg bg-bejo-500 flex items-center justify-center text-white shadow-lg shadow-bejo-500/20">
+      <div class="px-4 sm:px-8 py-5 border-b border-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="size-8 rounded-lg bg-bejo-500 flex items-center justify-center text-white shadow-lg shadow-bejo-500/20 shrink-0">
             <Icon icon="lucide:help-circle" class="size-4" />
           </div>
-          <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest">Pengaturan Manajemen FAQ (Bantuan)</h4>
+          <h4 class="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-widest truncate">Pengaturan Manajemen FAQ</h4>
         </div>
-        <button @click="addNewFaq" class="px-5 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all active:scale-95 shadow-lg shadow-green-500/20">
+        <button @click="addNewFaq" class="w-full sm:w-auto px-5 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-green-500/20 shrink-0">
           <Icon icon="lucide:plus" class="size-3.5" />
           Tambah FAQ
         </button>

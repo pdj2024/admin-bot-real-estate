@@ -289,9 +289,9 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div class="max-h-[600px] overflow-auto relative scrollbar-hide border-b border-slate-100">
+    <div class="max-h-[600px] w-full overflow-hidden overflow-x-auto relative scrollbar-hide border-b border-slate-100">
       <!-- Batch Actions -->
-      <div v-if="table.getSelectedRowModel().rows.length > 0" class="sticky top-0 z-[110] flex items-center px-6 py-3 bg-white/95 backdrop-blur-md border-b border-bejo-100 gap-4 animate-in slide-in-from-top duration-300">
+      <div v-if="table.getSelectedRowModel().rows.length > 0" class="sticky top-0 z-[110] flex flex-wrap items-center px-4 py-3 md:px-6 md:py-3 bg-white/95 backdrop-blur-md border-b border-bejo-100 gap-3 md:gap-4 animate-in slide-in-from-top duration-300">
         <div class="flex items-center gap-2 px-3 py-1.5 bg-bejo-50 rounded-lg border border-bejo-100">
           <Icon icon="lucide:check-square" class="size-4 text-bejo-600" />
           <span class="text-[11px] font-black text-bejo-900 uppercase tracking-wider">{{ table.getSelectedRowModel().rows.length }} Sales Terpilih</span>
@@ -398,8 +398,8 @@ onBeforeUnmount(() => {
     </div>
 
     <!-- Pagination -->
-    <div class="px-6 py-5 border-t border-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
-      <div class="flex items-center gap-6">
+    <div class="px-6 py-5 border-t border-slate-50 flex flex-col lg:flex-row items-center justify-between gap-4">
+      <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4 lg:gap-6">
         <div class="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
           Menampilkan 
           <span class="text-slate-900 font-black">{{ table.getRowModel().rows.length }}</span> 

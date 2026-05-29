@@ -62,19 +62,19 @@ onMounted(() => {
 
       <div class="w-full relative z-10">
         <!-- Hero Banner Section -->
-        <div class="relative overflow-hidden rounded-[2rem] md:rounded-[3.5rem] bg-white p-6 md:p-16 lg:p-20 shadow-xl shadow-bejo-600/5 border border-bejo-100">
+        <div class="relative overflow-hidden rounded-[2rem] md:rounded-[3.5rem] bg-white px-4 py-8 md:p-16 lg:p-20 shadow-xl shadow-bejo-600/5 border border-bejo-100 mt-4">
           <!-- Dekorasi Background -->
           <div class="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-bejo-50 via-bejo-50/50 to-transparent"></div>
           <div class="absolute -right-20 -top-20 size-96 bg-gradient-to-br from-bejo-100 via-bejo-200 to-bejo-400 rounded-full blur-3xl opacity-40"></div>
           <div class="absolute right-10 -bottom-20 size-64 bg-gradient-to-tr from-bejo-300 via-bejo-500 to-bejo-700 rounded-full blur-3xl opacity-10"></div>
           
-          <div class="relative z-10 flex flex-col items-center text-center px-6 w-full max-w-4xl mx-auto">
-            <h1 class="text-4xl sm:text-5xl lg:text-7xl font-black text-slate-900 tracking-tight mb-6 leading-tight">
+          <div class="relative z-10 flex flex-col items-center text-center px-4 w-full max-w-4xl mx-auto">
+            <h1 class="text-3xl sm:text-5xl lg:text-7xl font-black text-slate-900 tracking-tight mb-3 md:mb-6 leading-tight">
               Hai, ada yang bisa <br />
               <span class="text-transparent bg-clip-text bg-gradient-to-r from-bejo-500 via-bejo-700 to-bejo-900">Kami bantu?</span>
             </h1>
 
-            <p class="text-slate-500 text-lg sm:text-xl font-medium max-w-2xl mx-auto leading-relaxed mb-12">
+            <p class="text-slate-500 text-sm md:text-xl font-medium max-w-2xl mx-auto leading-relaxed mb-4 md:mb-12">
               Temukan informasi lengkap mengenai layanan {{ settingsStore.business.appName }}. Kami merangkum pertanyaan yang paling sering diajukan untuk memudahkan Anda.
             </p>
 

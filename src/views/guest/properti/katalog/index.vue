@@ -1,7 +1,7 @@
 <template>
   <GuestLayout>
     <div class="mb-10 print:hidden space-y-10">
-      <div class="relative overflow-hidden rounded-[2rem] md:rounded-[3.5rem] bg-white border border-bejo-100 p-6 md:p-16 lg:p-20 shadow-premium">
+      <div class="relative overflow-hidden rounded-[2rem] md:rounded-[3.5rem] bg-white border border-bejo-100 px-4 py-8 md:p-16 lg:p-20 shadow-premium mt-4">
         <!-- Mesh Gradient Background -->
         <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
           <div class="absolute -top-[30%] -right-[10%] size-[600px] bg-bejo-100/40 rounded-full blur-[100px]"></div>
@@ -10,12 +10,12 @@
         </div>
 
         <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-12">
-          <div class="max-w-3xl space-y-8">
-            <h1 class="text-6xl md:text-7xl text-slate-900 tracking-tighter leading-[0.9] font-black">
+          <div class="max-w-3xl space-y-3 md:space-y-8">
+            <h1 class="text-3xl md:text-7xl text-slate-900 tracking-tighter leading-[0.9] font-black">
               Eksplorasi Katalog <br />
               <span class="text-transparent bg-clip-text bg-gradient-to-br from-bejo-500 via-bejo-600 to-bejo-900">{{ settingsStore.business.appName }}</span>
             </h1>
-            <p class="text-slate-500 text-xl font-medium leading-relaxed max-w-xl opacity-80">Temukan ribuan unit properti terbaik dengan desain yang elegan, terverifikasi, dan profesional di seluruh Indonesia.</p>
+            <p class="text-slate-500 text-sm md:text-xl font-medium leading-relaxed max-w-xl opacity-80">Temukan ribuan unit properti terbaik dengan desain yang elegan, terverifikasi, dan profesional di seluruh Indonesia.</p>
           </div>
 
           <div class="hidden md:flex items-center justify-end gap-6 lg:gap-8 shrink-0">

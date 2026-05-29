@@ -31,7 +31,7 @@ const loadGoogleMaps = () => {
 
   const existingScript = document.querySelector('script[src*="maps.googleapis.com/maps/api/js"]')
   if (existingScript) {
-    if (typeof window.google?.maps?.Map === 'function') {
+    if (typeof window.google?.maps?.importLibrary === 'function' || typeof window.google?.maps?.Map === 'function') {
       initMap()
     } else {
       existingScript.addEventListener('load', () => initMap())

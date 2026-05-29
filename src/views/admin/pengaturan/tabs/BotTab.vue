@@ -161,17 +161,17 @@ onMounted(() => {
   <div class="space-y-6">
     <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden min-h-[600px]">
       <!-- Tab Header -->
-      <div class="px-8 py-5 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <div class="size-8 rounded-lg bg-bejo-500 flex items-center justify-center text-white shadow-lg shadow-bejo-500/20">
+      <div class="px-4 sm:px-8 py-5 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="size-8 rounded-lg bg-bejo-500 flex items-center justify-center text-white shadow-lg shadow-bejo-500/20 shrink-0">
               <Icon icon="lucide:bot" class="size-4" />
             </div>
-            <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest">Pengaturan Bot Prompt</h4>
+            <h4 class="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-widest truncate">Pengaturan Bot Prompt</h4>
           </div>
         </div>
 
       <!-- Sub Tab Switcher -->
-      <div class="px-8 pt-6 pb-0 border-b border-slate-100 flex items-center gap-6 bg-white">
+      <div class="px-4 sm:px-8 pt-6 pb-0 border-b border-slate-100 flex items-center gap-4 sm:gap-6 bg-white overflow-x-auto no-scrollbar">
         <button 
           @click="activeSubTab = 'analisa_pencarian'"
           class="pb-4 text-sm font-black uppercase tracking-widest border-b-2 transition-all duration-200 flex items-center gap-2"

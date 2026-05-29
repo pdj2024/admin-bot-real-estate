@@ -170,14 +170,13 @@ defineExpose({
 </script>
 
 <template>
-  <div class="fixed bottom-6 right-6 z-[999] hidden lg:block">
+  <div class="fixed bottom-6 right-6 z-[1100]">
     <!-- Chat Window Container -->
     <Transition name="chat-window">
       <div 
         v-if="isOpen"
         class="absolute bottom-20 right-0 w-[800px] h-[600px] bg-white rounded-[2rem] shadow-2xl border border-slate-100 flex overflow-hidden origin-bottom-right"
       >
-        <!-- Mini Sidebar -->
         <!-- Mini Sidebar -->
         <SideBar 
           v-if="!isFocusedMode"
@@ -202,7 +201,6 @@ defineExpose({
 
           <!-- Focus Mode Header -->
           <div v-if="isFocusedMode" class="shrink-0 px-6 py-2.5 bg-white border-b border-slate-100 flex items-center gap-4">
-            <!-- Removed 'Back' button to keep it restricted to focused customer -->
             <h5 class="text-sm font-black text-slate-900 uppercase tracking-tighter">Percakapan Customer</h5>
           </div>
 
@@ -229,7 +227,6 @@ defineExpose({
               @addChat="chatStore.chats.push($event)"
               @updateChatStatus="handleUpdateChatStatus"
             />
-            
 
             <div v-if="!selectedRoomId" class="flex-1 flex flex-col items-center justify-center p-12 text-center text-slate-400">
               <div class="size-20 bg-slate-100 rounded-3xl flex items-center justify-center mb-6">
@@ -274,5 +271,47 @@ defineExpose({
 :deep(.simplebar-thumb) {
   background: #e2e8f0;
   border-radius: 10px;
+}
+
+/* ==========================================================================
+   Responsive Overrides for ChatWidget
+   ========================================================================== */
+@media (max-width: 1024px) {
+  /* Expand the outer container on mobile/tablet to overlay the viewport */
+  .fixed.bottom-6.right-6 {
+    bottom: 0 !important;
+    right: 0 !important;
+    left: 0 !important;
+    top: 0 !important;
+    pointer-events: none;
+    width: 100vw;
+    height: 100vh;
+  }
+  
+  /* Tablet focused modal */
+  .absolute.bottom-20.right-0 {
+    position: fixed !important;
+    bottom: 16px !important;
+    right: 16px !important;
+    left: 16px !important;
+    top: 16px !important;
+    width: auto !important;
+    height: auto !important;
+    pointer-events: auto;
+    border-radius: 1.5rem !important;
+    z-index: 1100;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Full screen overlay on mobile portrait (412x861) */
+  .absolute.bottom-20.right-0 {
+    bottom: 0 !important;
+    right: 0 !important;
+    left: 0 !important;
+    top: 0 !important;
+    border-radius: 0 !important;
+    border: none !important;
+  }
 }
 </style>

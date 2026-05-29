@@ -352,13 +352,13 @@ const setPageSize = (size: number) => {
 
 <template>
   <Vertical>
-    <div class="px-4 md:px-3 md:pt-1 pb-32 space-y-6 md:space-y-8">
+    <div class="px-4 md:px-3 pt-6 md:pt-6 pb-32 space-y-6 md:space-y-8">
 
       <!-- Main Content Card -->
       <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-2xl shadow-slate-200/40 overflow-hidden relative">
         <!-- Batch Action Bar -->
         <Transition name="slide-up">
-          <div v-if="Object.keys(selectedIds).length > 0" class="absolute top-6 left-1/2 -translate-x-1/2 z-[100] px-6 py-4 bg-white/80 backdrop-blur-md border border-bejo-100 rounded-3xl shadow-2xl shadow-bejo-500/10 flex items-center gap-4 animate-in fade-in slide-in-from-top-4">
+          <div v-if="Object.keys(selectedIds).length > 0" class="absolute top-6 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-2rem)] md:w-auto px-4 py-3 md:px-6 md:py-4 bg-white/90 backdrop-blur-md border border-bejo-100 rounded-3xl shadow-2xl shadow-bejo-500/10 flex flex-wrap md:flex-nowrap items-center justify-center gap-3 md:gap-4 animate-in fade-in slide-in-from-top-4">
             <div class="flex items-center gap-3 pr-4 border-r border-slate-100">
               <div class="size-10 rounded-xl bg-bejo-500 text-white flex items-center justify-center font-black text-sm shadow-lg shadow-bejo-500/20">
                 {{ Object.keys(selectedIds).length }}
@@ -406,7 +406,7 @@ const setPageSize = (size: number) => {
             </button>
           </div>
         </div>
-        <div class="lg:overflow-visible relative">
+        <div class="w-full overflow-hidden overflow-x-auto relative">
           <!-- Background Loading Indicator (No Flicker) -->
           <div v-if="loading && dataWilayah.kota.length > 0" class="absolute inset-0 z-10 bg-white/40 backdrop-blur-[1px] flex items-start justify-center pt-20 transition-all duration-300">
             <div class="bg-white px-4 py-2 rounded-2xl shadow-xl border border-bejo-100 flex items-center gap-3 animate-in fade-in zoom-in-95">
@@ -587,8 +587,8 @@ const setPageSize = (size: number) => {
       </div>
 
       <!-- Pagination -->
-        <div v-if="hierarchicalData.length > 0" class="px-6 py-5 border-t border-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div class="flex items-center gap-6">
+        <div v-if="hierarchicalData.length > 0" class="px-6 py-5 border-t border-slate-50 flex flex-col lg:flex-row items-center justify-between gap-4">
+          <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4 lg:gap-6">
             <div class="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
               Menampilkan 
               <span class="text-slate-900 font-black">{{ paginatedData.length }}</span> 

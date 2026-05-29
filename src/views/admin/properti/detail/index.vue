@@ -31,6 +31,19 @@ const mapCoords = computed(() => {
     }
   }
 
+  // Check Area field (often contains coordinates as JSON string or array element)
+  if (product.value.Area) {
+    try {
+      const areaArr = typeof product.value.Area === 'string' ? JSON.parse(product.value.Area) : product.value.Area
+      if (Array.isArray(areaArr) && areaArr[2]) {
+        const [lat, lng] = areaArr[2].split(',').map(Number)
+        if (!isNaN(lat) && !isNaN(lng)) {
+          return { lat, lng }
+        }
+      }
+    } catch {}
+  }
+
   // Fallback to legacy address parsing
   if (!product.value.Alamat) return null
   const latMatch = product.value.Alamat.match(/(?:Lat|Latitude):\s*([-+]?\d+\.?\d*)/i)

@@ -426,12 +426,12 @@ onMounted(() => {
     <template v-else>
       <!-- Identitas Utama -->
       <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
-        <div class="px-8 py-5 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <div class="size-8 rounded-lg bg-bejo-500 flex items-center justify-center text-white shadow-lg shadow-bejo-500/20">
+        <div class="px-4 sm:px-8 py-5 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="size-8 rounded-lg bg-bejo-500 flex items-center justify-center text-white shadow-lg shadow-bejo-500/20 shrink-0">
               <Icon icon="lucide:building-2" class="size-4" />
             </div>
-            <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest">Pengaturan Profil Perusahaan</h4>
+            <h4 class="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-widest truncate">Pengaturan Profil Perusahaan</h4>
           </div>
         </div>
 
@@ -638,7 +638,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <div class="flex items-center gap-3 pt-4">
+      <div class="flex justify-end items-center gap-3 pt-4">
         <button 
           :disabled="isSaving" 
           @click="handleSave" 

@@ -247,7 +247,7 @@ onBeforeUnmount(() => {
         </label>
       </div>
 
-      <div class="space-y-4 flex-1 flex flex-col min-h-[400px]">
+      <div class="space-y-4 flex-1 flex flex-col min-h-[280px] sm:min-h-[350px] md:min-h-[400px]">
         <BaseFormGroup icon="lucide:search" class="shrink-0">
           <input v-model="searchQuery" @input="handleSearchInput" @focus="isPredictionsOpen = predictions.length > 0" placeholder="Cari titik lokasi..." class="field-input h-10 !pl-11" />
           <div v-if="isPredictionsOpen && predictions.length" class="absolute top-full left-0 mt-2 w-full z-[100] bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden scale-in">

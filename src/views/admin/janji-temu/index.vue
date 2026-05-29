@@ -283,66 +283,66 @@ const handleRefresh = () => {
 
     <!-- Past Due Appointments Pop-up Modal -->
     <Transition name="fade">
-      <div v-if="showPastDueModal" class="fixed inset-0 z-[1060] flex items-center justify-center p-4 md:p-6">
+      <div v-if="showPastDueModal" class="fixed inset-0 z-[1060] flex items-center justify-center p-3 sm:p-4 md:p-6">
         <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-md" @click="closePastDueModal"></div>
-        <div class="relative w-full max-w-2xl bg-white rounded-[2.5rem] p-6 md:p-8 shadow-2xl border border-slate-100 flex flex-col max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-300">
+        <div class="relative w-full max-w-2xl bg-white rounded-2xl sm:rounded-[2.5rem] p-4 sm:p-6 md:p-8 shadow-2xl border border-slate-100 flex flex-col max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-300">
           
           <!-- Header -->
-          <div class="flex justify-between items-start mb-6 shrink-0">
+          <div class="flex justify-between items-start mb-4 sm:mb-6 shrink-0">
             <div>
-              <h3 class="text-xl md:text-2xl font-black text-slate-900 flex items-center gap-2">
-                <Icon icon="lucide:alert-circle" class="size-6 md:size-7 text-amber-500" />
+              <h3 class="text-base sm:text-xl md:text-2xl font-black text-slate-900 flex items-center gap-1.5 sm:gap-2">
+                <Icon icon="lucide:alert-circle" class="size-5 sm:size-6 md:size-7 text-amber-500 shrink-0" />
                 Konfirmasi Jadwal Terlewat
               </h3>
-              <p class="text-xs md:text-xs font-bold text-slate-400 mt-1"> Perbarui janji temu yang telah terlewat</p>
+              <p class="text-[10px] sm:text-xs font-bold text-slate-400 mt-0.5 sm:mt-1"> Perbarui janji temu yang telah terlewat</p>
             </div>
-            <button @click="closePastDueModal" class="size-9 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-colors">
+            <button @click="closePastDueModal" class="size-8 sm:size-9 rounded-lg sm:rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-colors shrink-0">
               <Icon icon="lucide:x" class="size-5" />
             </button>
           </div>
 
           <!-- Body (Scrollable Container) -->
-          <div class="flex-1 overflow-y-auto custom-scrollbar pr-1 space-y-6 mb-6">
+          <div class="flex-1 overflow-y-auto custom-scrollbar pr-1 space-y-4 sm:space-y-6 mb-4 sm:mb-6">
             
             <!-- Group: BARU -->
-            <div v-if="groupedPastDue.baru.length > 0" class="space-y-3">
+            <div v-if="groupedPastDue.baru.length > 0" class="space-y-2 sm:space-y-3">
               <div class="flex items-center justify-between px-1 gap-2 flex-wrap">
-                <div class="flex items-center gap-2">
-                  <span class="text-[11px] font-black text-blue-600 uppercase tracking-wider bg-blue-50 px-2.5 py-1 rounded-lg">Status: Pengajuan (Baru)</span>
-                  <span class="text-[10px] md:text-xs font-bold text-slate-400">Tahap berikutnya: Konfirmasi</span>
+                <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                  <span class="text-[9px] sm:text-[11px] font-black text-blue-600 uppercase tracking-wider bg-blue-50 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg">Status: Pengajuan (Baru)</span>
+                  <span class="text-[9px] sm:text-[10px] md:text-xs font-bold text-slate-400">Tahap berikutnya: Konfirmasi</span>
                 </div>
-                <label class="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-slate-500">
-                  <input type="checkbox" :checked="isAllGroupSelected('baru')" @change="toggleSelectAllGroup('baru')" class="size-4 rounded text-blue-500 focus:ring-blue-400 border-slate-200" />
+                <label class="flex items-center gap-1.5 cursor-pointer text-[10px] sm:text-xs font-bold text-slate-500">
+                  <input type="checkbox" :checked="isAllGroupSelected('baru')" @change="toggleSelectAllGroup('baru')" class="size-3.5 sm:size-4 rounded text-blue-500 focus:ring-blue-400 border-slate-200" />
                   Pilih Semua
                 </label>
               </div>
-              <div class="divide-y divide-slate-50 border border-slate-100 rounded-2xl overflow-hidden bg-slate-50/30">
+              <div class="divide-y divide-slate-50 border border-slate-100 rounded-xl sm:rounded-2xl overflow-hidden bg-slate-50/30">
                 <div v-for="app in groupedPastDue.baru" :key="app.No_Id" class="hover:bg-white transition-colors">
-                   <div class="flex items-center justify-between gap-3 p-4">
-                     <label class="flex items-center gap-3.5 flex-1 cursor-pointer min-w-0">
-                       <input type="checkbox" :value="app.No_Id" v-model="selectedPastDueIds" class="size-5 rounded text-blue-500 focus:ring-blue-400 border-slate-250 shrink-0" />
+                   <div class="flex items-center justify-between gap-2.5 p-3 sm:p-4">
+                     <label class="flex items-center gap-2.5 sm:gap-3.5 flex-1 cursor-pointer min-w-0">
+                       <input type="checkbox" :value="app.No_Id" v-model="selectedPastDueIds" class="size-4 sm:size-5 rounded text-blue-500 focus:ring-blue-400 border-slate-250 shrink-0" />
                       <div class="min-w-0 flex-1">
-                        <div class="flex items-center gap-2 flex-wrap">
-                          <span class="text-sm md:text-base font-black text-slate-800">{{ app.Nama_Customer || app.Id_Customer }}</span>
-                          <span class="text-[10px] font-mono text-slate-450 bg-slate-100 px-2 py-0.5 rounded font-bold">#{{ app.No_Tracking }}</span>
+                        <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                           <span class="text-xs sm:text-sm md:text-base font-black text-slate-800">{{ app.Nama_Customer || app.Id_Customer }}</span>
+                           <span class="text-[8px] sm:text-[10px] font-mono text-slate-450 bg-slate-100 px-1.5 sm:px-2 py-0.5 rounded font-bold">#{{ app.No_Tracking }}</span>
                         </div>
-                        <p class="text-xs md:text-sm font-semibold text-slate-500 truncate mt-1">{{ app.Nama_Produk }}</p>
-                        <p class="text-xs font-bold text-red-500/90 mt-1.5 flex items-center gap-1.5">
-                          <Icon icon="lucide:calendar" class="size-3.5" />
+                        <p class="text-[10px] sm:text-xs md:text-sm font-semibold text-slate-500 truncate mt-0.5 sm:mt-1">{{ app.Nama_Produk }}</p>
+                        <p class="text-[10px] sm:text-xs font-bold text-red-500/90 mt-1 flex items-center gap-1 sm:gap-1.5">
+                          <Icon icon="lucide:calendar" class="size-3.5 shrink-0" />
                           {{ app.Tanggal_Janji.split('T')[0] }} • {{ app.Waktu_Janji }} WIB
                         </p>
                       </div>
                     </label>
-                    <button v-if="cancellingAppId !== app.No_Id" @click.stop="startCancelInline(app.No_Id)" class="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors shrink-0 flex items-center gap-1">
-                      <Icon icon="lucide:ban" class="size-3.5" />
+                    <button v-if="cancellingAppId !== app.No_Id" @click.stop="startCancelInline(app.No_Id)" class="px-2 sm:px-3 py-1.5 sm:py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-colors shrink-0 flex items-center gap-1">
+                      <Icon icon="lucide:ban" class="size-3.5 shrink-0" />
                       Batal
                     </button>
                   </div>
                   
                   <!-- Inline Cancellation Form -->
-                  <div v-if="cancellingAppId === app.No_Id" class="px-4 pb-4 pt-1 space-y-3 bg-red-50/10 border-t border-slate-50">
-                    <div class="space-y-1.5">
-                      <label class="text-[10px] font-black text-red-500 uppercase tracking-wider block">Alasan Pembatalan (Wajib)</label>
+                  <div v-if="cancellingAppId === app.No_Id" class="px-3 sm:px-4 pb-3 sm:pb-4 pt-1 space-y-2 sm:space-y-3 bg-red-50/10 border-t border-slate-50">
+                    <div class="space-y-1">
+                      <label class="text-[9px] sm:text-[10px] font-black text-red-500 uppercase tracking-wider block">Alasan Pembatalan (Wajib)</label>
                       <textarea 
                         v-model="cancelReasonText" 
                         class="w-full px-3 py-2 bg-white border border-slate-200 focus:border-red-400 focus:ring-red-400 rounded-xl text-xs font-bold min-h-[60px]" 
@@ -350,13 +350,13 @@ const handleRefresh = () => {
                       ></textarea>
                     </div>
                     <div class="flex items-center gap-2 justify-end">
-                      <button @click="cancelCancelInline" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors">
+                      <button @click="cancelCancelInline" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-colors">
                         Kembali
                       </button>
                       <button 
                         @click="submitCancelInline(app)" 
                         :disabled="!cancelReasonText.trim()"
-                        class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors disabled:opacity-50"
+                        class="px-2.5 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-colors disabled:opacity-50"
                       >
                         Ya, Batalkan!
                       </button>
@@ -367,44 +367,44 @@ const handleRefresh = () => {
             </div>
 
             <!-- Group: DIKONFIRMASI -->
-            <div v-if="groupedPastDue.dikonfirmasi.length > 0" class="space-y-3">
+            <div v-if="groupedPastDue.dikonfirmasi.length > 0" class="space-y-2 sm:space-y-3">
               <div class="flex items-center justify-between px-1 gap-2 flex-wrap">
-                <div class="flex items-center gap-2">
-                  <span class="text-[11px] font-black text-bejo-600 uppercase tracking-wider bg-bejo-50 px-2.5 py-1 rounded-lg">Status: Dikonfirmasi</span>
-                  <span class="text-[10px] md:text-xs font-bold text-slate-400">Tahap berikutnya: Mulai Pertemuan</span>
+                <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                  <span class="text-[9px] sm:text-[11px] font-black text-bejo-600 uppercase tracking-wider bg-bejo-50 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg">Status: Dikonfirmasi</span>
+                  <span class="text-[9px] sm:text-[10px] md:text-xs font-bold text-slate-400">Tahap berikutnya: Mulai Pertemuan</span>
                 </div>
-                <label class="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-slate-500">
-                  <input type="checkbox" :checked="isAllGroupSelected('dikonfirmasi')" @change="toggleSelectAllGroup('dikonfirmasi')" class="size-4 rounded text-bejo-500 focus:ring-bejo-400 border-slate-200" />
+                <label class="flex items-center gap-1.5 cursor-pointer text-[10px] sm:text-xs font-bold text-slate-500">
+                  <input type="checkbox" :checked="isAllGroupSelected('dikonfirmasi')" @change="toggleSelectAllGroup('dikonfirmasi')" class="size-3.5 sm:size-4 rounded text-bejo-500 focus:ring-bejo-400 border-slate-200" />
                   Pilih Semua
                 </label>
               </div>
-              <div class="divide-y divide-slate-50 border border-slate-100 rounded-2xl overflow-hidden bg-slate-50/30">
+              <div class="divide-y divide-slate-50 border border-slate-100 rounded-xl sm:rounded-2xl overflow-hidden bg-slate-50/30">
                 <div v-for="app in groupedPastDue.dikonfirmasi" :key="app.No_Id" class="hover:bg-white transition-colors">
-                  <div class="flex items-center justify-between gap-3 p-4">
-                    <label class="flex items-center gap-3.5 flex-1 cursor-pointer min-w-0">
-                      <input type="checkbox" :value="app.No_Id" v-model="selectedPastDueIds" class="size-5 rounded text-bejo-500 focus:ring-bejo-400 border-slate-250 shrink-0" />
+                  <div class="flex items-center justify-between gap-2.5 p-3 sm:p-4">
+                    <label class="flex items-center gap-2.5 sm:gap-3.5 flex-1 cursor-pointer min-w-0">
+                      <input type="checkbox" :value="app.No_Id" v-model="selectedPastDueIds" class="size-4 sm:size-5 rounded text-bejo-500 focus:ring-bejo-400 border-slate-250 shrink-0" />
                       <div class="min-w-0 flex-1">
-                        <div class="flex items-center gap-2 flex-wrap">
-                          <span class="text-sm md:text-base font-black text-slate-800">{{ app.Nama_Customer || app.Id_Customer }}</span>
-                          <span class="text-[10px] font-mono text-slate-450 bg-slate-100 px-2 py-0.5 rounded font-bold">#{{ app.No_Tracking }}</span>
+                        <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                           <span class="text-xs sm:text-sm md:text-base font-black text-slate-800">{{ app.Nama_Customer || app.Id_Customer }}</span>
+                           <span class="text-[8px] sm:text-[10px] font-mono text-slate-450 bg-slate-100 px-1.5 sm:px-2 py-0.5 rounded font-bold">#{{ app.No_Tracking }}</span>
                         </div>
-                        <p class="text-xs md:text-sm font-semibold text-slate-500 truncate mt-1">{{ app.Nama_Produk }}</p>
-                        <p class="text-xs font-bold text-red-500/90 mt-1.5 flex items-center gap-1.5">
-                          <Icon icon="lucide:calendar" class="size-3.5" />
+                        <p class="text-[10px] sm:text-xs md:text-sm font-semibold text-slate-500 truncate mt-0.5 sm:mt-1">{{ app.Nama_Produk }}</p>
+                        <p class="text-[10px] sm:text-xs font-bold text-red-500/90 mt-1 flex items-center gap-1 sm:gap-1.5">
+                          <Icon icon="lucide:calendar" class="size-3.5 shrink-0" />
                           {{ app.Tanggal_Janji.split('T')[0] }} • {{ app.Waktu_Janji }} WIB
                         </p>
                       </div>
                     </label>
-                    <button v-if="cancellingAppId !== app.No_Id" @click.stop="startCancelInline(app.No_Id)" class="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors shrink-0 flex items-center gap-1">
-                      <Icon icon="lucide:ban" class="size-3.5" />
+                    <button v-if="cancellingAppId !== app.No_Id" @click.stop="startCancelInline(app.No_Id)" class="px-2 sm:px-3 py-1.5 sm:py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-colors shrink-0 flex items-center gap-1">
+                      <Icon icon="lucide:ban" class="size-3.5 shrink-0" />
                       Batal
                     </button>
                   </div>
                   
                   <!-- Inline Cancellation Form -->
-                  <div v-if="cancellingAppId === app.No_Id" class="px-4 pb-4 pt-1 space-y-3 bg-red-50/10 border-t border-slate-50">
-                    <div class="space-y-1.5">
-                      <label class="text-[10px] font-black text-red-500 uppercase tracking-wider block">Alasan Pembatalan (Wajib)</label>
+                  <div v-if="cancellingAppId === app.No_Id" class="px-3 sm:px-4 pb-3 sm:pb-4 pt-1 space-y-2 sm:space-y-3 bg-red-50/10 border-t border-slate-50">
+                    <div class="space-y-1">
+                      <label class="text-[9px] sm:text-[10px] font-black text-red-500 uppercase tracking-wider block">Alasan Pembatalan (Wajib)</label>
                       <textarea 
                         v-model="cancelReasonText" 
                         class="w-full px-3 py-2 bg-white border border-slate-200 focus:border-red-400 focus:ring-red-400 rounded-xl text-xs font-bold min-h-[60px]" 
@@ -412,13 +412,13 @@ const handleRefresh = () => {
                       ></textarea>
                     </div>
                     <div class="flex items-center gap-2 justify-end">
-                      <button @click="cancelCancelInline" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors">
+                      <button @click="cancelCancelInline" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-colors">
                         Kembali
                       </button>
                       <button 
                         @click="submitCancelInline(app)" 
                         :disabled="!cancelReasonText.trim()"
-                        class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors disabled:opacity-50"
+                        class="px-2.5 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-colors disabled:opacity-50"
                       >
                         Ya, Batalkan!
                       </button>
@@ -429,44 +429,44 @@ const handleRefresh = () => {
             </div>
 
             <!-- Group: PROSES -->
-            <div v-if="groupedPastDue.proses.length > 0" class="space-y-3">
+            <div v-if="groupedPastDue.proses.length > 0" class="space-y-2 sm:space-y-3">
               <div class="flex items-center justify-between px-1 gap-2 flex-wrap">
-                <div class="flex items-center gap-2">
-                  <span class="text-[11px] font-black text-emerald-700 uppercase tracking-wider bg-emerald-50 px-2.5 py-1 rounded-lg">Status: Mulai Pertemuan (Proses)</span>
-                  <span class="text-[10px] md:text-xs font-bold text-slate-400">Tahap berikutnya: Selesai</span>
+                <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                  <span class="text-[9px] sm:text-[11px] font-black text-emerald-700 uppercase tracking-wider bg-emerald-50 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg">Status: Mulai Pertemuan (Proses)</span>
+                  <span class="text-[9px] sm:text-[10px] md:text-xs font-bold text-slate-400">Tahap berikutnya: Selesai</span>
                 </div>
-                <label class="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-slate-500">
-                  <input type="checkbox" :checked="isAllGroupSelected('proses')" @change="toggleSelectAllGroup('proses')" class="size-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-200" />
+                <label class="flex items-center gap-1.5 cursor-pointer text-[10px] sm:text-xs font-bold text-slate-500">
+                  <input type="checkbox" :checked="isAllGroupSelected('proses')" @change="toggleSelectAllGroup('proses')" class="size-3.5 sm:size-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-200" />
                   Pilih Semua
                 </label>
               </div>
-              <div class="divide-y divide-slate-50 border border-slate-100 rounded-2xl overflow-hidden bg-slate-50/30">
+              <div class="divide-y divide-slate-50 border border-slate-100 rounded-xl sm:rounded-2xl overflow-hidden bg-slate-50/30">
                 <div v-for="app in groupedPastDue.proses" :key="app.No_Id" class="hover:bg-white transition-colors">
-                  <div class="flex items-center justify-between gap-3 p-4">
-                    <label class="flex items-center gap-3.5 flex-1 cursor-pointer min-w-0">
-                      <input type="checkbox" :value="app.No_Id" v-model="selectedPastDueIds" class="size-5 rounded text-emerald-600 focus:ring-emerald-500 border-slate-250 shrink-0" />
+                  <div class="flex items-center justify-between gap-2.5 p-3 sm:p-4">
+                    <label class="flex items-center gap-2.5 sm:gap-3.5 flex-1 cursor-pointer min-w-0">
+                      <input type="checkbox" :value="app.No_Id" v-model="selectedPastDueIds" class="size-4 sm:size-5 rounded text-emerald-600 focus:ring-emerald-500 border-slate-250 shrink-0" />
                       <div class="min-w-0 flex-1">
-                        <div class="flex items-center gap-2 flex-wrap">
-                          <span class="text-sm md:text-base font-black text-slate-800">{{ app.Nama_Customer || app.Id_Customer }}</span>
-                          <span class="text-[10px] font-mono text-slate-450 bg-slate-100 px-2 py-0.5 rounded font-bold">#{{ app.No_Tracking }}</span>
+                        <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                           <span class="text-xs sm:text-sm md:text-base font-black text-slate-800">{{ app.Nama_Customer || app.Id_Customer }}</span>
+                           <span class="text-[8px] sm:text-[10px] font-mono text-slate-450 bg-slate-100 px-1.5 sm:px-2 py-0.5 rounded font-bold">#{{ app.No_Tracking }}</span>
                         </div>
-                        <p class="text-xs md:text-sm font-semibold text-slate-500 truncate mt-1">{{ app.Nama_Produk }}</p>
-                        <p class="text-xs font-bold text-red-500/90 mt-1.5 flex items-center gap-1.5">
-                          <Icon icon="lucide:calendar" class="size-3.5" />
+                        <p class="text-[10px] sm:text-xs md:text-sm font-semibold text-slate-500 truncate mt-0.5 sm:mt-1">{{ app.Nama_Produk }}</p>
+                        <p class="text-[10px] sm:text-xs font-bold text-red-500/90 mt-1 flex items-center gap-1 sm:gap-1.5">
+                          <Icon icon="lucide:calendar" class="size-3.5 shrink-0" />
                           {{ app.Tanggal_Janji.split('T')[0] }} • {{ app.Waktu_Janji }} WIB
                         </p>
                       </div>
                     </label>
-                    <button v-if="cancellingAppId !== app.No_Id" @click.stop="startCancelInline(app.No_Id)" class="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors shrink-0 flex items-center gap-1">
-                      <Icon icon="lucide:ban" class="size-3.5" />
+                    <button v-if="cancellingAppId !== app.No_Id" @click.stop="startCancelInline(app.No_Id)" class="px-2 sm:px-3 py-1.5 sm:py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-colors shrink-0 flex items-center gap-1">
+                      <Icon icon="lucide:ban" class="size-3.5 shrink-0" />
                       Batal
                     </button>
                   </div>
                   
                   <!-- Inline Cancellation Form -->
-                  <div v-if="cancellingAppId === app.No_Id" class="px-4 pb-4 pt-1 space-y-3 bg-red-50/10 border-t border-slate-50">
-                    <div class="space-y-1.5">
-                      <label class="text-[10px] font-black text-red-500 uppercase tracking-wider block">Alasan Pembatalan (Wajib)</label>
+                  <div v-if="cancellingAppId === app.No_Id" class="px-3 sm:px-4 pb-3 sm:pb-4 pt-1 space-y-2 sm:space-y-3 bg-red-50/10 border-t border-slate-50">
+                    <div class="space-y-1">
+                      <label class="text-[9px] sm:text-[10px] font-black text-red-500 uppercase tracking-wider block">Alasan Pembatalan (Wajib)</label>
                       <textarea 
                         v-model="cancelReasonText" 
                         class="w-full px-3 py-2 bg-white border border-slate-200 focus:border-red-400 focus:ring-red-400 rounded-xl text-xs font-bold min-h-[60px]" 
@@ -474,13 +474,13 @@ const handleRefresh = () => {
                       ></textarea>
                     </div>
                     <div class="flex items-center gap-2 justify-end">
-                      <button @click="cancelCancelInline" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors">
+                      <button @click="cancelCancelInline" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-colors">
                         Kembali
                       </button>
                       <button 
                         @click="submitCancelInline(app)" 
                         :disabled="!cancelReasonText.trim()"
-                        class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors disabled:opacity-50"
+                        class="px-2.5 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-colors disabled:opacity-50"
                       >
                         Ya, Batalkan!
                       </button>
@@ -493,18 +493,18 @@ const handleRefresh = () => {
           </div>
 
           <!-- Footer -->
-          <div class="border-t border-slate-100 pt-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 shrink-0">
-            <label class="flex items-center gap-2.5 cursor-pointer">
-              <input type="checkbox" v-model="dontShowToday" class="size-4.5 rounded text-slate-600 focus:ring-slate-500 border-slate-200" />
-              <span class="text-xs font-bold text-slate-500 select-none">Jangan tampilkan hari ini</span>
+          <div class="border-t border-slate-100 pt-3 sm:pt-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 sm:gap-4 shrink-0">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" v-model="dontShowToday" class="size-4 sm:size-4.5 rounded text-slate-600 focus:ring-slate-500 border-slate-200" />
+              <span class="text-[10px] sm:text-xs font-bold text-slate-500 select-none">Jangan tampilkan hari ini</span>
             </label>
-            <div class="flex items-center gap-3 justify-end">
-              <button @click="closePastDueModal" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-black uppercase tracking-widest transition-colors">
+            <div class="flex items-center gap-2.5 sm:gap-3 justify-end">
+              <button @click="closePastDueModal" class="px-3.5 sm:px-5 py-2 sm:py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-colors">
                 Tutup
               </button>
-              <button @click="updatePastDueStatus" :disabled="selectedPastDueIds.length === 0 || isUpdatingPastDue" class="px-5 py-2.5 bg-bejo-500 hover:bg-bejo-600 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-colors flex items-center gap-2 disabled:opacity-50 shadow-lg shadow-bejo-500/10">
-                <Icon v-if="isUpdatingPastDue" icon="lucide:loader-2" class="size-4 animate-spin" />
-                <Icon v-else icon="lucide:check-circle" class="size-4" />
+              <button @click="updatePastDueStatus" :disabled="selectedPastDueIds.length === 0 || isUpdatingPastDue" class="px-3.5 sm:px-5 py-2 sm:py-2.5 bg-bejo-500 hover:bg-bejo-600 text-white rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-colors flex items-center gap-1.5 sm:gap-2 disabled:opacity-50 shadow-lg shadow-bejo-500/10">
+                <Icon v-if="isUpdatingPastDue" icon="lucide:loader-2" class="size-3.5 animate-spin" />
+                <Icon v-else icon="lucide:check-circle" class="size-3.5" />
                 Update Status ({{ selectedPastDueIds.length }})
               </button>
             </div>

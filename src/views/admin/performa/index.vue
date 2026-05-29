@@ -201,9 +201,9 @@ onMounted(async () => {
       
       <!-- Action Panel & Filters -->
       <div class="bg-white rounded-[2.5rem] p-6 md:p-8 border border-slate-100 shadow-xl shadow-slate-200/40 space-y-6">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <!-- Search Bar -->
-          <div class="relative w-full md:max-w-xs">
+          <div class="relative w-full lg:max-w-xs shrink-0">
             <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
               <Icon icon="lucide:search" class="size-4" />
             </span>
@@ -215,50 +215,53 @@ onMounted(async () => {
             />
           </div>
 
-          <!-- Last Updated Stamp -->
-          <div class="bg-slate-50/60 border border-slate-100 rounded-xl px-4 py-2.5 flex items-center gap-2.5 self-start md:self-auto">
-            <Icon icon="lucide:clock" class="size-4 text-bejo-600" />
-            <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Terakhir Diupdate:</span>
-            <span class="text-xs font-bold text-slate-700">{{ lastUpdatedOverall }}</span>
-          </div>
+          <!-- Dynamic Row Wrapper: Row 2 at 900px, splits into Row 2 & 3 under 625px -->
+          <div class="flex flex-col min-[625px]:flex-row min-[625px]:items-center lg:justify-end gap-4 w-full flex-1">
+            <!-- Last Updated Stamp -->
+            <div class="bg-slate-50/60 border border-slate-100 rounded-xl px-3 py-2 flex flex-wrap items-center gap-2 self-start min-[625px]:self-auto max-w-full">
+              <Icon icon="lucide:clock" class="size-4 text-bejo-600 shrink-0" />
+              <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider whitespace-nowrap">Terakhir Diupdate:</span>
+              <span class="text-xs font-bold text-slate-700 break-all">{{ lastUpdatedOverall }}</span>
+            </div>
 
-          <!-- Buttons Panel -->
-          <div class="flex items-center gap-3">
-            <!-- Recalculate Button -->
-            <button 
-              @click="handleRecalculate" 
-              :disabled="isRecalculating"
-              class="px-5 py-2.5 bg-bejo-500 hover:bg-bejo-600 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 disabled:opacity-50 shadow-lg shadow-bejo-500/10"
-            >
-              <Icon v-if="isRecalculating" icon="lucide:loader-2" class="size-4 animate-spin" />
-              <Icon v-else icon="lucide:calculator" class="size-4" />
-              Hitung Ulang Performa
-            </button>
-
-            <!-- Export Button Dropdown -->
-            <div class="relative">
+            <!-- Buttons Panel -->
+            <div class="flex flex-wrap items-center gap-3 self-start min-[625px]:self-auto w-full min-[625px]:w-auto">
+              <!-- Recalculate Button -->
               <button 
-                @click="showExportDropdown = !showExportDropdown"
-                class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2"
+                @click="handleRecalculate" 
+                :disabled="isRecalculating"
+                class="px-5 py-2.5 bg-bejo-500 hover:bg-bejo-600 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 disabled:opacity-50 shadow-lg shadow-bejo-500/10 shrink-0 min-[380px]:whitespace-nowrap whitespace-normal text-left min-[380px]:text-center max-w-full"
               >
-                <Icon icon="lucide:share" class="size-4" />
-                Ekspor
-                <Icon icon="lucide:chevron-down" class="size-3" />
+                <Icon v-if="isRecalculating" icon="lucide:loader-2" class="size-4 animate-spin" />
+                <Icon v-else icon="lucide:calculator" class="size-4" />
+                Hitung Ulang Performa
               </button>
-              <div 
-                v-if="showExportDropdown"
-                class="absolute right-0 top-full mt-2 w-52 bg-white border border-slate-100 rounded-2xl shadow-xl p-2 z-[90] animate-in fade-in zoom-in-95 duration-150"
-              >
-                <button @click="exportData('csv')" class="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-bejo-600 rounded-xl transition-all flex items-center gap-2">
-                  <Icon icon="lucide:file-spreadsheet" class="size-4" />
-                  Format CSV
+
+              <!-- Export Button Dropdown -->
+              <div class="relative">
+                <button 
+                  @click="showExportDropdown = !showExportDropdown"
+                  class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 shrink-0 min-[380px]:whitespace-nowrap whitespace-normal text-left"
+                >
+                  <Icon icon="lucide:share" class="size-4" />
+                  Ekspor
+                  <Icon icon="lucide:chevron-down" class="size-3" />
                 </button>
-                <button @click="exportData('txt')" class="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-bejo-600 rounded-xl transition-all flex items-center gap-2">
-                  <Icon icon="lucide:file-text" class="size-4" />
-                  Format TXT Laporan
-                </button>
+                <div 
+                  v-if="showExportDropdown"
+                  class="absolute right-0 top-full mt-2 w-52 bg-white border border-slate-100 rounded-2xl shadow-xl p-2 z-[90] animate-in fade-in zoom-in-95 duration-150"
+                >
+                  <button @click="exportData('csv')" class="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-bejo-600 rounded-xl transition-all flex items-center gap-2">
+                    <Icon icon="lucide:file-spreadsheet" class="size-4" />
+                    Format CSV
+                  </button>
+                  <button @click="exportData('txt')" class="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-bejo-600 rounded-xl transition-all flex items-center gap-2">
+                    <Icon icon="lucide:file-text" class="size-4" />
+                    Format TXT Laporan
+                  </button>
+                </div>
+                <div v-if="showExportDropdown" @click="showExportDropdown = false" class="fixed inset-0 z-40"></div>
               </div>
-              <div v-if="showExportDropdown" @click="showExportDropdown = false" class="fixed inset-0 z-40"></div>
             </div>
           </div>
         </div>

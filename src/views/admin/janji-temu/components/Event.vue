@@ -37,10 +37,51 @@ const getTimelineChain = (current: any) => {
 const timelineChain = computed(() => getTimelineChain(props.appointment))
 const showTimelineDropdown = ref(false)
 const triggerRect = ref<DOMRect | null>(null)
-const toggleTimelineDropdown = (event: MouseEvent) => {
+const timelineButtonRef = ref<HTMLElement | null>(null)
+
+const dropdownStyle = computed(() => {
+  if (!triggerRect.value) return {}
+  
+  const rect = triggerRect.value
+  const spaceBelow = window.innerHeight - rect.bottom
+  const spaceAbove = rect.top
+  
+  // Default positioning (below the button)
+  const top = rect.bottom + 6
+  let left = rect.right - 288 // 288px is the width of the popover (w-72)
+  
+  // On mobile screens, keep the popup within horizontal viewport boundaries
+  if (window.innerWidth < 640) {
+    const popoverWidth = 288
+    left = Math.max(16, Math.min(window.innerWidth - popoverWidth - 16, rect.left + rect.width / 2 - popoverWidth / 2))
+  }
+  
+  // If not enough space below, render above the button
+  if (spaceBelow < 320 && spaceAbove > spaceBelow) {
+    return {
+      bottom: `${window.innerHeight - rect.top + 6}px`,
+      left: `${left}px`,
+      maxHeight: `${Math.max(150, Math.min(320, spaceAbove - 20))}px`
+    }
+  }
+  
+  return {
+    top: `${top}px`,
+    left: `${left}px`,
+    maxHeight: `${Math.max(150, Math.min(320, spaceBelow - 20))}px`
+  }
+})
+
+const updateDropdownPosition = () => {
+  if (showTimelineDropdown.value && timelineButtonRef.value) {
+    triggerRect.value = timelineButtonRef.value.getBoundingClientRect()
+  }
+}
+
+const toggleTimelineDropdown = () => {
   showTimelineDropdown.value = !showTimelineDropdown.value
-  if (showTimelineDropdown.value && event.currentTarget) {
-    triggerRect.value = (event.currentTarget as HTMLElement).getBoundingClientRect()
+  if (showTimelineDropdown.value && timelineButtonRef.value) {
+    triggerRect.value = timelineButtonRef.value.getBoundingClientRect()
   } else {
     triggerRect.value = null
   }
@@ -810,29 +851,24 @@ const dropdownRef = ref<HTMLElement | null>(null)
 const handleClickOutside = (event: MouseEvent) => {
   if (showTimelineDropdown.value && dropdownRef.value) {
     const target = event.target as HTMLElement
-    const clickedButton = target.closest('.px-3.py-1.5')
-    if (!dropdownRef.value.contains(target) && !clickedButton) {
+    const insideButton = timelineButtonRef.value && timelineButtonRef.value.contains(target)
+    if (!dropdownRef.value.contains(target) && !insideButton) {
       showTimelineDropdown.value = false
       triggerRect.value = null
     }
   }
 }
 
-const handleScroll = () => {
-  if (showTimelineDropdown.value) {
-    showTimelineDropdown.value = false
-    triggerRect.value = null
-  }
-}
-
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
-  document.addEventListener('scroll', handleScroll, true)
+  window.addEventListener('resize', updateDropdownPosition)
+  document.addEventListener('scroll', updateDropdownPosition, true)
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
-  document.removeEventListener('scroll', handleScroll)
+  window.removeEventListener('resize', updateDropdownPosition)
+  document.removeEventListener('scroll', updateDropdownPosition, true)
 })
 </script>
 
@@ -965,7 +1001,7 @@ onUnmounted(() => {
             <div v-if="timelineChain.length > 1" class="relative pt-4 border-t border-slate-100 flex justify-between items-center">
               <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1"> Status Jadwal </span>
               <div class="relative">
-                <button @click="toggleTimelineDropdown($event)" class="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200/60 rounded-xl text-[10px] font-black text-slate-600 uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-sm" :class="{ 'bg-bejo-50 border-bejo-200 text-bejo-600': showTimelineDropdown }">
+                <button ref="timelineButtonRef" @click="toggleTimelineDropdown()" class="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200/60 rounded-xl text-[10px] font-black text-slate-600 uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-sm" :class="{ 'bg-bejo-50 border-bejo-200 text-bejo-600': showTimelineDropdown }">
                   <Icon icon="lucide:history" class="size-3.5" :class="showTimelineDropdown ? 'text-bejo-500' : 'text-slate-500'" />
                   Riwayat ({{ timelineChain.length }}x)
                   <Icon icon="lucide:chevron-down" class="size-3 transition-transform" :class="{ 'rotate-180': showTimelineDropdown }" />
@@ -976,11 +1012,8 @@ onUnmounted(() => {
                   <div
                     v-if="showTimelineDropdown && triggerRect"
                     ref="dropdownRef"
-                    class="absolute bg-white rounded-2xl shadow-2xl border border-slate-100 p-4.5 z-[1060] w-72 max-h-80 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2 duration-200 text-left"
-                    :style="{
-                      top: `${triggerRect.bottom + 6}px`,
-                      left: `${triggerRect.right - 288}px`
-                    }"
+                    class="absolute bg-white rounded-2xl shadow-2xl border border-slate-100 p-4.5 z-[1060] w-72 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2 duration-200 text-left"
+                    :style="dropdownStyle"
                   >
                     <span class="text-[11px] font-black text-slate-400 uppercase tracking-wider block mb-3 border-b border-slate-100 pb-2">Riwayat Reschedule</span>
                     <div class="relative pl-4 border-l border-slate-100 ml-1.5 space-y-4">

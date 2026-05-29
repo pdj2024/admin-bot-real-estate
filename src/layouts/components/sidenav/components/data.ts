@@ -61,7 +61,7 @@ export const menuItems: MenuItemType[] = [
       { key: 'data-icon', label: 'Icon', url: '/data/icon' },
       { key: 'data-status', label: 'Status', url: '/data/status' },
       { key: 'data-admin', label: 'Admin', url: '/data/admin'},
-      { key: 'data-sales', label: 'Sales', url: '/data/sales' },
+      // { key: 'data-sales', label: 'Sales', url: '/data/sales' },
       { key: 'data-customer', label: 'Customer', url: '/data/customer' },
       { key: 'data-wilayah', label: 'Wilayah', url: '/data/wilayah' },
     ]

@@ -46,18 +46,18 @@ const teamMembers = [
       <!-- Breadcrumb -->
 
       <!-- Hero Banner -->
-      <div class="relative overflow-hidden rounded-[2rem] md:rounded-[3.5rem] bg-white p-6 md:p-16 lg:p-20 shadow-xl shadow-bejo-600/5 border border-bejo-100">
+      <div class="relative overflow-hidden rounded-[2rem] md:rounded-[3.5rem] bg-white px-4 py-8 md:p-16 lg:p-20 shadow-xl shadow-bejo-600/5 border border-bejo-100 mt-4">
         <!-- Dekorasi Background -->
         <div class="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-bejo-50 via-bejo-50/50 to-transparent"></div>
         <div class="absolute -right-20 -top-20 size-96 bg-gradient-to-br from-bejo-100 via-bejo-200 to-bejo-400 rounded-full blur-3xl opacity-40"></div>
         <div class="absolute right-10 -bottom-20 size-64 bg-gradient-to-tr from-bejo-300 via-bejo-500 to-bejo-700 rounded-full blur-3xl opacity-10"></div>
         
-        <div class="relative z-10 text-center px-6 w-full max-w-4xl mx-auto">
+        <div class="relative z-10 text-center px-4 w-full max-w-4xl mx-auto">
 
-          <h1 class="text-4xl sm:text-5xl lg:text-7xl font-black text-slate-900 tracking-tight mb-6">
+          <h1 class="text-3xl sm:text-5xl lg:text-7xl font-black text-slate-900 tracking-tight mb-3 md:mb-6">
             Mengenal <span class="text-transparent bg-clip-text bg-gradient-to-r from-bejo-500 via-bejo-700 to-bejo-900">{{ settingsStore.business.appName }}</span>
           </h1>
-          <p class="text-slate-500 text-lg sm:text-xl font-medium leading-relaxed max-w-3xl mx-auto line-clamp-3">
+          <p class="text-slate-500 text-sm md:text-xl font-medium leading-relaxed max-w-3xl mx-auto line-clamp-3">
             {{ settingsStore.business.description }}
           </p>
         </div>

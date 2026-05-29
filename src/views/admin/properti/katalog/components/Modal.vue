@@ -67,43 +67,43 @@ const handlePublish = async () => {
 
 <template>
   <Transition enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0" enter-to-class="opacity-100" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0">
-    <div v-show="showModal" class="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div class="bg-white w-full max-w-7xl max-h-[90vh] rounded-[2.5rem] shadow-2xl border border-slate-50 overflow-hidden flex flex-col z-10 animate-fade-in-up">
+    <div v-show="showModal" class="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4">
+      <div class="bg-white w-full max-w-7xl h-full max-h-[96vh] sm:max-h-[90vh] rounded-3xl sm:rounded-[2.5rem] shadow-2xl border border-slate-50 overflow-hidden flex flex-col z-10 animate-fade-in-up">
         <div class="flex flex-col border-b border-slate-100 bg-white">
-          <div class="flex items-center justify-between px-8 py-6">
-            <div class="flex items-center gap-4">
-              <div class="size-12 rounded-[1.25rem] bg-gradient-to-br from-bejo-50 to-bejo-100 flex items-center justify-center text-bejo-600 shadow-sm border border-bejo-100/50">
-                <Icon :icon="form.No_Id ? 'lucide:edit-3' : 'lucide:plus-circle'" class="size-6" />
+          <div class="flex items-center justify-between px-4 sm:px-8 py-4 sm:py-6">
+            <div class="flex items-center gap-3 sm:gap-4 min-w-0">
+              <div class="size-10 sm:size-12 rounded-xl sm:rounded-[1.25rem] bg-gradient-to-br from-bejo-50 to-bejo-100 flex items-center justify-center text-bejo-600 shadow-sm border border-bejo-100/50 shrink-0">
+                <Icon :icon="form.No_Id ? 'lucide:edit-3' : 'lucide:plus-circle'" class="size-5 sm:size-6" />
               </div>
-              <div>
-                <h2 class="text-slate-900 font-extrabold text-xl tracking-tight leading-tight">{{ form.No_Id ? 'Edit' : 'Tambah' }} Properti</h2>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Lengkapi detail properti untuk dipublikasikan</p>
+              <div class="min-w-0">
+                <h2 class="text-slate-900 font-extrabold text-base sm:text-xl tracking-tight leading-tight truncate">{{ form.No_Id ? 'Edit' : 'Tambah' }} Properti</h2>
+                <p class="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5 sm:mt-1 truncate">Lengkapi detail properti untuk dipublikasikan</p>
               </div>
             </div>
-            <button :disabled="isLoading" @click="handleClose" class="size-10 flex items-center justify-center rounded-2xl bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all border border-slate-100 shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
-              <Icon icon="lucide:x" class="size-6" />
+            <button :disabled="isLoading" @click="handleClose" class="size-8 sm:size-10 flex items-center justify-center rounded-xl sm:rounded-2xl bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all border border-slate-100 shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shrink-0">
+              <Icon icon="lucide:x" class="size-5 sm:size-6" />
             </button>
           </div>
 
           <!-- Tab Navigation Bar -->
-          <div class="flex px-8 gap-2 border-t border-slate-50 bg-slate-50/30">
-            <button @click="activeTab = 'utama'" class="flex-1 lg:flex-none lg:w-48 pt-4 pb-3.5 text-[11px] font-black uppercase tracking-widest transition-all relative group" :class="activeTab === 'utama' ? 'text-bejo-600' : 'text-slate-400 hover:text-slate-500'">
-              <div class="flex items-center justify-center gap-2.5">
-                <Icon icon="lucide:home" class="size-4 -mt-0.5" :class="activeTab === 'utama' ? 'text-bejo-600' : 'text-slate-400'" />
+          <div class="flex px-4 sm:px-8 gap-1 sm:gap-2 border-t border-slate-50 bg-slate-50/30 overflow-x-auto custom-scroll whitespace-nowrap shrink-0">
+            <button @click="activeTab = 'utama'" class="flex-1 sm:flex-none sm:w-48 pt-3 sm:pt-4 pb-2.5 sm:pb-3.5 text-[9px] sm:text-[11px] font-black uppercase tracking-widest transition-all relative group shrink-0" :class="activeTab === 'utama' ? 'text-bejo-600' : 'text-slate-400 hover:text-slate-500'">
+              <div class="flex items-center justify-center gap-1.5 sm:gap-2.5">
+                <Icon icon="lucide:home" class="size-3.5 sm:size-4 -mt-0.5" :class="activeTab === 'utama' ? 'text-bejo-600' : 'text-slate-400'" />
                 <span class="leading-none">Utama</span>
               </div>
               <div class="absolute bottom-0 left-0 right-0 h-1 bg-bejo-600 rounded-t-full transition-all duration-300 transform" :class="activeTab === 'utama' ? 'scale-x-50 opacity-100' : 'scale-x-0 opacity-0'"></div>
             </button>
-            <button @click="activeTab = 'lokasi'" class="flex-1 lg:flex-none lg:w-48 pt-4 pb-3.5 text-[11px] font-black uppercase tracking-widest transition-all relative group" :class="activeTab === 'lokasi' ? 'text-bejo-600' : 'text-slate-400 hover:text-slate-500'">
-              <div class="flex items-center justify-center gap-2.5">
-                <Icon icon="lucide:map-pin" class="size-4 -mt-0.5" :class="activeTab === 'lokasi' ? 'text-bejo-600' : 'text-slate-400'" />
+            <button @click="activeTab = 'lokasi'" class="flex-1 sm:flex-none sm:w-48 pt-3 sm:pt-4 pb-2.5 sm:pb-3.5 text-[9px] sm:text-[11px] font-black uppercase tracking-widest transition-all relative group shrink-0" :class="activeTab === 'lokasi' ? 'text-bejo-600' : 'text-slate-400 hover:text-slate-500'">
+              <div class="flex items-center justify-center gap-1.5 sm:gap-2.5">
+                <Icon icon="lucide:map-pin" class="size-3.5 sm:size-4 -mt-0.5" :class="activeTab === 'lokasi' ? 'text-bejo-600' : 'text-slate-400'" />
                 <span class="leading-none">Lokasi</span>
               </div>
               <div class="absolute bottom-0 left-0 right-0 h-1 bg-bejo-600 rounded-t-full transition-all duration-300 transform" :class="activeTab === 'lokasi' ? 'scale-x-50 opacity-100' : 'scale-x-0 opacity-0'"></div>
             </button>
-            <button @click="activeTab = 'spesifikasi'" class="flex-1 lg:flex-none lg:w-48 pt-4 pb-3.5 text-[11px] font-black uppercase tracking-widest transition-all relative group" :class="activeTab === 'spesifikasi' ? 'text-bejo-600' : 'text-slate-400 hover:text-slate-500'">
-              <div class="flex items-center justify-center gap-2.5">
-                <Icon icon="lucide:file-text" class="size-4 -mt-0.5" :class="activeTab === 'spesifikasi' ? 'text-bejo-600' : 'text-slate-400'" />
+            <button @click="activeTab = 'spesifikasi'" class="flex-1 sm:flex-none sm:w-48 pt-3 sm:pt-4 pb-2.5 sm:pb-3.5 text-[9px] sm:text-[11px] font-black uppercase tracking-widest transition-all relative group shrink-0" :class="activeTab === 'spesifikasi' ? 'text-bejo-600' : 'text-slate-400 hover:text-slate-500'">
+              <div class="flex items-center justify-center gap-1.5 sm:gap-2.5">
+                <Icon icon="lucide:file-text" class="size-3.5 sm:size-4 -mt-0.5" :class="activeTab === 'spesifikasi' ? 'text-bejo-600' : 'text-slate-400'" />
                 <span class="leading-none">Spesifikasi</span>
               </div>
               <div class="absolute bottom-0 left-0 right-0 h-1 bg-bejo-600 rounded-t-full transition-all duration-300 transform" :class="activeTab === 'spesifikasi' ? 'scale-x-50 opacity-100' : 'scale-x-0 opacity-0'"></div>
@@ -111,7 +111,7 @@ const handlePublish = async () => {
           </div>
         </div>
 
-        <div class="px-8 py-8 overflow-y-auto flex-1 custom-scroll bg-slate-50/10 relative">
+        <div class="px-4 sm:px-8 py-4 sm:py-8 overflow-y-auto flex-1 custom-scroll bg-slate-50/10 relative">
           <!-- TAB 1: UTAMA -->
           <TabUtama v-show="activeTab === 'utama'" />
 
@@ -122,14 +122,14 @@ const handlePublish = async () => {
           <TabSpesifikasi v-show="activeTab === 'spesifikasi'" />
         </div>
 
-        <div class="px-8 py-6 border-t border-slate-100 flex justify-between items-center bg-white">
-          <div class="flex items-center gap-3">
-            <button :disabled="isLoading" @click="handleClose" class="px-8 py-3 text-xs font-black text-slate-400 hover:text-red-500 uppercase tracking-widest transition-colors disabled:opacity-30 disabled:cursor-not-allowed">Batal</button>
+        <div class="px-4 sm:px-8 py-4 sm:py-6 border-t border-slate-100 flex flex-col sm:flex-row gap-3 justify-between items-stretch sm:items-center bg-white shrink-0">
+          <div class="flex items-center justify-center sm:justify-start order-last sm:order-first">
+            <button :disabled="isLoading" @click="handleClose" class="w-full sm:w-auto px-6 py-2.5 sm:py-3 text-xs font-black text-slate-400 hover:text-red-500 uppercase tracking-widest transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-center">Batal</button>
           </div>
 
-          <div class="flex gap-4 items-center">
+          <div class="flex flex-col xs:flex-row gap-2 sm:gap-4 items-stretch xs:items-center w-full sm:w-auto order-first sm:order-last">
             <!-- Status Toggle Button (Draft <-> Aktif) - Sembunyikan jika sudah Terjual/Tersewa -->
-            <button v-if="form.Status_Properti !== 'Terjual' && form.Status_Properti !== 'Tersewa'" :disabled="isLoading" @click="form.Status_Display === 'Draft' ? handlePublish() : handleSaveDraft()" class="px-8 py-3 bg-slate-50 text-slate-500 text-[10px] font-black rounded-[1.25rem] transition-all hover:bg-slate-100 active:scale-95 flex items-center gap-2 group disabled:opacity-50 border border-slate-100 tracking-widest uppercase">
+            <button v-if="form.Status_Properti !== 'Terjual' && form.Status_Properti !== 'Tersewa'" :disabled="isLoading" @click="form.Status_Display === 'Draft' ? handlePublish() : handleSaveDraft()" class="w-full sm:w-auto justify-center px-4 sm:px-6 py-2.5 sm:py-3 bg-slate-50 text-slate-500 text-[10px] font-black rounded-xl sm:rounded-[1.25rem] transition-all hover:bg-slate-100 active:scale-95 flex items-center gap-2 group disabled:opacity-50 border border-slate-100 tracking-widest uppercase">
               <Icon v-if="isLoading" icon="lucide:loader-2" class="size-4 animate-spin" />
               <template v-else>
                 <Icon :icon="form.Status_Display === 'Draft' ? 'lucide:eye' : 'lucide:archive'" class="size-4 group-hover:scale-110 transition-transform" />
@@ -137,16 +137,16 @@ const handlePublish = async () => {
               </template>
             </button>
 
-            <div>
-              <button v-if="activeTab !== 'spesifikasi'" @click="activeTab = activeTab === 'utama' ? 'lokasi' : 'spesifikasi'" class="px-8 py-3 bg-slate-800 text-white text-[10px] font-black rounded-[1.25rem] transition-all hover:bg-slate-900 active:scale-95 flex items-center gap-2 group uppercase tracking-widest shadow-lg shadow-slate-800/10">
+            <div class="w-full sm:w-auto">
+              <button v-if="activeTab !== 'spesifikasi'" @click="activeTab = activeTab === 'utama' ? 'lokasi' : 'spesifikasi'" class="w-full sm:w-auto justify-center px-4 sm:px-8 py-2.5 sm:py-3 bg-slate-800 text-white text-[10px] font-black rounded-xl sm:rounded-[1.25rem] transition-all hover:bg-slate-900 active:scale-95 flex items-center gap-2 group uppercase tracking-widest shadow-lg shadow-slate-800/10">
                 {{ activeTab === 'utama' ? 'Lanjut ke Lokasi' : 'Lanjut ke Spesifikasi' }}
                 <Icon icon="lucide:arrow-right" class="size-4 group-hover:translate-x-1 transition-transform" />
               </button>
 
-              <button v-else :disabled="isLoading" @click="() => modalState.submitForm()" class="px-10 py-3 bg-bejo-600 text-white text-[10px] font-black rounded-[1.25rem] shadow-xl shadow-bejo-600/20 transition-all hover:scale-[1.03] active:scale-95 flex items-center gap-2 disabled:opacity-70 disabled:scale-100 uppercase tracking-widest">
-                <Icon v-if="isLoading" icon="lucide:loader-2" class="size-4 animate-spin" />
-                <Icon v-else icon="lucide:save" class="size-4" />
-                {{ isLoading ? '...Proses Menyimpan' : form.No_Id ? 'Simpan Perubahan' : 'Tambah Properti' }}
+              <button v-else :disabled="isLoading" @click="() => modalState.submitForm()" class="w-full sm:w-auto justify-center px-5 sm:px-10 py-2.5 sm:py-3 bg-bejo-600 text-white text-[10px] font-black rounded-xl sm:rounded-[1.25rem] shadow-xl shadow-bejo-600/20 transition-all hover:scale-[1.03] active:scale-95 flex items-center gap-2 disabled:opacity-70 disabled:scale-100 uppercase tracking-widest">
+                <Icon v-if="isLoading" icon="lucide:loader-2" class="size-4 animate-spin shrink-0" />
+                <Icon v-else icon="lucide:save" class="size-4 shrink-0" />
+                <span class="truncate">{{ isLoading ? 'Proses...' : form.No_Id ? 'Simpan' : 'Tambah Properti' }}</span>
               </button>
             </div>
           </div>

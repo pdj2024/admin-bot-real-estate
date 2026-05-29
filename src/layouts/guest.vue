@@ -181,13 +181,13 @@
             <!-- Quick Links -->
             <div class="lg:col-span-2 space-y-6">
               <h4 class="text-white font-black text-sm uppercase tracking-widest">Tautan Cepat</h4>
-              <nav class="flex flex-col gap-4">
+              <nav class="grid grid-cols-2 gap-x-6 gap-y-4 lg:flex lg:flex-col lg:gap-4">
                 <RouterLink to="/" class="text-sm font-bold hover:text-bejo-400 transition-colors">Beranda</RouterLink>
                 <RouterLink to="/katalog" class="text-sm font-bold hover:text-bejo-400 transition-colors">Katalog Properti</RouterLink>
                 <RouterLink to="/simulasi-kpr" class="text-sm font-bold hover:text-bejo-400 transition-colors">Simulasi KPR</RouterLink>
                 <RouterLink to="/tentang-kami" class="text-sm font-bold hover:text-bejo-400 transition-colors">Tentang Kami</RouterLink>
                 <RouterLink to="/kontak" class="text-sm font-bold hover:text-bejo-400 transition-colors">Hubungi Kami</RouterLink>
-                <RouterLink to="/faq" class="text-sm font-bold hover:text-bejo-400 transition-colors">FAQ (Bantuan)</RouterLink>
+                <RouterLink to="/faq" class="text-sm font-bold hover:text-bejo-400 transition-colors">FAQ</RouterLink>
               </nav>
             </div>
 

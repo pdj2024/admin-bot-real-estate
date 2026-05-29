@@ -234,7 +234,7 @@ const formatCurrency = (val: number) => {
         </p>
       </div>
 
-      <div class="relative w-full aspect-[21/9] bg-slate-50 rounded-[3rem] border border-slate-100 shadow-2xl overflow-hidden mb-12">
+      <div class="relative w-full aspect-[4/3] sm:aspect-[21/9] bg-slate-50 rounded-[3rem] border border-slate-100 shadow-2xl overflow-hidden mb-12">
         <div ref="mapRef" class="w-full h-full"></div>
 
         <!-- Custom Tooltip Overlay -->

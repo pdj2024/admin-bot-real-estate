@@ -365,11 +365,24 @@ const handleDelete = async (admin: Admin) => {
 
 
 
+const activeDropdownRowId = ref<string | null>(null)
+const toggleRowDropdown = (rowId: string) => {
+  activeDropdownRowId.value = activeDropdownRowId.value === rowId ? null : rowId
+}
+const closeDropdown = (e: MouseEvent) => {
+  const target = e.target as HTMLElement
+  if (!target.closest('.action-dropdown-btn') && !target.closest('.action-dropdown-menu')) {
+    activeDropdownRowId.value = null
+  }
+}
+
 onMounted(() => {
   fetchData()
+  document.addEventListener('click', closeDropdown)
 })
 
 onBeforeUnmount(() => {
+  document.removeEventListener('click', closeDropdown)
 })
 </script>
 
@@ -377,7 +390,7 @@ onBeforeUnmount(() => {
   <div class="flex flex-col relative">
     <!-- Batch Action Bar -->
     <Transition name="slide-up">
-      <div v-if="Object.keys(rowSelection).length > 0" class="absolute -top-24 left-0 right-0 z-50 px-6 py-4 bg-white/80 backdrop-blur-md border border-bejo-100 rounded-3xl shadow-2xl shadow-bejo-500/10 flex items-center gap-4 animate-in fade-in slide-in-from-top-4">
+      <div v-if="Object.keys(rowSelection).length > 0" class="absolute -top-28 md:-top-24 left-0 right-0 z-50 px-4 py-3 md:px-6 md:py-4 bg-white/90 backdrop-blur-md border border-bejo-100 rounded-3xl shadow-2xl shadow-bejo-500/10 flex flex-wrap md:flex-nowrap items-center gap-3 md:gap-4 animate-in fade-in slide-in-from-top-4">
         <div class="flex items-center gap-3 pr-4 border-r border-slate-100">
           <div class="size-10 rounded-xl bg-bejo-500 text-white flex items-center justify-center font-black text-sm shadow-lg shadow-bejo-500/20">
             {{ Object.keys(rowSelection).length }}
@@ -407,7 +420,7 @@ onBeforeUnmount(() => {
       </div>
     </Transition>
 
-    <div class="lg:overflow-visible relative">
+    <div class="w-full overflow-hidden overflow-x-auto relative">
       <!-- Background Loading Indicator -->
       <div v-if="isLoading && admins.length > 0" class="absolute inset-0 z-10 bg-white/40 backdrop-blur-[1px] flex items-start justify-center pt-20 transition-all duration-300">
         <div class="bg-white px-4 py-2 rounded-2xl shadow-xl border border-bejo-100 flex items-center gap-3 animate-in fade-in zoom-in-95">
@@ -507,7 +520,8 @@ onBeforeUnmount(() => {
             </td>
 
             <td v-if="table.getColumn('aksi')?.getIsVisible()" class="px-6 py-5">
-              <div class="flex items-center gap-2">
+              <!-- Desktop Actions -->
+              <div class="hidden md:flex items-center gap-2">
                 <button @click="emit('edit', row.original)" class="h-9 px-3 rounded-xl bg-slate-50 hover:bg-bejo-500 hover:text-white border border-slate-100 text-slate-500 transition-all flex items-center justify-center gap-1.5 text-[11px] font-black uppercase tracking-wider active:scale-95">
                   <Icon icon="lucide:pencil" class="size-3.5" />
                   Edit
@@ -517,6 +531,26 @@ onBeforeUnmount(() => {
                   Hapus
                 </button>
               </div>
+
+              <!-- Mobile Actions (Three Dots Dropdown) -->
+              <div class="md:hidden relative flex justify-end">
+                <button @click.stop="toggleRowDropdown(row.original.No_Id)" class="action-dropdown-btn size-9 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center border border-slate-200/60 text-slate-500 active:scale-95 transition-all">
+                  <Icon icon="lucide:more-vertical" class="size-4" />
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div v-if="activeDropdownRowId === row.original.No_Id" class="action-dropdown-menu absolute right-0 mt-10 w-32 bg-white border border-slate-100 rounded-2xl shadow-xl z-[120] py-2 animate-in fade-in slide-in-from-top-2 duration-150 text-left">
+                  <button @click="emit('edit', row.original); activeDropdownRowId = null" class="w-full px-4 py-2 text-xs font-black uppercase tracking-wider text-slate-600 hover:bg-bejo-50 hover:text-bejo-600 flex items-center gap-2 transition-colors">
+                    <Icon icon="lucide:pencil" class="size-3.5" />
+                    Edit
+                  </button>
+                  <div class="h-px bg-slate-50 my-1"></div>
+                  <button @click="handleDelete(row.original); activeDropdownRowId = null" class="w-full px-4 py-2 text-xs font-black uppercase tracking-wider text-red-500 hover:bg-red-55 flex items-center gap-2 transition-colors">
+                    <Icon icon="lucide:trash-2" class="size-3.5" />
+                    Hapus
+                  </button>
+                </div>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -525,8 +559,8 @@ onBeforeUnmount(() => {
     </div>
 
     <!-- Pagination -->
-    <div class="px-6 py-5 border-t border-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
-      <div class="flex items-center gap-6">
+    <div class="px-6 py-5 border-t border-slate-50 flex flex-col lg:flex-row items-center justify-between gap-4">
+      <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4 lg:gap-6">
         <div class="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
           Menampilkan 
           <span class="text-slate-900 font-black">{{ table.getRowModel().rows.length }}</span> 
