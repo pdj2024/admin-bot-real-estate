@@ -45,12 +45,17 @@ const addAkses = () => {
 // Dropdowns State
 const dropdownHadapRef = ref<HTMLElement | null>(null)
 const dropdownPosisiRef = ref<HTMLElement | null>(null)
+const dropdownSatuanRef = ref<HTMLElement | null>(null)
+
 const menuHadapRef = ref<HTMLElement | null>(null)
 const menuPosisiRef = ref<HTMLElement | null>(null)
-const dropdownStyles = ref({ hadap: {}, posisi: {} })
+const menuSatuanRef = ref<HTMLElement | null>(null)
+
+const dropdownStyles = ref({ hadap: {}, posisi: {}, satuan: {} })
 
 const isHadapOpen = ref(false)
 const isPosisiOpen = ref(false)
+const isSatuanOpen = ref(false)
 
 const searchHadap = ref('')
 const searchPosisi = ref('')
@@ -72,6 +77,11 @@ const posisiOptions = [
   { value: 'tusuk sate', label: 'Tusuk Sate' }
 ]
 
+const satuanOptions = [
+  { value: 'Bulan', label: 'Bulan' },
+  { value: 'Tahun', label: 'Tahun' }
+]
+
 const filteredHadapOptions = computed(() => {
   if (!searchHadap.value) return hadapOptions
   return hadapOptions.filter(o => o.label.toLowerCase().includes(searchHadap.value.toLowerCase()))
@@ -82,17 +92,33 @@ const filteredPosisiOptions = computed(() => {
   return posisiOptions.filter(o => o.label.toLowerCase().includes(searchPosisi.value.toLowerCase()))
 })
 
-const updateDropdownStyles = (type: 'hadap' | 'posisi') => {
+const updateDropdownStyles = (type: 'hadap' | 'posisi' | 'satuan') => {
   let targetRef = null
   if (type === 'hadap') targetRef = dropdownHadapRef.value
   else if (type === 'posisi') targetRef = dropdownPosisiRef.value
+  else if (type === 'satuan') targetRef = dropdownSatuanRef.value
 
   if (targetRef) {
     const rect = (targetRef as any).$el.getBoundingClientRect()
-    dropdownStyles.value[type] = {
-      top: `${rect.bottom + 8}px`,
-      left: `${rect.left}px`,
-      width: `${rect.width}px`
+    const spaceBelow = window.innerHeight - rect.bottom
+    const dropdownHeight = 240 // estimated max height
+    
+    if (spaceBelow < dropdownHeight && rect.top > dropdownHeight) {
+      // Buka ke atas
+      dropdownStyles.value[type] = {
+        bottom: `${window.innerHeight - rect.top + 8}px`,
+        left: `${rect.left}px`,
+        width: `${rect.width}px`,
+        top: 'auto'
+      }
+    } else {
+      // Buka ke bawah
+      dropdownStyles.value[type] = {
+        top: `${rect.bottom + 8}px`,
+        left: `${rect.left}px`,
+        width: `${rect.width}px`,
+        bottom: 'auto'
+      }
     }
   }
 }
@@ -101,6 +127,7 @@ const toggleHadap = () => {
   isHadapOpen.value = !isHadapOpen.value
   if (isHadapOpen.value) {
     isPosisiOpen.value = false
+    isSatuanOpen.value = false
     nextTick(() => updateDropdownStyles('hadap'))
   }
 }
@@ -109,7 +136,17 @@ const togglePosisi = () => {
   isPosisiOpen.value = !isPosisiOpen.value
   if (isPosisiOpen.value) {
     isHadapOpen.value = false
+    isSatuanOpen.value = false
     nextTick(() => updateDropdownStyles('posisi'))
+  }
+}
+
+const toggleSatuan = () => {
+  isSatuanOpen.value = !isSatuanOpen.value
+  if (isSatuanOpen.value) {
+    isHadapOpen.value = false
+    isPosisiOpen.value = false
+    nextTick(() => updateDropdownStyles('satuan'))
   }
 }
 
@@ -125,6 +162,11 @@ const selectPosisi = (value: string) => {
   isPosisiOpen.value = false
 }
 
+const selectSatuan = (value: string) => {
+  form.value.Satuan_Minimal_Sewa = value as any
+  isSatuanOpen.value = false
+}
+
 const getHadapLabel = (value: string) => {
   const opt = hadapOptions.find(o => o.value === value)
   return opt ? opt.label : ''
@@ -135,6 +177,11 @@ const getPosisiLabel = (value: string) => {
   return opt ? opt.label : ''
 }
 
+const getSatuanLabel = (value: string) => {
+  const opt = satuanOptions.find(o => o.value === value)
+  return opt ? opt.label : ''
+}
+
 const handleClickOutside = (event: MouseEvent) => {
   const target = event.target as Node
   if (dropdownHadapRef.value && !(dropdownHadapRef.value as any).$el.contains(target) && !menuHadapRef.value?.contains(target)) {
@@ -142,6 +189,9 @@ const handleClickOutside = (event: MouseEvent) => {
   }
   if (dropdownPosisiRef.value && !(dropdownPosisiRef.value as any).$el.contains(target) && !menuPosisiRef.value?.contains(target)) {
     isPosisiOpen.value = false
+  }
+  if (dropdownSatuanRef.value && !(dropdownSatuanRef.value as any).$el.contains(target) && !menuSatuanRef.value?.contains(target)) {
+    isSatuanOpen.value = false
   }
 }
 
@@ -207,11 +257,23 @@ onBeforeUnmount(() => {
               <BaseFormGroup label="MINIMAL SEWA" icon="lucide:clock">
                 <input v-model="form.Minimal_Sewa" type="number" class="field-input !pl-11" />
               </BaseFormGroup>
-              <BaseFormGroup label="SATUAN" icon="lucide:timer">
-                <select v-model="form.Satuan_Minimal_Sewa" class="field-input !pl-11 appearance-none bg-white">
-                  <option value="Bulan">Bulan</option>
-                  <option value="Tahun">Tahun</option>
-                </select>
+              <BaseFormGroup label="SATUAN" icon="lucide:timer" ref="dropdownSatuanRef">
+                <button @click="toggleSatuan" type="button" class="field-input h-11 !pl-11 flex items-center justify-between group bg-white border-slate-200">
+                  <span class="text-xs font-bold" :class="form.Satuan_Minimal_Sewa ? 'text-slate-700' : 'text-slate-300'">
+                    {{ form.Satuan_Minimal_Sewa ? getSatuanLabel(form.Satuan_Minimal_Sewa) : 'Pilih Satuan' }}
+                  </span>
+                  <Icon icon="lucide:chevron-down" class="size-4 text-slate-400 group-hover:text-bejo-600 transition-transform" :class="isSatuanOpen ? 'rotate-180' : ''" />
+                </button>
+                <Teleport to="body">
+                  <div v-if="isSatuanOpen" ref="menuSatuanRef" class="fixed z-[1000] bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden scale-in" :style="dropdownStyles.satuan">
+                    <div class="max-h-60 overflow-y-auto custom-scroll py-1">
+                      <button v-for="opt in satuanOptions" :key="opt.value" @click="selectSatuan(opt.value)" type="button" class="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors flex items-center justify-between uppercase tracking-wide">
+                        <span>{{ opt.label }}</span>
+                        <Icon v-if="form.Satuan_Minimal_Sewa === opt.value" icon="lucide:check" class="size-4 text-bejo-600" />
+                      </button>
+                    </div>
+                  </div>
+                </Teleport>
               </BaseFormGroup>
             </div>
           </div>

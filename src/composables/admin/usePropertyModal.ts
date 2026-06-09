@@ -516,11 +516,25 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
     const isStrict = targetStatus === 'Aktif'
     
     if (isStrict) {
-      const required = [form.value.Nama_Produk, form.value.Tipe, form.value.Jenis_Sertifikat, form.value.Status_Transaksi?.length, form.value.Id_Kota, form.value.Luas_Bangunan]
-      const isEmpty = (v: any) => v === null || v === undefined || v === ''
-      if (required.some(isEmpty)) return fail('Lengkapi semua field wajib (bintang merah) untuk mengaktifkan properti!')
-      if (form.value.Status_Transaksi?.includes('Jual') && !form.value.Harga_Jual1) return fail('Harga Jual harus diisi!')
-      if (form.value.Status_Transaksi?.includes('Sewa') && !form.value.Harga_Sewa1) return fail('Harga Sewa harus diisi!')
+      const isEmpty = (v: any) => v === null || v === undefined || v === '' || v === 0
+      
+      const requiredFields = [
+        { value: form.value.Nama_Produk, msg: 'Nama Properti wajib diisi pada tab Utama!' },
+        { value: form.value.Tipe, msg: 'Tipe Properti wajib dipilih pada tab Utama!' },
+        { value: form.value.Jenis_Sertifikat, msg: 'Jenis Sertifikat wajib dipilih pada tab Utama!' },
+        { value: form.value.Status_Transaksi?.length, msg: 'Opsi Transaksi (Jual/Sewa) wajib dipilih pada tab Spesifikasi!' },
+        { value: form.value.Id_Kota, msg: 'Kota wajib diisi pada tab Lokasi!' },
+        { value: form.value.Id_Area, msg: 'Area wajib diisi pada tab Lokasi!' },
+        { value: form.value.Id_Prioritas, msg: 'Prioritas/Kawasan wajib diisi pada tab Lokasi!' },
+        { value: form.value.Luas_Bangunan, msg: 'Luas Bangunan wajib diisi pada tab Spesifikasi!' }
+      ]
+
+      for (const req of requiredFields) {
+        if (isEmpty(req.value)) return fail(req.msg)
+      }
+
+      if (form.value.Status_Transaksi?.includes('Jual') && !form.value.Harga_Jual1) return fail('Harga Jual harus diisi pada tab Spesifikasi!')
+      if (form.value.Status_Transaksi?.includes('Sewa') && !form.value.Harga_Sewa1) return fail('Harga Sewa harus diisi pada tab Spesifikasi!')
     } else {
       // Minimal validation for draft
       if (!form.value.Nama_Produk) return fail('Minimal isi Nama Properti untuk menyimpan sebagai draft!')
