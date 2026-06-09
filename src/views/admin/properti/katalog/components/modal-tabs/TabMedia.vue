@@ -92,10 +92,6 @@ const addDriveLink = async () => {
 
 
 
-const onPhotoChange = (event: Event) => {
-  mediaImage.handlePhoto(event, null)
-}
-
 const onDenahChange = (event: Event) => {
   mediaDenah.handlePhoto(event, null)
 }
