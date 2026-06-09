@@ -107,47 +107,7 @@ const onThreeDChange = (event: Event) => {
 
 <template>
   <div class="space-y-8 scale-in pb-10">
-    <!-- 1. Galeri Gambar Produk -->
-    <div class="space-y-3">
-      <label class="label block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">GALERI FOTO PROPERTI</label>
-      <div class="relative">
-        <div class="preview-container flex flex-wrap gap-4">
-          <div v-for="(img, i) in mediaImage.previewPhotos.value" :key="i" class="preview-box relative size-28 flex-shrink-0 group/img rounded-2xl overflow-hidden border-2 transition-all duration-200 shadow-sm"
-            :class="form.Id_Media_Thumbnail === (img.No_Id_Media !== 'new_upload' ? img.No_Id_Media : `local_img_${i}`) ? 'border-amber-400 shadow-amber-200' : 'border-slate-200'"
-          >
-            <video v-if="img.ContentType?.startsWith('video/')" :src="`${img.Url || img.Id_Media}#t=0.001`" class="size-full object-cover" preload="metadata" playsinline muted></video>
-            <img v-else :src="img.Url || img.Id_Media" class="size-full object-cover transition-transform duration-500 group-hover/img:scale-105" />
-            
-            <!-- Set as Thumbnail (Star Button) -->
-            <button 
-              type="button" 
-              @click="form.Id_Media_Thumbnail = form.Id_Media_Thumbnail === (img.No_Id_Media !== 'new_upload' ? img.No_Id_Media : `local_img_${i}`) ? '' : (img.No_Id_Media !== 'new_upload' ? img.No_Id_Media : `local_img_${i}`)"
-              class="absolute top-2 left-2 p-1.5 bg-white/90 backdrop-blur-xs rounded-xl shadow-md border border-slate-100 hover:scale-110 transition-all"
-              :title="form.Id_Media_Thumbnail === (img.No_Id_Media !== 'new_upload' ? img.No_Id_Media : `local_img_${i}`) ? 'Thumbnail Utama' : 'Jadikan Thumbnail'"
-            >
-              <Icon 
-                :icon="form.Id_Media_Thumbnail === (img.No_Id_Media !== 'new_upload' ? img.No_Id_Media : `local_img_${i}`) ? 'mdi:star' : 'mdi:star-outline'" 
-                class="size-4 transition-colors"
-                :class="form.Id_Media_Thumbnail === (img.No_Id_Media !== 'new_upload' ? img.No_Id_Media : `local_img_${i}`) ? 'text-amber-500' : 'text-slate-300'" 
-              />
-            </button>
-
-            <!-- Delete Photo -->
-            <button @click="mediaImage.removePhoto(i)" type="button" class="absolute top-2 right-2 size-7 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-all border-2 border-white scale-0 group-hover/img:scale-100">
-              <Icon icon="lucide:x" class="size-3.5" />
-            </button>
-          </div>
-
-          <label class="size-28 border-2 border-dashed border-slate-200 rounded-2xl flex flex-shrink-0 flex-col items-center justify-center cursor-pointer hover:bg-bejo-50/50 hover:border-bejo-300 transition-all text-slate-400 group/add">
-            <Icon icon="lucide:plus" class="size-6 group-hover/add:text-bejo-600 transition-colors" />
-            <span class="text-[9px] font-black mt-1 group-hover/add:text-bejo-600 uppercase tracking-widest">Tambah</span>
-            <input type="file" multiple hidden @change="onPhotoChange" accept="image/*,video/*" />
-          </label>
-        </div>
-      </div>
-    </div>
-
-    <!-- 2. Galeri Denah Rumah -->
+    <!-- 1. Galeri Denah Rumah -->
     <div class="space-y-3 pt-4 border-t border-slate-100">
       <label class="label block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">DENAH PROPERTI</label>
       <div class="relative">
@@ -183,7 +143,7 @@ const onThreeDChange = (event: Event) => {
       </div>
     </div>
 
-    <!-- 3. Galeri Gambar 3D -->
+    <!-- 2. Galeri Gambar 3D -->
     <div class="space-y-3 pt-4 border-t border-slate-100">
       <label class="label block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">VISUALISASI 3D</label>
       <div class="relative">
@@ -214,6 +174,46 @@ const onThreeDChange = (event: Event) => {
             <Icon icon="lucide:plus" class="size-6 group-hover/add:text-bejo-600 transition-colors" />
             <span class="text-[9px] font-black mt-1 group-hover/add:text-bejo-600 uppercase tracking-widest">Tambah</span>
             <input type="file" multiple hidden @change="onThreeDChange" accept="image/*" />
+          </label>
+        </div>
+      </div>
+    </div>
+
+     <!-- 3. Galeri Gambar Produk -->
+    <div class="space-y-3">
+      <label class="label block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Foto</label>
+      <div class="relative">
+        <div class="preview-container flex flex-wrap gap-4">
+          <div v-for="(img, i) in mediaImage.previewPhotos.value" :key="i" class="preview-box relative size-28 flex-shrink-0 group/img rounded-2xl overflow-hidden border-2 transition-all duration-200 shadow-sm"
+            :class="form.Id_Media_Thumbnail === (img.No_Id_Media !== 'new_upload' ? img.No_Id_Media : `local_img_${i}`) ? 'border-amber-400 shadow-amber-200' : 'border-slate-200'"
+          >
+            <video v-if="img.ContentType?.startsWith('video/')" :src="`${img.Url || img.Id_Media}#t=0.001`" class="size-full object-cover" preload="metadata" playsinline muted></video>
+            <img v-else :src="img.Url || img.Id_Media" class="size-full object-cover transition-transform duration-500 group-hover/img:scale-105" />
+            
+            <!-- Set as Thumbnail (Star Button) -->
+            <button 
+              type="button" 
+              @click="form.Id_Media_Thumbnail = form.Id_Media_Thumbnail === (img.No_Id_Media !== 'new_upload' ? img.No_Id_Media : `local_img_${i}`) ? '' : (img.No_Id_Media !== 'new_upload' ? img.No_Id_Media : `local_img_${i}`)"
+              class="absolute top-2 left-2 p-1.5 bg-white/90 backdrop-blur-xs rounded-xl shadow-md border border-slate-100 hover:scale-110 transition-all"
+              :title="form.Id_Media_Thumbnail === (img.No_Id_Media !== 'new_upload' ? img.No_Id_Media : `local_img_${i}`) ? 'Thumbnail Utama' : 'Jadikan Thumbnail'"
+            >
+              <Icon 
+                :icon="form.Id_Media_Thumbnail === (img.No_Id_Media !== 'new_upload' ? img.No_Id_Media : `local_img_${i}`) ? 'mdi:star' : 'mdi:star-outline'" 
+                class="size-4 transition-colors"
+                :class="form.Id_Media_Thumbnail === (img.No_Id_Media !== 'new_upload' ? img.No_Id_Media : `local_img_${i}`) ? 'text-amber-500' : 'text-slate-300'" 
+              />
+            </button>
+
+            <!-- Delete Photo -->
+            <button @click="mediaImage.removePhoto(i)" type="button" class="absolute top-2 right-2 size-7 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-all border-2 border-white scale-0 group-hover/img:scale-100">
+              <Icon icon="lucide:x" class="size-3.5" />
+            </button>
+          </div>
+
+          <label class="size-28 border-2 border-dashed border-slate-200 rounded-2xl flex flex-shrink-0 flex-col items-center justify-center cursor-pointer hover:bg-bejo-50/50 hover:border-bejo-300 transition-all text-slate-400 group/add">
+            <Icon icon="lucide:plus" class="size-6 group-hover/add:text-bejo-600 transition-colors" />
+            <span class="text-[9px] font-black mt-1 group-hover/add:text-bejo-600 uppercase tracking-widest">Tambah</span>
+            <input type="file" multiple hidden @change="onPhotoChange" accept="image/*,video/*" />
           </label>
         </div>
       </div>
