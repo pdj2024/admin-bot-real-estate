@@ -222,7 +222,7 @@ const onThreeDChange = (event: Event) => {
     <!-- 4. Google Drive Links -->
     <div class="space-y-4 pt-4 border-t border-slate-100">
         <BaseFormGroup>
-          <label class="label block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Foto Lainnya</label>
+          <label class="label block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Foto/Folder Drive</label>
           <div class="flex items-center space-x-2">
             <div class="relative flex-grow">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">

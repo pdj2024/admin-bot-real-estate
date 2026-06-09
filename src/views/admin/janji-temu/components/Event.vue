@@ -185,12 +185,27 @@ const sendBrochure = async () => {
       }
     }
 
-    const images = []
-    for (let i = 0; i < Math.min(validMedia.length, 3); i++) {
-      const src = validMedia[i].ThumbUrl || validMedia[i].Id_Media
-      const url = resolvedUrls[src] || src
-      const img = await getBase64ImageFromUrl(url)
-      if (img) images.push(img)
+    const targetCircleId = productData.value.Id_Media_Thumbnail
+    const targetSquareId = (productData.value.Id_Media_Denah && productData.value.Id_Media_Denah.length > 0) ? productData.value.Id_Media_Denah[0] : (productData.value.File_Image && productData.value.File_Image.length > 0 ? productData.value.File_Image[0] : null)
+
+    let circleMedia = validMedia.find((m: any) => m.Id_Media === targetCircleId || (m.No_Id_Media && m.No_Id_Media === targetCircleId))
+    if (!circleMedia && validMedia.length > 0) circleMedia = validMedia[0]
+
+    let squareMedia = validMedia.find((m: any) => m.Id_Media === targetSquareId || (m.No_Id_Media && m.No_Id_Media === targetSquareId))
+    if (!squareMedia && validMedia.length > 1) squareMedia = validMedia.find((m: any) => m !== circleMedia) || validMedia[1]
+    if (!squareMedia && validMedia.length > 0) squareMedia = validMedia[0]
+
+    const mediaSelection = [squareMedia, circleMedia]
+
+    const images: (string | null)[] = [null, null]
+    for (let i = 0; i < 2; i++) {
+      const m = mediaSelection[i]
+      if (m) {
+        const src = m.ThumbUrl || m.Id_Media
+        const url = resolvedUrls[src] || src
+        const img = await getBase64ImageFromUrl(url)
+        images[i] = img
+      }
     }
 
     let logoBase64 = null
