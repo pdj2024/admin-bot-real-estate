@@ -11,7 +11,7 @@
       <div class="bg-white/95 backdrop-blur-xl rounded-[3rem] shadow-2xl overflow-hidden border border-white/20">
         <div class="px-8 py-12 md:px-12 md:py-16 text-center">
           <RouterLink to="/" class="inline-flex items-center gap-3 mb-8 group">
-            <img :src="settingsStore.business.Logo || logo" alt="Logo" class="h-10 group-hover:scale-110 transition-transform" />
+            <img :src="settingsStore.business.Logo_Company || settingsStore.business.Logo || logo" alt="Logo" class="h-10 group-hover:scale-110 transition-transform" />
             <span class="text-2xl font-black text-slate-900 tracking-tighter">{{ settingsStore.business.appName || 'Rumah Bejo' }}</span>
           </RouterLink>
           

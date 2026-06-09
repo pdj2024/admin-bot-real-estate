@@ -14,6 +14,7 @@ const form = ref({
   Password: ''
 })
 const rememberMe = ref(true)
+const showPassword = ref(false)
 const showQuickLogin = ref(false)
 const savedAccount = ref<any>(null)
 
@@ -214,10 +215,17 @@ onMounted(() => {
             <Icon icon="lucide:lock" class="size-5" />
           </div>
           <input 
-            type="password" id="Password" v-model="form.Password" placeholder="••••••••"
-            class="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500 transition-all outline-none font-medium"
+            :type="showPassword ? 'text' : 'password'" id="Password" v-model="form.Password" placeholder="••••••••"
+            class="w-full pl-12 pr-12 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500 transition-all outline-none font-medium"
             required
           />
+          <button 
+            type="button" 
+            @click="showPassword = !showPassword"
+            class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-bejo-500 transition-colors z-10 cursor-pointer"
+          >
+            <Icon :icon="showPassword ? 'lucide:eye-off' : 'lucide:eye'" class="size-5" />
+          </button>
         </div>
       </div>
 

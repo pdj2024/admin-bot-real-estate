@@ -209,9 +209,14 @@ export const useSettings = defineStore('settings', () => {
           isInitialized.value = true
         } catch (error) {
           console.error('Initialization failed:', error)
-          // Reset promise so next call can retry
-          initPromise.value = null
-          throw error
+          const storedBusiness = localStorage.getItem('business_settings')
+          if (storedBusiness) {
+            isInitialized.value = true
+          } else {
+            // Reset promise so next call can retry
+            initPromise.value = null
+            throw error
+          }
         }
       }
     })()

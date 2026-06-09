@@ -21,6 +21,10 @@ const formPassword = ref({
   confirmPassword: ''
 })
 
+const showCurrentPassword = ref(false)
+const showNewPassword = ref(false)
+const showConfirmPassword = ref(false)
+
 const isLoadingProfile = ref(true)
 const isSavingProfile = ref(false)
 const isLoadingPassword = ref(false)
@@ -524,7 +528,14 @@ onMounted(() => {
               </label>
               <div class="relative group">
                 <Icon icon="lucide:key" class="absolute left-5 top-1/2 -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-orange-600 transition-colors" />
-                <input v-model="formPassword.currentPassword" type="password" class="field-input !pl-12 focus:!border-orange-500 focus:!ring-orange-500/5" placeholder="••••••••" />
+                <input v-model="formPassword.currentPassword" :type="showCurrentPassword ? 'text' : 'password'" class="field-input !pl-12 !pr-12 focus:!border-orange-500 focus:!ring-orange-500/5" placeholder="••••••••" />
+                <button 
+                  type="button" 
+                  @click="showCurrentPassword = !showCurrentPassword"
+                  class="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-orange-500 transition-colors"
+                >
+                  <Icon :icon="showCurrentPassword ? 'lucide:eye-off' : 'lucide:eye'" class="size-4.5" />
+                </button>
               </div>
             </div>
 
@@ -535,7 +546,14 @@ onMounted(() => {
               </label>
               <div class="relative group">
                 <Icon icon="lucide:shield" class="absolute left-5 top-1/2 -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-orange-600 transition-colors" />
-                <input v-model="formPassword.newPassword" type="password" class="field-input !pl-12 focus:!border-orange-500 focus:!ring-orange-500/5" placeholder="••••••••" />
+                <input v-model="formPassword.newPassword" :type="showNewPassword ? 'text' : 'password'" class="field-input !pl-12 !pr-12 focus:!border-orange-500 focus:!ring-orange-500/5" placeholder="••••••••" />
+                <button 
+                  type="button" 
+                  @click="showNewPassword = !showNewPassword"
+                  class="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-orange-500 transition-colors"
+                >
+                  <Icon :icon="showNewPassword ? 'lucide:eye-off' : 'lucide:eye'" class="size-4.5" />
+                </button>
               </div>
             </div>
 
@@ -546,7 +564,14 @@ onMounted(() => {
               </label>
               <div class="relative group">
                 <Icon icon="lucide:shield-check" class="absolute left-5 top-1/2 -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-orange-600 transition-colors" />
-                <input v-model="formPassword.confirmPassword" type="password" class="field-input !pl-12 focus:!border-orange-500 focus:!ring-orange-500/5" placeholder="••••••••" />
+                <input v-model="formPassword.confirmPassword" :type="showConfirmPassword ? 'text' : 'password'" class="field-input !pl-12 !pr-12 focus:!border-orange-500 focus:!ring-orange-500/5" placeholder="••••••••" />
+                <button 
+                  type="button" 
+                  @click="showConfirmPassword = !showConfirmPassword"
+                  class="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-orange-500 transition-colors"
+                >
+                  <Icon :icon="showConfirmPassword ? 'lucide:eye-off' : 'lucide:eye'" class="size-4.5" />
+                </button>
               </div>
             </div>
           </div>
