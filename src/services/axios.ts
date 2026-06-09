@@ -108,6 +108,11 @@ api.interceptors.request.use(async (config) => {
     config.headers.Authorization = `Bearer ${token}`
   }
 
+  const roleUser = localStorage.getItem('role_user')
+  if (roleUser) {
+    config.headers['X-Jenis-User'] = roleUser
+  }
+
   return config
 }, (error) => {
   return Promise.reject(error)

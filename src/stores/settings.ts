@@ -77,10 +77,11 @@ export const useSettings = defineStore('settings', () => {
   const fetchBusinessSettings = async () => {
     try {
       isLoading.value = true
+      const role = localStorage.getItem('role_user') || 'Guest'
       const { data } = await api.get('/api/company/getAll', {
         params: { no_id: 'comp_0001' },
         headers: {
-          'X-Jenis-User': 'Admin'
+          'X-Jenis-User': role
         }
       })
 
@@ -108,9 +109,10 @@ export const useSettings = defineStore('settings', () => {
 
   const fetchDefaultSettings = async () => {
     try {
+      const role = localStorage.getItem('role_user') || 'Guest'
       const { data } = await api.get('/api/nilaiDefault/getAll?id_company=comp_0001', {
         params: { id_company: 'comp_0001' },
-        headers: { 'X-Jenis-User': 'Admin' }
+        headers: { 'X-Jenis-User': role }
       })
 
       if (data.StatusCode === 200 && data.Data.length > 0) {

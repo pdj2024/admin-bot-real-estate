@@ -1,5 +1,6 @@
 import { ref, watch, nextTick } from 'vue'
 import { success, fail } from '@/utils/sweet-alert'
+import Swal from 'sweetalert2'
 import api from '@/services/axios'
 import { usePropertyLocation } from './usePropertyLocation'
 import { usePropertyMedia } from './usePropertyMedia'
@@ -466,7 +467,47 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
     nextTick(() => {
       location.geocodeExistingAddress()
     })
+
+    // Draft Restoration Logic
+    const draftKey = itemData ? `property_draft_${itemData.No_Id}` : 'property_draft_new'
+    const savedDraftStr = localStorage.getItem(draftKey)
+    if (savedDraftStr) {
+      Swal.fire({
+        title: 'Draft Tersimpan Ditemukan',
+        text: 'Sistem menemukan isian form yang belum tersimpan dari sesi sebelumnya. Ingin memuatnya kembali?',
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonColor: '#EF8C4C',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Ya, Muat Draft',
+        cancelButtonText: 'Tidak, Buang Draft'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          try {
+            const parsed = JSON.parse(savedDraftStr)
+            form.value = { ...form.value, ...parsed }
+            
+            // Re-apply length/width if available
+            if (form.value.Tipe_Ukuran) {
+              const splitUkuran = form.value.Tipe_Ukuran.split('x')
+              panjang.value = splitUkuran[0] || ''
+              lebar.value = splitUkuran[1] || ''
+            }
+          } catch {}
+        } else {
+          localStorage.removeItem(draftKey)
+        }
+      })
+    }
   }
+
+  // Auto-save form watcher
+  watch(() => form.value, (newVal) => {
+    // Prevent saving completely empty base form
+    if (!newVal.Nama_Produk && !newVal.Tipe && !newVal.Alamat && !newVal.Harga_Jual1) return
+    const key = newVal.No_Id ? `property_draft_${newVal.No_Id}` : 'property_draft_new'
+    localStorage.setItem(key, JSON.stringify(newVal))
+  }, { deep: true })
 
   const submitForm = async (mode?: 'active' | 'draft') => {
     if (isLoading.value) return
@@ -614,6 +655,10 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
         mediaDenah.clearDeletedMedia(),
         media3d.clearDeletedMedia()
       ])
+      
+      // Clear saved draft on success
+      const draftKey = isEdit ? `property_draft_${form.value.No_Id}` : 'property_draft_new'
+      localStorage.removeItem(draftKey)
       
       success(isEdit ? 'Properti diperbarui' : 'Properti ditambah')
       form.value.Status_Display = targetStatus
