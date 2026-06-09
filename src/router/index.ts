@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import axios from 'axios'
 import { useSettings } from '@/stores/settings'
+import { API_BASE_URL } from '@/config/constants'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -271,7 +272,7 @@ router.beforeEach(async (to, from, next) => {
     if (!isTokenRefreshed) {
       isTokenRefreshed = true
       try {
-        const baseURL = 'https://wabotapi.padajaya.biz.id'
+        const baseURL = API_BASE_URL
         const roleUser = localStorage.getItem('role_user') || 'admin'
 
         const { data } = await axios.post(`${baseURL}/api/auth/refresh`, { refreshToken }, { headers: { 'X-Jenis-User': roleUser } })

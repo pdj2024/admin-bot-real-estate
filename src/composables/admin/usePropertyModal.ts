@@ -40,8 +40,10 @@ export interface RealEstateForm {
   Satuan_Minimal_Sewa: 'Bulan' | 'Tahun' | ''
   Harga_Jual1: number
   Harga_Jual2: number
+  Harga_Jual3: number
   Harga_Sewa1: number
   Harga_Sewa2: number
+  Harga_Sewa3: number
   Row_Jalan?: number
   Keterangan: string
   Slug: string
@@ -68,6 +70,8 @@ export interface RealEstateForm {
   Kode_Item_Group: string | null
   Created_By: string | null
   Updated_By: string | null
+  Id_Customer: string
+  Tanggal_Transaksi: string
 }
 
 export function usePropertyModal(emit: any, handleCloseFn: () => void) {
@@ -267,8 +271,10 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
     Satuan_Minimal_Sewa: 'Tahun',
     Harga_Jual1: 0,
     Harga_Jual2: 0,
+    Harga_Jual3: 0,
     Harga_Sewa1: 0,
     Harga_Sewa2: 0,
+    Harga_Sewa3: 0,
     Keterangan: '',
     Slug: '',
     Latitude: '',
@@ -291,7 +297,9 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
     Serah_Terima: null,
     Kode_Item_Group: null,
     Created_By: null,
-    Updated_By: null
+    Updated_By: null,
+    Id_Customer: '',
+    Tanggal_Transaksi: ''
   })
 
   const form = ref<RealEstateForm>(defaultForm())
@@ -301,7 +309,10 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
     cities,
     createCity
   })
-  const media = usePropertyMedia(form)
+  const mediaImage = usePropertyMedia(form, 'File_Image')
+  const mediaDenah = usePropertyMedia(form, 'Id_Media_Denah')
+  const media3d = usePropertyMedia(form, 'Id_Media_3d')
+  const mediaDrive = usePropertyMedia(form, 'Id_Media_Drive')
 
   // Watchers
   watch([panjang, lebar], ([newP, newL]) => {
@@ -347,9 +358,22 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
 
 
   const initData = (itemData?: any) => {
-    media.photos.value = []
-    media.previewPhotos.value = []
-    media.deletedMediaIds.value = []
+    mediaImage.photos.value = []
+    mediaImage.previewPhotos.value = []
+    mediaImage.deletedMediaIds.value = []
+
+    mediaDenah.photos.value = []
+    mediaDenah.previewPhotos.value = []
+    mediaDenah.deletedMediaIds.value = []
+
+    media3d.photos.value = []
+    media3d.previewPhotos.value = []
+    media3d.deletedMediaIds.value = []
+
+    mediaDrive.photos.value = []
+    mediaDrive.previewPhotos.value = []
+    mediaDrive.deletedMediaIds.value = []
+
     location.searchQuery.value = ''
 
     if (itemData) {
@@ -399,8 +423,11 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
       }
 
       if (itemData.MediaUrls) {
-        media.previewPhotos.value = [...itemData.MediaUrls]
+        mediaImage.previewPhotos.value = [...itemData.MediaUrls]
       }
+      mediaDenah.loadExistingMedia(form.value.Id_Media_Denah || [])
+      media3d.loadExistingMedia(form.value.Id_Media_3d || [])
+      mediaDrive.loadExistingMedia(form.value.Id_Media_Drive || [])
 
       form.value.Ada_Minimal_Sewa = !!(itemData.Minimal_Sewa && itemData.Minimal_Sewa > 0)
       
@@ -464,8 +491,29 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
       const targetUrl = isEdit ? `/api/realEstate/update?no_id=${form.value.No_Id}` : '/api/realEstate/create'
       
       // Handle Media Uploads
-      const newMediaIds = await media.uploadAllMedia()
+      const [newMediaIds, newDenahIds, new3dIds, newDriveIds] = await Promise.all([
+        mediaImage.uploadAllMedia(),
+        mediaDenah.uploadAllMedia(),
+        media3d.uploadAllMedia(),
+        mediaDrive.uploadAllMedia()
+      ])
       
+      // Map Thumbnail ID if it's a new upload
+      let finalThumbnailId = form.value.Id_Media_Thumbnail
+      if (finalThumbnailId?.startsWith('local_img_')) {
+        const idx = parseInt(finalThumbnailId.replace('local_img_', ''), 10)
+        if (!isNaN(idx) && newMediaIds[idx]) finalThumbnailId = newMediaIds[idx]
+      } else if (finalThumbnailId?.startsWith('local_denah_')) {
+        const idx = parseInt(finalThumbnailId.replace('local_denah_', ''), 10)
+        if (!isNaN(idx) && newDenahIds[idx]) finalThumbnailId = newDenahIds[idx]
+      } else if (finalThumbnailId?.startsWith('local_3d_')) {
+        const idx = parseInt(finalThumbnailId.replace('local_3d_', ''), 10)
+        if (!isNaN(idx) && new3dIds[idx]) finalThumbnailId = new3dIds[idx]
+      } else if (finalThumbnailId?.startsWith('local_drive_')) {
+        const idx = parseInt(finalThumbnailId.replace('local_drive_', ''), 10)
+        if (!isNaN(idx) && newDriveIds[idx]) finalThumbnailId = newDriveIds[idx]
+      }
+
       // 1. Check if Kota is virtual
       let finalKotaId = form.value.Id_Kota
       if (finalKotaId) {
@@ -518,6 +566,8 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
       const currentLat = location.isLocationSelected.value ? String(location.currentCoords.lat) : ''
       const currentLng = location.isLocationSelected.value ? String(location.currentCoords.lng) : ''
 
+      const currentUserId = localStorage.getItem('no_id') || null
+
       const payload = { 
         ...form.value, 
         Status_Display: targetStatus,
@@ -526,16 +576,30 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
         Longitude: currentLng,
         Id_Area: finalAreaId,
         Id_Prioritas: finalPrioId,
-        Luas_Tanah: String(form.value.Luas_Tanah || '0'),
-        Luas_Bangunan: String(form.value.Luas_Bangunan || '0'),
-        Jumlah_Lantai: String(form.value.Jumlah_Lantai || '0'),
-        Jumlah_Kamar_Tidur: String(form.value.Jumlah_Kamar_Tidur || '0'),
-        Jumlah_Kamar_Mandi: String(form.value.Jumlah_Kamar_Mandi || '0'),
-        Jumlah_Carpot: String(form.value.Jumlah_Carpot || '0'),
-        Row_Jalan: form.value.Row_Jalan ? Number(form.value.Row_Jalan) : 0,
+        Luas_Tanah: Number(form.value.Luas_Tanah || 0),
+        Luas_Bangunan: Number(form.value.Luas_Bangunan || 0),
+        Jumlah_Lantai: Number(form.value.Jumlah_Lantai || 0),
+        Jumlah_Kamar_Tidur: Number(form.value.Jumlah_Kamar_Tidur || 0),
+        Jumlah_Kamar_Mandi: Number(form.value.Jumlah_Kamar_Mandi || 0),
+        Jumlah_Carpot: Number(form.value.Jumlah_Carpot || 0),
+        Row_Jalan: Number(form.value.Row_Jalan || 0),
         Daya_Listrik: String(form.value.Daya_Listrik || '0'),
+        Harga_Jual1: Number(form.value.Harga_Jual1 || 0),
+        Harga_Jual2: Number(form.value.Harga_Jual2 || 0),
+        Harga_Jual3: Number(form.value.Harga_Jual3 || 0),
+        Harga_Sewa1: Number(form.value.Harga_Sewa1 || 0),
+        Harga_Sewa2: Number(form.value.Harga_Sewa2 || 0),
+        Harga_Sewa3: Number(form.value.Harga_Sewa3 || 0),
         File_Image: [...new Set([...(form.value.File_Image || []), ...newMediaIds])], 
-        Flag_Sewa: form.value.Status_Transaksi?.includes('Sewa') ? 'Ya' : 'Tidak' 
+        Id_Media_Denah: [...new Set([...(form.value.Id_Media_Denah || []), ...newDenahIds])], 
+        Id_Media_3d: [...new Set([...(form.value.Id_Media_3d || []), ...new3dIds])], 
+        Id_Media_Drive: [...new Set([...(form.value.Id_Media_Drive || []), ...newDriveIds])], 
+        Id_Media_Thumbnail: finalThumbnailId,
+        Flag_Sewa: form.value.Status_Transaksi?.includes('Sewa') ? 'Ya' : 'Tidak',
+        Created_By: isEdit ? form.value.Created_By : currentUserId,
+        Updated_By: isEdit ? currentUserId : null,
+        Id_Customer: form.value.Id_Customer || null,
+        Tanggal_Transaksi: form.value.Tanggal_Transaksi || null
       }
       
       delete (payload as any).MediaUrls
@@ -545,7 +609,11 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
       await api[isEdit ? 'put' : 'post'](targetUrl, payload, { headers: { 'X-Jenis-User': 'admin' } })
       
       // Cleanup deleted media
-      await media.clearDeletedMedia()
+      await Promise.all([
+        mediaImage.clearDeletedMedia(),
+        mediaDenah.clearDeletedMedia(),
+        media3d.clearDeletedMedia()
+      ])
       
       success(isEdit ? 'Properti diperbarui' : 'Properti ditambah')
       form.value.Status_Display = targetStatus
@@ -584,6 +652,9 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
     handleWilayahSuccess,
     // Expose sub-composable members for template access
     ...location,
-    ...media
+    mediaImage,
+    mediaDenah,
+    media3d,
+    mediaDrive
   }
 }

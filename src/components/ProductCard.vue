@@ -17,12 +17,12 @@
         </div>
 
         <!-- Main Image/Video with Smooth Transition -->
-        <div v-if="product.MediaUrls && product.MediaUrls.length >= 1" class="absolute inset-0">
-          <template v-if="product.MediaUrls[0].ContentType?.startsWith('video/')">
+        <div v-if="thumbnailMedia" class="absolute inset-0">
+          <template v-if="thumbnailMedia.ContentType?.startsWith('video/')">
              <!-- Video Thumbnail -->
              <div class="size-full relative group-hover:scale-105 transition-transform duration-700">
                <video 
-                 :src="product.MediaUrls[0].Url || product.MediaUrls[0].Id_Media" 
+                 :src="thumbnailMedia.Url || thumbnailMedia.Id_Media" 
                  class="absolute inset-0 w-full h-full object-cover" 
                  preload="metadata" 
                  muted 
@@ -37,7 +37,7 @@
           </template>
           <img 
             v-else
-            :src="product.MediaUrls[0].Url || product.MediaUrls[0].Id_Media" 
+            :src="thumbnailMedia.Url || thumbnailMedia.Id_Media" 
             class="absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
             :class="isImageLoaded ? 'opacity-100' : 'opacity-0'"
             :loading="lazy ? 'lazy' : 'eager'"
@@ -355,6 +355,15 @@ const props = withDefaults(
     lazy: true
   }
 )
+
+const thumbnailMedia = computed(() => {
+  if (!props.product?.MediaUrls || !Array.isArray(props.product.MediaUrls) || props.product.MediaUrls.length === 0) return null
+  if (props.product.Id_Media_Thumbnail) {
+    const found = props.product.MediaUrls.find((m: any) => m && (m.Id_Media === props.product.Id_Media_Thumbnail || m.No_Id_Media === props.product.Id_Media_Thumbnail))
+    if (found) return found
+  }
+  return props.product.MediaUrls[0] || null
+})
 
 const hasMedia = computed(() => props.product?.MediaUrls && props.product.MediaUrls.length > 0)
 

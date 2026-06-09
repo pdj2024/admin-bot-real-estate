@@ -45,3 +45,4 @@ src/example-components
 
 #Keys
 /src/config/constants.ts
+/src/config/app.config.json

@@ -5,6 +5,7 @@ import Auth from '@/layouts/auth.vue'
 import { success, fail } from '@/utils/sweet-alert'
 import { ref, onMounted, computed } from 'vue'
 import api from '@/services/axios'
+import { useSettings } from '@/stores/settings'
 
 const router = useRouter()
 const route = useRoute()
@@ -113,6 +114,13 @@ const handleLogin = async (isQuick = false) => {
         }))
       } else {
         localStorage.removeItem('quick_login_data')
+      }
+
+      // Force settings store to re-initialize with new credentials context
+      try {
+        await useSettings().init(true)
+      } catch (err) {
+        console.error('Failed to initialize settings on login:', err)
       }
 
       success(`Halo ${localStorage.getItem('nama_display') || data.Nama_Display}! Selamat datang kembali`)

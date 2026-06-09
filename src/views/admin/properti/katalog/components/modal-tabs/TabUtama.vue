@@ -8,9 +8,7 @@ if (!state) {
   throw new Error('TabUtama must be used within a component providing propertyModalState')
 }
 
-const { form, previewPhotos, handlePhoto, removePhoto, isCompressing, currentCompressionIndex, totalVideosToCompress } = state
-
-const scrollContainer = ref<HTMLElement | null>(null)
+const { form } = state
 
 const dropdownTypeRef = ref<HTMLElement | null>(null)
 const dropdownCertRef = ref<HTMLElement | null>(null)
@@ -79,10 +77,6 @@ const selectCertificate = (type: string) => {
   isCertOpen.value = false
 }
 
-const onPhotoChange = (event: Event) => {
-  handlePhoto(event, scrollContainer.value)
-}
-
 const handleClickOutside = (event: MouseEvent) => {
   const target = event.target as Node
 
@@ -114,7 +108,7 @@ const currentHost = window.location.host
           <div>
             <span class="text-xs font-black text-slate-700 block uppercase tracking-wide">{{ form.Status_Display == 'Aktif' ? 'Tampil' : 'Draft' }}</span>
             <span class="text-[10px] font-bold mt-0.5 block" :class="form.Status_Display === 'Aktif' ? 'text-bejo-600' : 'text-slate-400'">
-              {{ form.Status_Display === 'Aktif' ? 'Properti ini dapat dilihat oleh tamu' : 'Properti disimpan sebagai draft' }}
+              {{ form.Status_Display === 'Aktif' ? 'Properti ini dapat dilihat oleh publik' : 'Properti disimpan sebagai draft' }}
             </span>
           </div>
           <button type="button" class="toggle shrink-0" :class="{ 'toggle-active': form.Status_Display === 'Aktif' }" @click="form.Status_Display = form.Status_Display === 'Aktif' ? 'Draft' : 'Aktif'">
@@ -189,52 +183,7 @@ const currentHost = window.location.host
         </div>
       </BaseFormGroup>
 
-      <div class="space-y-3">
-        <label class="label block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">GALERI GAMBAR PRODUK</label>
-        <div class="relative">
-          <!-- Compression Loading Overlay -->
-          <Transition enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0" enter-to-class="opacity-100" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0">
-            <div v-if="isCompressing" class="absolute inset-0 z-[60] bg-white/90 backdrop-blur-md rounded-2xl flex flex-col items-center justify-center border-2 border-dashed border-bejo-200">
-              <div class="relative">
-                <Icon icon="lucide:loader-2" class="size-10 text-bejo-600 animate-spin" />
-                <Icon icon="lucide:video" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-4 text-bejo-600" />
-              </div>
-              <p class="mt-4 text-[11px] font-black text-bejo-600 uppercase tracking-[0.2em] animate-pulse">
-                Mengompres Video {{ totalVideosToCompress > 1 ? `(${currentCompressionIndex}/${totalVideosToCompress})` : '' }}...
-              </p>
-              <p class="mt-1 text-[9px] font-bold text-slate-400 uppercase tracking-widest italic">Mohon tunggu sebentar, sedang mengoptimalkan ukuran</p>
-            </div>
-          </Transition>
-
-          <div ref="scrollContainer" class="preview-container flex flex-nowrap gap-3 overflow-x-auto pb-2 custom-scroll" :class="{ 'opacity-50 grayscale pointer-events-none': isCompressing }">
-            <template v-if="previewPhotos.length >= 1">
-              <div v-for="(img, i) in previewPhotos" :key="i" class="preview-box relative size-24 flex-shrink-0 group/img">
-                <!-- Video Thumbnail with Play Icon -->
-                <div v-if="img.ContentType?.startsWith('video/')" class="size-full relative rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
-                   <video :src="`${img.Url || img.Id_Media}#t=0.001`" class="size-full object-cover" preload="metadata" playsinline muted></video>
-                   <div class="absolute inset-0 flex items-center justify-center bg-black/20 group-hover/img:bg-black/10 transition-colors">
-                      <Icon icon="lucide:play" class="size-6 text-white fill-white/20" />
-                   </div>
-                </div>
-                <!-- Image Thumbnail -->
-                <img v-else :src="img.Url || img.Id_Media" class="size-full object-cover rounded-2xl border border-slate-200 shadow-sm transition-transform duration-500 group-hover/img:scale-105" />
-                
-                <button @click="removePhoto(i)" type="button" class="absolute -top-2 -right-2 size-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-all border-2 border-white scale-0 group-hover/img:scale-100">
-                  <Icon icon="lucide:x" class="size-3" />
-                </button>
-              </div>
-            </template>
-
-            <label class="size-24 border-2 border-dashed border-slate-200 rounded-2xl flex flex-shrink-0 flex-col items-center justify-center cursor-pointer hover:bg-bejo-50/50 hover:border-bejo-300 transition-all text-slate-400 group/add">
-              <Icon icon="lucide:plus" class="size-6 group-hover/add:text-bejo-600 transition-colors" />
-              <span class="text-[9px] font-black mt-1 group-hover/add:text-bejo-600 uppercase tracking-widest">Tambah</span>
-              <input type="file" multiple hidden @change="onPhotoChange" accept="image/*,video/*" />
-            </label>
-
-            <div v-if="!previewPhotos.length" class="flex-1 flex items-center h-24 px-6 border-2 border-dashed border-slate-100 rounded-2xl text-slate-300 text-[10px] font-black uppercase tracking-widest italic bg-slate-50/30">Belum ada foto</div>
-          </div>
-        </div>
-      </div>
+      <!-- Galeri Gambar Produk moved to TabMedia -->
     </div>
   </div>
 </template>

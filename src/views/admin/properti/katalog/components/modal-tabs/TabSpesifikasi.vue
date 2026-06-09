@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject } from 'vue'
+import { inject, ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { Icon } from '@iconify/vue'
 import BaseFormGroup from '@/components/common/BaseFormGroup.vue'
 
@@ -41,6 +41,116 @@ const addAkses = () => {
     newAkses.value = ''
   }
 }
+
+// Dropdowns State
+const dropdownHadapRef = ref<HTMLElement | null>(null)
+const dropdownPosisiRef = ref<HTMLElement | null>(null)
+const menuHadapRef = ref<HTMLElement | null>(null)
+const menuPosisiRef = ref<HTMLElement | null>(null)
+const dropdownStyles = ref({ hadap: {}, posisi: {} })
+
+const isHadapOpen = ref(false)
+const isPosisiOpen = ref(false)
+
+const searchHadap = ref('')
+const searchPosisi = ref('')
+
+const hadapOptions = [
+  { value: 'utara', label: 'Utara' },
+  { value: 'timur', label: 'Timur' },
+  { value: 'selatan', label: 'Selatan' },
+  { value: 'barat', label: 'Barat' },
+  { value: 'timur laut', label: 'Timur Laut' },
+  { value: 'tenggara', label: 'Tenggara' },
+  { value: 'barat daya', label: 'Barat Daya' },
+  { value: 'barat laut', label: 'Barat Laut' }
+]
+
+const posisiOptions = [
+  { value: 'normal', label: 'Normal' },
+  { value: 'hook', label: 'Hook' },
+  { value: 'tusuk sate', label: 'Tusuk Sate' }
+]
+
+const filteredHadapOptions = computed(() => {
+  if (!searchHadap.value) return hadapOptions
+  return hadapOptions.filter(o => o.label.toLowerCase().includes(searchHadap.value.toLowerCase()))
+})
+
+const filteredPosisiOptions = computed(() => {
+  if (!searchPosisi.value) return posisiOptions
+  return posisiOptions.filter(o => o.label.toLowerCase().includes(searchPosisi.value.toLowerCase()))
+})
+
+const updateDropdownStyles = (type: 'hadap' | 'posisi') => {
+  let targetRef = null
+  if (type === 'hadap') targetRef = dropdownHadapRef.value
+  else if (type === 'posisi') targetRef = dropdownPosisiRef.value
+
+  if (targetRef) {
+    const rect = (targetRef as any).$el.getBoundingClientRect()
+    dropdownStyles.value[type] = {
+      top: `${rect.bottom + 8}px`,
+      left: `${rect.left}px`,
+      width: `${rect.width}px`
+    }
+  }
+}
+
+const toggleHadap = () => {
+  isHadapOpen.value = !isHadapOpen.value
+  if (isHadapOpen.value) {
+    isPosisiOpen.value = false
+    nextTick(() => updateDropdownStyles('hadap'))
+  }
+}
+
+const togglePosisi = () => {
+  isPosisiOpen.value = !isPosisiOpen.value
+  if (isPosisiOpen.value) {
+    isHadapOpen.value = false
+    nextTick(() => updateDropdownStyles('posisi'))
+  }
+}
+
+const selectHadap = (value: string) => {
+  form.value.Hadap_Rumah = value
+  searchHadap.value = ''
+  isHadapOpen.value = false
+}
+
+const selectPosisi = (value: string) => {
+  form.value.Posisi_Properti = value
+  searchPosisi.value = ''
+  isPosisiOpen.value = false
+}
+
+const getHadapLabel = (value: string) => {
+  const opt = hadapOptions.find(o => o.value === value)
+  return opt ? opt.label : ''
+}
+
+const getPosisiLabel = (value: string) => {
+  const opt = posisiOptions.find(o => o.value === value)
+  return opt ? opt.label : ''
+}
+
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as Node
+  if (dropdownHadapRef.value && !(dropdownHadapRef.value as any).$el.contains(target) && !menuHadapRef.value?.contains(target)) {
+    isHadapOpen.value = false
+  }
+  if (dropdownPosisiRef.value && !(dropdownPosisiRef.value as any).$el.contains(target) && !menuPosisiRef.value?.contains(target)) {
+    isPosisiOpen.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 </script>
 
 <template>
@@ -145,6 +255,56 @@ const addAkses = () => {
               <span class="text-slate-300 font-bold">×</span>
               <input v-model="lebar" placeholder="L" class="field-input text-center !px-2 flex-1" />
             </div>
+          </BaseFormGroup>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <BaseFormGroup label="HADAP RUMAH" icon="lucide:compass" ref="dropdownHadapRef">
+            <button @click="toggleHadap" type="button" class="field-input h-11 !pl-11 flex items-center justify-between group bg-white border-slate-200">
+              <span class="text-xs font-bold" :class="form.Hadap_Rumah ? 'text-slate-700' : 'text-slate-300'">
+                {{ form.Hadap_Rumah ? getHadapLabel(form.Hadap_Rumah) : 'Pilih Arah Hadap' }}
+              </span>
+              <Icon icon="lucide:chevron-down" class="size-4 text-slate-400 group-hover:text-bejo-600 transition-transform" :class="isHadapOpen ? 'rotate-180' : ''" />
+            </button>
+            <Teleport to="body">
+              <div v-if="isHadapOpen" ref="menuHadapRef" class="fixed z-[1000] bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden scale-in" :style="dropdownStyles.hadap">
+                <div class="px-4 py-3 border-b border-slate-50 bg-slate-50/50">
+                  <div class="relative">
+                    <Icon icon="lucide:search" class="absolute left-0 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
+                    <input v-model="searchHadap" placeholder="CARI ARAH HADAP..." class="w-full bg-transparent pl-6 border-none text-[10px] font-black focus:ring-0 placeholder:text-slate-400 text-slate-700 uppercase tracking-widest" />
+                  </div>
+                </div>
+                <div class="max-h-60 overflow-y-auto custom-scroll py-1">
+                  <button v-for="opt in filteredHadapOptions" :key="opt.value" @click="selectHadap(opt.value)" type="button" class="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors flex items-center justify-between uppercase tracking-wide">
+                    <span>{{ opt.label }}</span>
+                    <Icon v-if="form.Hadap_Rumah === opt.value" icon="lucide:check" class="size-4 text-bejo-600" />
+                  </button>
+                </div>
+              </div>
+            </Teleport>
+          </BaseFormGroup>
+          <BaseFormGroup label="POSISI PROPERTI" icon="lucide:layers-2" ref="dropdownPosisiRef">
+            <button @click="togglePosisi" type="button" class="field-input h-11 !pl-11 flex items-center justify-between group bg-white border-slate-200">
+              <span class="text-xs font-bold" :class="form.Posisi_Properti ? 'text-slate-700' : 'text-slate-300'">
+                {{ form.Posisi_Properti ? getPosisiLabel(form.Posisi_Properti) : 'Pilih Posisi' }}
+              </span>
+              <Icon icon="lucide:chevron-down" class="size-4 text-slate-400 group-hover:text-bejo-600 transition-transform" :class="isPosisiOpen ? 'rotate-180' : ''" />
+            </button>
+            <Teleport to="body">
+              <div v-if="isPosisiOpen" ref="menuPosisiRef" class="fixed z-[1000] bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden scale-in" :style="dropdownStyles.posisi">
+                <div class="px-4 py-3 border-b border-slate-50 bg-slate-50/50">
+                  <div class="relative">
+                    <Icon icon="lucide:search" class="absolute left-0 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
+                    <input v-model="searchPosisi" placeholder="CARI POSISI..." class="w-full bg-transparent pl-6 border-none text-[10px] font-black focus:ring-0 placeholder:text-slate-400 text-slate-700 uppercase tracking-widest" />
+                  </div>
+                </div>
+                <div class="max-h-60 overflow-y-auto custom-scroll py-1">
+                  <button v-for="opt in filteredPosisiOptions" :key="opt.value" @click="selectPosisi(opt.value)" type="button" class="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors flex items-center justify-between uppercase tracking-wide">
+                    <span>{{ opt.label }}</span>
+                    <Icon v-if="form.Posisi_Properti === opt.value" icon="lucide:check" class="size-4 text-bejo-600" />
+                  </button>
+                </div>
+              </div>
+            </Teleport>
           </BaseFormGroup>
         </div>
 

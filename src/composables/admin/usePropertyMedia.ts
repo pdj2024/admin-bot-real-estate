@@ -2,7 +2,7 @@ import { ref, nextTick } from 'vue'
 import axios from 'axios'
 import api from '@/services/axios'
 
-export function usePropertyMedia(form: any) {
+export function usePropertyMedia(form: any, fieldKey = 'File_Image') {
   const photos = ref<File[]>([])
   const extensionsPhotos = ref<string[]>([])
   const previewPhotos = ref<any[]>([])
@@ -115,10 +115,10 @@ export function usePropertyMedia(form: any) {
       selectedFiles.value.splice(newUploadIndex, 1)
     } else {
       const idToRemove = photoToRemove.No_Id_Media
-      if (form.value.File_Image) {
-        const idIndex = form.value.File_Image.indexOf(idToRemove)
+      if (form.value[fieldKey]) {
+        const idIndex = form.value[fieldKey].indexOf(idToRemove)
         if (idIndex !== -1) {
-          form.value.File_Image.splice(idIndex, 1)
+          form.value[fieldKey].splice(idIndex, 1)
           deletedMediaIds.value.push(idToRemove)
         }
       }
@@ -126,7 +126,36 @@ export function usePropertyMedia(form: any) {
     previewPhotos.value.splice(index, 1)
   }
 
-
+  const loadExistingMedia = async (ids: string[]) => {
+    previewPhotos.value = []
+    if (!ids || ids.length === 0) return
+    try {
+      const { data } = await api.post('/api/mediacloud/read-url-batch', { ids }, {
+        headers: { 'X-Jenis-User': 'admin' }
+      })
+      if (data.success) {
+        previewPhotos.value = ids.map(id => {
+          const resolved = data.success[id]
+          return {
+            Id_Media: resolved?.Url || id,
+            No_Id_Media: id,
+            Url: resolved?.Url || null,
+            ContentType: resolved?.ContentType || 'image/jpeg',
+            Size: resolved?.Size || 0
+          }
+        })
+      }
+    } catch (err) {
+      console.error('Failed to load existing GCS previews:', err)
+      previewPhotos.value = ids.map(id => ({
+        Id_Media: id,
+        No_Id_Media: id,
+        Url: null,
+        ContentType: 'image/jpeg',
+        Size: 0
+      }))
+    }
+  }
 
   const sendMedia = async (uploadUrl: string, media: File) => {
     const response = await axios.put(uploadUrl, media, { 
@@ -221,6 +250,7 @@ export function usePropertyMedia(form: any) {
     previewPhotos,
     handlePhoto,
     removePhoto,
+    loadExistingMedia,
     uploadAllMedia,
     clearDeletedMedia,
     deletedMediaIds

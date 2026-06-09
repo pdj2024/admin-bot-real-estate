@@ -1,8 +1,9 @@
 import axios from 'axios'
 import router from '@/router'
 import { isTokenExpired } from '@/utils/token'
+import { API_BASE_URL } from '@/config/constants'
 
-const baseURL = 'https://wabotapi.padajaya.biz.id'
+const baseURL = API_BASE_URL
 
 const api = axios.create({
   baseURL: baseURL,

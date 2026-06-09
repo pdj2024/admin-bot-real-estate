@@ -252,6 +252,20 @@ const handleShare = () => {
           Kontrol Admin
        </h6>
        <div class="grid grid-cols-1 gap-3">
+          <!-- Created By -->
+          <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+             <div class="flex items-center gap-3">
+                <div class="size-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-slate-100 text-slate-400">
+                   <Icon icon="lucide:user-circle" class="size-5" />
+                </div>
+                <div>
+                   <span class="block text-xs font-black text-slate-900 uppercase tracking-wide">Dibuat Oleh</span>
+                   <span class="block text-[10px] font-bold text-slate-400">{{ product?.Email || '-' }}</span>
+                </div>
+             </div>
+          </div>
+
+          <!-- Share Link -->
           <button @click="handleShare" class="flex items-center justify-between p-4 bg-slate-50 hover:bg-bejo-50 rounded-2xl transition-all group border border-slate-100 hover:border-bejo-200">
              <div class="flex items-center gap-3">
                 <div class="size-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-slate-100 group-hover:border-bejo-200 group-hover:text-bejo-600">

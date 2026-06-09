@@ -178,7 +178,7 @@ const table = useVueTable({
   autoResetPageIndex: false,
   getRowId: (row) => row.No_Id,
   initialState: {
-    pagination: { pageSize: 15 }
+    pagination: { pageSize: 12 }
   }
 })
 
