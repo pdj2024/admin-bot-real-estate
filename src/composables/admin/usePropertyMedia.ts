@@ -205,7 +205,10 @@ export function usePropertyMedia(form: any) {
 
   const clearDeletedMedia = async () => {
     if (deletedMediaIds.value.length) {
-      api.post('/api/mediacloud/delete-batch', { ids: deletedMediaIds.value }).catch(() => {})
+      api.delete('/api/mediacloud/delete-batch', {
+        data: { ids: deletedMediaIds.value },
+        headers: { 'X-Jenis-User': 'admin' }
+      }).catch(() => {})
       deletedMediaIds.value = []
     }
   }
