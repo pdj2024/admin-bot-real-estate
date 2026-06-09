@@ -127,9 +127,9 @@ const handlePublish = async () => {
             <button :disabled="isLoading" @click="handleClose" class="w-full sm:w-auto px-6 py-2.5 sm:py-3 text-xs font-black text-slate-400 hover:text-red-500 uppercase tracking-widest transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-center">Batal</button>
           </div>
 
-          <div class="flex flex-col xs:flex-row gap-2 sm:gap-4 items-stretch xs:items-center w-full sm:w-auto order-first sm:order-last">
+          <div class="flex flex-row gap-2 sm:gap-4 items-center w-full sm:w-auto order-first sm:order-last">
             <!-- Status Toggle Button (Draft <-> Aktif) - Sembunyikan jika sudah Terjual/Tersewa -->
-            <button v-if="form.Status_Properti !== 'Terjual' && form.Status_Properti !== 'Tersewa'" :disabled="isLoading" @click="form.Status_Display === 'Draft' ? handlePublish() : handleSaveDraft()" class="w-full sm:w-auto justify-center px-4 sm:px-6 py-2.5 sm:py-3 bg-slate-50 text-slate-500 text-[10px] font-black rounded-xl sm:rounded-[1.25rem] transition-all hover:bg-slate-100 active:scale-95 flex items-center gap-2 group disabled:opacity-50 border border-slate-100 tracking-widest uppercase">
+            <button v-if="form.Status_Properti !== 'Terjual' && form.Status_Properti !== 'Tersewa'" :disabled="isLoading" @click="form.Status_Display === 'Draft' ? handlePublish() : handleSaveDraft()" class="flex-1 sm:flex-none justify-center px-4 sm:px-6 py-2.5 sm:py-3 bg-slate-50 text-slate-500 text-[10px] font-black rounded-xl sm:rounded-[1.25rem] transition-all hover:bg-slate-100 active:scale-95 flex items-center gap-2 group disabled:opacity-50 border border-slate-100 tracking-widest uppercase">
               <Icon v-if="isLoading" icon="lucide:loader-2" class="size-4 animate-spin" />
               <template v-else>
                 <Icon :icon="form.Status_Display === 'Draft' ? 'lucide:eye' : 'lucide:archive'" class="size-4 group-hover:scale-110 transition-transform" />
@@ -137,13 +137,13 @@ const handlePublish = async () => {
               </template>
             </button>
 
-            <div class="w-full sm:w-auto">
-              <button v-if="activeTab !== 'spesifikasi'" @click="activeTab = activeTab === 'utama' ? 'lokasi' : 'spesifikasi'" class="w-full sm:w-auto justify-center px-4 sm:px-8 py-2.5 sm:py-3 bg-slate-800 text-white text-[10px] font-black rounded-xl sm:rounded-[1.25rem] transition-all hover:bg-slate-900 active:scale-95 flex items-center gap-2 group uppercase tracking-widest shadow-lg shadow-slate-800/10">
+            <div class="flex-1 sm:w-auto">
+              <button v-if="activeTab !== 'spesifikasi'" @click="activeTab = activeTab === 'utama' ? 'lokasi' : 'spesifikasi'" class="w-full justify-center px-4 sm:px-8 py-2.5 sm:py-3 bg-slate-800 text-white text-[10px] font-black rounded-xl sm:rounded-[1.25rem] transition-all hover:bg-slate-900 active:scale-95 flex items-center gap-2 group uppercase tracking-widest shadow-lg shadow-slate-800/10">
                 {{ activeTab === 'utama' ? 'Lanjut ke Lokasi' : 'Lanjut ke Spesifikasi' }}
                 <Icon icon="lucide:arrow-right" class="size-4 group-hover:translate-x-1 transition-transform" />
               </button>
 
-              <button v-else :disabled="isLoading" @click="() => modalState.submitForm()" class="w-full sm:w-auto justify-center px-5 sm:px-10 py-2.5 sm:py-3 bg-bejo-600 text-white text-[10px] font-black rounded-xl sm:rounded-[1.25rem] shadow-xl shadow-bejo-600/20 transition-all hover:scale-[1.03] active:scale-95 flex items-center gap-2 disabled:opacity-70 disabled:scale-100 uppercase tracking-widest">
+              <button v-else :disabled="isLoading" @click="() => modalState.submitForm()" class="w-full justify-center px-5 sm:px-10 py-2.5 sm:py-3 bg-bejo-600 text-white text-[10px] font-black rounded-xl sm:rounded-[1.25rem] shadow-xl shadow-bejo-600/20 transition-all hover:scale-[1.03] active:scale-95 flex items-center gap-2 disabled:opacity-70 disabled:scale-100 uppercase tracking-widest">
                 <Icon v-if="isLoading" icon="lucide:loader-2" class="size-4 animate-spin shrink-0" />
                 <Icon v-else icon="lucide:save" class="size-4 shrink-0" />
                 <span class="truncate">{{ isLoading ? 'Proses...' : form.No_Id ? 'Simpan' : 'Tambah Properti' }}</span>
