@@ -58,6 +58,16 @@ export interface RealEstateForm {
   Id_Area: string
   Id_Prioritas: string
   _isVirtualArea?: boolean
+  Id_Media_Denah: string[]
+  Id_Media_3d: string[]
+  Id_Media_Thumbnail: string
+  Id_Media_Drive: string[]
+  Hadap_Rumah: string
+  Posisi_Properti: string
+  Serah_Terima: string | null
+  Kode_Item_Group: string | null
+  Created_By: string | null
+  Updated_By: string | null
 }
 
 export function usePropertyModal(emit: any, handleCloseFn: () => void) {
@@ -271,7 +281,17 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
     Kelurahan: '',
     Id_Kota: '',
     Id_Area: '',
-    Id_Prioritas: ''
+    Id_Prioritas: '',
+    Id_Media_Denah: [],
+    Id_Media_3d: [],
+    Id_Media_Thumbnail: '',
+    Id_Media_Drive: [],
+    Hadap_Rumah: '',
+    Posisi_Properti: '',
+    Serah_Terima: null,
+    Kode_Item_Group: null,
+    Created_By: null,
+    Updated_By: null
   })
 
   const form = ref<RealEstateForm>(defaultForm())
@@ -333,7 +353,10 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
     location.searchQuery.value = ''
 
     if (itemData) {
-      form.value = JSON.parse(JSON.stringify(itemData))
+      form.value = {
+        ...defaultForm(),
+        ...JSON.parse(JSON.stringify(itemData))
+      }
       
       // 1. Detect location prioritizing Latitude and Longitude fields
       if (itemData.Latitude && itemData.Longitude) {
