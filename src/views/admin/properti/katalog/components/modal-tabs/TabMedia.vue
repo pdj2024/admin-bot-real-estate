@@ -181,7 +181,7 @@ const onThreeDChange = (event: Event) => {
 
      <!-- 3. Galeri Gambar Produk -->
     <div class="space-y-3">
-      <label class="label block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Foto</label>
+      <label class="label block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Foto Lainnya</label>
       <div class="relative">
         <div class="preview-container flex flex-wrap gap-4">
           <div v-for="(img, i) in mediaImage.previewPhotos.value" :key="i" class="preview-box relative size-28 flex-shrink-0 group/img rounded-2xl overflow-hidden border-2 transition-all duration-200 shadow-sm"
@@ -213,7 +213,7 @@ const onThreeDChange = (event: Event) => {
           <label class="size-28 border-2 border-dashed border-slate-200 rounded-2xl flex flex-shrink-0 flex-col items-center justify-center cursor-pointer hover:bg-bejo-50/50 hover:border-bejo-300 transition-all text-slate-400 group/add">
             <Icon icon="lucide:plus" class="size-6 group-hover/add:text-bejo-600 transition-colors" />
             <span class="text-[9px] font-black mt-1 group-hover/add:text-bejo-600 uppercase tracking-widest">Tambah</span>
-            <input type="file" multiple hidden @change="onPhotoChange" accept="image/*,video/*" />
+            <input type="file" multiple hidden @change="(e) => mediaImage.handlePhoto(e, null)" accept="image/*,video/*" />
           </label>
         </div>
       </div>
@@ -221,7 +221,8 @@ const onThreeDChange = (event: Event) => {
 
     <!-- 4. Google Drive Links -->
     <div class="space-y-4 pt-4 border-t border-slate-100">
-        <BaseFormGroup label="TAUTAN DOKUMEN GOOGLE DRIVE (AKAN DIUNDUH KE GCS)">
+        <BaseFormGroup>
+          <label class="label block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Foto Lainnya</label>
           <div class="flex items-center space-x-2">
             <div class="relative flex-grow">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
