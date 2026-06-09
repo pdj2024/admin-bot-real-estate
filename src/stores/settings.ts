@@ -134,6 +134,18 @@ export const useSettings = defineStore('settings', () => {
           colorPrimary: theme.primaryColor,
           colorSecondary: theme.secondaryColor
         })
+        
+        // Sync with useLayout to prevent reset
+        const { useLayout } = await import('@/stores/layout')
+        const layoutStore = useLayout()
+        layoutStore.setSideNavSize(theme.sidebarType as any)
+
+        // Save for instant UI next load
+        localStorage.setItem('app_local_settings', JSON.stringify({
+          sidenavSize: theme.sidebarType,
+          colorPrimary: theme.primaryColor,
+          colorSecondary: theme.secondaryColor
+        }))
       }
     } catch (err) {
       console.error('Fetch default settings error:', err)

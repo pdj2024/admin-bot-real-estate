@@ -22,6 +22,7 @@ const performRefresh = async (): Promise<string | null> => {
   const roleUser = localStorage.getItem('role_user') || 'admin'
   
   if (!refreshToken || refreshToken === 'undefined') {
+    handleLogout()
     throw new Error('Refresh token missing')
   }
 
@@ -42,11 +43,8 @@ const performRefresh = async (): Promise<string | null> => {
 
     return newToken
   } catch (err: any) {
-    // Jika server mengembalikan 401/403 atau refresh token ditolak
-    if (err.response?.status === 401 || err.response?.status === 403) {
-      console.error('Session expired: Refresh token is invalid')
-      handleLogout()
-    }
+    console.error('Session expired: Refresh token failed', err)
+    handleLogout()
     throw err
   }
 }
@@ -72,8 +70,9 @@ const handleLogout = () => {
   localStorage.removeItem('no_id_media')
   localStorage.removeItem('user_detail')
   
-  if (router.currentRoute.value.meta.requiresAuth || router.currentRoute.value.name === 'Login') {
-    router.push({ name: 'Login', query: { expired: '1', redirect: router.currentRoute.value.fullPath } })
+  // Force redirect to login if requiring auth
+  if (router.currentRoute.value.meta.requiresAuth || router.currentRoute.value.name === 'Login' || window.location.pathname.startsWith('/chat') || window.location.pathname.startsWith('/dashboard')) {
+    window.location.href = `/login?expired=1&redirect=${encodeURIComponent(window.location.pathname)}`
   }
 }
 
@@ -93,16 +92,15 @@ api.interceptors.request.use(async (config) => {
 
   if (token && token !== 'undefined' && isTokenExpired(token)) {
     try {
-      // Cek apakah tab lain sudah me-refresh token baru
       const possiblyNewToken = localStorage.getItem('token')
       if (possiblyNewToken && possiblyNewToken !== 'undefined' && !isTokenExpired(possiblyNewToken)) {
          token = possiblyNewToken
       } else {
          token = await getOrStartRefresh()
       }
-    } catch {
-      // Refresh failed proactively
-      token = null
+    } catch (err) {
+      handleLogout()
+      return Promise.reject(err)
     }
   }
 
@@ -110,13 +108,10 @@ api.interceptors.request.use(async (config) => {
     config.headers.Authorization = `Bearer ${token}`
   }
 
-  const roleUser = localStorage.getItem('role_user')
-  if (roleUser) {
-    config.headers['X-Jenis-User'] = roleUser
-  }
-
   return config
-}, (error) => Promise.reject(error))
+}, (error) => {
+  return Promise.reject(error)
+})
 
 // Response Interceptor: Reactive Refresh
 api.interceptors.response.use(
@@ -124,10 +119,8 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config
 
-    // Handle 401 Unauthorized
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true
-
       try {
         const newToken = await getOrStartRefresh()
         if (newToken) {
@@ -135,16 +128,13 @@ api.interceptors.response.use(
           return api(originalRequest)
         }
       } catch (err) {
-        // Refresh token failed, performRefresh will have handled logout if it was a 401/403
+        handleLogout()
         return Promise.reject(err)
       }
     }
     
-    // If we already retried and still get 401, or it's a 403
     if (error.response?.status === 401 || error.response?.status === 403) {
-       if (router.currentRoute.value.meta.requiresAuth) {
-         handleLogout()
-       }
+       handleLogout()
     }
 
     return Promise.reject(error)
