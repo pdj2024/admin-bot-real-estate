@@ -70,7 +70,7 @@ const formatText = (text: string) => {
     <div class="card relative transition-all duration-700 border-none shadow-premium bg-white rounded-[2.5rem] overflow-hidden">
       <div class="card-body p-8 md:p-10">
         <!-- Header: Title & Address -->
-        <div class="mb-10 border-b border-slate-100 pb-10 relative">
+        <div class="mb-6 border-b border-slate-100 pb-6 relative">
           <!-- Badges -->
           <div v-if="product" class="flex flex-wrap items-center gap-2 mb-5">
             <div v-for="tag in product.Status_Transaksi" :key="tag" class="px-4 py-1 rounded-full bg-bejo-500 text-white text-[9px] font-black uppercase tracking-widest shadow-sm shadow-bejo-500/20">
@@ -202,19 +202,16 @@ const formatText = (text: string) => {
         </div>
 
         <!-- Accessibility -->
-        <div class="mb-14">
+        <div class="mb-14" v-if="!product || (product?.Akses_Jalan && product.Akses_Jalan.filter(a => a && a.trim() !== '').length > 0)">
           <h6 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-8 flex items-center gap-3">
              <div class="w-8 h-[2px] bg-slate-200 rounded-full"></div>
              Aksesibilitas
           </h6>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 pl-4">
             <template v-if="product">
-              <div v-for="(akses, idx) in product?.Akses_Jalan" :key="idx" class="flex items-center gap-4 group">
+              <div v-for="(akses, idx) in product?.Akses_Jalan?.filter(a => a && a.trim() !== '')" :key="idx" class="flex items-center gap-4 group">
                 <div class="size-2 rounded-full bg-red-500 shadow-lg shadow-red-500/20 group-hover:scale-125 transition-transform"></div>
                 <span class="text-sm md:text-base font-bold text-slate-700 tracking-tight">{{ akses }}</span>
-              </div>
-              <div v-if="!product?.Akses_Jalan || product.Akses_Jalan.length === 0" class="text-sm font-bold text-slate-400 italic">
-                Informasi akses jalan tidak tersedia
               </div>
             </template>
             <template v-else>

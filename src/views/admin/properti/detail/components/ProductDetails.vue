@@ -69,7 +69,7 @@ const formatText = (text: string) => {
     <div class="card relative transition-all duration-700 border-none shadow-premium bg-white rounded-[2.5rem] overflow-hidden">
       <div class="card-body p-8 md:p-10">
         <!-- Header: Title & Address -->
-        <div class="mb-10 border-b border-slate-100 pb-10 relative">
+        <div class="mb-6 border-b border-slate-100 pb-6 relative">
           <!-- Badges -->
           <div v-if="product" class="flex flex-wrap items-center gap-2 mb-5">
             <div v-for="tag in product.Status_Transaksi" :key="tag" class="px-4 py-1 rounded-full bg-bejo-500 text-white text-[9px] font-black uppercase tracking-widest shadow-sm shadow-bejo-500/20">
@@ -80,7 +80,7 @@ const formatText = (text: string) => {
             <div class="h-6 w-16 bg-slate-100 rounded-full"></div>
           </div>
 
-          <h1 class="text-4xl md:text-5xl font-black tracking-tighter mb-4 uppercase leading-[0.85] text-slate-900" :class="!product ? 'text-transparent bg-slate-200 rounded-2xl animate-pulse select-none' : ''">
+          <h1 class="text-4xl md:text-6xl font-black tracking-tighter mb-4 uppercase leading-[0.85] text-slate-900" :class="!product ? 'text-transparent bg-slate-200 rounded-2xl animate-pulse select-none' : ''">
             {{ product?.Nama_Produk || 'Memuat Nama Properti...' }}
           </h1>
           <div class="flex items-start gap-2" :class="!product ? 'text-transparent bg-slate-200 rounded-lg animate-pulse select-none w-fit' : 'text-slate-500'">
@@ -139,7 +139,7 @@ const formatText = (text: string) => {
           <div v-show="!product || product?.Status_Transaksi?.includes('Jual')" class="bg-slate-50/50 p-6 rounded-3xl border border-slate-100 relative group overflow-hidden">
             <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-2" :class="!product ? 'text-transparent bg-slate-200 rounded animate-pulse w-fit select-none' : ''">Harga Jual</p>
             <h4 class="flex flex-wrap items-center gap-x-4 gap-y-1">
-              <span class="font-black text-3xl text-slate-900 tracking-tighter" :class="!product ? 'text-transparent bg-slate-200 rounded-xl animate-pulse select-none' : ''">
+              <span class="font-black text-3xl md:text-4xl text-slate-900 tracking-tighter" :class="!product ? 'text-transparent bg-slate-200 rounded-xl animate-pulse select-none' : ''">
                 {{ !product ? formatCurrency(5000000000) : (product?.Harga_Jual2 == 0 ? formatCurrency(product.Harga_Jual1) : formatCurrency(product.Harga_Jual2)) }}
               </span>
               <div v-if="product?.Harga_Jual2 && product?.Harga_Jual2 != 0 && product && app.viewDiscount" class="flex items-center gap-2 mt-1">
@@ -157,7 +157,7 @@ const formatText = (text: string) => {
           <div v-show="!product || product?.Status_Transaksi?.includes('Sewa')" class="bg-bejo-50/30 p-6 rounded-3xl border border-bejo-100 relative group overflow-hidden">
             <p class="text-[10px] text-bejo-600 font-black uppercase tracking-widest mb-2" :class="!product ? 'text-transparent bg-slate-200 rounded animate-pulse w-fit select-none' : ''">Harga Sewa</p>
             <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
-              <h4 class="font-black text-3xl text-bejo-600 tracking-tighter" :class="!product ? 'text-transparent bg-slate-200 rounded-xl animate-pulse select-none' : ''">
+              <h4 class="font-black text-3xl md:text-4xl text-bejo-600 tracking-tighter" :class="!product ? 'text-transparent bg-slate-200 rounded-xl animate-pulse select-none' : ''">
                 {{ !product ? formatCurrency(150000000) : formatCurrency(product?.Harga_Sewa2 == 0 ? product.Harga_Sewa1 : product?.Harga_Sewa2 || 0) }}
               </h4>
               <div v-if="product?.Harga_Sewa2 && product?.Harga_Sewa2 != 0 && product && app.viewDiscount" class="flex items-center gap-2 mt-1">
@@ -195,19 +195,16 @@ const formatText = (text: string) => {
         </div>
 
         <!-- Accessibility -->
-        <div class="mb-14">
+        <div class="mb-14" v-if="!product || (product?.Akses_Jalan && product.Akses_Jalan.filter(a => a && a.trim() !== '').length > 0)">
           <h6 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-8 flex items-center gap-3">
              <div class="w-8 h-[2px] bg-slate-200 rounded-full"></div>
              Aksesibilitas
           </h6>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 pl-4">
             <template v-if="product">
-              <div v-for="(akses, idx) in product?.Akses_Jalan" :key="idx" class="flex items-center gap-4 group">
+              <div v-for="(akses, idx) in product?.Akses_Jalan?.filter(a => a && a.trim() !== '')" :key="idx" class="flex items-center gap-4 group">
                 <div class="size-2 rounded-full bg-red-500 shadow-lg shadow-red-500/20 group-hover:scale-125 transition-transform"></div>
                 <span class="text-sm md:text-base font-bold text-slate-700 tracking-tight">{{ akses }}</span>
-              </div>
-              <div v-if="!product?.Akses_Jalan || product.Akses_Jalan.length === 0" class="text-sm font-bold text-slate-400 italic">
-                Informasi akses jalan tidak tersedia
               </div>
             </template>
             <template v-else>

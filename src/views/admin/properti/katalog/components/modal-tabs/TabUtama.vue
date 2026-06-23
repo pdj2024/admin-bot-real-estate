@@ -175,7 +175,7 @@ const currentHost = window.location.host
     <div class="space-y-6">
       <!-- Sembunyikan toggle draft jika sudah Terjual/Tersewa -->
       <div v-if="form.No_Id && form.Status_Properti !== 'Terjual' && form.Status_Properti !== 'Tersewa'" class="field">
-        <label class="label mb-2">TAMPILKAN KATALOG</label>
+        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 shrink-0 ml-1">TAMPILKAN KATALOG</label>
         <div class="toggle-box">
           <div>
             <span class="text-xs font-black text-slate-700 block uppercase tracking-wide">{{ form.Status_Display == 'Aktif' ? 'Tampil' : 'Draft' }}</span>

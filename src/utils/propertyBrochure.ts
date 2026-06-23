@@ -313,49 +313,52 @@ export const downloadBrochure = async (product: any, businessSettings: any, appS
     doc.text(`Tawaran Eksklusif dari ${businessSettings.appName || 'Rumah Rejeki'}`, col1X, subTitleY)
 
     const spY = Math.max(80, subTitleY + 12)
-    doc.setFillColor(darkOrange)
-    doc.roundedRect(col1X, spY, 65, 10, 3, 3, 'F')
-    doc.setTextColor(255, 255, 255)
-    doc.setFontSize(8.5)
-    doc.text('MENGAPA MEMILIH KAMI?', col1X + 32.5, spY + 6.5, { align: 'center' })
-
-    doc.setTextColor(slateColor)
-    doc.setFontSize(9.5)
-    doc.setFont('helvetica', 'normal')
     let aY = spY + 16
-    const pts = product.Akses_Jalan || ['3 Menit ke Pondok Indah Mall', '5 Menit ke RS Pondok Indah', '10 Menit ke Tol JORR', '5 Menit ke Jakarta Intercultural School']
-    pts.slice(0, 4).forEach((p: string) => {
-      // Circle
-      doc.setDrawColor(primaryColor)
-      doc.setLineWidth(0.5)
-      doc.circle(col1X + 4, aY - 1.5, 2.5, 'S')
-      
-      // Checkmark: path starts relative to box
-      doc.line(col1X + 3, aY - 1.5, col1X + 3.8, aY - 0.75)
-      doc.line(col1X + 3.8, aY - 0.75, col1X + 5, aY - 2.25)
-      
-      const pLines = doc.splitTextToSize(p, 72)
-      doc.text(pLines, col1X + 10, aY)
-      aY += pLines.length * 3.5 + 3.5 // margin-bottom: 3.5mm in HTML
-    })
+    const imgY = 135
 
-    const imgY = Math.max(135, aY)
+    const ptsRaw = product.Akses_Jalan || ['3 Menit ke Pondok Indah Mall', '5 Menit ke RS Pondok Indah', '10 Menit ke Tol JORR', '5 Menit ke Jakarta Intercultural School']
+    const pts = ptsRaw.filter((p: string) => p && p.trim() !== '')
+
+    if (pts.length > 0) {
+      doc.setFillColor(darkOrange)
+      doc.roundedRect(col1X, spY, 65, 10, 3, 3, 'F')
+      doc.setTextColor(255, 255, 255)
+      doc.setFontSize(8.5)
+      doc.text('MENGAPA MEMILIH KAMI?', col1X + 32.5, spY + 6.5, { align: 'center' })
+
+      doc.setTextColor(slateColor)
+      doc.setFontSize(9.5)
+      doc.setFont('helvetica', 'normal')
+      
+      pts.slice(0, 4).forEach((p: string) => {
+        doc.setDrawColor(primaryColor)
+        doc.setLineWidth(0.5)
+        doc.circle(col1X + 4, aY - 1.5, 2.5, 'S')
+        
+        doc.line(col1X + 3, aY - 1.5, col1X + 3.8, aY - 0.75)
+        doc.line(col1X + 3.8, aY - 0.75, col1X + 5, aY - 2.25)
+        
+        const pLines = doc.splitTextToSize(p, 72)
+        doc.text(pLines, col1X + 10, aY)
+        aY += pLines.length * 3.5 + 3.5
+      })
+    }
+
+    const finalImgY = Math.max(imgY, aY)
     
     // Outer white container with orange border
     doc.setFillColor(255, 255, 255)
     doc.setDrawColor(primaryColor)
     doc.setLineWidth(1)
-    doc.roundedRect(col1X, imgY, 80, 50, 4, 4, 'FD')
+    doc.roundedRect(col1X, finalImgY, 80, 50, 4, 4, 'FD')
 
     if (images[0]) {
       try {
-        // Image is inset by 2.5mm inside the 80x50 border
-        doc.addImage(images[0] as string, 'JPEG', col1X + 2.5, imgY + 2.5, 75, 45, undefined, 'FAST')
-        
-        // Mask image sharp corners to give a border-radius: 2mm effect
+        // Safe mask alternative with white borders
+        doc.addImage(images[0] as string, 'JPEG', col1X + 2.5, finalImgY + 2.5, 75, 45, undefined, 'FAST')
         doc.setDrawColor(255, 255, 255)
-        doc.setLineWidth(3) // 3mm border width to overlap edges
-        doc.roundedRect(col1X + 2.5, imgY + 2.5, 75, 45, 2, 2, 'S')
+        doc.setLineWidth(4) // Thick border to round corners properly
+        doc.roundedRect(col1X + 2.5, finalImgY + 2.5, 75, 45, 3, 3, 'S')
       } catch {}
     }
 
@@ -367,11 +370,19 @@ export const downloadBrochure = async (product: any, businessSettings: any, appS
     doc.setFontSize(10)
     doc.text('FASILITAS LENGKAP', 145, fY + 6.5, { align: 'center' })
 
+    const ktBase = product.Jumlah_Kamar_Tidur || 0
+    const ktAdd = Number(product.Jumlah_Kamar_Tidur_Tambahan) > 0 ? `+${product.Jumlah_Kamar_Tidur_Tambahan}` : ''
+    const ktValue = ktBase === 0 && ktAdd === '' ? '-' : `${ktBase}${ktAdd}`
+
+    const kmBase = product.Jumlah_Kamar_Mandi || 0
+    const kmAdd = Number(product.Jumlah_Kamar_Mandi_Tambahan) > 0 ? `+${product.Jumlah_Kamar_Mandi_Tambahan}` : ''
+    const kmValue = kmBase === 0 && kmAdd === '' ? '-' : `${kmBase}${kmAdd}`
+
     const details = [
       { label: 'Tipe', value: product.Tipe || '-' },
-      { label: 'Lantai', value: product.Jumlah_Lantai || '-' },
-      { label: 'Kamar Tidur', value: product.Jumlah_Kamar_Tidur || '-' },
-      { label: 'Kamar Mandi', value: product.Jumlah_Kamar_Mandi || '-' },
+      { label: 'Lantai', value: product.Jumlah_Lantai ? `${product.Jumlah_Lantai} Lantai` : '-' },
+      { label: 'Kamar Tidur', value: ktValue },
+      { label: 'Kamar Mandi', value: kmValue },
       { label: 'Carport', value: product.Jumlah_Carpot || '-' },
       { label: 'Listrik', value: product.Daya_Listrik ? `${product.Daya_Listrik} VA` : '-' }
     ].filter((d) => !(d.label === 'Lantai' && (d.value === '-' || !d.value)))
@@ -403,7 +414,13 @@ export const downloadBrochure = async (product: any, businessSettings: any, appS
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(9.5)
     doc.setTextColor(slateColor)
-    doc.text(product.Keterangan || 'Mansion megah bergaya arsitektur klasik Eropa yang dilengkapi kolam renang pribadi dan interior mewah berlapis marmer Italia.', col2X, 187, { maxWidth: 70, align: 'justify', lineHeightFactor: 1.45 })
+    
+    let descriptionText = product.Keterangan || 'Mansion megah bergaya arsitektur klasik Eropa yang dilengkapi kolam renang pribadi dan interior mewah berlapis marmer Italia.'
+    if (descriptionText.length > 250) {
+      descriptionText = descriptionText.substring(0, 250).trim() + '...'
+    }
+    
+    doc.text(descriptionText, col2X, 187, { maxWidth: 70, align: 'justify', lineHeightFactor: 1.45 })
 
     // --- COLUMN 3 ---
     doc.setFillColor(darkOrange)

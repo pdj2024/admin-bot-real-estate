@@ -5,6 +5,7 @@ import TabUtama from './modal-tabs/TabUtama.vue'
 import TabSpesifikasi from './modal-tabs/TabSpesifikasi.vue'
 import TabLokasi from './modal-tabs/TabLokasi.vue'
 import TabMedia from './modal-tabs/TabMedia.vue'
+import TabKunci from './modal-tabs/TabKunci.vue'
 import { usePropertyModal } from '@/composables/admin/usePropertyModal'
 
 const props = defineProps<{
@@ -29,7 +30,7 @@ const modalState = usePropertyModal(emit, handleClose)
 provide('propertyModalState', modalState)
 
 const { form, isLoading, initData, loadGoogleMaps, initWilayah } = modalState
-const activeTab = ref<'utama' | 'lokasi' | 'spesifikasi' | 'media'>('utama')
+const activeTab = ref<'utama' | 'lokasi' | 'spesifikasi' | 'media' | 'kunci'>('utama')
 
 // Watch for modal trigger
 watch(
@@ -119,6 +120,13 @@ const handlePublish = async () => {
               </div>
               <div class="absolute bottom-0 left-0 right-0 h-1 bg-bejo-600 rounded-t-full transition-all duration-300 transform" :class="activeTab === 'media' ? 'scale-x-50 opacity-100' : 'scale-x-0 opacity-0'"></div>
             </button>
+            <button @click="activeTab = 'kunci'" class="flex-1 sm:flex-none sm:w-48 pt-3 sm:pt-4 pb-2.5 sm:pb-3.5 text-[9px] sm:text-[11px] font-black uppercase tracking-widest transition-all relative group shrink-0" :class="activeTab === 'kunci' ? 'text-bejo-600' : 'text-slate-400 hover:text-slate-500'">
+              <div class="flex items-center justify-center gap-1.5 sm:gap-2.5">
+                <Icon icon="lucide:key" class="size-3.5 sm:size-4 -mt-0.5" :class="activeTab === 'kunci' ? 'text-bejo-600' : 'text-slate-400'" />
+                <span class="leading-none">Kunci</span>
+              </div>
+              <div class="absolute bottom-0 left-0 right-0 h-1 bg-bejo-600 rounded-t-full transition-all duration-300 transform" :class="activeTab === 'kunci' ? 'scale-x-50 opacity-100' : 'scale-x-0 opacity-0'"></div>
+            </button>
           </div>
         </div>
 
@@ -134,6 +142,9 @@ const handlePublish = async () => {
 
           <!-- TAB 4: MEDIA -->
           <TabMedia v-show="activeTab === 'media'" />
+
+          <!-- TAB 5: KUNCI -->
+          <TabKunci v-show="activeTab === 'kunci'" />
         </div>
 
         <div class="px-4 sm:px-8 py-4 sm:py-6 border-t border-slate-100 flex flex-col sm:flex-row gap-3 justify-between items-stretch sm:items-center bg-white shrink-0">
@@ -152,8 +163,8 @@ const handlePublish = async () => {
             </button>
 
             <div class="flex-1 sm:w-auto">
-              <button v-if="activeTab !== 'media'" @click="activeTab = activeTab === 'utama' ? 'lokasi' : activeTab === 'lokasi' ? 'spesifikasi' : 'media'" class="w-full justify-center px-4 sm:px-8 py-2.5 sm:py-3 bg-bejo-300 text-white text-[10px] font-black rounded-xl sm:rounded-[1.25rem] transition-all hover:bg-bejo-400 active:scale-95 flex items-center gap-2 group uppercase tracking-widest shadow-lg shadow-bejo-300/10">
-                {{ activeTab === 'utama' ? 'Lanjut ke Lokasi' : activeTab === 'lokasi' ? 'Lanjut ke Spesifikasi' : 'Lanjut ke Media' }}
+              <button v-if="activeTab !== 'kunci'" @click="activeTab = activeTab === 'utama' ? 'lokasi' : activeTab === 'lokasi' ? 'spesifikasi' : activeTab === 'spesifikasi' ? 'media' : 'kunci'" class="w-full justify-center px-4 sm:px-8 py-2.5 sm:py-3 bg-bejo-300 text-white text-[10px] font-black rounded-xl sm:rounded-[1.25rem] transition-all hover:bg-bejo-400 active:scale-95 flex items-center gap-2 group uppercase tracking-widest shadow-lg shadow-bejo-300/10">
+                {{ activeTab === 'utama' ? 'Lanjut ke Lokasi' : activeTab === 'lokasi' ? 'Lanjut ke Spesifikasi' : activeTab === 'spesifikasi' ? 'Lanjut ke Media' : 'Lanjut ke Kunci' }}
                 <Icon icon="lucide:arrow-right" class="size-4 group-hover:translate-x-1 transition-transform" />
               </button>
 

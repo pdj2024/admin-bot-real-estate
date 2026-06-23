@@ -313,6 +313,10 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
   const media3d = usePropertyMedia(form, 'Id_Media_3d')
   const mediaDrive = usePropertyMedia(form, 'Id_Media_Drive')
 
+  // Kunci State
+  const kunciList = ref<any[]>([])
+  const pendingKunci = ref<any[]>([])
+
   // Watchers
   watch([panjang, lebar], ([newP, newL]) => {
     form.value.Tipe_Ukuran = newP || newL ? `${newP}x${newL}` : ''
@@ -372,12 +376,19 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
     mediaDrive.previewPhotos.value = []
     mediaDrive.deletedMediaIds.value = []
 
+    kunciList.value = []
+    pendingKunci.value = []
+
     location.searchQuery.value = ''
 
     if (itemData) {
       form.value = {
         ...defaultForm(),
         ...JSON.parse(JSON.stringify(itemData))
+      }
+      
+      if (itemData.No_Id) {
+        fetchKunci(itemData.No_Id)
       }
       if (form.value.Keterangan) {
         form.value.Keterangan = form.value.Keterangan.replace(/\\'/g, "'").replace(/\\"/g, '"')
@@ -472,7 +483,7 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
     // Draft Restoration Logic
     const draftKey = itemData ? `property_draft_${itemData.No_Id}` : 'property_draft_new'
     const savedDraftStr = localStorage.getItem(draftKey)
-    if (savedDraftStr) {
+    if (savedDraftStr && !itemData) {
       Swal.fire({
         title: 'Draft Tersimpan Ditemukan',
         text: 'Sistem menemukan isian form yang belum tersimpan dari sesi sebelumnya. Ingin memuatnya kembali?',
@@ -518,6 +529,48 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
     },
     { deep: true }
   )
+
+  // Kunci Methods
+  async function fetchKunci(idProduk: string) {
+    try {
+      const res = await api.get(`/api/masterKunci/getAll?id_produk=${idProduk}`)
+      kunciList.value = res.data.Data || []
+    } catch (err) {
+      console.error('Failed to fetch kunci:', err)
+      kunciList.value = []
+    }
+  }
+
+  async function submitKunci(namaKunci: string, status: string, isEdit: boolean, noId?: string) {
+    try {
+      const payload = {
+        Id_Produk: form.value.No_Id,
+        Nama_Kunci: namaKunci,
+        Status: status
+      }
+      if (isEdit && noId) {
+        await api.put(`/api/masterKunci/update?no_id=${noId}`, payload)
+      } else {
+        await api.post('/api/masterKunci/create', payload)
+      }
+      await fetchKunci(form.value.No_Id)
+      success(isEdit ? 'Kunci berhasil diperbarui' : 'Kunci berhasil ditambahkan')
+    } catch (err: any) {
+      fail(err.response?.data?.message || err.message || 'Gagal menyimpan kunci')
+      throw err
+    }
+  }
+
+  async function removeKunci(noId: string) {
+    try {
+      await api.delete(`/api/masterKunci/delete?no_id=${noId}`)
+      await fetchKunci(form.value.No_Id)
+      success('Kunci berhasil dihapus')
+    } catch (err: any) {
+      fail(err.response?.data?.message || err.message || 'Gagal menghapus kunci')
+      throw err
+    }
+  }
 
   const submitForm = async (mode?: 'active' | 'draft') => {
     if (isLoading.value) return
@@ -631,6 +684,11 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
 
       const currentUserId = localStorage.getItem('no_id') || null
 
+      const finalFileImage = [...new Set([...(form.value.File_Image || []), ...newMediaIds])].filter(Boolean)
+      const finalMediaDenah = [...new Set([...(form.value.Id_Media_Denah || []), ...newDenahIds])].filter(Boolean)
+      const finalMedia3d = [...new Set([...(form.value.Id_Media_3d || []), ...new3dIds])].filter(Boolean)
+      const finalMediaDrive = [...new Set([...(form.value.Id_Media_Drive || []), ...newDriveIds])].filter(Boolean)
+
       const payload = {
         ...form.value,
         Keterangan: form.value.Keterangan ? form.value.Keterangan.replace(/'/g, "\\'").replace(/"/g, '\\"') : '',
@@ -640,6 +698,7 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
         Longitude: currentLng,
         Id_Area: finalAreaId,
         Id_Prioritas: finalPrioId,
+        Akses_Jalan: form.value.Akses_Jalan && form.value.Akses_Jalan.length > 0 ? form.value.Akses_Jalan : [""],
         Luas_Tanah: Number(form.value.Luas_Tanah || 0),
         Luas_Bangunan: Number(form.value.Luas_Bangunan || 0),
         Jumlah_Lantai: Number(form.value.Jumlah_Lantai || 0),
@@ -656,10 +715,10 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
         Harga_Sewa1: Number(form.value.Harga_Sewa1 || 0),
         Harga_Sewa2: Number(form.value.Harga_Sewa2 || 0),
         Harga_Sewa3: Number(form.value.Harga_Sewa3 || 0),
-        File_Image: [...new Set([...(form.value.File_Image || []), ...newMediaIds])].filter(Boolean),
-        Id_Media_Denah: [...new Set([...(form.value.Id_Media_Denah || []), ...newDenahIds])].filter(Boolean),
-        Id_Media_3d: [...new Set([...(form.value.Id_Media_3d || []), ...new3dIds])].filter(Boolean),
-        Id_Media_Drive: [...new Set([...(form.value.Id_Media_Drive || []), ...newDriveIds])].filter(Boolean),
+        File_Image: finalFileImage.length > 0 ? finalFileImage : [""],
+        Id_Media_Denah: finalMediaDenah.length > 0 ? finalMediaDenah : [""],
+        Id_Media_3d: finalMedia3d.length > 0 ? finalMedia3d : [""],
+        Id_Media_Drive: finalMediaDrive.length > 0 ? finalMediaDrive : [""],
         Id_Media_Thumbnail: finalThumbnailId,
         Flag_Sewa: form.value.Status_Transaksi?.includes('Sewa') ? 'Ya' : 'Tidak',
         Created_By: isEdit ? form.value.Created_By : currentUserId,
@@ -675,7 +734,25 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
       // Cleanup deleted media
       await Promise.all([mediaImage.clearDeletedMedia(), mediaDenah.clearDeletedMedia(), media3d.clearDeletedMedia()])
 
-      await api[isEdit ? 'put' : 'post'](targetUrl, payload, { headers: { 'X-Jenis-User': 'admin' } })
+      const res = await api[isEdit ? 'put' : 'post'](targetUrl, payload, { headers: { 'X-Jenis-User': 'admin' } })
+      
+      const newId = !isEdit && res.data?.NewId ? res.data.NewId : null
+
+      // If there are pending keys and this was a new property, create them now
+      if (!isEdit && newId && pendingKunci.value.length > 0) {
+        for (const k of pendingKunci.value) {
+          try {
+            await api.post('/api/masterKunci/create', {
+              Id_Produk: newId,
+              Nama_Kunci: k.Nama_Kunci,
+              Status: k.Status
+            })
+          } catch (err) {
+            console.error('Failed to create pending kunci:', k.Nama_Kunci, err)
+          }
+        }
+        pendingKunci.value = []
+      }
 
       // Clear saved draft on success
       const draftKey = isEdit ? `property_draft_${form.value.No_Id}` : 'property_draft_new'
@@ -704,6 +781,11 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
     virtualCities,
     virtualAreas,
     virtualPriorities,
+    kunciList,
+    pendingKunci,
+    fetchKunci,
+    submitKunci,
+    removeKunci,
     wilayahModalParentId,
     isWilayahModalOpen,
     wilayahModalType,

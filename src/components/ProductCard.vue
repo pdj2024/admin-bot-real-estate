@@ -74,8 +74,8 @@
         </div>
 
         <!-- Access Road Stickers Bottom Right -->
-        <div class="absolute bottom-4 right-4 flex flex-col gap-1.5 items-end z-10" v-if="product.Akses_Jalan">
-          <span v-for="(akses, idx) in product.Akses_Jalan.slice(0, 3)" :key="idx" class="bg-white/80 backdrop-blur-sm text-slate-800 text-[9px] font-black px-3 py-1.5 rounded-xl shadow-sm flex items-center gap-2 group/akses">
+        <div class="absolute bottom-4 right-4 flex flex-col gap-1.5 items-end z-10" v-if="product.Akses_Jalan && product.Akses_Jalan.filter(a => a && a.trim() !== '').length > 0">
+          <span v-for="(akses, idx) in product.Akses_Jalan.filter(a => a && a.trim() !== '').slice(0, 3)" :key="idx" class="bg-white/80 backdrop-blur-sm text-slate-800 text-[9px] font-black px-3 py-1.5 rounded-xl shadow-sm flex items-center gap-2 group/akses">
             <Icon icon="lucide:map-pin" class="size-2.5 text-bejo-600 group-hover/akses:scale-110 transition-transform" />
             {{ akses }}
           </span>
@@ -164,13 +164,13 @@
                   <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0">
                     <Icon icon="lucide:bed" class="size-3.5 text-bejo-600" />
                   </div>
-                  <span class="text-xs font-bold text-slate-700">{{ product.Jumlah_Kamar_Tidur || 0 }} KT</span>
+                  <span class="text-xs font-bold text-slate-700">{{ product.Jumlah_Kamar_Tidur || 0 }}{{ Number(product.Jumlah_Kamar_Tidur_Tambahan) > 0 ? `+${product.Jumlah_Kamar_Tidur_Tambahan}` : '' }} KT</span>
                 </div>
                 <div class="flex items-center gap-2 cursor-help" title="Kamar Mandi">
                   <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0">
                     <Icon icon="lucide:bath" class="size-3.5 text-bejo-600" />
                   </div>
-                  <span class="text-xs font-bold text-slate-700">{{ product.Jumlah_Kamar_Mandi || 0 }} KM</span>
+                  <span class="text-xs font-bold text-slate-700">{{ product.Jumlah_Kamar_Mandi || 0 }}{{ Number(product.Jumlah_Kamar_Mandi_Tambahan) > 0 ? `+${product.Jumlah_Kamar_Mandi_Tambahan}` : '' }} KM</span>
                 </div>
                 <div class="flex items-center gap-2 cursor-help" title="Jumlah Lantai">
                   <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0">
@@ -189,6 +189,12 @@
                     <Icon icon="lucide:road" class="size-3.5 text-bejo-600" />
                   </div>
                   <span class="text-xs font-bold text-slate-700">{{ product.Row_Jalan }} Mobil</span>
+                </div>
+                <div v-if="product.Daya_Listrik && Number(product.Daya_Listrik) > 0" class="flex items-center gap-2 cursor-help" title="Daya Listrik">
+                  <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0">
+                    <Icon icon="lucide:zap" class="size-3.5 text-bejo-600" />
+                  </div>
+                  <span class="text-xs font-bold text-slate-700">{{ Number(product.Daya_Listrik).toLocaleString('id-ID') }} W</span>
                 </div>
               </template>
             </div>

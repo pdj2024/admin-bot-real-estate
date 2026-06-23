@@ -99,6 +99,7 @@ const displayArea = computed(() => {
 const emit = defineEmits<{
   (e: 'edit'): void
   (e: 'delete'): void
+  (e: 'openLightbox', index: number): void
 }>()
 
 const handleShare = () => {
@@ -137,18 +138,20 @@ const handleShare = () => {
             <template v-else-if="currentMedia?.type === 'video'">
               <video 
                 :src="currentMedia.url!" 
-                class="size-full object-cover" 
+                class="size-full object-cover cursor-pointer" 
                 controls 
                 autoplay 
                 muted 
                 loop
+                @click="emit('openLightbox', activeMediaIndex)"
               ></video>
             </template>
             <template v-else-if="currentMedia?.type === 'image'">
               <img 
                 :src="currentMedia.url!" 
-                class="size-full object-cover transition-transform duration-700 group-hover/main:scale-110" 
+                class="size-full object-cover transition-transform duration-700 group-hover/main:scale-110 cursor-pointer" 
                 :alt="product?.Nama_Produk" 
+                @click="emit('openLightbox', activeMediaIndex)"
               />
             </template>
             <template v-else>

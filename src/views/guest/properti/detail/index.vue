@@ -238,8 +238,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <Guest>
-    <div class="w-full max-w-[1440px] mx-auto !px-4 sm:!px-8 lg:!px-10 py-10 min-h-[60vh]">
+  <Guest mainClass="!pt-4 md:!pt-6">
+    <div class="w-full max-w-[1440px] mx-auto !px-4 sm:!px-8 lg:!px-10 pb-10 pt-2 min-h-[60vh]">
 
       <!-- Skeleton Loading State -->
       <div v-if="isLoading" class="grid lg:grid-cols-3 grid-cols-1 gap-8">
@@ -346,18 +346,7 @@ onUnmounted(() => {
               </Transition>
             </div>
 
-            <!-- Thumbnail Strip -->
-            <div class="mt-8 flex gap-2 overflow-x-auto max-w-full pb-4 px-4 no-scrollbar">
-              <button 
-                v-for="(m, i) in product.MediaUrls" 
-                :key="i"
-                @click="lightboxIndex = i"
-                class="size-16 rounded-xl overflow-hidden border-2 transition-all shrink-0"
-                :class="lightboxIndex === i ? 'border-bejo-500 scale-110 shadow-lg' : 'border-transparent opacity-50 hover:opacity-100'"
-              >
-                <img :src="m.ThumbUrl || m.Url || m.Id_Media" class="size-full object-cover" />
-              </button>
-            </div>
+
           </div>
         </Transition>
       </div>

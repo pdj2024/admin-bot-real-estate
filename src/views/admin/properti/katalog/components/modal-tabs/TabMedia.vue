@@ -181,7 +181,7 @@ const deleteBatch = () => {
     <!-- 1. Google Drive Links -->
     <div class="space-y-4 pt-4 border-t border-slate-100">
         <BaseFormGroup>
-          <label class="label block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Foto/Folder Drive</label>
+          <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Foto/Folder Drive</label>
           <div class="flex items-center space-x-2">
             <div class="relative flex-grow">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -212,7 +212,7 @@ const deleteBatch = () => {
      <!-- 2. Galeri Gambar Produk -->
     <div class="space-y-3">
       <div class="flex items-center justify-between">
-        <label class="label block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 mb-0">Foto Lainnya</label>
+        <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 mb-0">Foto Lainnya</label>
         <button v-if="mediaImage.previewPhotos.value.length > 0" @click="toggleSelectionMode" type="button" class="text-[10px] font-bold px-3 py-1.5 rounded-full transition-colors uppercase tracking-widest" :class="isSelectionMode ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'">
           {{ isSelectionMode ? 'Batal Pilih' : 'Pilih Beberapa' }}
         </button>
@@ -283,7 +283,7 @@ const deleteBatch = () => {
     
     <!-- 3. Galeri Denah Rumah -->
     <div class="space-y-3 pt-4 border-t border-slate-100">
-      <label class="label block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">DENAH PROPERTI</label>
+      <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">DENAH PROPERTI</label>
       <div class="relative">
         <div class="preview-container flex flex-wrap gap-4">
           <div v-for="(img, i) in mediaDenah.previewPhotos.value" :key="i" class="preview-box relative size-28 flex-shrink-0 group/img rounded-2xl overflow-hidden border-2 transition-all duration-200 shadow-sm"
@@ -324,7 +324,7 @@ const deleteBatch = () => {
 
     <!-- 4. Galeri Gambar 3D -->
     <div class="space-y-3 pt-4 border-t border-slate-100">
-      <label class="label block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">VISUALISASI 3D</label>
+      <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">VISUALISASI 3D</label>
       <div class="relative">
         <div class="preview-container flex flex-wrap gap-4">
           <div v-for="(img, i) in media3d.previewPhotos.value" :key="i" class="preview-box relative size-28 flex-shrink-0 group/img rounded-2xl overflow-hidden border-2 transition-all duration-200 shadow-sm"
@@ -370,9 +370,6 @@ const deleteBatch = () => {
 <style scoped>
 @reference "@/assets/css/style.css";
 
-.label {
-  @apply block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1;
-}
 .field-input {
   @apply w-full border border-slate-200 rounded-xl py-2.5 px-4 text-sm bg-card focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none font-bold text-slate-700 placeholder:text-slate-300 placeholder:font-medium;
 }

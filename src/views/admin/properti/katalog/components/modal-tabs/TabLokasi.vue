@@ -418,9 +418,6 @@ onBeforeUnmount(() => {
 <style scoped>
 @reference "@/assets/css/style.css";
 
-.label {
-  @apply block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1;
-}
 .field-input {
   @apply w-full border border-slate-200 rounded-xl py-2.5 px-4 text-sm bg-card focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none font-bold text-slate-700 placeholder:text-slate-300 placeholder:font-medium;
 }
