@@ -9,8 +9,8 @@ defineProps<{
 const specs = [
   { icon: 'lucide:land-plot', label: 'Luas Tanah', key: 'Luas_Tanah', suffix: ' m²' },
   { icon: 'lucide:home', label: 'Luas Bangunan', key: 'Luas_Bangunan', suffix: ' m²' },
-  { icon: 'lucide:bed', label: 'Kamar Tidur', key: 'Jumlah_Kamar_Tidur', suffix: ' KT' },
-  { icon: 'lucide:bath', label: 'Kamar Mandi', key: 'Jumlah_Kamar_Mandi', suffix: ' KM' },
+  { icon: 'lucide:bed', label: 'Kamar Tidur', key: 'Jumlah_Kamar_Tidur', additionalKey: 'Jumlah_Kamar_Tidur_Tambahan', suffix: ' KT' },
+  { icon: 'lucide:bath', label: 'Kamar Mandi', key: 'Jumlah_Kamar_Mandi', additionalKey: 'Jumlah_Kamar_Mandi_Tambahan', suffix: ' KM' },
   { icon: 'lucide:layers', label: 'Lantai', key: 'Jumlah_Lantai', suffix: ' Lt' },
   { icon: 'lucide:car', label: 'Carport', key: 'Jumlah_Carpot', suffix: ' Mobil' },
   { icon: 'lucide:road', label: 'Row Jalan', key: 'Row_Jalan', suffix: ' Mobil' }
@@ -37,7 +37,7 @@ const specs = [
         <span class="text-sm font-black text-slate-800" 
               :class="!product ? 'text-transparent bg-slate-200 rounded animate-pulse w-16 select-none mt-1' : ''">
           <template v-if="product">
-            {{ product[spec.key] || 0 }}{{ spec.suffix || '' }}
+            {{ product[spec.key] || 0 }}{{ spec.additionalKey && Number(product[spec.additionalKey]) > 0 ? `+${product[spec.additionalKey]}` : '' }}{{ spec.suffix || '' }}
           </template>
           <template v-else>Memuat..</template>
         </span>

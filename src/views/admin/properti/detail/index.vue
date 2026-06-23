@@ -176,7 +176,7 @@ const handleDelete = async () => {
       })
       
       success('Berhasil hapus produk')
-      router.push('/admin/properti/katalog')
+      router.push('/properti/katalog')
     } catch (err: any) {
       fail('Gagal menghapus data')
       console.error(err)

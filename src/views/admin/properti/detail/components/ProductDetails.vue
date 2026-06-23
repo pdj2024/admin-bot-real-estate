@@ -44,6 +44,24 @@ const formatCurrency = (value: number) => {
   if (value === undefined || value === null) return 'Rp 0'
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
 }
+
+const formatText = (text: string) => {
+  if (!text) return ''
+  // Escape HTML first to prevent XSS
+  const escapedText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;')
+  
+  // Format WhatsApp styles
+  let formatted = escapedText.replace(/\*([^\n]+?)\*/g, '<strong class="font-black">$1</strong>')
+  formatted = formatted.replace(/_([^\n]+?)_/g, '<em class="italic">$1</em>')
+  formatted = formatted.replace(/~([^\n]+?)~/g, '<del class="line-through opacity-70">$1</del>')
+
+  // Then replace URLs with links (supports http://, https://, and www.)
+  const urlRegex = /(https?:\/\/[^\s]+|(?:www\.)[^\s]+)/g
+  return formatted.replace(urlRegex, (url) => {
+    const href = url.startsWith('http') ? url : `https://${url}`
+    return `<a href="${href}" target="_blank" class="text-bejo-600 font-bold hover:underline cursor-pointer">${url}</a>`
+  })
+}
 </script>
 
 <template>
@@ -170,10 +188,9 @@ const formatCurrency = (value: number) => {
           <Icon icon="lucide:quote" class="absolute top-6 right-8 size-16 text-slate-500/5" v-if="product" />
           <h6 class="text-[10px] font-black text-slate-900 uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
             <div class="w-10 h-[2px] bg-bejo-500 rounded-full"></div>
-            Deskripsi Lengkap
+            Deskripsi Properti
           </h6>
-          <p class="text-base md:text-lg leading-relaxed font-medium text-slate-600" :class="!product ? 'text-transparent bg-slate-200 rounded-lg animate-pulse select-none' : ''">
-            {{ product?.Keterangan || 'Sedang memuat deskripsi lengkap...' }}
+          <p class="text-sm md:text-base font-medium text-slate-700 leading-relaxed whitespace-pre-wrap" :class="!product ? 'text-transparent bg-slate-200 rounded-lg animate-pulse select-none' : ''" v-html="product ? formatText(product.Keterangan) : 'Sedang memuat deskripsi properti...'">
           </p>
         </div>
 

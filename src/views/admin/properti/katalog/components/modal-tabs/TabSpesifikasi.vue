@@ -11,8 +11,6 @@ if (!state) {
 const { form, panjang, lebar, newAkses } = state
 
 const specs = [
-  { key: 'Jumlah_Kamar_Tidur', label: 'Jumlah KT', icon: 'lucide:bed' },
-  { key: 'Jumlah_Kamar_Mandi', label: 'Jumlah KM', icon: 'lucide:bath' },
   { key: 'Jumlah_Carpot', label: 'Carport', icon: 'lucide:car' },
   { key: 'Row_Jalan', label: 'Row Jalan (Mobil)', icon: 'lucide:road' },
   { key: 'Daya_Listrik', label: 'Listrik (W)', icon: 'lucide:zap' }
@@ -311,16 +309,16 @@ onBeforeUnmount(() => {
           <BaseFormGroup label="JUMLAH LANTAI" icon="lucide:layers">
             <input v-model="form.Jumlah_Lantai" type="number" class="field-input !pl-11" placeholder="0" />
           </BaseFormGroup>
-          <BaseFormGroup label="DIMENSI (P X L)" icon="lucide:ruler">
+          <BaseFormGroup label="DIMENSI (L X P)" icon="lucide:ruler">
             <div class="flex items-center gap-2">
-              <input v-model="panjang" placeholder="P" class="field-input text-center !px-2 flex-1" />
-              <span class="text-slate-300 font-bold">×</span>
               <input v-model="lebar" placeholder="L" class="field-input text-center !px-2 flex-1" />
+              <span class="text-slate-300 font-bold">×</span>
+              <input v-model="panjang" placeholder="P" class="field-input text-center !px-2 flex-1" />
             </div>
           </BaseFormGroup>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <BaseFormGroup label="HADAP RUMAH" icon="lucide:compass" ref="dropdownHadapRef">
+          <BaseFormGroup label="ARAH HADAP" icon="lucide:compass" ref="dropdownHadapRef">
             <button @click="toggleHadap" type="button" class="field-input h-11 !pl-11 flex items-center justify-between group bg-white border-slate-200">
               <span class="text-xs font-bold" :class="form.Hadap_Rumah ? 'text-slate-700' : 'text-slate-300'">
                 {{ form.Hadap_Rumah ? getHadapLabel(form.Hadap_Rumah) : 'Pilih Arah Hadap' }}
@@ -371,6 +369,22 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+          <BaseFormGroup label="JUMLAH KT" icon="lucide:bed">
+            <div class="flex items-center gap-2 pl-[38px] relative">
+              <Icon icon="lucide:bed" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-4" />
+              <input v-model="form.Jumlah_Kamar_Tidur" type="number" class="field-input text-center !px-2 flex-1" placeholder="Utama" />
+              <span class="text-slate-300 font-bold">+</span>
+              <input v-model="form.Jumlah_Kamar_Tidur_Tambahan" type="number" class="field-input text-center !px-2 flex-1" placeholder="Tambahan" />
+            </div>
+          </BaseFormGroup>
+          <BaseFormGroup label="JUMLAH KM" icon="lucide:bath">
+            <div class="flex items-center gap-2 pl-[38px] relative">
+              <Icon icon="lucide:bath" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-4" />
+              <input v-model="form.Jumlah_Kamar_Mandi" type="number" class="field-input text-center !px-2 flex-1" placeholder="Utama" />
+              <span class="text-slate-300 font-bold">+</span>
+              <input v-model="form.Jumlah_Kamar_Mandi_Tambahan" type="number" class="field-input text-center !px-2 flex-1" placeholder="Tambahan" />
+            </div>
+          </BaseFormGroup>
           <BaseFormGroup v-for="s in specs" :key="s.key" :label="s.label.toUpperCase()" :icon="s.icon">
             <input v-model="form[s.key]" type="number" :step="s.key === 'Row_Jalan' ? '0.1' : '1'" class="field-input !pl-11" :placeholder="s.key === 'Row_Jalan' ? '0.0' : '0'" />
           </BaseFormGroup>
@@ -382,6 +396,20 @@ onBeforeUnmount(() => {
 
 <style scoped>
 @reference "@/assets/css/style.css";
+
+/* Hide number input spin buttons */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.label {
+  @apply block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1;
+}
 
 .field-input {
   @apply w-full border border-slate-200 rounded-xl py-2.5 px-4 text-sm bg-card focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none font-bold text-slate-700 placeholder:text-slate-300 placeholder:font-medium;

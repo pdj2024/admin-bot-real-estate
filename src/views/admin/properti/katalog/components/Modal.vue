@@ -15,6 +15,9 @@ const props = defineProps<{
 const emit = defineEmits(['update:showModal', 'success', 'close'])
 
 const handleClose = () => {
+  if (modalState && modalState.clearDraft) {
+    modalState.clearDraft()
+  }
   emit('update:showModal', false)
   emit('close')
 }

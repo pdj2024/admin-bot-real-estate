@@ -89,6 +89,78 @@ const handleClickOutside = (event: MouseEvent) => {
   }
 }
 
+// Text Formatting Logic
+const showFormatToolbar = ref(false)
+const descTextareaRef = ref<HTMLTextAreaElement | null>(null)
+
+const handleTextSelection = () => {
+  const el = descTextareaRef.value
+  if (!el) return
+  if (el.selectionStart !== el.selectionEnd) {
+    showFormatToolbar.value = true
+  } else {
+    showFormatToolbar.value = false
+  }
+}
+
+const handleBlur = () => {
+  // Give a small delay so if a user clicks a toolbar button, the click registers before toolbar hides
+  setTimeout(() => {
+    showFormatToolbar.value = false
+  }, 200)
+}
+
+const formatText = (wrapper: string) => {
+  const el = descTextareaRef.value
+  if (!el) return
+  
+  const start = el.selectionStart
+  const end = el.selectionEnd
+  if (start === end) return
+
+  const text = form.value.Keterangan || ''
+  const selected = text.slice(start, end)
+  
+  const newText = text.slice(0, start) + wrapper + selected + wrapper + text.slice(end)
+  form.value.Keterangan = newText
+  
+  // Re-select text
+  setTimeout(() => {
+    el.focus()
+    el.setSelectionRange(start + wrapper.length, end + wrapper.length)
+    handleTextSelection()
+  }, 0)
+}
+
+const formatList = (prefix: string) => {
+  const el = descTextareaRef.value
+  if (!el) return
+  
+  const start = el.selectionStart
+  const end = el.selectionEnd
+  if (start === end) return
+
+  const text = form.value.Keterangan || ''
+  const selected = text.slice(start, end)
+  
+  // Add prefix to each line
+  const lines = selected.split('\n')
+  const newLines = lines.map((line, idx) => {
+    if (prefix === '1.') return `${idx + 1}. ${line}`
+    return `${prefix} ${line}`
+  })
+  const replacement = newLines.join('\n')
+  
+  const newText = text.slice(0, start) + replacement + text.slice(end)
+  form.value.Keterangan = newText
+  
+  setTimeout(() => {
+    el.focus()
+    el.setSelectionRange(start, start + replacement.length)
+    handleTextSelection()
+  }, 0)
+}
+
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
 })
@@ -177,9 +249,31 @@ const currentHost = window.location.host
       </div>
 
       <BaseFormGroup label="DESKRIPSI PROPERTI" icon="lucide:text-quote" align-icon="top" class="flex-1 flex flex-col" inner-class="h-full flex-1 flex flex-col">
-        <div class="relative flex-1 min-h-[150px] flex flex-col h-full">
-          <textarea v-model="form.Keterangan" maxlength="200" class="field-input flex-1 !pl-11 pt-4 resize-none leading-relaxed bg-white border-slate-200 text-sm font-medium" placeholder="Ceritakan keunggulan dan detail unit ini..."></textarea>
-          <div class="absolute bottom-4 right-4 text-[9px] font-black text-slate-400 bg-white shadow-sm border border-slate-100 px-3 py-1 rounded-full uppercase tracking-widest">{{ form.Keterangan?.length || 0 }} <span class="text-slate-300">/</span> 200</div>
+        <div class="relative flex-1 min-h-[300px] flex flex-col h-full" @mouseup="handleTextSelection" @keyup="handleTextSelection">
+          <!-- Text Formatting Toolbar -->
+          <Transition name="fade">
+            <div v-if="showFormatToolbar" class="absolute top-2 left-1/2 -translate-x-1/2 bg-slate-900 text-white rounded-lg px-2 py-1.5 flex items-center gap-1 shadow-xl z-20 transition-all">
+              <button type="button" @mousedown.prevent="formatText('*')" class="p-1.5 hover:bg-white/20 rounded transition-colors" title="Bold (*kata*)">
+                <Icon icon="lucide:bold" class="size-3.5" />
+              </button>
+              <button type="button" @mousedown.prevent="formatText('_')" class="p-1.5 hover:bg-white/20 rounded transition-colors" title="Italic (_kata_)">
+                <Icon icon="lucide:italic" class="size-3.5" />
+              </button>
+              <button type="button" @mousedown.prevent="formatText('~')" class="p-1.5 hover:bg-white/20 rounded transition-colors" title="Strikethrough (~kata~)">
+                <Icon icon="lucide:strikethrough" class="size-3.5" />
+              </button>
+              <div class="w-px h-4 bg-white/20 mx-1"></div>
+              <button type="button" @mousedown.prevent="formatList('-')" class="p-1.5 hover:bg-white/20 rounded transition-colors" title="Bullet List">
+                <Icon icon="lucide:list" class="size-3.5" />
+              </button>
+              <button type="button" @mousedown.prevent="formatList('1.')" class="p-1.5 hover:bg-white/20 rounded transition-colors" title="Numbered List">
+                <Icon icon="lucide:list-ordered" class="size-3.5" />
+              </button>
+            </div>
+          </Transition>
+
+          <textarea ref="descTextareaRef" v-model="form.Keterangan" @blur="handleBlur" maxlength="5000" class="field-input flex-1 !pl-11 pt-4 resize-none leading-relaxed bg-white border-slate-200 text-sm font-medium relative z-10" placeholder="Ceritakan keunggulan dan detail unit ini..."></textarea>
+          <div class="absolute bottom-4 right-4 text-[9px] font-black text-slate-400 bg-white shadow-sm border border-slate-100 px-3 py-1 rounded-full uppercase tracking-widest z-20">{{ form.Keterangan?.length || 0 }} <span class="text-slate-300">/</span> 5000</div>
         </div>
       </BaseFormGroup>
 
@@ -236,5 +330,13 @@ const currentHost = window.location.host
     opacity: 1;
     transform: scale(1);
   }
+}
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

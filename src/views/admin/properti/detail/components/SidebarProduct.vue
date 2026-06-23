@@ -40,7 +40,19 @@ const handleSwipe = () => {
 
 const media = computed(() => {
   if (!props.product?.MediaUrls) return []
-  return props.product.MediaUrls.map(m => ({
+  
+  // Filter unique No_Id_Media to avoid duplicates
+  const uniqueMedia = []
+  const seen = new Set()
+  
+  for (const m of props.product.MediaUrls) {
+    if (!seen.has(m.No_Id_Media)) {
+      seen.add(m.No_Id_Media)
+      uniqueMedia.push(m)
+    }
+  }
+
+  return uniqueMedia.map(m => ({
     url: m.Url || m.Id_Media, // Fallback to Id_Media if Url is missing
     type: m.ContentType?.startsWith('video/') ? 'video' : 'image',
     thumb: m.ThumbUrl || m.Url || m.Id_Media
@@ -260,7 +272,7 @@ const handleShare = () => {
                 </div>
                 <div>
                    <span class="block text-xs font-black text-slate-900 uppercase tracking-wide">Dibuat Oleh</span>
-                   <span class="block text-[10px] font-bold text-slate-400">{{ product?.Email || '-' }}</span>
+                   <span class="block text-[10px] font-bold text-slate-400">{{ product?.Created_By || '-' }}</span>
                 </div>
              </div>
           </div>

@@ -28,8 +28,10 @@ export interface RealEstateForm {
   Luas_Tanah: number
   Luas_Bangunan: number
   Jumlah_Lantai: number
-  Jumlah_Kamar_Tidur: number
-  Jumlah_Kamar_Mandi: number
+  Jumlah_Kamar_Tidur: number | null
+  Jumlah_Kamar_Tidur_Tambahan: number | null
+  Jumlah_Kamar_Mandi: number | null
+  Jumlah_Kamar_Mandi_Tambahan: number | null
   Jumlah_Carpot: number
   Daya_Listrik: number
   Status_Display: string
@@ -80,7 +82,7 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
   const panjang = ref('')
   const lebar = ref('')
   const isLoading = ref(false)
-  
+
   // Wilayah Data
   const cities = ref<any[]>([])
   const areas = ref<any[]>([])
@@ -139,11 +141,11 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
         console.error('Failed to create city:', err)
       }
     }
-    
+
     // Fallback: fetch and find by name if already exists or creation failed
     await fetchCities()
-    const existing = cities.value.find(c => (c.Nama || '').toLowerCase() === name.toLowerCase())
-    return existing ? (existing.No_Id || existing.No_Id_Kota) : null
+    const existing = cities.value.find((c) => (c.Nama || '').toLowerCase() === name.toLowerCase())
+    return existing ? existing.No_Id || existing.No_Id_Kota : null
   }
 
   const createArea = async (name: string, idKota?: string) => {
@@ -165,14 +167,11 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
         console.error('Failed to create area:', err)
       }
     }
-    
+
     // Fallback: fetch and find by name if already exists or creation failed
     await fetchAreas()
-    const existing = areas.value.find(a => 
-      (a.Nama || '').toLowerCase() === name.toLowerCase() && 
-      (!idKota || a.Id_Kota === idKota)
-    )
-    return existing ? (existing.No_Id || existing.No_Id_Area) : null
+    const existing = areas.value.find((a) => (a.Nama || '').toLowerCase() === name.toLowerCase() && (!idKota || a.Id_Kota === idKota))
+    return existing ? existing.No_Id || existing.No_Id_Area : null
   }
 
   const createPriority = async (name: string, idArea?: string, desc?: string) => {
@@ -194,14 +193,11 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
         console.error('Failed to create priority:', err)
       }
     }
-    
+
     // Fallback: fetch and find by name if already exists or creation failed
     await fetchPriorities()
-    const existing = priorities.value.find(p => 
-      (p.Nama || '').toLowerCase() === name.toLowerCase() && 
-      (!idArea || p.Id_Area === idArea)
-    )
-    return existing ? (existing.No_Id || existing.No_Id_Prioritas) : null
+    const existing = priorities.value.find((p) => (p.Nama || '').toLowerCase() === name.toLowerCase() && (!idArea || p.Id_Area === idArea))
+    return existing ? existing.No_Id || existing.No_Id_Prioritas : null
   }
 
   const handleWilayahSuccess = async (newData: any) => {
@@ -246,7 +242,7 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
     fetchAreas()
     fetchPriorities()
   }
-  
+
   const defaultForm = (): RealEstateForm => ({
     No_Id: '',
     Nama_Produk: '',
@@ -258,8 +254,10 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
     Luas_Tanah: 0,
     Luas_Bangunan: 0,
     Jumlah_Lantai: 0,
-    Jumlah_Kamar_Tidur: 0,
-    Jumlah_Kamar_Mandi: 0,
+    Jumlah_Kamar_Tidur: null,
+    Jumlah_Kamar_Tidur_Tambahan: null,
+    Jumlah_Kamar_Mandi: null,
+    Jumlah_Kamar_Mandi_Tambahan: null,
     Jumlah_Carpot: 0,
     Row_Jalan: 0,
     Daya_Listrik: 0,
@@ -304,9 +302,9 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
   })
 
   const form = ref<RealEstateForm>(defaultForm())
-  
+
   // Domain sub-composables
-  const location = usePropertyLocation(form, { 
+  const location = usePropertyLocation(form, {
     cities,
     createCity
   })
@@ -317,7 +315,7 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
 
   // Watchers
   watch([panjang, lebar], ([newP, newL]) => {
-    form.value.Tipe_Ukuran = (newP || newL) ? `${newP}x${newL}` : ''
+    form.value.Tipe_Ukuran = newP || newL ? `${newP}x${newL}` : ''
   })
 
   watch(
@@ -357,7 +355,6 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
     { immediate: true }
   )
 
-
   const initData = (itemData?: any) => {
     mediaImage.photos.value = []
     mediaImage.previewPhotos.value = []
@@ -382,7 +379,10 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
         ...defaultForm(),
         ...JSON.parse(JSON.stringify(itemData))
       }
-      
+      if (form.value.Keterangan) {
+        form.value.Keterangan = form.value.Keterangan.replace(/\\'/g, "'").replace(/\\"/g, '"')
+      }
+
       // 1. Detect location prioritizing Latitude and Longitude fields
       if (itemData.Latitude && itemData.Longitude) {
         location.isLocationSelected.value = true
@@ -392,7 +392,7 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
         // Fallback to legacy address parsing
         const latMatch = itemData.Alamat ? itemData.Alamat.match(/(?:Lat|Latitude):\s*([-+]?\d+\.?\d*)/i) : null
         const lngMatch = itemData.Alamat ? itemData.Alamat.match(/(?:Long|Lng|Longitude):\s*([-+]?\d+\.?\d*)/i) : null
-        
+
         if (latMatch && lngMatch) {
           location.isLocationSelected.value = true
           location.currentCoords.lat = parseFloat(latMatch[1])
@@ -423,15 +423,16 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
         lebar.value = splitUkuran[1] || ''
       }
 
-      if (itemData.MediaUrls) {
-        mediaImage.previewPhotos.value = [...itemData.MediaUrls]
+      if (form.value.File_Image && itemData.MediaUrls) {
+        const validIds = form.value.File_Image.filter(Boolean)
+        mediaImage.previewPhotos.value = itemData.MediaUrls.filter((m: any) => validIds.includes(m.No_Id_Media))
       }
-      mediaDenah.loadExistingMedia(form.value.Id_Media_Denah || [])
-      media3d.loadExistingMedia(form.value.Id_Media_3d || [])
-      mediaDrive.loadExistingMedia(form.value.Id_Media_Drive || [])
+      mediaDenah.loadExistingMedia(form.value.Id_Media_Denah ? form.value.Id_Media_Denah.filter(Boolean) : [])
+      media3d.loadExistingMedia(form.value.Id_Media_3d ? form.value.Id_Media_3d.filter(Boolean) : [])
+      mediaDrive.loadExistingMedia(form.value.Id_Media_Drive ? form.value.Id_Media_Drive.filter(Boolean) : [])
 
       form.value.Ada_Minimal_Sewa = !!(itemData.Minimal_Sewa && itemData.Minimal_Sewa > 0)
-      
+
       // Ensure Area exists if missing from itemData
       if (!form.value.Area) {
         form.value.Area = ['', '', '']
@@ -486,7 +487,7 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
           try {
             const parsed = JSON.parse(savedDraftStr)
             form.value = { ...form.value, ...parsed }
-            
+
             // Re-apply length/width if available
             if (form.value.Tipe_Ukuran) {
               const splitUkuran = form.value.Tipe_Ukuran.split('x')
@@ -501,23 +502,32 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
     }
   }
 
+  const clearDraft = () => {
+    const draftKey = form.value.No_Id ? `property_draft_${form.value.No_Id}` : 'property_draft_new'
+    localStorage.removeItem(draftKey)
+  }
+
   // Auto-save form watcher
-  watch(() => form.value, (newVal) => {
-    // Prevent saving completely empty base form
-    if (!newVal.Nama_Produk && !newVal.Tipe && !newVal.Alamat && !newVal.Harga_Jual1) return
-    const key = newVal.No_Id ? `property_draft_${newVal.No_Id}` : 'property_draft_new'
-    localStorage.setItem(key, JSON.stringify(newVal))
-  }, { deep: true })
+  watch(
+    () => form.value,
+    (newVal) => {
+      // Prevent saving completely empty base form
+      if (!newVal.Nama_Produk && !newVal.Alamat && !newVal.Harga_Jual1 && !newVal.Keterangan) return
+      const key = newVal.No_Id ? `property_draft_${newVal.No_Id}` : 'property_draft_new'
+      localStorage.setItem(key, JSON.stringify(newVal))
+    },
+    { deep: true }
+  )
 
   const submitForm = async (mode?: 'active' | 'draft') => {
     if (isLoading.value) return
-    
+
     const targetStatus = mode === 'active' ? 'Aktif' : mode === 'draft' ? 'Draft' : form.value.Status_Display
     const isStrict = targetStatus === 'Aktif'
-    
+
     if (isStrict) {
       const isEmpty = (v: any) => v === null || v === undefined || v === '' || v === 0
-      
+
       const requiredFields = [
         { value: form.value.Nama_Produk, msg: 'Nama Properti wajib diisi pada tab Utama!' },
         { value: form.value.Tipe, msg: 'Tipe Properti wajib dipilih pada tab Utama!' },
@@ -544,15 +554,13 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
     try {
       const isEdit = !!form.value.No_Id
       const targetUrl = isEdit ? `/api/realEstate/update?no_id=${form.value.No_Id}` : '/api/realEstate/create'
-      
+
       // Handle Media Uploads
-      const [newMediaIds, newDenahIds, new3dIds, newDriveIds] = await Promise.all([
-        mediaImage.uploadAllMedia(),
-        mediaDenah.uploadAllMedia(),
-        media3d.uploadAllMedia(),
-        mediaDrive.uploadAllMedia()
-      ])
-      
+      const newMediaIds = await mediaImage.uploadAllMedia()
+      const newDenahIds = await mediaDenah.uploadAllMedia()
+      const new3dIds = await media3d.uploadAllMedia()
+      const newDriveIds = await mediaDrive.uploadAllMedia()
+
       // Map Thumbnail ID if it's a new upload
       let finalThumbnailId = form.value.Id_Media_Thumbnail
       if (finalThumbnailId?.startsWith('local_img_')) {
@@ -574,7 +582,7 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
       if (finalKotaId) {
         const isRealKota = cities.value.some((c: any) => c.No_Id === finalKotaId || c.No_Id_Kota === finalKotaId)
         if (!isRealKota) {
-          const virtualKota = virtualCities.value.find(c => c.No_Id === finalKotaId)
+          const virtualKota = virtualCities.value.find((c) => c.No_Id === finalKotaId)
           const kotaName = virtualKota ? virtualKota.Nama : finalKotaId
           const createdKotaId = await createCity(kotaName)
           if (!createdKotaId) throw new Error('Gagal membuat kota otomatis')
@@ -588,7 +596,7 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
       if (finalAreaId) {
         const isRealArea = areas.value.some((a: any) => a.No_Id === finalAreaId || a.No_Id_Area === finalAreaId)
         if (!isRealArea) {
-          const virtualArea = virtualAreas.value.find(a => a.No_Id === finalAreaId)
+          const virtualArea = virtualAreas.value.find((a) => a.No_Id === finalAreaId)
           let areaName = virtualArea ? virtualArea.Nama : finalAreaId
           if (String(areaName).startsWith('virtual-')) {
             areaName = String(areaName).replace('virtual-', '')
@@ -605,12 +613,12 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
       if (finalPrioId) {
         const isRealPrio = priorities.value.some((p: any) => p.No_Id === finalPrioId || p.No_Id_Prioritas === finalPrioId)
         if (!isRealPrio) {
-          const virtualPrio = virtualPriorities.value.find(p => p.No_Id === finalPrioId)
+          const virtualPrio = virtualPriorities.value.find((p) => p.No_Id === finalPrioId)
           let prioName = virtualPrio ? virtualPrio.Nama : finalPrioId
           if (String(prioName).startsWith('virtual-')) {
             prioName = String(prioName).replace('virtual-', '')
           }
-          
+
           const createdPrioId = await createPriority(prioName, finalAreaId, virtualPrio?.Deskripsi)
           if (!createdPrioId) throw new Error('Gagal membuat prioritas otomatis')
           finalPrioId = createdPrioId
@@ -623,8 +631,9 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
 
       const currentUserId = localStorage.getItem('no_id') || null
 
-      const payload = { 
-        ...form.value, 
+      const payload = {
+        ...form.value,
+        Keterangan: form.value.Keterangan ? form.value.Keterangan.replace(/'/g, "\\'").replace(/"/g, '\\"') : '',
         Status_Display: targetStatus,
         Alamat: form.value.Alamat.split(', Lat:')[0].split('_Lat:')[0].trim(),
         Latitude: currentLat,
@@ -635,7 +644,9 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
         Luas_Bangunan: Number(form.value.Luas_Bangunan || 0),
         Jumlah_Lantai: Number(form.value.Jumlah_Lantai || 0),
         Jumlah_Kamar_Tidur: Number(form.value.Jumlah_Kamar_Tidur || 0),
+        Jumlah_Kamar_Tidur_Tambahan: form.value.Jumlah_Kamar_Tidur_Tambahan ? Number(form.value.Jumlah_Kamar_Tidur_Tambahan) : null,
         Jumlah_Kamar_Mandi: Number(form.value.Jumlah_Kamar_Mandi || 0),
+        Jumlah_Kamar_Mandi_Tambahan: form.value.Jumlah_Kamar_Mandi_Tambahan ? Number(form.value.Jumlah_Kamar_Mandi_Tambahan) : null,
         Jumlah_Carpot: Number(form.value.Jumlah_Carpot || 0),
         Row_Jalan: Number(form.value.Row_Jalan || 0),
         Daya_Listrik: String(form.value.Daya_Listrik || '0'),
@@ -645,10 +656,10 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
         Harga_Sewa1: Number(form.value.Harga_Sewa1 || 0),
         Harga_Sewa2: Number(form.value.Harga_Sewa2 || 0),
         Harga_Sewa3: Number(form.value.Harga_Sewa3 || 0),
-        File_Image: [...new Set([...(form.value.File_Image || []), ...newMediaIds])], 
-        Id_Media_Denah: [...new Set([...(form.value.Id_Media_Denah || []), ...newDenahIds])], 
-        Id_Media_3d: [...new Set([...(form.value.Id_Media_3d || []), ...new3dIds])], 
-        Id_Media_Drive: [...new Set([...(form.value.Id_Media_Drive || []), ...newDriveIds])], 
+        File_Image: [...new Set([...(form.value.File_Image || []), ...newMediaIds])].filter(Boolean),
+        Id_Media_Denah: [...new Set([...(form.value.Id_Media_Denah || []), ...newDenahIds])].filter(Boolean),
+        Id_Media_3d: [...new Set([...(form.value.Id_Media_3d || []), ...new3dIds])].filter(Boolean),
+        Id_Media_Drive: [...new Set([...(form.value.Id_Media_Drive || []), ...newDriveIds])].filter(Boolean),
         Id_Media_Thumbnail: finalThumbnailId,
         Flag_Sewa: form.value.Status_Transaksi?.includes('Sewa') ? 'Ya' : 'Tidak',
         Created_By: isEdit ? form.value.Created_By : currentUserId,
@@ -656,24 +667,20 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
         Id_Customer: form.value.Id_Customer || null,
         Tanggal_Transaksi: form.value.Tanggal_Transaksi || null
       }
-      
+
       delete (payload as any).MediaUrls
       delete (payload as any)._isVirtualArea
       if (!isEdit) delete (payload as any).No_Id
 
-      await api[isEdit ? 'put' : 'post'](targetUrl, payload, { headers: { 'X-Jenis-User': 'admin' } })
-      
       // Cleanup deleted media
-      await Promise.all([
-        mediaImage.clearDeletedMedia(),
-        mediaDenah.clearDeletedMedia(),
-        media3d.clearDeletedMedia()
-      ])
-      
+      await Promise.all([mediaImage.clearDeletedMedia(), mediaDenah.clearDeletedMedia(), media3d.clearDeletedMedia()])
+
+      await api[isEdit ? 'put' : 'post'](targetUrl, payload, { headers: { 'X-Jenis-User': 'admin' } })
+
       // Clear saved draft on success
       const draftKey = isEdit ? `property_draft_${form.value.No_Id}` : 'property_draft_new'
       localStorage.removeItem(draftKey)
-      
+
       success(isEdit ? 'Properti diperbarui' : 'Properti ditambah')
       form.value.Status_Display = targetStatus
       emit('success')
@@ -702,6 +709,7 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
     wilayahModalType,
     initData,
     submitForm,
+    clearDraft,
     initWilayah,
     fetchCities,
     fetchAreas,

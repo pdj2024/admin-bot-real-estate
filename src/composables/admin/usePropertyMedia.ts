@@ -119,7 +119,9 @@ export function usePropertyMedia(form: any, fieldKey = 'File_Image') {
         const idIndex = form.value[fieldKey].indexOf(idToRemove)
         if (idIndex !== -1) {
           form.value[fieldKey].splice(idIndex, 1)
-          deletedMediaIds.value.push(idToRemove)
+          if (idToRemove && photoToRemove.Id_Media) {
+            deletedMediaIds.value.push(idToRemove)
+          }
         }
       }
     }
@@ -133,8 +135,16 @@ export function usePropertyMedia(form: any, fieldKey = 'File_Image') {
       const { data } = await api.post('/api/mediacloud/read-url-batch', { ids }, {
         headers: { 'X-Jenis-User': 'admin' }
       })
+      
+      const failedIds = data.failed || []
+      const successIds = data.success ? Object.keys(data.success) : []
+      
+      if (failedIds.length > 0 && form.value[fieldKey]) {
+        form.value[fieldKey] = form.value[fieldKey].filter((id: string) => !failedIds.includes(id))
+      }
+
       if (data.success) {
-        previewPhotos.value = ids.map(id => {
+        previewPhotos.value = successIds.map(id => {
           const resolved = data.success[id]
           return {
             Id_Media: resolved?.Url || id,
@@ -147,13 +157,6 @@ export function usePropertyMedia(form: any, fieldKey = 'File_Image') {
       }
     } catch (err) {
       console.error('Failed to load existing GCS previews:', err)
-      previewPhotos.value = ids.map(id => ({
-        Id_Media: id,
-        No_Id_Media: id,
-        Url: null,
-        ContentType: 'image/jpeg',
-        Size: 0
-      }))
     }
   }
 
@@ -234,11 +237,24 @@ export function usePropertyMedia(form: any, fieldKey = 'File_Image') {
 
   const clearDeletedMedia = async () => {
     if (deletedMediaIds.value.length) {
-      api.delete('/api/mediacloud/delete-batch', {
-        data: { ids: deletedMediaIds.value },
-        headers: { 'X-Jenis-User': 'admin' }
-      }).catch(() => {})
-      deletedMediaIds.value = []
+      try {
+        const { data } = await api.post('/api/mediacloud/read-url-batch', { ids: deletedMediaIds.value }, {
+          headers: { 'X-Jenis-User': 'admin' }
+        })
+        
+        const successIds = data.success ? Object.keys(data.success) : []
+        
+        if (successIds.length > 0) {
+          await api.delete('/api/mediacloud/delete-batch', {
+            data: { ids: successIds },
+            headers: { 'X-Jenis-User': 'admin' }
+          })
+        }
+      } catch (err) {
+        console.error('Failed to read or delete batch media:', err)
+      } finally {
+        deletedMediaIds.value = []
+      }
     }
   }
 
