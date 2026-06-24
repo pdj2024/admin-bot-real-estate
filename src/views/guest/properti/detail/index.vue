@@ -268,11 +268,21 @@ onUnmounted(() => {
           
           <!-- Map Section -->
           <div v-if="mapCoords && !product.Hide_alamat" class="w-full">
-            <div class="flex items-center gap-2 mb-4">
-              <div class="size-8 bg-bejo-50 rounded-lg flex items-center justify-center border border-bejo-100">
-                <Icon icon="lucide:map" class="size-4 text-bejo-600" />
+            <div class="flex items-center justify-between gap-4 mb-4">
+              <div class="flex items-center gap-2">
+                <div class="size-8 bg-bejo-50 rounded-lg flex items-center justify-center border border-bejo-100">
+                  <Icon icon="lucide:map" class="size-4 text-bejo-600" />
+                </div>
+                <h3 class="text-sm font-black uppercase tracking-widest text-slate-900">Lokasi Properti</h3>
               </div>
-              <h3 class="text-sm font-black uppercase tracking-widest text-slate-900">Lokasi Properti</h3>
+              <a 
+                :href="`https://www.google.com/maps/dir/?api=1&destination=${mapCoords.lat},${mapCoords.lng}`" 
+                target="_blank"
+                class="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-slate-900/20 shrink-0"
+              >
+                <Icon icon="lucide:navigation" class="size-4" />
+                Arahkan Saya
+              </a>
             </div>
             <GoogleMapsViewer 
               :lat="mapCoords.lat" 

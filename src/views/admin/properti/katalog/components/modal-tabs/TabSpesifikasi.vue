@@ -59,20 +59,20 @@ const searchHadap = ref('')
 const searchPosisi = ref('')
 
 const hadapOptions = [
-  { value: 'utara', label: 'Utara' },
-  { value: 'timur', label: 'Timur' },
-  { value: 'selatan', label: 'Selatan' },
-  { value: 'barat', label: 'Barat' },
-  { value: 'timur laut', label: 'Timur Laut' },
-  { value: 'tenggara', label: 'Tenggara' },
-  { value: 'barat daya', label: 'Barat Daya' },
-  { value: 'barat laut', label: 'Barat Laut' }
+  { value: 'Utara', label: 'Utara' },
+  { value: 'Timur', label: 'Timur' },
+  { value: 'Selatan', label: 'Selatan' },
+  { value: 'Barat', label: 'Barat' },
+  { value: 'Timur Laut', label: 'Timur Laut' },
+  { value: 'Tenggara', label: 'Tenggara' },
+  { value: 'Barat Daya', label: 'Barat Daya' },
+  { value: 'Barat Laut', label: 'Barat Laut' }
 ]
 
 const posisiOptions = [
-  { value: 'normal', label: 'Normal' },
-  { value: 'hook', label: 'Hook' },
-  { value: 'tusuk sate', label: 'Tusuk Sate' }
+  { value: 'Normal', label: 'Normal' },
+  { value: 'Hook', label: 'Hook' },
+  { value: 'Tusuk Sate', label: 'Tusuk Sate' }
 ]
 
 const satuanOptions = [

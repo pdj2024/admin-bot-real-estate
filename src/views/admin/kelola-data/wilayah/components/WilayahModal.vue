@@ -312,32 +312,28 @@ const handleClose = () => {
 <template>
   <Transition enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0" enter-to-class="opacity-100" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0">
     <div v-if="show" class="fixed inset-0 z-[1100] flex items-center justify-center p-4">
-      <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-md transition-opacity" @click="handleClose"></div>
+      <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" @click="handleClose"></div>
 
-      <div class="bg-card w-full max-w-lg rounded-2xl shadow-2xl z-10 overflow-hidden border border-slate-100 animate-in fade-in zoom-in slide-in-from-bottom-8 duration-500 flex flex-col">
+      <div class="relative w-full max-w-xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]">
         <!-- Header -->
-        <div class="flex flex-col border-b bg-card">
-          <div class="flex justify-between items-center px-8 py-3">
-            <div class="flex items-center gap-3">
-              <div class="size-10 rounded-2xl bg-bejo-500 text-white flex items-center justify-center shadow-lg shadow-bejo-500/20">
-                <Icon :icon="editData ? 'lucide:pencil' : 'lucide:plus'" class="size-5" />
-              </div>
-              <div>
-                <h3 class="text-lg font-bold text-slate-800 tracking-tight leading-none">{{ title }}</h3>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
-                  Master Data Geografis
-                </p>
-              </div>
+        <div class="px-8 py-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/50 shrink-0">
+          <div class="flex items-center gap-4">
+            <div class="size-10 rounded-xl bg-bejo-600 flex items-center justify-center text-white shadow-lg shadow-bejo-600/20">
+              <Icon :icon="editData ? 'lucide:edit-3' : 'lucide:plus'" class="size-5" />
             </div>
-            <button @click="handleClose" class="p-2 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-600 transition-all active:scale-95">
-              <Icon icon="lucide:x" class="size-6" />
-            </button>
+            <div>
+              <h3 class="text-sm font-black text-slate-900 uppercase tracking-widest">{{ title }}</h3>
+              <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Master Data Geografis</p>
+            </div>
           </div>
+          <button @click="handleClose" class="size-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-white hover:text-red-500 transition-all shrink-0">
+            <Icon icon="lucide:x" class="size-5" />
+          </button>
         </div>
 
         <!-- Body -->
-        <form @submit.prevent="handleSubmit" class="flex-1 overflow-y-auto">
-          <div class="px-8 py-8 space-y-6">
+        <form @submit.prevent="handleSubmit" class="flex-1 overflow-y-auto custom-scrollbar">
+          <div class="p-8 space-y-6">
             <!-- Parent Selection (if applicable) -->
             <div v-if="parentLabel" class="space-y-1.5" ref="dropdownRef">
               <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Pilih {{ parentLabel }} <span class="text-red-500">*</span></label>
@@ -415,14 +411,14 @@ const handleClose = () => {
           </div>
 
           <!-- Footer -->
-          <div class="px-8 py-6 border-t flex justify-between items-center bg-white">
-            <button type="button" @click="handleClose" class="px-8 py-3 text-xs font-black text-slate-400 hover:text-slate-600 uppercase tracking-widest transition-colors">
+          <div class="px-8 py-6 border-t border-slate-50 bg-slate-50/30 flex items-center justify-end gap-4 shrink-0">
+            <button type="button" @click="handleClose" class="px-6 py-3 text-[10px] font-black text-slate-400 hover:text-slate-600 uppercase tracking-widest transition-all">
               Batal
             </button>
-            <button type="submit" :disabled="loading" class="px-10 py-3 bg-bejo-500 text-white text-xs font-black rounded-2xl shadow-xl shadow-bejo-500/20 transition-all hover:scale-[1.03] active:scale-95 flex items-center gap-2 disabled:opacity-70 disabled:scale-100">
-              <Icon v-if="loading" icon="lucide:loader-2" class="animate-spin size-4" />
+            <button type="submit" :disabled="loading" class="px-8 py-3 bg-bejo-600 hover:bg-bejo-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-bejo-600/20 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2">
+              <Icon v-if="loading" icon="lucide:loader-2" class="size-4 animate-spin" />
               <Icon v-else icon="lucide:save" class="size-4" />
-              {{ loading ? 'Memproses...' : editData ? 'Simpan Perubahan' : `Tambah ${type}` }}
+              {{ loading ? 'Memproses...' : (editData ? 'Simpan Perubahan' : `Tambah ${type}`) }}
             </button>
           </div>
         </form>

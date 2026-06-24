@@ -233,7 +233,7 @@ const formatText = (text: string) => {
                   { label: 'Posisi', val: (product as any)?.Posisi_Properti || '-' },
                   { label: 'Lebar Jalan (Row)', val: product?.Row_Jalan ? (product.Row_Jalan + ' Mobil') : '-' },
                   { label: 'Minimal Sewa', val: (product?.minimal_sewa || (product as any)?.Minimal_Sewa) ? ((product?.minimal_sewa || (product as any)?.Minimal_Sewa) + ' ' + (product?.Satuan_Minimal_Sewa || '')) : '-', show: !product || product?.Status_Transaksi?.includes('Sewa') }
-                ].filter(i => i.show !== false)" :key="item.label" class="hover:bg-slate-50 transition-colors">
+                ].filter(i => i.show !== false)" :key="item.label" class="hover:bg-slate-50 transition-colors capitalize">
                   <td class="px-8 py-5 text-slate-500 bg-slate-50/50 w-1/3">{{ item.label }}</td>
                   <td class="px-8 py-5 text-slate-900 not-italic">
                     <span v-if="product">{{ item.val }}</span>
