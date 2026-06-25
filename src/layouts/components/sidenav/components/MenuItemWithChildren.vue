@@ -1,13 +1,13 @@
 <template>
-  <li class="menu-item hs-accordion" :class="{ active: isParentActive || isOpen }">
-    <button type="button" @click.stop.prevent="toggleMenu" class="hs-accordion-toggle menu-link w-full" :class="{ active: isParentActive || isOpen }">
+  <li class="menu-item" :class="{ active: isParentActive || isOpen }">
+    <button type="button" @click.stop.prevent="toggleMenu" class="menu-link w-full" :class="{ active: isParentActive || isOpen }">
       <span v-if="item.icon" class="menu-icon flex items-center justify-center"><Icon :icon="item.icon"></Icon></span>
       <span class="menu-text">{{ item.label }}</span>
       <span class="menu-arrow">
         <Icon icon="lucide:chevron-right" class="ms-auto transition-transform duration-200" :class="{ 'rotate-90': isOpen }" />
       </span>
     </button>
-    <ul v-show="isOpen" class="sub-menu hs-accordion-content hs-accordion-group">
+    <ul v-show="isOpen" class="sub-menu">
       <template v-for="(child, idx) in item.children" :key="idx">
         <MenuItemWithChildren v-if="child.children" :item="child" :level="(level ?? 0) + 1" />
         <MenuItem v-else :item="child" :key="idx" />

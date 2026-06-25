@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
+import api from '@/services/axios'
 import type { Product } from '../index.vue'
 
 const router = useRouter()
@@ -108,6 +109,33 @@ const handleShare = () => {
   navigator.clipboard.writeText(url)
   alert('Link properti berhasil disalin!')
 }
+
+const lastKeyPositions = ref<any[]>([])
+const isKeyDropdownOpen = ref(false)
+
+const fetchLastKeyPositions = async () => {
+  if (!props.product?.No_Id) return
+  try {
+    const { data } = await api.get(`/api/pinjamKunci/getAll?orderby=Tanggal_Pengajuan&id_produk=${props.product.No_Id}`)
+    
+    if (data.Data && Array.isArray(data.Data)) {
+      const sorted = [...data.Data].sort((a, b) => new Date(b.Tanggal_Pengajuan).getTime() - new Date(a.Tanggal_Pengajuan).getTime())
+      const uniqueKeys = new Map()
+      for (const item of sorted) {
+        if (!uniqueKeys.has(item.Id_Kunci)) {
+          uniqueKeys.set(item.Id_Kunci, item)
+        }
+      }
+      lastKeyPositions.value = Array.from(uniqueKeys.values())
+    }
+  } catch (err) {
+    console.error('Failed to fetch key positions:', err)
+  }
+}
+
+watch(() => props.product?.No_Id, (newId) => {
+  if (newId) fetchLastKeyPositions()
+}, { immediate: true })
 </script>
 
 <template>
@@ -262,10 +290,15 @@ const handleShare = () => {
           </button>
        </div>
 
-       <h6 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-          <Icon icon="lucide:lock" class="size-3" />
-          Kontrol Admin
-       </h6>
+       <div class="flex items-center justify-between">
+         <h6 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+            <Icon icon="lucide:lock" class="size-3" />
+            Kontrol Admin
+         </h6>
+         <button @click="handleShare" class="size-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-bejo-50 hover:text-bejo-600 transition-colors border border-slate-100" title="Bagikan Link">
+            <Icon icon="lucide:share-2" class="size-4" />
+         </button>
+       </div>
        <div class="grid grid-cols-1 gap-3">
           <!-- Created By -->
           <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
@@ -274,25 +307,49 @@ const handleShare = () => {
                    <Icon icon="lucide:user-circle" class="size-5" />
                 </div>
                 <div>
-                   <span class="block text-xs font-black text-slate-900 uppercase tracking-wide">Dibuat Oleh</span>
+                   <span class="block text-xs font-black text-slate-900 uppercase tracking-wide">{{ (product as any)?.Nama_Admin || 'Dibuat Oleh' }}</span>
                    <span class="block text-[10px] font-bold text-slate-400">{{ product?.Created_By || '-' }}</span>
                 </div>
              </div>
           </div>
 
-          <!-- Share Link -->
-          <button @click="handleShare" class="flex items-center justify-between p-4 bg-slate-50 hover:bg-bejo-50 rounded-2xl transition-all group border border-slate-100 hover:border-bejo-200">
-             <div class="flex items-center gap-3">
-                <div class="size-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-slate-100 group-hover:border-bejo-200 group-hover:text-bejo-600">
-                   <Icon icon="lucide:share-2" class="size-5" />
+          <!-- Posisi Kunci Terakhir -->
+          <div v-if="lastKeyPositions.length > 0" class="border border-slate-100 rounded-2xl bg-slate-50 overflow-hidden">
+             <button @click="isKeyDropdownOpen = !isKeyDropdownOpen" class="flex items-center justify-between w-full p-4 hover:bg-slate-100 transition-colors">
+                <div class="flex items-center gap-3">
+                   <div class="size-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-slate-100 text-slate-400">
+                      <Icon icon="lucide:key" class="size-5" />
+                   </div>
+                   <div class="text-left">
+                      <span class="block text-xs font-black text-slate-900 uppercase tracking-wide">Posisi Kunci</span>
+                      <span class="block text-[10px] font-bold text-slate-400">{{ lastKeyPositions.length }} Kunci Tercatat</span>
+                   </div>
                 </div>
-                <div>
-                   <span class="block text-xs font-black text-slate-900 uppercase tracking-wide">Bagikan Link</span>
-                   <span class="block text-[10px] font-bold text-slate-400">Salin URL properti</span>
+                <Icon icon="lucide:chevron-down" class="size-4 text-slate-400 transition-transform duration-300" :class="isKeyDropdownOpen ? 'rotate-180' : ''" />
+             </button>
+             <div v-show="isKeyDropdownOpen" class="px-4 pb-4">
+                <div class="flex flex-col gap-2 pt-2 border-t border-slate-200/60">
+                   <div v-for="kunci in lastKeyPositions" :key="kunci.Id_Kunci" class="bg-white p-3 rounded-xl border border-slate-100 shadow-sm flex items-start gap-3">
+                      <div class="size-8 bg-bejo-50 rounded-lg shrink-0 flex items-center justify-center text-bejo-600 mt-0.5">
+                         <Icon icon="lucide:key" class="size-4" />
+                      </div>
+                      <div class="flex-1 min-w-0">
+                         <div class="flex justify-between items-start gap-2">
+                           <span class="block text-xs font-black text-slate-900 truncate">{{ kunci.Nama_Kunci }}</span>
+                           <span class="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full" 
+                                 :class="kunci.Status_Progress === 'dikembalikan' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'">
+                              {{ kunci.Status_Progress }}
+                           </span>
+                         </div>
+                         <span class="block text-[10px] font-bold text-slate-500 mt-1 truncate">
+                            Oleh <span class="text-bejo-600">{{ kunci.Nama_Agent }}</span>
+                         </span>
+                         <span class="block text-[9px] font-semibold text-slate-400 mt-0.5">{{ new Date(kunci.Tanggal_Pengajuan).toLocaleString('id-ID', {day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit'}) }}</span>
+                      </div>
+                   </div>
                 </div>
              </div>
-             <Icon icon="lucide:chevron-right" class="size-4 text-slate-300 group-hover:text-bejo-600 group-hover:translate-x-1 transition-all" />
-          </button>
+          </div>
 
           <div class="flex items-center gap-3 mt-2">
              <button 

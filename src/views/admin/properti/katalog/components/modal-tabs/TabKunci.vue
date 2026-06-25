@@ -2,7 +2,7 @@
 import { inject, ref, computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import BaseFormGroup from '@/components/common/BaseFormGroup.vue'
-import { success, fail } from '@/utils/sweet-alert'
+import { fail } from '@/utils/sweet-alert'
 import Swal from 'sweetalert2'
 
 const state = inject<any>('propertyModalState')
@@ -34,7 +34,7 @@ const handleAddKunci = async () => {
       })
     }
     newKunciName.value = ''
-  } catch (err) {
+  } catch {
     // Error handled in composable
   } finally {
     isSubmitting.value = false
@@ -49,7 +49,7 @@ const handleToggleStatus = async (kunci: any, isPending: boolean, index: number)
   } else {
     try {
       await submitKunci(kunci.Nama_Kunci, newStatus, true, kunci.No_Id)
-    } catch (err) {
+    } catch {
       // Revert on fail
       kunci.Status = kunci.Status === 'aktif' ? 'nonaktif' : 'aktif'
     }
@@ -74,7 +74,7 @@ const handleDeleteKunci = async (kunci: any, isPending: boolean, index: number) 
     if (result.isConfirmed) {
       try {
         await removeKunci(kunci.No_Id)
-      } catch (err) {
+      } catch {
         // Handled in composable
       }
     }

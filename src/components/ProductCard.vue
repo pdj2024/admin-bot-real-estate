@@ -237,6 +237,14 @@
             <strong class="text-slate-800 font-extrabold">{{ product.Tanggal_Transaksi ? product.Tanggal_Transaksi.split('T')[0] : '-' }}</strong>
           </span>
         </div>
+        
+        <div v-if="product.Serah_Terima" class="flex items-center gap-2 mt-0.5">
+          <Icon icon="lucide:handshake" :class="product.Status_Properti === 'Terjual' ? 'text-emerald-600' : 'text-bejo-600'" class="size-3.5" />
+          <span class="text-slate-500">
+            Serah Terima: 
+            <strong class="text-slate-800 font-extrabold">{{ product.Serah_Terima.split('T')[0] }}</strong>
+          </span>
+        </div>
       </div>
 
       <!-- Pricing Info -->
@@ -301,6 +309,10 @@
               <button @click="$emit('updateStatus', product, 'Tersedia')" v-if="product.Status_Properti != 'Tersedia'" class="admin-dropdown-item hover:bg-bejo-50 hover:text-bejo-600">
                 <Icon icon="lucide:rotate-ccw" class="size-4" /> 
                 {{ product.Status_Properti == 'Terjual' ? 'Batal Terjual' : (product.Status_Properti == 'Tersewa' ? 'Batal Tersewa' : 'Batal Status') }}
+              </button>
+              <button @click="$emit('serahTerima', product)" v-if="(product.Status_Properti == 'Terjual' || product.Status_Properti == 'Tersewa') && !product.Serah_Terima" class="admin-dropdown-item hover:bg-bejo-50 hover:text-bejo-600">
+                <Icon icon="lucide:handshake" class="size-4" /> 
+                Serah Terima Unit
               </button>
               <hr class="my-2 border-slate-100" />
               <button @click="$emit('updateStatus', product, 'Aktif')" v-if="product.Status_Display == 'Draft' && product.Status_Properti == 'Tersedia'" class="admin-dropdown-item hover:bg-blue-50 hover:text-blue-600"><Icon icon="lucide:eye" class="size-4" /> Tampilkan Produk</button>
@@ -381,7 +393,7 @@ const effectivelyLoading = computed(() => {
   return false
 })
 
-const emit = defineEmits(['toggleDropdown', 'updateStatus', 'delete', 'edit', 'select', 'toggleExpand'])
+const emit = defineEmits(['toggleDropdown', 'updateStatus', 'delete', 'edit', 'select', 'toggleExpand', 'serahTerima'])
 
 const targetUrl = computed(() => {
   return props.isAdmin ? `/properti/detail/${props.product.Slug}` : `/detail/${props.product.Slug}`

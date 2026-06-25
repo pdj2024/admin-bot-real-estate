@@ -29,12 +29,19 @@ const isLoading = ref(true)
 const customers = ref<any[]>([])
 const showTxModal = ref(false)
 const txProduct = ref<any>(null)
-const txStatus = ref('')
+const txStatus = ref('Terjual')
 const txDate = ref('')
 const txCustomerId = ref('')
 const txSearchCustomer = ref('')
 const isTxCustomerDropdownOpen = ref(false)
 const isSavingTx = ref(false)
+const showTxCustomerDropdown = ref(false)
+
+// Serah Terima State
+const showSerahTerimaModal = ref(false)
+const serahTerimaProduct = ref<any>(null)
+const serahTerimaDate = ref('')
+const isSavingSerahTerima = ref(false)
 
 
 const props = defineProps<{
@@ -57,7 +64,10 @@ const props = defineProps<{
     max: string
   }
   transactionType: string
+  statusSelection: string
 }>()
+
+const emit = defineEmits(['update:transactionType', 'update:statusSelection', 'openFilter', 'resetFilter'])
 
 const propertyTypes = ['Rumah', 'Tanah', 'Ruko', 'Apartemen', 'Gudang', 'Villa', 'SOHO', 'Pabrik', 'Perkantoran', 'Hotel', 'Rumah Kos', 'Stand', 'Toko', 'Gedung', 'Condotel', 'Lain-lain']
 
@@ -208,6 +218,20 @@ const buildParams = () => {
     p.append('status_transaksi', '["Jual","Sewa"]')
   }
 
+  // Status Properti Mapping
+  if (props.statusSelection === 'Draft') {
+    p.append('status_display', 'Draft')
+  } else if (props.statusSelection === 'Tersedia') {
+    p.append('status_display', 'Aktif')
+    p.append('status_properti', 'Tersedia')
+  } else if (props.statusSelection === 'Terjual') {
+    p.append('status_display', 'Aktif')
+    p.append('status_properti', 'Terjual')
+  } else if (props.statusSelection === 'Tersewa') {
+    p.append('status_display', 'Aktif')
+    p.append('status_properti', 'Tersewa')
+  }
+
   // Region & Price
   if (props.region.city) {
     const cleanCity = props.region.city.replace(/\b(kota|kabupaten|kab\.|kab)\b/gi, '').replace(/\s+/g, ' ').trim()
@@ -217,6 +241,10 @@ const buildParams = () => {
   if (props.priceRange.max) p.append('harga_max', props.priceRange.max)
   if (props.facilities.rowJalanMin) p.append('row_jalan_min', String(props.facilities.rowJalanMin))
   if (props.facilities.rowJalanMax) p.append('row_jalan_max', String(props.facilities.rowJalanMax))
+  if (props.facilities.kamarTidur) p.append('jumlah_kamar_tidur_min', String(props.facilities.kamarTidur))
+  if (props.facilities.kamarMandi) p.append('jumlah_kamar_mandi_min', String(props.facilities.kamarMandi))
+  if (props.facilities.carport) p.append('jumlah_carpot_min', String(props.facilities.carport))
+  if (props.facilities.lantai) p.append('jumlah_lantai_min', String(props.facilities.lantai))
 
   return p.toString()
 }
@@ -272,7 +300,7 @@ const fetchData = async (backgroundRefetch = false) => {
 // Watch for filter changes to refetch data
 let fetchTimeout: any = null
 watch(
-  [() => props.searchQuery, transactionFilter, typeFilter, () => props.region.city, () => props.priceRange, () => props.facilities],
+  [() => props.searchQuery, transactionFilter, typeFilter, () => props.region.city, () => props.priceRange, () => props.facilities, () => props.statusSelection],
   () => {
     if (fetchTimeout) clearTimeout(fetchTimeout)
     fetchTimeout = setTimeout(() => {
@@ -290,7 +318,12 @@ const updateStatusTransaksi = async (product: any, newStatus: string) => {
   if (newStatus === 'Terjual' || newStatus === 'Tersewa') {
     txProduct.value = { ...product }
     txStatus.value = newStatus
-    txDate.value = new Date().toISOString().split('T')[0]
+    
+    // Initialize with current local datetime
+    const d = new Date()
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset())
+    txDate.value = d.toISOString().slice(0, 16)
+    
     txCustomerId.value = product.Id_Customer || ''
     const foundCust = customers.value.find((c: any) => c.No_Id === product.Id_Customer)
     txSearchCustomer.value = foundCust ? foundCust.Nama_Display : ''
@@ -309,6 +342,13 @@ const updateStatusTransaksi = async (product: any, newStatus: string) => {
         // Auto-set to Draft if Sold or Rented
         if (newStatus === 'Terjual' || newStatus === 'Tersewa') {
           product.Status_Display = 'Draft'
+        }
+        
+        // Nullify fields if status is cancelled (Tersedia)
+        if (newStatus === 'Tersedia') {
+          product.Id_Customer = ""
+          product.Tanggal_Transaksi = null
+          product.Serah_Terima = null
         }
       }
 
@@ -358,7 +398,16 @@ const submitTransaction = async () => {
     updatedProduct.Status_Properti = txStatus.value
     updatedProduct.Status_Display = 'Draft'
     updatedProduct.Id_Customer = txCustomerId.value
-    updatedProduct.Tanggal_Transaksi = txDate.value
+
+    let formattedDate = txDate.value
+    if (formattedDate.length === 16) {
+      formattedDate = formattedDate + ':00Z'
+    } else if (formattedDate.length === 10) {
+      formattedDate = formattedDate + 'T00:00:00Z'
+    } else if (!formattedDate.endsWith('Z')) {
+      formattedDate = formattedDate + 'Z'
+    }
+    updatedProduct.Tanggal_Transaksi = formattedDate
 
     await api.put('/api/realEstate/update?no_id=' + updatedProduct.No_Id, updatedProduct, {
       headers: { 'X-Jenis-User': 'admin' }
@@ -371,6 +420,58 @@ const submitTransaction = async () => {
     fail('Gagal menyimpan detail transaksi.')
   } finally {
     isSavingTx.value = false
+  }
+}
+
+const openSerahTerimaModal = (product: any) => {
+  serahTerimaProduct.value = { ...product }
+  // default to current date if not set
+  if (product.Serah_Terima) {
+    if (product.Serah_Terima.includes('/')) {
+      const rawDate = product.Serah_Terima.split(' ')[0].split('/')
+      if (rawDate.length === 3) {
+        // 07/01/2026 -> 2026-01-07
+        serahTerimaDate.value = `${rawDate[2]}-${rawDate[1]}-${rawDate[0]}T00:00`
+      } else {
+        serahTerimaDate.value = product.Serah_Terima.slice(0, 16)
+      }
+    } else {
+      serahTerimaDate.value = product.Serah_Terima.slice(0, 16)
+    }
+  } else {
+    const d = new Date()
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset())
+    serahTerimaDate.value = d.toISOString().slice(0, 16)
+  }
+  showSerahTerimaModal.value = true
+}
+
+const submitSerahTerima = async () => {
+  if (!serahTerimaProduct.value || !serahTerimaDate.value) return
+  isSavingSerahTerima.value = true
+  try {
+    const updatedProduct = { ...serahTerimaProduct.value }
+    let formattedDate = serahTerimaDate.value
+    if (formattedDate.length === 16) {
+      formattedDate = formattedDate + ':00Z'
+    } else if (formattedDate.length === 10) {
+      formattedDate = formattedDate + 'T00:00:00Z'
+    } else if (!formattedDate.endsWith('Z')) {
+      formattedDate = formattedDate + 'Z'
+    }
+    updatedProduct.Serah_Terima = formattedDate
+
+    await api.put('/api/realEstate/update?no_id=' + updatedProduct.No_Id, updatedProduct, {
+      headers: { 'X-Jenis-User': 'admin' }
+    })
+    showSerahTerimaModal.value = false
+    success(`Tanggal Serah Terima berhasil dicatat`)
+    await fetchData(true)
+  } catch (error) {
+    console.error('Gagal menyimpan serah terima:', error)
+    fail('Gagal menyimpan tanggal serah terima.')
+  } finally {
+    isSavingSerahTerima.value = false
   }
 }
 
@@ -567,6 +668,7 @@ defineExpose({ openAddModal })
         @updateStatus="updateStatusTransaksi"
         @edit="openEditModal(row.original)"
         @delete="deleteProduct"
+        @serahTerima="openSerahTerimaModal"
       />
     </div>
 
@@ -610,8 +712,8 @@ defineExpose({ openAddModal })
       leave-to-class="opacity-0"
     >
       <div v-show="showTxModal" class="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-        <div class="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl border border-slate-50 overflow-hidden flex flex-col z-10 animate-fade-in-up">
-          <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-white">
+        <div class="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl border border-slate-50 flex flex-col z-10 animate-fade-in-up">
+          <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-white rounded-t-[2.5rem]">
             <div class="flex items-center gap-3">
               <div class="size-10 rounded-2xl bg-gradient-to-br from-bejo-50 to-bejo-100 flex items-center justify-center text-bejo-600 shadow-sm border border-bejo-100/50">
                 <Icon :icon="txStatus === 'Terjual' ? 'lucide:badge-check' : 'lucide:key'" class="size-5" />
@@ -704,7 +806,7 @@ defineExpose({ openAddModal })
               <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tanggal Transaksi</label>
               <div class="relative">
                 <input 
-                  type="date" 
+                  type="datetime-local" 
                   v-model="txDate" 
                   class="w-full border border-slate-200 rounded-xl py-2.5 pl-10 pr-4 text-xs font-bold text-slate-700 bg-white focus:ring-4 focus:ring-bejo-600/10 focus:border-bejo-600 transition-all outline-none"
                 />
@@ -713,7 +815,7 @@ defineExpose({ openAddModal })
             </div>
           </div>
 
-          <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-3 bg-white">
+          <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-3 bg-white rounded-b-[2.5rem]">
             <button @click="showTxModal = false" class="px-5 py-2.5 text-xs font-black text-slate-400 hover:text-red-500 uppercase tracking-widest transition-colors">Batal</button>
             <button 
               :disabled="isSavingTx || !txCustomerId || !txDate" 
@@ -723,6 +825,68 @@ defineExpose({ openAddModal })
               <Icon v-if="isSavingTx" icon="lucide:loader-2" class="size-4 animate-spin" />
               <Icon v-else icon="lucide:save" class="size-4" />
               {{ isSavingTx ? 'Menyimpan...' : 'Simpan' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- Modal Serah Terima Unit -->
+    <Transition 
+      enter-active-class="transition duration-300 ease-out" 
+      enter-from-class="opacity-0" 
+      enter-to-class="opacity-100" 
+      leave-active-class="transition duration-200 ease-in" 
+      leave-from-class="opacity-100" 
+      leave-to-class="opacity-0"
+    >
+      <div v-show="showSerahTerimaModal" class="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div class="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl border border-slate-50 flex flex-col z-10 animate-fade-in-up">
+          <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-white rounded-t-[2.5rem]">
+            <div class="flex items-center gap-3">
+              <div class="size-10 rounded-2xl bg-gradient-to-br from-bejo-50 to-bejo-100 flex items-center justify-center text-bejo-600 shadow-sm border border-bejo-100/50">
+                <Icon icon="lucide:handshake" class="size-5" />
+              </div>
+              <div>
+                <h3 class="text-slate-900 font-extrabold text-base tracking-tight leading-tight">Serah Terima Unit</h3>
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Atur Tanggal Serah Terima</p>
+              </div>
+            </div>
+            <button @click="showSerahTerimaModal = false" class="size-8 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all border border-slate-100 shadow-sm active:scale-95">
+              <Icon icon="lucide:x" class="size-4" />
+            </button>
+          </div>
+
+          <div class="p-6 bg-slate-50/50 flex flex-col gap-6">
+            <div v-if="serahTerimaProduct" class="p-4 bg-white border border-slate-100 rounded-2xl shadow-sm">
+              <div class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Unit Properti</div>
+              <div class="font-bold text-slate-800 text-sm mb-0.5">{{ serahTerimaProduct.Nama_Produk }}</div>
+              <div class="text-xs text-slate-500 line-clamp-1">{{ serahTerimaProduct.Alamat }}</div>
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tanggal Serah Terima</label>
+              <div class="relative">
+                <input 
+                  type="datetime-local" 
+                  v-model="serahTerimaDate" 
+                  class="w-full border border-slate-200 rounded-xl py-2.5 pl-10 pr-4 text-xs font-bold text-slate-700 bg-white focus:ring-4 focus:ring-bejo-600/10 focus:border-bejo-600 transition-all outline-none"
+                />
+                <Icon icon="lucide:calendar" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 size-4 pointer-events-none" />
+              </div>
+            </div>
+          </div>
+
+          <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-3 bg-white rounded-b-[2.5rem]">
+            <button @click="showSerahTerimaModal = false" class="px-5 py-2.5 text-xs font-black text-slate-400 hover:text-red-500 uppercase tracking-widest transition-colors">Batal</button>
+            <button 
+              :disabled="isSavingSerahTerima || !serahTerimaDate" 
+              @click="submitSerahTerima" 
+              class="px-6 py-2.5 bg-bejo-600 hover:bg-bejo-700 disabled:opacity-50 text-white text-xs font-black rounded-xl shadow-lg shadow-bejo-600/20 active:scale-95 transition-all flex items-center gap-2 uppercase tracking-widest"
+            >
+              <Icon v-if="isSavingSerahTerima" icon="lucide:loader-2" class="size-4 animate-spin" />
+              <Icon v-else icon="lucide:save" class="size-4" />
+              {{ isSavingSerahTerima ? 'Menyimpan...' : 'Simpan' }}
             </button>
           </div>
         </div>

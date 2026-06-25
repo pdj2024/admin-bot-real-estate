@@ -24,6 +24,13 @@ const form = ref({
   Estimasi_Pengembalian: ''
 })
 
+const minEstimasiPengembalian = computed(() => {
+  if (form.value.Tanggal_Janji) {
+    return `${form.value.Tanggal_Janji}T00:00`
+  }
+  return `${today}T00:00`
+})
+
 const selectedKey = ref('')
 
 const customers = ref<any[]>([])
@@ -156,6 +163,14 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
 
+watch(() => form.value.Tanggal_Janji, () => {
+  form.value.Estimasi_Pengembalian = ''
+})
+
+watch(() => form.value.Waktu_Janji, () => {
+  form.value.Waktu_Selesai = ''
+})
+
 const fetchData = async () => {
   try {
     const [custRes, prodRes] = await Promise.all([
@@ -262,10 +277,10 @@ const submitForm = async () => {
 
     // 2. Create Key Borrowing if selected
     if (selectedKey.value) {
-      const createdAppointmentId = appointmentRes.data?.Data?.No_Id || null
+      const createdAppointmentId = appointmentRes.data?.NewId || null
       
       const keyPayload = {
-        Id_Agent: adminId,
+        Id_Agent: form.value.Id_Customer,
         Id_Kunci: selectedKey.value,
         Id_Janji_Temu: createdAppointmentId,
         Tanggal_Pengajuan: `${form.value.Tanggal_Janji}T${form.value.Waktu_Janji}`,
@@ -282,9 +297,13 @@ const submitForm = async () => {
     success('Berhasil membuat janji temu' + (selectedKey.value ? ' dan pengajuan pinjam kunci' : ''))
     emit('refresh')
     closeModal()
-  } catch (error) {
+  } catch (error: any) {
     console.error('Gagal membuat janji temu:', error)
-    fail('Gagal membuat janji temu')
+    if (error.response && error.response.data && error.response.data.Message) {
+      fail(error.response.data.Message)
+    } else {
+      fail('Gagal membuat janji temu')
+    }
   } finally {
     isLoading.value = false
   }
@@ -303,7 +322,7 @@ const formatDate = (dateStr: string) => {
 
 <template>
   <Transition enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0" enter-to-class="opacity-100" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0">
-    <div v-if="modelValue" class="fixed inset-0 z-[1100] flex items-center justify-center p-4">
+    <div v-if="modelValue" class="fixed inset-0 z-[1050] flex items-center justify-center p-4">
       <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" @click="closeModal"></div>
       <div class="relative w-full max-w-4xl bg-white rounded-[2.5rem] shadow-2xl flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-500 overflow-hidden">
         
@@ -334,7 +353,7 @@ const formatDate = (dateStr: string) => {
                   <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Customer <span class="text-red-500">*</span></label>
                   <button type="button" ref="customerBtnRef" @click="toggleDropdown('customer')" class="w-full h-12 px-4 bg-slate-50 border border-slate-100 rounded-xl focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500/50 outline-none transition-all font-bold text-slate-700 text-sm flex items-center justify-between group">
                     <span class="truncate" :class="form.Id_Customer ? 'text-slate-700' : 'text-slate-400'">
-                      {{ customers.find(c => c.No_Id === form.Id_Customer)?.Nama_Display || customers.find(c => c.No_Id === form.Id_Customer)?.UserName || customers.find(c => c.No_Id === form.Id_Customer)?.No_Id || 'PILIH CUSTOMER' }}
+                      {{ customers.find(c => c.No_Id === form.Id_Customer)?.Nama_Display || customers.find(c => c.No_Id === form.Id_Customer)?.UserName || customers.find(c => c.No_Id === form.Id_Customer)?.No_Id || '- PILIH -' }}
                     </span>
                     <Icon icon="lucide:chevron-down" class="text-slate-400 size-4 transition-transform" :class="{'rotate-180 text-bejo-500': isDropdownOpen.customer}" />
                   </button>
@@ -364,10 +383,10 @@ const formatDate = (dateStr: string) => {
                 </div>
 
                 <div class="space-y-2 relative">
-                  <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Produk / Properti <span class="text-red-500">*</span></label>
+                  <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Properti <span class="text-red-500">*</span></label>
                   <button type="button" ref="produkBtnRef" @click="toggleDropdown('produk')" class="w-full h-12 px-4 bg-slate-50 border border-slate-100 rounded-xl focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500/50 outline-none transition-all font-bold text-slate-700 text-sm flex items-center justify-between group">
                     <span class="truncate" :class="form.Id_Produk ? 'text-slate-700' : 'text-slate-400'">
-                      {{ products.find(p => p.No_Id === form.Id_Produk)?.Nama_Produk || 'PILIH PRODUK' }}
+                      {{ products.find(p => p.No_Id === form.Id_Produk)?.Nama_Produk || '- PILIH -' }}
                     </span>
                     <Icon icon="lucide:chevron-down" class="text-slate-400 size-4 transition-transform" :class="{'rotate-180 text-bejo-500': isDropdownOpen.produk}" />
                   </button>
@@ -413,7 +432,7 @@ const formatDate = (dateStr: string) => {
                 <div class="space-y-2">
                   <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Waktu Selesai</label>
                   <div class="relative group">
-                    <input type="time" v-model="form.Waktu_Selesai" class="w-full h-12 px-4 bg-slate-50 border border-slate-100 rounded-xl focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500/50 outline-none transition-all font-bold text-slate-700 text-sm appearance-none" />
+                    <input type="time" v-model="form.Waktu_Selesai" :min="form.Waktu_Janji" class="w-full h-12 px-4 bg-slate-50 border border-slate-100 rounded-xl focus:ring-4 focus:ring-bejo-500/10 focus:border-bejo-500/50 outline-none transition-all font-bold text-slate-700 text-sm appearance-none" />
                   </div>
                 </div>
               </div>
@@ -474,7 +493,7 @@ const formatDate = (dateStr: string) => {
               
               <div v-if="!form.Id_Produk" class="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center py-10 bg-slate-50 rounded-2xl border border-slate-100 border-dashed mb-auto">
                 <Icon icon="lucide:building" class="size-8 mx-auto mb-2 text-slate-300" />
-                Pilih Produk Terlebih Dahulu
+                Pilih Properti Terlebih Dahulu
               </div>
               <div v-else-if="!form.Tanggal_Janji || !form.Estimasi_Pengembalian" class="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center py-10 bg-slate-50 rounded-2xl border border-slate-100 border-dashed mb-auto">
                 <Icon icon="lucide:calendar-clock" class="size-8 mx-auto mb-2 text-slate-300" />
@@ -531,7 +550,7 @@ const formatDate = (dateStr: string) => {
               <div v-if="form.Id_Produk" class="mt-auto pt-4 border-t border-slate-100 shrink-0">
                 <label class="text-[10px] font-black text-amber-600 uppercase tracking-widest ml-1 block mb-2">Estimasi Pengembalian <span class="text-red-500">*</span></label>
                 <div class="relative group">
-                  <input type="datetime-local" v-model="form.Estimasi_Pengembalian" class="w-full h-11 px-4 bg-amber-50/50 border border-amber-100 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 outline-none transition-all font-bold text-slate-700 text-xs appearance-none" />
+                  <input type="datetime-local" :min="minEstimasiPengembalian" v-model="form.Estimasi_Pengembalian" class="w-full h-11 px-4 bg-amber-50/50 border border-amber-100 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 outline-none transition-all font-bold text-slate-700 text-xs appearance-none" />
                 </div>
               </div>
 

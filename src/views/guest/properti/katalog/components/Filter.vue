@@ -63,8 +63,8 @@
                         <Icon icon="lucide:chevron-down" class="size-4 text-slate-400 transition-transform" :class="isProvOpen ? 'rotate-180' : ''" />
                       </button>
 
-                      <Teleport to="body">
-                        <div v-if="isProvOpen" class="fixed z-[9999] bg-white border border-slate-200 shadow-2xl rounded-2xl overflow-hidden" :style="provDropdownStyle">
+                      <Transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0 scale-95 -translate-y-2" enter-to-class="opacity-100 scale-100 translate-y-0" leave-active-class="transition duration-150 ease-in" leave-from-class="opacity-100 scale-100 translate-y-0" leave-to-class="opacity-0 scale-95 -translate-y-2">
+                        <div v-if="isProvOpen" class="absolute left-0 right-0 top-[calc(100%+4px)] z-[9999] bg-white border border-slate-200 shadow-2xl rounded-2xl overflow-hidden">
                           <div class="p-2 border-b bg-slate-50">
                             <div class="relative">
                               <Icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
@@ -81,7 +81,7 @@
                             <div v-if="filteredProvinces.length === 0" class="p-4 text-center text-xs text-slate-400 font-medium">Provinsi tidak ditemukan</div>
                           </div>
                         </div>
-                      </Teleport>
+                      </Transition>
                     </div>
 
                     <!-- Dropdown Kota -->
@@ -96,8 +96,8 @@
                         <Icon icon="lucide:chevron-down" class="size-4 text-slate-400 transition-transform" :class="isCityOpen ? 'rotate-180' : ''" />
                       </button>
 
-                      <Teleport to="body">
-                        <div v-if="isCityOpen && region.provinceId" class="fixed z-[9999] bg-white border border-slate-200 shadow-2xl rounded-2xl overflow-hidden" :style="cityDropdownStyle">
+                      <Transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0 scale-95 -translate-y-2" enter-to-class="opacity-100 scale-100 translate-y-0" leave-active-class="transition duration-150 ease-in" leave-from-class="opacity-100 scale-100 translate-y-0" leave-to-class="opacity-0 scale-95 -translate-y-2">
+                        <div v-if="isCityOpen && region.provinceId" class="absolute left-0 right-0 top-[calc(100%+4px)] z-[9999] bg-white border border-slate-200 shadow-2xl rounded-2xl overflow-hidden">
                           <div class="p-2 border-b bg-slate-50">
                             <div class="relative">
                               <Icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
@@ -114,7 +114,7 @@
                             <div v-if="filteredCities.length === 0" class="p-4 text-center text-xs text-slate-400 font-medium">Kota tidak ditemukan</div>
                           </div>
                         </div>
-                      </Teleport>
+                      </Transition>
                     </div>
                   </div>
                 </div>

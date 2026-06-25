@@ -31,6 +31,9 @@
           <RouterLink to="/simulasi-kpr" active-class="bg-bejo-50 text-bejo-600 [&>svg]:text-bejo-500" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 hover:text-bejo-600 hover:bg-bejo-50 rounded-xl transition-all group">
             <Icon icon="lucide:calculator" class="size-4 text-slate-400 group-hover:text-bejo-500 transition-colors" /> Simulasi KPR
           </RouterLink>
+          <RouterLink to="/pinjam-kunci" active-class="bg-bejo-50 text-bejo-600 [&>svg]:text-bejo-500" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 hover:text-bejo-600 hover:bg-bejo-50 rounded-xl transition-all group">
+            <Icon icon="lucide:key" class="size-4 text-slate-400 group-hover:text-bejo-500 transition-colors" /> Pinjam Kunci
+          </RouterLink>
           <RouterLink v-if="isLoggedIn" to="/dashboard" active-class="bg-bejo-50 text-bejo-600 [&>svg]:text-bejo-500" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 hover:text-bejo-600 hover:bg-bejo-50 rounded-xl transition-all group">
             <Icon icon="lucide:layout-dashboard" class="size-4 text-slate-400 group-hover:text-bejo-500 transition-colors" /> Dashboard Admin
           </RouterLink>
@@ -70,6 +73,10 @@
               </RouterLink>
               <RouterLink to="/simulasi-kpr" active-class="text-bejo-600 [&>span]:scale-x-100" class="relative text-sm font-bold text-slate-600 hover:text-bejo-600 transition-colors group py-2">
                 Simulasi KPR
+                <span class="absolute inset-x-0 -bottom-1 h-1 bg-bejo-500 rounded-t-full transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
+              </RouterLink>
+              <RouterLink to="/pinjam-kunci" active-class="text-bejo-600 [&>span]:scale-x-100" class="relative text-sm font-bold text-slate-600 hover:text-bejo-600 transition-colors group py-2">
+                Pinjam Kunci
                 <span class="absolute inset-x-0 -bottom-1 h-1 bg-bejo-500 rounded-t-full transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
               </RouterLink>
               <RouterLink to="/tentang-kami" active-class="text-bejo-600 [&>span]:scale-x-100" class="relative text-sm font-bold text-slate-600 hover:text-bejo-600 transition-colors group py-2">

@@ -81,6 +81,15 @@ const router = createRouter({
       },
       component: () => import('@/views/guest/faq/index.vue')
     },
+    {
+      path: '/pinjam-kunci',
+      name: 'Pinjam Kunci',
+      meta: {
+        title: 'Pinjam Kunci',
+        requiresAuth: false
+      },
+      component: () => import('@/views/guest/pinjam-kunci/index.vue')
+    },
 
     // Role Admin
     {
@@ -140,6 +149,15 @@ const router = createRouter({
         requiresAuth: true
       },
       component: () => import('@/views/admin/properti/katalog/index.vue')
+    },
+    {
+      path: '/kunci',
+      name: 'kunci',
+      meta: {
+        title: 'Master Kunci',
+        requiresAuth: true
+      },
+      component: () => import('@/views/admin/kunci/index.vue')
     },
     {
       path: '/properti/detail/:slug',

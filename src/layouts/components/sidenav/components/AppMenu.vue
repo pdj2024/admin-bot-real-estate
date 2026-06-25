@@ -1,5 +1,5 @@
 <template>
-  <ul class="side-nav p-3 hs-accordion-group">
+  <ul class="side-nav p-3">
     <template v-for="(item, idx) in menuItems" :key="item.key || idx">
       <li v-if="item.isTitle" class="menu-title" :class="item.isTitle && idx != 0 ? 'mt-3' : ''">
         <span>{{ item.label }}</span>

@@ -25,6 +25,7 @@ const priceRange = ref({
   max: ''
 })
 const transactionType = ref('Semua')
+const statusSelection = ref('Semua')
 const rumahRef = ref<any>(null)
 
 const toggleFilter = () => {
@@ -84,6 +85,7 @@ onMounted(() => {
             v-model:region="region"
             v-model:priceRange="priceRange"
             v-model:transactionType="transactionType"
+            v-model:statusSelection="statusSelection"
             :provinces="provinces"
             class="xl:sticky xl:top-24"
           />
@@ -97,6 +99,7 @@ onMounted(() => {
             v-model:region="region"
             v-model:priceRange="priceRange"
             v-model:transactionType="transactionType"
+            v-model:statusSelection="statusSelection"
             @openFilter="toggleFilter" 
             @resetFilter="() => {
               searchQuery = '';
@@ -104,6 +107,7 @@ onMounted(() => {
               region = { province: '', city: '', provinceId: '' };
               priceRange = { min: '', max: '' };
               transactionType = 'Semua';
+              statusSelection = 'Semua';
             }"
           />
         </section>

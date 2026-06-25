@@ -1,0 +1,35 @@
+POST /api/pinjamKunci/create
+body {
+  "nama_agent": "Budi Santoso",
+  "telepon": "6281234567890",
+  "id_produk": "PRP-001",
+  "tanggal_pengajuan": "2026-06-25T10:00:00",
+  "estimasi_pengembalian": "2026-06-25T17:00:00"
+}
+return 200 {
+  "StatusCode": 200,
+  "Message": "Pengajuan peminjaman berhasil dikirim"
+}
+return 400 {
+  "Message": "Nama atau Nomor Telepon tidak terdaftar sebagai Customer."
+}
+
+--------------------------------------------------
+
+GET /api/pinjamKunci/getByCustomer?telepon={telepon}&nama_agent={nama_agent}
+return 200 {
+  "StatusCode": 200,
+  "Data": [
+    {
+      "No_Tracking": "TRK-99812",
+      "Nama_Kunci": "Kunci Pintu Utama",
+      "Id_Produk": "PRP-001",
+      "Nama_Produk": "The Galaxy Apartment",
+      "Tanggal_Pengajuan": "2026-06-25T10:00:00",
+      "Estimasi_Pengembalian": "2026-06-25T17:00:00",
+      "Status_Progress": "baru" 
+    }
+  ]
+}
+
+

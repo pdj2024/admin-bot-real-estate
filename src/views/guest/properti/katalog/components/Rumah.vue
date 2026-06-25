@@ -87,13 +87,13 @@
 
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-      <!-- Show Skeletons while fetching initial data -->
-      <template v-if="isLoading && table.getRowModel().rows.length === 0">
+      <!-- Show Skeletons while fetching data -->
+      <template v-if="isLoading">
         <ProductCard v-for="i in 15" :key="'skeleton-' + i" :product="{}" is-loading />
       </template>
 
       <!-- Empty State -->
-      <template v-else-if="!isLoading && table.getRowModel().rows.length === 0">
+      <template v-else-if="table.getFilteredRowModel().rows.length === 0">
         <div class="col-span-full py-20 flex flex-col items-center justify-center text-center bg-slate-50/50 rounded-[3rem] border border-dashed border-slate-200">
           <div class="size-24 bg-white rounded-full flex items-center justify-center mb-6 shadow-sm border border-slate-100">
             <Icon icon="lucide:search-x" class="size-12 text-slate-300" />
@@ -384,6 +384,10 @@ const buildParams = () => {
   if (props.priceRange.max) p.append('harga_max', props.priceRange.max)
   if (props.facilities.rowJalanMin) p.append('row_jalan_min', String(props.facilities.rowJalanMin))
   if (props.facilities.rowJalanMax) p.append('row_jalan_max', String(props.facilities.rowJalanMax))
+  if (props.facilities.kamarTidur) p.append('jumlah_kamar_tidur_min', String(props.facilities.kamarTidur))
+  if (props.facilities.kamarMandi) p.append('jumlah_kamar_mandi_min', String(props.facilities.kamarMandi))
+  if (props.facilities.carport) p.append('jumlah_carpot_min', String(props.facilities.carport))
+  if (props.facilities.lantai) p.append('jumlah_lantai_min', String(props.facilities.lantai))
 
   return p.toString()
 }

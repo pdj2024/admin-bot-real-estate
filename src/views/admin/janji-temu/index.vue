@@ -505,7 +505,7 @@ const handleRefresh = () => {
 
         <div class="w-full md:w-auto shrink-0 flex gap-2">
           <button @click="applyFilter" class="px-6 h-11 bg-bejo-500 hover:bg-bejo-600 text-white rounded-xl font-bold transition-colors shadow-lg shadow-bejo-500/20">
-            GO
+            Cari
           </button>
           <button @click="resetFilter" class="px-6 h-11 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold transition-colors">
             Reset

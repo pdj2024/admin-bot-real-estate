@@ -28,6 +28,7 @@
     "@tailwindcss/typography": "^0.5.18",
     "@tailwindcss/vite": "^4.1.13",
     "@tanstack/vue-table": "^8.21.3",
+    "@vueuse/core": "^14.3.0",
     "@vueuse/head": "^2.0.0",
     "axios": "^1.13.6",
     "dropzone": "^6.0.0-beta.2",

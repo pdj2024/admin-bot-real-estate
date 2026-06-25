@@ -76,6 +76,28 @@
                   </button>
                 </div>
               </div>
+            <div class="hs-accordion active" id="filter-status">
+              <button class="hs-accordion-toggle flex items-center justify-between w-full font-semibold text-xs uppercase tracking-widest text-slate-500 pb-2 border-b border-slate-200 mt-2" aria-expanded="true" aria-controls="content-status">
+                Status Properti
+                <Icon icon="lucide:chevron-down" class="size-4 hs-accordion-active:rotate-180 transition-transform" />
+              </button>
+              <div id="content-status" class="hs-accordion-content w-full overflow-hidden transition-[height] duration-300">
+                <div class="grid grid-cols-2 gap-2 pt-4">
+                  <button 
+                    v-for="status in ['Semua', 'Tersedia', 'Terjual', 'Tersewa', 'Draft']" 
+                    :key="status"
+                    @click="$emit('update:statusSelection', status)"
+                    class="rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border text-center px-3 py-2.5"
+                    :class="[
+                      statusSelection === status 
+                        ? 'bg-bejo-600 text-white border-bejo-600 shadow-lg shadow-bejo-600/20' 
+                        : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-bejo-300 hover:bg-bejo-50 hover:text-bejo-600'
+                    ]"
+                  >
+                    {{ status }}
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div class="hs-accordion active" id="filter-tipe">
@@ -99,8 +121,8 @@
                       <Icon icon="lucide:chevron-down" class="size-4 text-slate-400 transition-transform" :class="isTypeOpen ? 'rotate-180' : ''" />
                     </button>
 
-                    <Teleport to="body">
-                      <div v-if="isTypeOpen" class="fixed z-[9999] bg-white border border-slate-200 shadow-2xl rounded-2xl overflow-hidden" :style="typeDropdownStyle">
+                    <Transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0 scale-95 -translate-y-2" enter-to-class="opacity-100 scale-100 translate-y-0" leave-active-class="transition duration-150 ease-in" leave-from-class="opacity-100 scale-100 translate-y-0" leave-to-class="opacity-0 scale-95 -translate-y-2">
+                      <div v-if="isTypeOpen" class="absolute left-0 right-0 top-[calc(100%+4px)] z-[9999] bg-white border border-slate-200 shadow-2xl rounded-2xl overflow-hidden">
                         <div class="p-2 border-b bg-slate-50">
                           <div class="relative">
                             <Icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
@@ -129,7 +151,7 @@
                           </div>
                         </div>
                       </div>
-                    </Teleport>
+                    </Transition>
                   </div>
                 </div>
               </div>
@@ -157,8 +179,8 @@
                       <Icon icon="lucide:chevron-down" class="size-4 text-slate-400 transition-transform" :class="isProvOpen ? 'rotate-180' : ''" />
                     </button>
 
-                    <Teleport to="body">
-                      <div v-if="isProvOpen" class="fixed z-[9999] bg-white border border-slate-200 shadow-2xl rounded-2xl overflow-hidden" :style="provDropdownStyle">
+                    <Transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0 scale-95 -translate-y-2" enter-to-class="opacity-100 scale-100 translate-y-0" leave-active-class="transition duration-150 ease-in" leave-from-class="opacity-100 scale-100 translate-y-0" leave-to-class="opacity-0 scale-95 -translate-y-2">
+                      <div v-if="isProvOpen" class="absolute left-0 right-0 top-[calc(100%+4px)] z-[9999] bg-white border border-slate-200 shadow-2xl rounded-2xl overflow-hidden">
                         <div class="p-2 border-b bg-slate-50">
                           <div class="relative">
                             <Icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
@@ -196,7 +218,7 @@
                           </div>
                         </div>
                       </div>
-                    </Teleport>
+                    </Transition>
                   </div>
 
                   <!-- Dropdown Kota -->
@@ -216,8 +238,8 @@
                       <Icon icon="lucide:chevron-down" class="size-4 text-slate-400 transition-transform" :class="isCityOpen ? 'rotate-180' : ''" />
                     </button>
 
-                    <Teleport to="body">
-                      <div v-if="isCityOpen && region.provinceId" class="fixed z-[9999] bg-white border border-slate-200 shadow-2xl rounded-2xl overflow-hidden" :style="cityDropdownStyle">
+                    <Transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0 scale-95 -translate-y-2" enter-to-class="opacity-100 scale-100 translate-y-0" leave-active-class="transition duration-150 ease-in" leave-from-class="opacity-100 scale-100 translate-y-0" leave-to-class="opacity-0 scale-95 -translate-y-2">
+                      <div v-if="isCityOpen && region.provinceId" class="absolute left-0 right-0 top-[calc(100%+4px)] z-[9999] bg-white border border-slate-200 shadow-2xl rounded-2xl overflow-hidden">
                         <div class="p-2 border-b bg-slate-50">
                           <div class="relative">
                             <Icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
@@ -255,7 +277,7 @@
                           </div>
                         </div>
                       </div>
-                    </Teleport>
+                    </Transition>
                   </div>
                 </div>
               </div>
@@ -420,6 +442,7 @@ interface Props {
     max: string | number
   }
   transactionType?: string
+  statusSelection?: string
   propertyType?: string
   provinces: any[]
   hideSearch?: boolean
@@ -429,6 +452,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   transactionType: 'Semua',
+  statusSelection: 'Semua',
   propertyType: 'Semua',
   compact: false,
   inline: false
@@ -438,6 +462,10 @@ const emit = defineEmits<{
   (e: 'update:searchQuery', value: string): void
   (e: 'update:facilities', value: Props['facilities']): void
   (e: 'update:region', value: Props['region']): void
+  (e: 'update:priceRange', value: Props['priceRange']): void
+  (e: 'update:transactionType', value: string): void
+  (e: 'update:statusSelection', value: string): void
+  (e: 'update:propertyType', value: string): void
   (e: 'update:priceRange', value: Props['priceRange']): void
   (e: 'update:transactionType', value: string): void
   (e: 'update:propertyType', value: string): void

@@ -54,6 +54,12 @@ export const menuItems: MenuItemType[] = [
     url: '/properti'
   },
   {
+    key: 'kunci',
+    label: 'Kunci',
+    icon: 'lucide:key',
+    url: '/kunci'
+  },
+  {
     key: 'data',
     label: 'Data',
     icon: 'lucide:workflow',

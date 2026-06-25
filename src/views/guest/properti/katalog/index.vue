@@ -42,7 +42,7 @@
             </div>
 
             <!-- Box 3: Dark Gradient -->
-            <div class="flex flex-col items-center justify-center size-32 rounded-[2.5rem] bg-gradient-to-br from-bejo-600 to-bejo-900 border border-bejo-700 shadow-bejo-premium hover-float group">
+            <div class="flex flex-col items-center justify-center size-32 rounded-[2.5rem] bg-gradient-to-br from-bejo-500 to-bejo-700 border border-bejo-500 shadow-bejo-premium hover-float group">
               <div class="size-12 rounded-2xl bg-white/20 flex items-center justify-center mb-3 group-hover:bg-white group-hover:text-bejo-600 transition-all">
                 <Icon icon="lucide:gem" class="size-6 text-white group-hover:text-bejo-600" />
               </div>

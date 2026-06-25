@@ -9,7 +9,7 @@ if (!state) {
   throw new Error('TabMedia must be used within a component providing propertyModalState')
 }
 
-const { form, mediaImage, mediaDenah, media3d, mediaDrive } = state
+const { form, mediaImage, mediaDenah, media3d } = state
 
 
 
