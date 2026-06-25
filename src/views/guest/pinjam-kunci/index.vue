@@ -31,8 +31,8 @@ const minDateTime = computed(() => getTodayDateTime())
 
 // Form Data
 const form = reactive({
-  nama: localStorage.getItem('agent_nama') || '',
-  nomor: localStorage.getItem('agent_telepon') || '',
+  nama: localStorage.getItem('agent_nama') || localStorage.getItem('nama_display') || '',
+  nomor: localStorage.getItem('agent_telepon') || localStorage.getItem('user_phone') || '',
   id_produk: '',
   tanggal_pengajuan: getTodayDateTime(),
   estimasi_pengembalian: ''
@@ -48,8 +48,8 @@ const isFormComplete = computed(() => {
 const errorMessage = ref('')
 
 const agentSession = reactive({
-  nama: localStorage.getItem('agent_nama') || '',
-  telepon: localStorage.getItem('agent_telepon') || ''
+  nama: localStorage.getItem('agent_nama') || localStorage.getItem('nama_display') || '',
+  telepon: localStorage.getItem('agent_telepon') || localStorage.getItem('user_phone') || ''
 })
 const isRecovering = ref(false)
 const recoverForm = reactive({ nama: '', nomor: '' })
