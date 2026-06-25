@@ -250,7 +250,7 @@ onMounted(async () => {
 
     <!-- Lightbox Modal -->
     <Transition name="fade">
-      <div v-if="showLightbox && product" class="fixed inset-0 z-[2000] bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-4 md:p-10">
+      <div v-if="showLightbox && product && product.MediaUrls" class="fixed inset-0 z-[2000] bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-4 md:p-10">
         <button @click="showLightbox = false" class="absolute top-6 right-6 size-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-all">
           <Icon icon="lucide:x" class="size-6" />
         </button>
