@@ -14,6 +14,8 @@ interface KunciData {
   Id_Produk: string
   Status: string
   Nama_Produk?: string
+  Nama_Agent_Terakhir?: string
+  Id_Agent_Terakhir?: string
 }
 
 const items = ref<KunciData[]>([])

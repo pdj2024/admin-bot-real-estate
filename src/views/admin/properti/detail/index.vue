@@ -68,6 +68,7 @@ interface MediaUrl {
   ThumbUrl: string | null
   Size: number
   Id_Media: string
+  No_Id_Media?: string
 }
 
 export interface Product {
@@ -107,7 +108,8 @@ export interface Product {
   Hide_alamat: boolean
   Akses_Jalan: string[]
   File_Image: string[]
-  MediaUrls: MediaUrl[]
+  MediaUrls?: MediaUrl[]
+  Created_By?: string | null
   Nama_Area?: string
   Kelurahan?: string
   Kecamatan?: string

@@ -145,7 +145,7 @@ const formatList = (prefix: string) => {
   
   // Add prefix to each line
   const lines = selected.split('\n')
-  const newLines = lines.map((line, idx) => {
+  const newLines = lines.map((line: string, idx: number) => {
     if (prefix === '1.') return `${idx + 1}. ${line}`
     return `${prefix} ${line}`
   })

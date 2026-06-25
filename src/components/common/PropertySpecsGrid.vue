@@ -6,7 +6,7 @@ defineProps<{
   isLoading?: boolean
 }>()
 
-const specs = [
+const specs: { icon: string, label: string, key: string, suffix: string, additionalKey?: string, format?: boolean }[] = [
   { icon: 'lucide:land-plot', label: 'Luas Tanah', key: 'Luas_Tanah', suffix: ' m²' },
   { icon: 'lucide:home', label: 'Luas Bangunan', key: 'Luas_Bangunan', suffix: ' m²' },
   { icon: 'lucide:bed', label: 'Kamar Tidur', key: 'Jumlah_Kamar_Tidur', additionalKey: 'Jumlah_Kamar_Tidur_Tambahan', suffix: ' KT' },

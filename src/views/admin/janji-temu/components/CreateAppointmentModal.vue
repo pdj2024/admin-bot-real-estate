@@ -81,7 +81,7 @@ const menuRefs = ref({
   tipePertemuan: null as HTMLElement | null
 })
 
-import { computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { computed, onUnmounted, nextTick } from 'vue'
 
 const updateDropdownStyle = (type: 'customer' | 'produk' | 'tipePertemuan') => {
   const btn = type === 'customer' ? customerBtnRef.value : type === 'produk' ? produkBtnRef.value : tipePertemuanBtnRef.value;

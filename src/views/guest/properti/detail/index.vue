@@ -69,6 +69,7 @@ interface MediaUrl {
   ThumbUrl: string | null
   Size: number
   Id_Media: string
+  No_Id_Media?: string
 }
 
 export interface Product {

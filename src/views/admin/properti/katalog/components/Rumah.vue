@@ -35,7 +35,6 @@ const txCustomerId = ref('')
 const txSearchCustomer = ref('')
 const isTxCustomerDropdownOpen = ref(false)
 const isSavingTx = ref(false)
-const showTxCustomerDropdown = ref(false)
 
 // Serah Terima State
 const showSerahTerimaModal = ref(false)
@@ -66,8 +65,6 @@ const props = defineProps<{
   transactionType: string
   statusSelection: string
 }>()
-
-const emit = defineEmits(['update:transactionType', 'update:statusSelection', 'openFilter', 'resetFilter'])
 
 const propertyTypes = ['Rumah', 'Tanah', 'Ruko', 'Apartemen', 'Gudang', 'Villa', 'SOHO', 'Pabrik', 'Perkantoran', 'Hotel', 'Rumah Kos', 'Stand', 'Toko', 'Gedung', 'Condotel', 'Lain-lain']
 
@@ -549,6 +546,7 @@ const emit = defineEmits<{
   (e: 'update:region', value: any): void
   (e: 'update:priceRange', value: any): void
   (e: 'update:transactionType', value: string): void
+  (e: 'update:statusSelection', value: string): void
 }>()
 
 const handlePageChange = async (action: 'prev' | 'next' | number) => {

@@ -18,24 +18,25 @@ export const menuItems: MenuItemType[] = [
     icon: 'lucide:layout-dashboard',
     url: '/dashboard'
   },
-  {
-    key: 'performa',
-    label: 'Performa',
-    icon: 'lucide:line-chart',
-    url: '/performa'
-  },
-  {
-    key: 'chat',
-    label: 'Chat',
-    icon: 'lucide:messages-square',
-    url: '/chat'
-  },
-  {
-    key: 'broadcast',
-    label: 'Broadcast',
-    icon: 'lucide:megaphone',
-    url: '/broadcast'
-  },
+  // Next Update
+  // {
+  //   key: 'performa',
+  //   label: 'Performa',
+  //   icon: 'lucide:line-chart',
+  //   url: '/performa'
+  // },
+  // {
+  //   key: 'chat',
+  //   label: 'Chat',
+  //   icon: 'lucide:messages-square',
+  //   url: '/chat'
+  // },
+  // {
+  //   key: 'broadcast',
+  //   label: 'Broadcast',
+  //   icon: 'lucide:megaphone',
+  //   url: '/broadcast'
+  // },
   {
     key: 'janji-temu',
     label: 'Janji Temu',
@@ -64,8 +65,9 @@ export const menuItems: MenuItemType[] = [
     label: 'Data',
     icon: 'lucide:workflow',
     children: [
-      { key: 'data-icon', label: 'Icon', url: '/data/icon' },
-      { key: 'data-status', label: 'Status', url: '/data/status' },
+      // Next Update
+      // { key: 'data-icon', label: 'Icon', url: '/data/icon' },
+      // { key: 'data-status', label: 'Status', url: '/data/status' },
       { key: 'data-admin', label: 'Admin', url: '/data/admin'},
       // { key: 'data-sales', label: 'Sales', url: '/data/sales' },
       { key: 'data-customer', label: 'Customer', url: '/data/customer' },

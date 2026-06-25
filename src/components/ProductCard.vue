@@ -74,8 +74,8 @@
         </div>
 
         <!-- Access Road Stickers Bottom Right -->
-        <div class="absolute bottom-4 right-4 flex flex-col gap-1.5 items-end z-10" v-if="product.Akses_Jalan && product.Akses_Jalan.filter(a => a && a.trim() !== '').length > 0">
-          <span v-for="(akses, idx) in product.Akses_Jalan.filter(a => a && a.trim() !== '').slice(0, 3)" :key="idx" class="bg-white/80 backdrop-blur-sm text-slate-800 text-[9px] font-black px-3 py-1.5 rounded-xl shadow-sm flex items-center gap-2 group/akses">
+        <div class="absolute bottom-4 right-4 flex flex-col gap-1.5 items-end z-10" v-if="product.Akses_Jalan && product.Akses_Jalan.filter((a: string) => a && a.trim() !== '').length > 0">
+          <span v-for="(akses, idx) in product.Akses_Jalan.filter((a: string) => a && a.trim() !== '').slice(0, 3)" :key="idx" class="bg-white/80 backdrop-blur-sm text-slate-800 text-[9px] font-black px-3 py-1.5 rounded-xl shadow-sm flex items-center gap-2 group/akses">
             <Icon icon="lucide:map-pin" class="size-2.5 text-bejo-600 group-hover/akses:scale-110 transition-transform" />
             {{ akses }}
           </span>
