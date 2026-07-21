@@ -236,7 +236,7 @@ const formatText = (text: string) => {
                   { label: 'Daya Listrik', val: product ? (product.Daya_Listrik.toLocaleString('id-ID') + ' Watt') : null },
                   { label: 'Tipe Unit', val: product?.Tipe },
                   { label: 'Sertifikat', val: product?.Jenis_Sertifikat },
-                  { label: 'Hadap', val: (product as any)?.Hadap_Rumah || '-' },
+                  { label: 'Hadap', val: ((product as any)?.Hadap_Rumah || '') + (((product as any)?.Hadap_Rumah && (product as any)?.Hadap_Rumah2) ? ' & ' : '') + ((product as any)?.Hadap_Rumah2 || '') || '-' },
                   { label: 'Posisi', val: (product as any)?.Posisi_Properti || '-' },
                   { label: 'Lebar Jalan (Row)', val: product?.Row_Jalan ? (product.Row_Jalan + ' Mobil') : '-' },
                   { label: 'Minimal Sewa', val: (product?.minimal_sewa || (product as any)?.Minimal_Sewa) ? ((product?.minimal_sewa || (product as any)?.Minimal_Sewa) + ' ' + (product?.Satuan_Minimal_Sewa || '')) : '-', show: !product || product?.Status_Transaksi?.includes('Sewa') }

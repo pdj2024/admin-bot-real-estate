@@ -14,11 +14,16 @@ const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(value)
 }
 
+const trimDecimals = (val: number, decimals: number = 2) => {
+  const factor = Math.pow(10, decimals)
+  return Math.floor(val * factor) / factor
+}
+
 const formatCurrencyShort = (value: number) => {
-  if (value >= 1e12) return 'Rp ' + (value / 1e12).toLocaleString('id-ID', { maximumFractionDigits: 2 }) + ' T'
-  if (value >= 1e9) return 'Rp ' + (value / 1e9).toLocaleString('id-ID', { maximumFractionDigits: 2 }) + ' M'
-  if (value >= 1e6) return 'Rp ' + (value / 1e6).toLocaleString('id-ID', { maximumFractionDigits: 2 }) + ' Jt'
-  if (value >= 1e3) return 'Rp ' + (value / 1e3).toLocaleString('id-ID', { maximumFractionDigits: 2 }) + ' Rb'
+  if (value >= 1e12) return 'Rp ' + trimDecimals(value / 1e12).toLocaleString('id-ID') + ' T'
+  if (value >= 1e9) return 'Rp ' + trimDecimals(value / 1e9).toLocaleString('id-ID') + ' M'
+  if (value >= 1e6) return 'Rp ' + trimDecimals(value / 1e6).toLocaleString('id-ID') + ' Jt'
+  if (value >= 1e3) return 'Rp ' + trimDecimals(value / 1e3).toLocaleString('id-ID') + ' Rb'
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
 }
 

@@ -68,6 +68,7 @@ export interface RealEstateForm {
   Id_Media_Thumbnail: string
   Id_Media_Drive: string[]
   Hadap_Rumah: string
+  Hadap_Rumah2: string | null
   Posisi_Properti: string
   Serah_Terima: string | null
   Kode_Item_Group: string | null
@@ -292,6 +293,7 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
     Id_Media_Thumbnail: '',
     Id_Media_Drive: [],
     Hadap_Rumah: '',
+    Hadap_Rumah2: null,
     Posisi_Properti: '',
     Serah_Terima: null,
     Kode_Item_Group: null,

@@ -190,11 +190,13 @@
                   </div>
                   <span class="text-xs font-bold text-slate-700">{{ product.Row_Jalan }} Mobil</span>
                 </div>
-                <div v-if="product.Daya_Listrik && Number(product.Daya_Listrik) > 0" class="flex items-center gap-2 cursor-help" title="Daya Listrik">
+                <div v-if="product.Hadap_Rumah || product.Hadap_Rumah2" class="flex items-center gap-2 cursor-help" title="Arah Hadap">
                   <div class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100 shrink-0">
-                    <Icon icon="lucide:zap" class="size-3.5 text-bejo-600" />
+                    <Icon icon="lucide:compass" class="size-3.5 text-bejo-600" />
                   </div>
-                  <span class="text-xs font-bold text-slate-700">{{ Number(product.Daya_Listrik).toLocaleString('id-ID') }} W</span>
+                  <span class="text-xs font-bold text-slate-700">
+                    {{ product.Hadap_Rumah || '' }}{{ (product.Hadap_Rumah && product.Hadap_Rumah2) ? ' & ' : '' }}{{ product.Hadap_Rumah2 || '' }}
+                  </span>
                 </div>
               </template>
             </div>
@@ -399,11 +401,16 @@ const targetUrl = computed(() => {
   return props.isAdmin ? `/properti/detail/${props.product.Slug}` : `/detail/${props.product.Slug}`
 })
 
+const trimDecimals = (val: number, decimals: number = 2) => {
+  const factor = Math.pow(10, decimals)
+  return Math.floor(val * factor) / factor
+}
+
 const formatCurrency = (value: number) => {
   if (!value) return 'Rp 0'
-  if (value >= 1e12) return 'Rp ' + (value / 1e12).toLocaleString('id-ID', { maximumFractionDigits: 1 }) + ' T'
-  if (value >= 1e9) return 'Rp ' + (value / 1e9).toLocaleString('id-ID', { maximumFractionDigits: 1 }) + ' M'
-  if (value >= 1e6) return 'Rp ' + (value / 1e6).toLocaleString('id-ID', { maximumFractionDigits: 1 }) + ' Jt'
+  if (value >= 1e12) return 'Rp ' + trimDecimals(value / 1e12).toLocaleString('id-ID') + ' T'
+  if (value >= 1e9) return 'Rp ' + trimDecimals(value / 1e9).toLocaleString('id-ID') + ' M'
+  if (value >= 1e6) return 'Rp ' + trimDecimals(value / 1e6).toLocaleString('id-ID') + ' Jt'
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
 }
 
