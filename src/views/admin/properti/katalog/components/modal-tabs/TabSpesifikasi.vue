@@ -63,10 +63,10 @@ const hadapOptions = [
   { value: 'Timur', label: 'Timur' },
   { value: 'Selatan', label: 'Selatan' },
   { value: 'Barat', label: 'Barat' },
-  { value: 'Timur Laut', label: 'Timur Laut' },
-  { value: 'Tenggara', label: 'Tenggara' },
-  { value: 'Barat Daya', label: 'Barat Daya' },
-  { value: 'Barat Laut', label: 'Barat Laut' }
+  { value: 'Utara & Timur', label: 'Utara & Timur' },
+  { value: 'Timur & Selatan', label: 'Timur & Selatan' },
+  { value: 'Selatan & Barat', label: 'Selatan & Barat' },
+  { value: 'Barat & Utara', label: 'Barat & Utara' }
 ]
 
 const posisiOptions = [
@@ -82,12 +82,12 @@ const satuanOptions = [
 
 const filteredHadapOptions = computed(() => {
   if (!searchHadap.value) return hadapOptions
-  return hadapOptions.filter(o => o.label.toLowerCase().includes(searchHadap.value.toLowerCase()))
+  return hadapOptions.filter((o) => o.label.toLowerCase().includes(searchHadap.value.toLowerCase()))
 })
 
 const filteredPosisiOptions = computed(() => {
   if (!searchPosisi.value) return posisiOptions
-  return posisiOptions.filter(o => o.label.toLowerCase().includes(searchPosisi.value.toLowerCase()))
+  return posisiOptions.filter((o) => o.label.toLowerCase().includes(searchPosisi.value.toLowerCase()))
 })
 
 const updateDropdownStyles = (type: 'hadap' | 'posisi' | 'satuan') => {
@@ -100,7 +100,7 @@ const updateDropdownStyles = (type: 'hadap' | 'posisi' | 'satuan') => {
     const rect = (targetRef as any).$el.getBoundingClientRect()
     const spaceBelow = window.innerHeight - rect.bottom
     const dropdownHeight = 240 // estimated max height
-    
+
     if (spaceBelow < dropdownHeight && rect.top > dropdownHeight) {
       // Buka ke atas
       dropdownStyles.value[type] = {
@@ -166,17 +166,17 @@ const selectSatuan = (value: string) => {
 }
 
 const getHadapLabel = (value: string) => {
-  const opt = hadapOptions.find(o => o.value === value)
+  const opt = hadapOptions.find((o) => o.value === value)
   return opt ? opt.label : ''
 }
 
 const getPosisiLabel = (value: string) => {
-  const opt = posisiOptions.find(o => o.value === value)
+  const opt = posisiOptions.find((o) => o.value === value)
   return opt ? opt.label : ''
 }
 
 const getSatuanLabel = (value: string) => {
-  const opt = satuanOptions.find(o => o.value === value)
+  const opt = satuanOptions.find((o) => o.value === value)
   return opt ? opt.label : ''
 }
 
@@ -398,12 +398,12 @@ onBeforeUnmount(() => {
 @reference "@/assets/css/style.css";
 
 /* Hide number input spin buttons */
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-input[type="number"] {
+input[type='number'] {
   -moz-appearance: textfield;
 }
 
