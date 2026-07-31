@@ -20,10 +20,11 @@ const isModalOpen = ref(false)
 const selectedItem = ref<Product | null>(null)
 const showLightbox = ref(false)
 const lightboxIndex = ref(0)
+const lightboxMedia = ref<any[]>([])
 
 const mapCoords = computed(() => {
   if (!product.value) return null
-  
+
   // Prioritize explicit Latitude and Longitude fields
   if (product.value.Latitude && product.value.Longitude) {
     const lat = parseFloat(product.value.Latitude)
@@ -50,7 +51,7 @@ const mapCoords = computed(() => {
   if (!product.value.Alamat) return null
   const latMatch = product.value.Alamat.match(/(?:Lat|Latitude):\s*([-+]?\d+\.?\d*)/i)
   const lngMatch = product.value.Alamat.match(/(?:Long|Lng|Longitude):\s*([-+]?\d+\.?\d*)/i)
-  
+
   if (latMatch && lngMatch) {
     return {
       lat: parseFloat(latMatch[1]),
@@ -127,7 +128,25 @@ const fetchData = async () => {
       headers: { 'X-Jenis-User': 'admin' }
     })
     const mainProduct = data.Data[0]
-    
+
+    // Resolve admin name if Created_By exists
+    if (mainProduct && mainProduct.Created_By) {
+      try {
+        const { data: adminData } = await api.get(`/api/admin/getAll?no_id=${mainProduct.Created_By}&orderby=Tgl_Created&orderdir=desc`, {
+          headers: {
+            'X-Jenis-User': 'Admin',
+            'Api-Key': 'realestate_key_2024'
+          }
+        })
+        const found = adminData.Data?.[0]
+        if (found) {
+          mainProduct.Nama_Admin = found.Nama_User || found.Nama_Lengkap || found.Nama || found.No_Id
+        }
+      } catch (err) {
+        console.error('Gagal mengambil admin info:', err)
+      }
+    }
+
     // Resolve customer name if Id_Customer exists
     if (mainProduct && mainProduct.Id_Customer) {
       try {
@@ -163,14 +182,14 @@ const openEditModal = () => {
 const handleDelete = async () => {
   if (!product.value) return
   const data = product.value
-  
+
   confirm('Apakah Anda ingin menghapus data ini?', async () => {
     try {
       const res = await api.delete('/api/mediacloud/delete-batch', {
         data: { ids: [...data.File_Image] },
         headers: { 'X-Jenis-User': 'admin' }
       })
-      
+
       const successMedia: string[] = res.data?.Success || []
       if (!data.File_Image.every((id: string) => successMedia.includes(id))) {
         fail('Beberapa gambar gagal dihapus')
@@ -180,7 +199,7 @@ const handleDelete = async () => {
       await api.delete(`/api/realEstate/delete?no_id=${data.No_Id}`, {
         headers: { 'X-Jenis-User': 'admin' }
       })
-      
+
       success('Berhasil hapus produk')
       router.push('/properti/katalog')
     } catch (err: any) {
@@ -201,20 +220,25 @@ onMounted(async () => {
 <template>
   <Vertical>
     <div class="p-4 md:p-3 py-10 pb-32 max-w-[1440px] mx-auto w-full">
-
       <div class="grid lg:grid-cols-12 grid-cols-1 gap-5">
-        <SidebarProduct 
-          :product="product" 
-          @edit="openEditModal" 
-          @delete="handleDelete" 
-          @openLightbox="(idx) => { lightboxIndex = idx; showLightbox = true }"
+        <SidebarProduct
+          :product="product"
+          @edit="openEditModal"
+          @delete="handleDelete"
+          @openLightbox="
+            (idx, mediaList) => {
+              lightboxIndex = idx
+              lightboxMedia = mediaList
+              showLightbox = true
+            }
+          "
           class="lg:col-span-4"
         />
         <div class="lg:col-span-8 col-span-1 flex flex-col gap-5">
-          <ProductDetails :product="product" :isAdmin="true" class="!col-span-1" />
-          
+          <ProductDetails :product="product" class="!col-span-1" />
+
           <!-- Map Section -->
-          <div v-if="mapCoords && product && !product.Hide_alamat" class="w-full">
+          <div v-if="mapCoords && !product.Hide_alamat" class="w-full">
             <div class="flex items-center justify-between gap-4 mb-4">
               <div class="flex items-center gap-2">
                 <div class="size-8 bg-bejo-50 rounded-lg flex items-center justify-center border border-bejo-100">
@@ -222,72 +246,40 @@ onMounted(async () => {
                 </div>
                 <h3 class="text-sm font-black uppercase tracking-widest text-slate-900">Lokasi Properti</h3>
               </div>
-              <a 
-                :href="`https://www.google.com/maps/dir/?api=1&destination=${mapCoords.lat},${mapCoords.lng}`" 
-                target="_blank"
-                class="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-slate-900/20 shrink-0"
-              >
+              <a :href="`https://www.google.com/maps/dir/?api=1&destination=${mapCoords.lat},${mapCoords.lng}`" target="_blank" class="flex items-center gap-1.5 text-xs font-bold text-bejo-600 hover:text-bejo-700 transition-colors">
                 <Icon icon="lucide:navigation" class="size-4" />
                 Arahkan Saya
               </a>
             </div>
-            <GoogleMapsViewer 
-              :lat="mapCoords.lat" 
-              :lng="mapCoords.lng" 
-              :title="product?.Nama_Produk"
-              height="400px"
-              mapId="ADMIN_MAIN_PRODUCT_MAP"
-            />
+            <GoogleMapsViewer :lat="mapCoords.lat" :lng="mapCoords.lng" :title="product?.Nama_Produk" height="400px" mapId="ADMIN_MAIN_PRODUCT_MAP" />
           </div>
         </div>
       </div>
     </div>
 
     <!-- Edit Modal -->
-    <Modal 
-      v-model:showModal="isModalOpen" 
-      :itemData="selectedItem" 
-      @success="fetchData" 
-    />
+    <Modal v-model:showModal="isModalOpen" :itemData="selectedItem" @success="fetchData" />
 
     <!-- Lightbox Modal -->
     <Transition name="fade">
-      <div v-if="showLightbox && product && product.MediaUrls" class="fixed inset-0 z-[2000] bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-4 md:p-10">
+      <div v-if="showLightbox && product" class="fixed inset-0 z-[2000] bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-4 md:p-10">
         <button @click="showLightbox = false" class="absolute top-6 right-6 size-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-all">
           <Icon icon="lucide:x" class="size-6" />
         </button>
-        
+
         <div class="relative w-full max-w-6xl aspect-[4/3] md:aspect-video flex items-center justify-center group">
           <!-- Navigation -->
-          <button 
-            v-if="product.MediaUrls.length > 1"
-            @click="lightboxIndex = (lightboxIndex - 1 + product.MediaUrls.length) % product.MediaUrls.length"
-            class="absolute left-4 top-1/2 -translate-y-1/2 size-12 bg-white/10 hover:bg-white text-white hover:text-bejo-600 rounded-full flex items-center justify-center transition-all z-10 opacity-0 group-hover:opacity-100"
-          >
+          <button v-if="lightboxMedia.length > 1" @click="lightboxIndex = (lightboxIndex - 1 + lightboxMedia.length) % lightboxMedia.length" class="absolute left-4 top-1/2 -translate-y-1/2 size-12 bg-white/10 hover:bg-white text-white hover:text-bejo-600 rounded-full flex items-center justify-center transition-all z-10 opacity-0 group-hover:opacity-100">
             <Icon icon="lucide:chevron-left" class="size-6" />
           </button>
-          <button 
-            v-if="product.MediaUrls.length > 1"
-            @click="lightboxIndex = (lightboxIndex + 1) % product.MediaUrls.length"
-            class="absolute right-4 top-1/2 -translate-y-1/2 size-12 bg-white/10 hover:bg-white text-white hover:text-bejo-600 rounded-full flex items-center justify-center transition-all z-10 opacity-0 group-hover:opacity-100"
-          >
+          <button v-if="lightboxMedia.length > 1" @click="lightboxIndex = (lightboxIndex + 1) % lightboxMedia.length" class="absolute right-4 top-1/2 -translate-y-1/2 size-12 bg-white/10 hover:bg-white text-white hover:text-bejo-600 rounded-full flex items-center justify-center transition-all z-10 opacity-0 group-hover:opacity-100">
             <Icon icon="lucide:chevron-right" class="size-6" />
           </button>
 
           <Transition name="fade" mode="out-in">
             <div :key="lightboxIndex" class="size-full flex items-center justify-center">
-              <img 
-                v-if="!product.MediaUrls[lightboxIndex].ContentType?.startsWith('video/')"
-                :src="product.MediaUrls[lightboxIndex].Url || product.MediaUrls[lightboxIndex].Id_Media" 
-                class="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
-              />
-              <video 
-                v-else
-                :src="product.MediaUrls[lightboxIndex].Url || product.MediaUrls[lightboxIndex].Id_Media"
-                class="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
-                controls
-                autoplay
-              ></video>
+              <img v-if="lightboxMedia[lightboxIndex]?.type !== 'video'" :src="lightboxMedia[lightboxIndex]?.url" class="max-w-full max-h-full object-contain rounded-2xl shadow-2xl" :alt="product?.Nama_Produk" />
+              <video v-else :src="lightboxMedia[lightboxIndex]?.url" class="max-w-full max-h-full object-contain rounded-2xl shadow-2xl" controls autoplay></video>
             </div>
           </Transition>
         </div>

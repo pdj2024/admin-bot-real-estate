@@ -51,7 +51,10 @@ const displayArea = computed(() => {
   return provinceName ? `${cityName}, ${provinceName}` : cityName
 })
 
-defineEmits(['openCompare', 'openLightbox'])
+defineEmits<{
+  (e: 'openCompare'): void
+  (e: 'openLightbox', index: number, mediaArray: any[]): void
+}>()
 
 const activeMediaIndex = ref(0)
 
@@ -172,10 +175,10 @@ const handleDownload = async () => {
             <div class="size-full animate-pulse bg-slate-200"></div>
           </template>
           <template v-else-if="currentMedia?.type === 'video'">
-            <video :src="currentMedia.url!" class="size-full object-cover cursor-pointer" controls autoplay muted loop @click="$emit('openLightbox', activeMediaIndex)" referrerpolicy="no-referrer"></video>
+            <video :src="currentMedia.url!" class="size-full object-cover cursor-pointer" controls autoplay muted loop @click="$emit('openLightbox', activeMediaIndex, media)" referrerpolicy="no-referrer"></video>
           </template>
           <template v-else-if="currentMedia?.type === 'image'">
-            <img :src="currentMedia.url!" class="size-full object-cover transition-transform duration-700 group-hover/main:scale-110 cursor-pointer" :alt="product?.Nama_Produk" @click="$emit('openLightbox', activeMediaIndex)" referrerpolicy="no-referrer" />
+            <img :src="currentMedia.url!" class="size-full object-cover transition-transform duration-700 group-hover/main:scale-110 cursor-pointer" :alt="product?.Nama_Produk" @click="$emit('openLightbox', activeMediaIndex, media)" referrerpolicy="no-referrer" />
           </template>
           <template v-else>
             <div class="size-full flex items-center justify-center text-slate-300">

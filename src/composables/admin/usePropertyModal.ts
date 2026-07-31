@@ -438,7 +438,11 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
 
       if (form.value.File_Image && itemData.MediaUrls) {
         const validIds = form.value.File_Image.filter(Boolean)
-        mediaImage.previewPhotos.value = itemData.MediaUrls.filter((m: any) => validIds.includes(m.No_Id_Media))
+        const filteredMedia = itemData.MediaUrls.filter((m: any) => validIds.includes(m.No_Id_Media))
+        // Hapus duplikat berdasarkan No_Id_Media (mencegah thumbnail muncul 2x jika backend mengirimkannya ganda)
+        mediaImage.previewPhotos.value = filteredMedia.filter((m: any, index: number, self: any[]) => 
+          index === self.findIndex((t) => t.No_Id_Media === m.No_Id_Media)
+        )
       }
       mediaDenah.loadExistingMedia(form.value.Id_Media_Denah ? form.value.Id_Media_Denah.filter(Boolean) : [])
       media3d.loadExistingMedia(form.value.Id_Media_3d ? form.value.Id_Media_3d.filter(Boolean) : [])

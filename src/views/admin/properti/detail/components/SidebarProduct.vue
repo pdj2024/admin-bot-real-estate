@@ -119,7 +119,7 @@ const displayArea = computed(() => {
 const emit = defineEmits<{
   (e: 'edit'): void
   (e: 'delete'): void
-  (e: 'openLightbox', index: number): void
+  (e: 'openLightbox', index: number, mediaArray: any[]): void
 }>()
 
 const handleShare = () => {
@@ -190,7 +190,7 @@ watch(() => props.product?.No_Id, (newId) => {
                 autoplay 
                 muted 
                 loop
-                @click="emit('openLightbox', activeMediaIndex)"
+                @click="emit('openLightbox', activeMediaIndex, media)"
                 referrerpolicy="no-referrer"
               ></video>
             </template>
@@ -199,7 +199,7 @@ watch(() => props.product?.No_Id, (newId) => {
                 :src="currentMedia.url!" 
                 class="size-full object-cover transition-transform duration-700 group-hover/main:scale-110 cursor-pointer" 
                 :alt="product?.Nama_Produk" 
-                @click="emit('openLightbox', activeMediaIndex)"
+                @click="emit('openLightbox', activeMediaIndex, media)"
                 referrerpolicy="no-referrer"
               />
             </template>
@@ -335,8 +335,10 @@ watch(() => props.product?.No_Id, (newId) => {
                    <Icon icon="lucide:user-circle" class="size-5" />
                 </div>
                 <div>
-                   <span class="block text-xs font-black text-slate-900 uppercase tracking-wide">{{ (product as any)?.Nama_Admin || 'Dibuat Oleh' }}</span>
-                   <span class="block text-[10px] font-bold text-slate-400">{{ product?.Created_By || '-' }}</span>
+                   <span class="block text-xs font-black text-slate-900 uppercase tracking-wide">Dibuat Oleh</span>
+                   <span class="block text-[10px] font-bold text-slate-400">
+                      {{ (product as any)?.Nama_Admin ? `${(product as any).Nama_Admin} (${product?.Created_By})` : (product?.Created_By || '-') }}
+                   </span>
                 </div>
              </div>
           </div>

@@ -263,7 +263,7 @@ onUnmounted(() => {
           :product="product" 
           :isAdmin="isAdmin" 
           @openCompare="showCompareModal = true" 
-          @openLightbox="(idx) => { lightboxIndex = idx; showLightbox = true }"
+          @openLightbox="(idx, mediaList) => { lightboxIndex = idx; lightboxMedia = mediaList; showLightbox = true }"
           class="lg:col-span-4" 
         />
         <div class="lg:col-span-8 col-span-1 flex flex-col gap-5">
@@ -280,8 +280,8 @@ onUnmounted(() => {
               </div>
               <a 
                 :href="`https://www.google.com/maps/dir/?api=1&destination=${mapCoords.lat},${mapCoords.lng}`" 
-                target="_blank"
-                class="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-slate-900/20 shrink-0"
+                target="_blank" 
+                class="flex items-center gap-1.5 text-xs font-bold text-bejo-600 hover:text-bejo-700 transition-colors"
               >
                 <Icon icon="lucide:navigation" class="size-4" />
                 Arahkan Saya
@@ -292,15 +292,16 @@ onUnmounted(() => {
               :lng="mapCoords.lng" 
               :title="product?.Nama_Produk"
               height="400px"
-              mapId="MAIN_PRODUCT_MAP"
+              mapId="GUEST_MAIN_PRODUCT_MAP"
             />
           </div>
 
           <KprSimulation :product="product" />
         </div>
         
+        <!-- Compare Modal -->
         <CompareModal :show="showCompareModal" :currentProduct="product" @close="showCompareModal = false" />
-
+        
         <!-- Sticky Mobile CTA -->
         <Transition name="slide-up">
           <div v-if="showStickyCTA && product && product.Status_Properti === 'Tersedia'" class="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t border-slate-100 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] p-4 z-[90] flex items-center justify-between gap-4">
@@ -316,7 +317,7 @@ onUnmounted(() => {
             </button>
           </div>
         </Transition>
-
+        
         <!-- Lightbox Modal -->
         <Transition name="fade">
           <div v-if="showLightbox && product" class="fixed inset-0 z-[2000] bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-4 md:p-10">
@@ -327,15 +328,15 @@ onUnmounted(() => {
             <div class="relative w-full max-w-6xl aspect-[4/3] md:aspect-video flex items-center justify-center group">
               <!-- Navigation -->
               <button 
-                v-if="product.MediaUrls.length > 1"
-                @click="lightboxIndex = (lightboxIndex - 1 + product.MediaUrls.length) % product.MediaUrls.length"
+                v-if="lightboxMedia.length > 1"
+                @click="lightboxIndex = (lightboxIndex - 1 + lightboxMedia.length) % lightboxMedia.length"
                 class="absolute left-4 top-1/2 -translate-y-1/2 size-12 bg-white/10 hover:bg-white text-white hover:text-bejo-600 rounded-full flex items-center justify-center transition-all z-10 opacity-0 group-hover:opacity-100"
               >
                 <Icon icon="lucide:chevron-left" class="size-6" />
               </button>
               <button 
-                v-if="product.MediaUrls.length > 1"
-                @click="lightboxIndex = (lightboxIndex + 1) % product.MediaUrls.length"
+                v-if="lightboxMedia.length > 1"
+                @click="lightboxIndex = (lightboxIndex + 1) % lightboxMedia.length"
                 class="absolute right-4 top-1/2 -translate-y-1/2 size-12 bg-white/10 hover:bg-white text-white hover:text-bejo-600 rounded-full flex items-center justify-center transition-all z-10 opacity-0 group-hover:opacity-100"
               >
                 <Icon icon="lucide:chevron-right" class="size-6" />
@@ -344,13 +345,14 @@ onUnmounted(() => {
               <Transition name="fade" mode="out-in">
                 <div :key="lightboxIndex" class="size-full flex items-center justify-center">
                   <img 
-                    v-if="!product.MediaUrls[lightboxIndex].ContentType?.startsWith('video/')"
-                    :src="product.MediaUrls[lightboxIndex].Url || product.MediaUrls[lightboxIndex].Id_Media" 
+                    v-if="lightboxMedia[lightboxIndex]?.type !== 'video'"
+                    :src="lightboxMedia[lightboxIndex]?.url" 
                     class="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
+                    :alt="product?.Nama_Produk"
                   />
                   <video 
                     v-else
-                    :src="product.MediaUrls[lightboxIndex].Url || product.MediaUrls[lightboxIndex].Id_Media"
+                    :src="lightboxMedia[lightboxIndex]?.url"
                     class="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
                     controls
                     autoplay
@@ -358,8 +360,6 @@ onUnmounted(() => {
                 </div>
               </Transition>
             </div>
-
-
           </div>
         </Transition>
       </div>

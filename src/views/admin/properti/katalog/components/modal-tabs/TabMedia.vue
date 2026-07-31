@@ -24,7 +24,6 @@ const driveLinkInput = ref('')
 const isImportingDrive = ref(false)
 
 const importDriveFile = async (id: string, name: string) => {
-  // Gunakan Google Drive v3 REST API resmi dengan acknowledgeAbuse=true untuk bypass virus scan limit pada file besar
   const url = `https://www.googleapis.com/drive/v3/files/${id}?alt=media&key=${GOOGLE_DRIVE_API_KEY}&acknowledgeAbuse=true`
   
   const res = await fetch(url)
@@ -96,6 +95,9 @@ const addDriveLink = async () => {
       if (mediaFiles.length) {
         for (const file of mediaFiles) {
           await importDriveFile(file.id, file.name)
+          // Beri jeda 1.5 detik antar unduhan untuk mencegah Google mengira ini adalah serangan Bot/DDoS
+          // yang memicu halaman CAPTCHA "automated queries".
+          await new Promise(resolve => setTimeout(resolve, 1500))
         }
         success(`Berhasil mengimpor ${mediaFiles.length} file dari Drive.`)
       } else {
