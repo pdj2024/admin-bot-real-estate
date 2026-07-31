@@ -24,52 +24,39 @@ const driveLinkInput = ref('')
 const isImportingDrive = ref(false)
 
 const importDriveFile = async (id: string, name: string) => {
-  const isVideo = name.toLowerCase().match(/\.(mp4|mov|avi|mkv|webm)$/i)
+  // Gunakan Google Drive v3 REST API resmi dengan acknowledgeAbuse=true untuk bypass virus scan limit pada file besar
+  const url = `https://www.googleapis.com/drive/v3/files/${id}?alt=media&key=${GOOGLE_DRIVE_API_KEY}&acknowledgeAbuse=true`
   
-  if (isVideo) {
-    // Solusi Terbaik untuk Video:
-    // Browser tidak bisa mengunduh file video besar via proxy karena masalah memori & CORS blocker.
-    // Jadi kita langsung 'melampirkan' link video Drive tersebut sebagai Id_Media tanpa perlu mengunduh/re-upload.
-    const driveUrl = `https://drive.google.com/uc?export=download&id=${id}`
-    
-    mediaImage.previewPhotos.value.push({ 
-      Id_Media: driveUrl, 
-      No_Id_Media: driveUrl, 
-      Url: driveUrl, 
-      Expired_At: '', 
-      IsCompressed: false, 
-      ContentType: 'video/mp4', 
-      ThumbUrl: null, 
-      Size: 0 
-    })
-    
-    if (!form.value.File_Image) form.value.File_Image = []
-    if (!form.value.File_Image.includes(driveUrl)) {
-      form.value.File_Image.push(driveUrl)
-    }
-    return Promise.resolve()
+  const res = await fetch(url)
+  if (!res.ok) {
+    let errMsg = 'Failed to download from Drive'
+    try {
+      const errData = await res.json()
+      if (errData.error?.message) errMsg = errData.error.message
+    } catch (e) {}
+    throw new Error(errMsg)
   }
-
-  // Solusi Paling Ampuh & Anti-Blokir (Update 2024):
-  // Google secara resmi memblokir hotlinking gambar melalui "uc?export=view" (Error 403) jika di-embed di tag <img>.
-  // Namun, Google mengizinkan endpoint "thumbnail" untuk di-embed dengan ukuran resolusi yang bisa kita atur (sz=w1000).
-  const imgUrl = `https://drive.google.com/thumbnail?id=${id}&sz=w1000`
+  
+  const blob = await res.blob()
+  const mimeType = name.toLowerCase().match(/\.(mp4|mov|avi|mkv|webm)$/i) ? 'video/mp4' : 'image/jpeg'
+  const file = new File([blob], name, { type: blob.type || mimeType })
+  
+  // Gunakan URL.createObjectURL alih-alih FileReader (base64) untuk mencegah BROWSER CRASH / Out of Memory
+  // saat me-render video atau file berukuran besar.
+  const blobUrl = URL.createObjectURL(file)
   
   mediaImage.previewPhotos.value.push({ 
-    Id_Media: imgUrl, 
-    No_Id_Media: imgUrl, 
-    Url: imgUrl, 
+    Id_Media: blobUrl, 
+    No_Id_Media: 'new_upload', 
+    Url: null, 
     Expired_At: '', 
     IsCompressed: false, 
-    ContentType: 'image/jpeg', 
+    ContentType: file.type, 
     ThumbUrl: null, 
-    Size: 0 
+    Size: file.size 
   })
+  mediaImage.photos.value.push(file)
   
-  if (!form.value.File_Image) form.value.File_Image = []
-  if (!form.value.File_Image.includes(imgUrl)) {
-    form.value.File_Image.push(imgUrl)
-  }
   return Promise.resolve()
 }
 
