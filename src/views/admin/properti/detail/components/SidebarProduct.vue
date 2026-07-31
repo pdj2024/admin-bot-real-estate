@@ -47,11 +47,30 @@ const media = computed(() => {
   const seen = new Set()
   
   for (const m of props.product.MediaUrls) {
-    if (!seen.has(m.No_Id_Media)) {
-      seen.add(m.No_Id_Media)
+    const key = m.Url || m.Id_Media
+    if (!seen.has(key)) {
+      seen.add(key)
       uniqueMedia.push(m)
     }
   }
+
+  const getOrderIndex = (noIdMedia: string) => {
+    if (!props.product) return 99999
+    if (props.product.Id_Media_Thumbnail === noIdMedia) return 0
+    
+    let idx = props.product.Id_Media_3d?.indexOf(noIdMedia)
+    if (idx !== undefined && idx !== -1) return 100 + idx
+    
+    idx = props.product.Id_Media_Denah?.indexOf(noIdMedia)
+    if (idx !== undefined && idx !== -1) return 200 + idx
+    
+    idx = props.product.File_Image?.indexOf(noIdMedia)
+    if (idx !== undefined && idx !== -1) return 300 + idx
+    
+    return 99999
+  }
+
+  uniqueMedia.sort((a, b) => getOrderIndex(a.No_Id_Media) - getOrderIndex(b.No_Id_Media))
 
   return uniqueMedia.map(m => ({
     url: m.Url || m.Id_Media, // Fallback to Id_Media if Url is missing
@@ -172,6 +191,7 @@ watch(() => props.product?.No_Id, (newId) => {
                 muted 
                 loop
                 @click="emit('openLightbox', activeMediaIndex)"
+                referrerpolicy="no-referrer"
               ></video>
             </template>
             <template v-else-if="currentMedia?.type === 'image'">
@@ -180,6 +200,7 @@ watch(() => props.product?.No_Id, (newId) => {
                 class="size-full object-cover transition-transform duration-700 group-hover/main:scale-110 cursor-pointer" 
                 :alt="product?.Nama_Produk" 
                 @click="emit('openLightbox', activeMediaIndex)"
+                referrerpolicy="no-referrer"
               />
             </template>
             <template v-else>
@@ -259,8 +280,9 @@ watch(() => props.product?.No_Id, (newId) => {
                class="size-full object-cover" 
                preload="metadata" 
                playsinline
+               referrerpolicy="no-referrer"
             ></video>
-            <img v-else :src="item.thumb!" class="size-full object-cover" />
+            <img v-else :src="item.thumb!" class="size-full object-cover" referrerpolicy="no-referrer" />
             <div v-if="item.type === 'video'" class="absolute inset-0 flex items-center justify-center bg-black/20">
                <Icon icon="lucide:play" class="size-4 text-white fill-white/20" />
             </div>

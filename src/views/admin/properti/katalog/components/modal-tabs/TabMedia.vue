@@ -24,39 +24,53 @@ const driveLinkInput = ref('')
 const isImportingDrive = ref(false)
 
 const importDriveFile = async (id: string, name: string) => {
-  const url = `https://www.googleapis.com/drive/v3/files/${id}?alt=media&key=${GOOGLE_DRIVE_API_KEY}`
-  const res = await fetch(url)
-  if (!res.ok) {
-    let errMsg = 'Failed to download from Drive'
-    try {
-      const errData = await res.json()
-      if (errData.error?.message) errMsg = errData.error.message
-    } catch (e) {}
-    throw new Error(errMsg)
-  }
-  const blob = await res.blob()
-  const file = new File([blob], name, { type: blob.type || 'image/jpeg' })
+  const isVideo = name.toLowerCase().match(/\.(mp4|mov|avi|mkv|webm)$/i)
   
-  return new Promise<void>((resolve) => {
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      if (typeof e.target?.result === 'string') {
-        mediaImage.previewPhotos.value.push({ 
-          Id_Media: e.target.result, 
-          No_Id_Media: 'new_upload', 
-          Url: null, 
-          Expired_At: '', 
-          IsCompressed: false, 
-          ContentType: file.type, 
-          ThumbUrl: null, 
-          Size: file.size 
-        })
-        mediaImage.photos.value.push(file)
-        resolve()
-      }
+  if (isVideo) {
+    // Solusi Terbaik untuk Video:
+    // Browser tidak bisa mengunduh file video besar via proxy karena masalah memori & CORS blocker.
+    // Jadi kita langsung 'melampirkan' link video Drive tersebut sebagai Id_Media tanpa perlu mengunduh/re-upload.
+    const driveUrl = `https://drive.google.com/uc?export=download&id=${id}`
+    
+    mediaImage.previewPhotos.value.push({ 
+      Id_Media: driveUrl, 
+      No_Id_Media: driveUrl, 
+      Url: driveUrl, 
+      Expired_At: '', 
+      IsCompressed: false, 
+      ContentType: 'video/mp4', 
+      ThumbUrl: null, 
+      Size: 0 
+    })
+    
+    if (!form.value.File_Image) form.value.File_Image = []
+    if (!form.value.File_Image.includes(driveUrl)) {
+      form.value.File_Image.push(driveUrl)
     }
-    reader.readAsDataURL(file)
+    return Promise.resolve()
+  }
+
+  // Solusi Paling Ampuh & Anti-Blokir (Update 2024):
+  // Google secara resmi memblokir hotlinking gambar melalui "uc?export=view" (Error 403) jika di-embed di tag <img>.
+  // Namun, Google mengizinkan endpoint "thumbnail" untuk di-embed dengan ukuran resolusi yang bisa kita atur (sz=w1000).
+  const imgUrl = `https://drive.google.com/thumbnail?id=${id}&sz=w1000`
+  
+  mediaImage.previewPhotos.value.push({ 
+    Id_Media: imgUrl, 
+    No_Id_Media: imgUrl, 
+    Url: imgUrl, 
+    Expired_At: '', 
+    IsCompressed: false, 
+    ContentType: 'image/jpeg', 
+    ThumbUrl: null, 
+    Size: 0 
   })
+  
+  if (!form.value.File_Image) form.value.File_Image = []
+  if (!form.value.File_Image.includes(imgUrl)) {
+    form.value.File_Image.push(imgUrl)
+  }
+  return Promise.resolve()
 }
 
 const addDriveLink = async () => {
@@ -262,8 +276,8 @@ const deleteBatch = () => {
                ]"
                @click="toggleSelectImage(i)"
           >
-            <video v-if="img.ContentType?.startsWith('video/')" :src="`${img.Url || img.Id_Media}#t=0.001`" class="size-full object-cover" preload="metadata" playsinline muted></video>
-            <img v-else :src="img.Url || img.Id_Media" class="size-full object-cover transition-transform duration-500" :class="isSelectionMode ? '' : 'group-hover/img:scale-105'" />
+            <video v-if="img.ContentType?.startsWith('video/')" :src="`${img.Url || img.Id_Media}#t=0.001`" class="size-full object-cover" preload="metadata" playsinline muted referrerpolicy="no-referrer"></video>
+            <img v-else :src="img.Url || img.Id_Media" class="size-full object-cover transition-transform duration-500" :class="isSelectionMode ? '' : 'group-hover/img:scale-105'" referrerpolicy="no-referrer" />
             
             <!-- Selection Overlay -->
             <div v-if="isSelectionMode" class="absolute inset-0 bg-black/10 z-10 transition-colors" :class="selectedIndices.includes(i) ? 'bg-bejo-500/10' : ''"></div>

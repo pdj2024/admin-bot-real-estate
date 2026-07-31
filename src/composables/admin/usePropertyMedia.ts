@@ -144,14 +144,22 @@ export function usePropertyMedia(form: any, fieldKey = 'File_Image') {
       }
 
       if (data.success) {
-        previewPhotos.value = successIds.map(id => {
+        const seenKeys = new Set()
+        previewPhotos.value = []
+        
+        successIds.forEach(id => {
           const resolved = data.success[id]
-          return {
-            Id_Media: resolved?.Url || id,
-            No_Id_Media: id,
-            Url: resolved?.Url || null,
-            ContentType: resolved?.ContentType || 'image/jpeg',
-            Size: resolved?.Size || 0
+          const key = resolved?.Url || id
+          
+          if (!seenKeys.has(key)) {
+            seenKeys.add(key)
+            previewPhotos.value.push({
+              Id_Media: resolved?.Url || id,
+              No_Id_Media: id,
+              Url: resolved?.Url || null,
+              ContentType: resolved?.ContentType || 'image/jpeg',
+              Size: resolved?.Size || 0
+            })
           }
         })
       }
