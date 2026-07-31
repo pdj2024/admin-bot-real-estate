@@ -19,14 +19,55 @@ export function usePropertyMedia(form: any, fieldKey = 'File_Image') {
 
     return new Promise((resolve) => {
       const video = document.createElement('video')
+      
+      // If browser definitely cannot play this, skip compression
+      if (file.type && video.canPlayType(file.type) === '') {
+        console.warn(`Browser cannot play ${file.type}, skipping compression.`)
+        return resolve(file)
+      }
+
       video.muted = true
       video.volume = 0
+      
+      let isResolved = false
+      const timeout = setTimeout(() => {
+        if (!isResolved) {
+          isResolved = true
+          console.warn('Video metadata load timeout, skipping compression.')
+          resolve(file)
+        }
+      }, 5000) // 5 second timeout
+
+      video.onerror = () => {
+        if (!isResolved) {
+          isResolved = true
+          clearTimeout(timeout)
+          console.warn('Video error, skipping compression.')
+          resolve(file)
+        }
+      }
+
       const reader = new FileReader()
+      reader.onerror = () => {
+        if (!isResolved) {
+          isResolved = true
+          clearTimeout(timeout)
+          resolve(file)
+        }
+      }
 
       reader.onload = (e) => {
         video.src = e.target?.result as string
         video.onloadedmetadata = () => {
+          if (isResolved) return
+          clearTimeout(timeout)
+          
           const stream = (video as any).captureStream ? (video as any).captureStream() : (video as any).mozCaptureStream()
+          if (!stream) {
+            isResolved = true
+            return resolve(file)
+          }
+
           const supportedMimeTypes = [
             'video/webm;codecs=vp9',
             'video/webm;codecs=vp8',
@@ -35,6 +76,11 @@ export function usePropertyMedia(form: any, fieldKey = 'File_Image') {
           ]
           const mimeType = supportedMimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || ''
           
+          if (!mimeType) {
+            isResolved = true
+            return resolve(file)
+          }
+
           const recorder = new MediaRecorder(stream, {
             mimeType,
             videoBitsPerSecond: 1500000 // Target ~1.5 Mbps
@@ -43,6 +89,8 @@ export function usePropertyMedia(form: any, fieldKey = 'File_Image') {
           const chunks: Blob[] = []
           recorder.ondataavailable = (e) => chunks.push(e.data)
           recorder.onstop = () => {
+            if (isResolved) return
+            isResolved = true
             const blob = new Blob(chunks, { type: 'video/webm' })
             const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".webm", {
               type: 'video/webm'
@@ -52,11 +100,18 @@ export function usePropertyMedia(form: any, fieldKey = 'File_Image') {
 
           video.currentTime = 0
           video.playbackRate = 4.0 // Speed up compression 4x
-          video.play().catch(err => console.warn('Video play failed during compression:', err))
+          video.play().catch(err => {
+             console.warn('Video play failed during compression:', err)
+             if (!isResolved) {
+               isResolved = true
+               recorder.stop()
+               resolve(file)
+             }
+          })
           recorder.start()
           
           video.onended = () => {
-            recorder.stop()
+            if (recorder.state === 'recording') recorder.stop()
             video.src = ''
           }
         }

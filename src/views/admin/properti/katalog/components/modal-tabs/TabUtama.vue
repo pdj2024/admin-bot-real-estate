@@ -248,11 +248,11 @@ const currentHost = window.location.host
         </div>
 
         <!-- NEW FIELDS FOR LINK AND CAPTION -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 gap-4" :class="{ 'md:grid-cols-2': form.Link }">
           <BaseFormGroup label="LINK MEDIA TAMBAHAN" icon="lucide:link">
             <input v-model="form.Link" placeholder="https://..." class="field-input h-11 !pl-11 bg-white border-slate-200" />
           </BaseFormGroup>
-          <BaseFormGroup label="CAPTION LINK" icon="lucide:type">
+          <BaseFormGroup v-if="form.Link" label="CAPTION LINK" icon="lucide:type">
             <input v-model="form.Link_Caption" placeholder="Contoh: Virtual Tour 360" class="field-input h-11 !pl-11 bg-white border-slate-200" />
           </BaseFormGroup>
         </div>

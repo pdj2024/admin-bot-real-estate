@@ -103,16 +103,16 @@ const media = computed(() => {
   const getOrderIndex = (noIdMedia: string) => {
     if (!props.product) return 99999
     if (props.product.Id_Media_Thumbnail === noIdMedia) return 0
-    
+
     let idx = props.product.Id_Media_3d?.indexOf(noIdMedia)
     if (idx !== undefined && idx !== -1) return 100 + idx
-    
+
     idx = props.product.Id_Media_Denah?.indexOf(noIdMedia)
     if (idx !== undefined && idx !== -1) return 200 + idx
-    
+
     idx = props.product.File_Image?.indexOf(noIdMedia)
     if (idx !== undefined && idx !== -1) return 300 + idx
-    
+
     return 99999
   }
 
@@ -276,9 +276,9 @@ const handleDownload = async () => {
         </button>
 
         <!-- Custom Link -->
-        <a v-if="product?.Link" :href="product.Link" target="_blank" rel="noopener noreferrer" class="w-full h-12 bg-bejo-100 text-bejo-600 rounded-2xl font-black text-[10px] uppercase tracking-widest border border-bejo-100 hover:bg-bejo-600 hover:text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50">
-          <Icon icon="lucide:external-link" class="size-4" />
-          Lihat {{ product.Link_Caption || 'Media' }}
+        <a v-if="product?.Link" :href="product.Link" target="_blank" rel="noopener noreferrer" class="w-full h-12 px-4 bg-bejo-100 text-bejo-600 rounded-2xl font-black text-[10px] uppercase tracking-widest border border-bejo-100 hover:bg-bejo-600 hover:text-white transition-all flex items-center justify-start gap-3 disabled:opacity-50">
+          <Icon icon="lucide:external-link" class="size-4 shrink-0" />
+          <span class="truncate">{{ product?.Link_Caption ? 'Lihat ' + product.Link_Caption : product?.Link }}</span>
         </a>
       </div>
 
