@@ -14,6 +14,7 @@ import CompareModal from '@/components/common/CompareModal.vue'
 const showCompareModal = ref(false)
 const showLightbox = ref(false)
 const lightboxIndex = ref(0)
+const lightboxMedia = ref<any[]>([])
 const showStickyCTA = ref(false)
 
 const route = useRoute()
@@ -106,11 +107,16 @@ export interface Product {
   Satuan_Minimal_Sewa: string
   Minimal_Sewa?: string
   Nama_Kota?: string
-  Area: string | string[]
+  Area: string
   Hide_alamat: boolean
   Akses_Jalan: string[]
   File_Image: string[]
-  MediaUrls: MediaUrl[]
+  MediaUrls?: MediaUrl[]
+  Id_Media_Thumbnail?: string
+  Id_Media_3d?: string[]
+  Id_Media_Denah?: string[]
+  Id_Media_Drive?: string[]
+  Created_By?: string | null
   Nama_Area?: string
   Kelurahan?: string
   Kecamatan?: string

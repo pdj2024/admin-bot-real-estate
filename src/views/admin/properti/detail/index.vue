@@ -110,6 +110,10 @@ export interface Product {
   Akses_Jalan: string[]
   File_Image: string[]
   MediaUrls?: MediaUrl[]
+  Id_Media_Thumbnail?: string
+  Id_Media_3d?: string[]
+  Id_Media_Denah?: string[]
+  Id_Media_Drive?: string[]
   Created_By?: string | null
   Nama_Area?: string
   Kelurahan?: string
@@ -238,7 +242,7 @@ onMounted(async () => {
           <ProductDetails :product="product" class="!col-span-1" />
 
           <!-- Map Section -->
-          <div v-if="mapCoords && !product.Hide_alamat" class="w-full">
+          <div v-if="mapCoords && !product?.Hide_alamat" class="w-full">
             <div class="flex items-center justify-between gap-4 mb-4">
               <div class="flex items-center gap-2">
                 <div class="size-8 bg-bejo-50 rounded-lg flex items-center justify-center border border-bejo-100">

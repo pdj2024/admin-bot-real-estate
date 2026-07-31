@@ -70,7 +70,7 @@ const media = computed(() => {
     return 99999
   }
 
-  uniqueMedia.sort((a, b) => getOrderIndex(a.No_Id_Media) - getOrderIndex(b.No_Id_Media))
+  uniqueMedia.sort((a, b) => getOrderIndex(a.No_Id_Media || '') - getOrderIndex(b.No_Id_Media || ''))
 
   return uniqueMedia.map(m => ({
     url: m.Url || m.Id_Media, // Fallback to Id_Media if Url is missing
