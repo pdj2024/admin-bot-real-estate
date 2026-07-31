@@ -246,6 +246,16 @@ const currentHost = window.location.host
             </Teleport>
           </BaseFormGroup>
         </div>
+
+        <!-- NEW FIELDS FOR LINK AND CAPTION -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <BaseFormGroup label="LINK MEDIA TAMBAHAN" icon="lucide:link">
+            <input v-model="form.Link" placeholder="https://..." class="field-input h-11 !pl-11 bg-white border-slate-200" />
+          </BaseFormGroup>
+          <BaseFormGroup label="CAPTION LINK" icon="lucide:type">
+            <input v-model="form.Link_Caption" placeholder="Contoh: Virtual Tour 360" class="field-input h-11 !pl-11 bg-white border-slate-200" />
+          </BaseFormGroup>
+        </div>
       </div>
 
       <BaseFormGroup label="DESKRIPSI PROPERTI" icon="lucide:text-quote" align-icon="top" class="flex-1 flex flex-col" inner-class="h-full flex-1 flex flex-col">

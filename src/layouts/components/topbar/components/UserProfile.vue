@@ -4,11 +4,13 @@ import { Icon } from '@iconify/vue'
 import { useRouter } from 'vue-router'
 import { logout } from '@/services/auth'
 import { confirm } from '@/utils/sweet-alert'
+import api from '@/services/axios'
 
 const router = useRouter()
 const namaDisplay = ref(localStorage.getItem('nama_display') || '');
 const noId = ref(localStorage.getItem('no_id') || '');
 const userAvatar = ref(localStorage.getItem('user_avatar') || '');
+const isLoadingAvatar = ref(!!userAvatar.value);
 
 const handleLogout = () => {
   confirm('Apakah Anda ingin keluar?', () => {
@@ -21,8 +23,46 @@ const updateProfileData = () => {
   userAvatar.value = localStorage.getItem('user_avatar') || ''
 }
 
+const checkAndRefreshAvatar = async () => {
+  const currentAvatarUrl = localStorage.getItem('user_avatar')
+  const mediaId = localStorage.getItem('no_id_media')
+
+  if (!currentAvatarUrl || !mediaId) {
+    isLoadingAvatar.value = false
+    return
+  }
+
+  try {
+    isLoadingAvatar.value = true
+    const res = await fetch(currentAvatarUrl)
+    if (res.status === 400) {
+      const text = await res.text()
+      if (text.includes('ExpiredToken')) {
+        const { data } = await api.post('/api/mediacloud/read-url-batch', {
+          ids: [mediaId]
+        })
+        if (data?.success) {
+          const successKeys = Object.keys(data.success)
+          if (successKeys.length > 0) {
+            const newUrl = data.success[successKeys[0]].Url
+            if (newUrl) {
+              localStorage.setItem('user_avatar', newUrl)
+              userAvatar.value = newUrl
+            }
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error validating avatar:', error)
+  } finally {
+    isLoadingAvatar.value = false
+  }
+}
+
 onMounted(() => {
   window.addEventListener('profile-updated', updateProfileData)
+  checkAndRefreshAvatar()
 })
 
 onUnmounted(() => {
@@ -40,11 +80,14 @@ const openSettingsAccount = () => {
   <div class="topbar-item hs-dropdown relative inline-flex [--placement:bottom-right]">
     <button id="hs-dropdown-with-icons" type="button" class="hs-dropdown-toggle flex items-center gap-3 px-2 py-1.5 rounded-full hover:bg-default-100 transition-all group">
       <div :class="[
-        'size-9 rounded-full flex items-center justify-center ring-2 ring-white shadow-sm group-hover:scale-105 transition-transform overflow-hidden',
+        'relative size-9 rounded-full flex items-center justify-center ring-2 ring-white shadow-sm group-hover:scale-105 transition-transform overflow-hidden',
         userAvatar ? 'bg-slate-50' : 'bg-bejo-500 text-white'
       ]">
         <img v-if="userAvatar" :src="userAvatar" class="size-full object-cover" />
         <Icon v-else icon="lucide:headset" class="size-5" />
+        <div v-if="userAvatar && isLoadingAvatar" class="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
+          <Icon icon="lucide:loader-2" class="size-4 animate-spin text-bejo-500" />
+        </div>
       </div>
       <div class="hidden md:flex flex-col items-start leading-none text-left">
         <span class="text-xs font-black text-default-900">{{ namaDisplay }}</span>
@@ -60,13 +103,16 @@ const openSettingsAccount = () => {
         <div class="flex items-center gap-3">
           <div class="relative">
             <div :class="[
-              'size-12 rounded-xl flex items-center justify-center shadow-lg overflow-hidden',
+              'relative size-12 rounded-xl flex items-center justify-center shadow-lg overflow-hidden',
               userAvatar ? 'bg-slate-50 shadow-slate-200/50' : 'bg-bejo-500 text-white shadow-bejo-500/20'
             ]">
                <img v-if="userAvatar" :src="userAvatar" class="size-full object-cover" />
                <Icon v-else icon="lucide:headset" class="size-6" />
+               <div v-if="userAvatar && isLoadingAvatar" class="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
+                 <Icon icon="lucide:loader-2" class="size-5 animate-spin text-bejo-500" />
+               </div>
             </div>
-            <span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></span>
+            <span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full z-20"></span>
           </div>
           <div class="overflow-hidden">
             <h6 class="text-sm font-black text-default-900 truncate">{{ namaDisplay }}</h6>

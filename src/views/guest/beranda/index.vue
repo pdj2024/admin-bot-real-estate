@@ -104,10 +104,10 @@
               </div>
               <!-- Trending Tags Carousel -->
               <div class="flex items-center justify-center gap-3 mt-6 select-none">
-                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-1 shrink-0">Populer:</span>
+                <span class="text-[12pt] font-black text-slate-400 uppercase tracking-widest mr-1 shrink-0">Populer:</span>
                 
                 <!-- Prev Button -->
-                <button @click="prevTags" class="size-6 rounded-full bg-bejo-50 hover:bg-bejo-600 hover:text-white text-bejo-700 flex items-center justify-center border border-bejo-100 transition-all shrink-0 hover:scale-110 active:scale-90">
+                <button @click="prevTags" class="size-7 rounded-full bg-bejo-50 hover:bg-bejo-600 hover:text-white text-bejo-700 flex items-center justify-center border border-bejo-100 transition-all shrink-0 hover:scale-110 active:scale-90">
                   <Icon icon="lucide:chevron-left" class="size-3" />
                 </button>
 
@@ -122,7 +122,7 @@
                       v-for="tag in visibleTags" 
                       :key="tag.label" 
                       @click="tag.action()" 
-                      class="px-4 py-1.5 bg-bejo-50 hover:bg-bejo-600 hover:text-white text-bejo-700 text-[10px] font-black rounded-full border border-bejo-100 transition-all uppercase tracking-wider whitespace-nowrap hover:scale-105 active:scale-95 duration-300"
+                      class="px-4 py-1.5 bg-bejo-50 hover:bg-bejo-600 hover:text-white text-bejo-700 text-[12pt] font-black rounded-full border border-bejo-100 transition-all uppercase tracking-wider whitespace-nowrap hover:scale-105 active:scale-95 duration-300"
                     >
                       {{ tag.label }}
                     </button>
@@ -130,8 +130,8 @@
                 </div>
 
                 <!-- Next Button -->
-                <button @click="nextTags" class="size-6 rounded-full bg-bejo-50 hover:bg-bejo-600 hover:text-white text-bejo-700 flex items-center justify-center border border-bejo-100 transition-all shrink-0 hover:scale-110 active:scale-90">
-                  <Icon icon="lucide:chevron-right" class="size-3" />
+                <button @click="nextTags" class="size-7 rounded-full bg-bejo-50 hover:bg-bejo-600 hover:text-white text-bejo-700 flex items-center justify-center border border-bejo-100 transition-all shrink-0 hover:scale-110 active:scale-90">
+                  <Icon icon="lucide:chevron-right" class="size-5" />
                 </button>
               </div>
             </div>
@@ -144,54 +144,13 @@
             </div>
           </div>
 
-          <!-- Stats Section (Premium Redesign) -->
-          <div class="relative z-20 w-full max-w-6xl mt-1.5 mb-6 md:mt-20 md:mb-0 px-4 md:px-0">
-            <div class="w-full mx-auto bg-white/60 backdrop-blur-3xl rounded-[2rem] md:rounded-[3.5rem] p-4 md:p-14 shadow-premium border border-white grid grid-cols-3 md:grid-cols-3 gap-3 md:gap-8 relative overflow-hidden">
-              <!-- Glow Effect inside Stats -->
-              <div class="absolute -top-24 -left-24 size-48 bg-bejo-100 rounded-full blur-[80px] opacity-40"></div>
-              <div class="absolute -bottom-24 -right-24 size-48 bg-bejo-200 rounded-full blur-[80px] opacity-30"></div>
-
-              <div class="text-center group relative z-10">
-                <div class="size-10 md:size-16 rounded-xl md:rounded-2xl bg-bejo-50 text-bejo-600 flex items-center justify-center mx-auto mb-3 md:mb-6 group-hover:bg-bejo-600 group-hover:text-white transition-all duration-500 shadow-sm border border-bejo-100/50 group-hover:rotate-6 group-hover:scale-110">
-                  <Icon icon="lucide:building-2" class="size-5 md:size-7" />
-                </div>
-                <div class="space-y-1">
-                  <h4 class="text-2xl md:text-5xl lg:text-6xl font-black text-slate-900 tracking-tighter">{{ allProducts.length > 0 ? allProducts.length : '...' }}</h4>
-                  <p class="text-[8px] md:text-[10px] font-black text-bejo-600/80 uppercase tracking-[0.25em]">Unit Eksklusif</p>
-                  <div class="h-1 w-6 md:w-8 bg-bejo-100 mx-auto rounded-full mt-2 group-hover:w-16 transition-all duration-500"></div>
-                </div>
-              </div>
-
-              <div class="text-center group relative z-10 border-x border-slate-100/80 py-2 md:py-0">
-                <div class="size-10 md:size-16 rounded-xl md:rounded-2xl bg-bejo-50 text-bejo-600 flex items-center justify-center mx-auto mb-3 md:mb-6 group-hover:bg-bejo-600 group-hover:text-white transition-all duration-500 shadow-sm border border-bejo-100/50 group-hover:-rotate-6 group-hover:scale-110">
-                  <Icon icon="lucide:shield-check" class="size-5 md:size-7" />
-                </div>
-                <div class="space-y-1">
-                  <h4 class="text-2xl md:text-5xl lg:text-6xl font-black text-slate-900 tracking-tighter">100 %</h4>
-                  <p class="text-[8px] md:text-[10px] font-black text-bejo-600/80 uppercase tracking-[0.25em]">Data Valid</p>
-                  <div class="h-1 w-6 md:w-8 bg-bejo-100 mx-auto rounded-full mt-2 group-hover:w-16 transition-all duration-500"></div>
-                </div>
-              </div>
-
-              <div class="text-center group relative z-10">
-                <div class="size-10 md:size-16 rounded-xl md:rounded-2xl bg-bejo-50 text-bejo-600 flex items-center justify-center mx-auto mb-3 md:mb-6 group-hover:bg-bejo-600 group-hover:text-white transition-all duration-500 shadow-sm border border-bejo-100/50 group-hover:rotate-6 group-hover:scale-110">
-                  <Icon icon="lucide:map-pin" class="size-5 md:size-7" />
-                </div>
-                <div class="space-y-1">
-                  <h4 class="text-2xl md:text-5xl lg:text-6xl font-black text-slate-900 tracking-tighter">{{ totalAreas }}</h4>
-                  <p class="text-[8px] md:text-[10px] font-black text-bejo-600/80 uppercase tracking-[0.25em]">Area Strategis</p>
-                  <div class="h-1 w-6 md:w-8 bg-bejo-100 mx-auto rounded-full mt-2 group-hover:w-16 transition-all duration-500"></div>
-                </div>
-              </div>
-            </div>
-          </div>
 
         </div>
       </div>
     </section>
 
     <!-- Highlight Properti Terbaru Section -->
-    <section class="pt-6 pb-4 sm:pt-16 sm:pb-10 px-4 bg-[#f7f9fb] relative overflow-hidden">
+    <section v-if="displayedProducts.length > 0 || isLoading" class="pt-6 pb-4 sm:pt-16 sm:pb-10 px-4 bg-[#f7f9fb] relative overflow-hidden">
       <!-- Premium Decor -->
       <div class="absolute -right-40 top-20 size-[600px] bg-bejo-200/20 rounded-full blur-[120px] pointer-events-none animate-pulse"></div>
       <div class="absolute -left-20 bottom-0 size-[400px] bg-bejo-100/30 rounded-full blur-[100px] pointer-events-none"></div>
@@ -227,7 +186,7 @@
             </button>
           </div>
 
-          <div ref="scrollContainer" class="flex overflow-x-auto snap-x snap-mandatory gap-4 md:gap-8 pb-6 px-4 md:px-20 custom-scroll scroll-smooth no-scrollbar scroll-pl-4 md:scroll-pl-20">
+          <div ref="scrollContainer" @scroll="handleInfiniteScroll" class="flex overflow-x-auto snap-x snap-mandatory gap-4 md:gap-8 pb-6 px-4 md:px-20 custom-scroll scroll-smooth no-scrollbar scroll-pl-4 md:scroll-pl-20">
             <!-- Show Skeletons while loading data -->
             <template v-if="isLoading && displayedProducts.length === 0">
               <ProductCard 
@@ -242,8 +201,8 @@
             <!-- Show Actual Cards (Each handles its own shimmer for image loading) -->
             <template v-else>
               <ProductCard 
-                v-for="row in displayedProducts" 
-                :key="row.id || row.No_Id" 
+                v-for="row in loopedProducts" 
+                :key="row._unique_key" 
                 :product="row" 
                 @select="(product: any) => $router.push(`/detail/${product.Slug}`)"
                 class="snap-start shrink-0 w-[80vw] md:w-[40vw] lg:w-[calc((100%-96px)/4)] hover:-translate-y-4 transition-all duration-700"
@@ -253,7 +212,7 @@
 
           <!-- Pagination Indicator (Desktop Only) -->
           <div class="hidden lg:flex justify-center gap-2 mt-4">
-            <div v-for="i in Math.ceil(displayedProducts.length / 1)" :key="i" class="h-1.5 rounded-full bg-slate-200 transition-all duration-300" :class="i === 1 ? 'w-8 bg-bejo-500' : 'w-2'"></div>
+            <div v-for="i in Math.min(displayedProducts.length, 5)" :key="i" class="h-1.5 rounded-full bg-slate-200 transition-all duration-300" :class="i === 1 ? 'w-8 bg-bejo-500' : 'w-2'"></div>
           </div>
 
           <!-- Hint for scrolling (Mobile Only) -->
@@ -447,7 +406,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import GuestLayout from '@/layouts/guest.vue'
@@ -485,19 +444,40 @@ const scroll = (direction: 'left' | 'right') => {
   const scrollAmount = cardWidth + gap
 
   if (direction === 'right') {
-    const isAtEnd = Math.ceil(container.scrollLeft + container.clientWidth) >= container.scrollWidth - 10
-    if (isAtEnd) {
-      container.scrollTo({ left: 0, behavior: 'smooth' })
-    } else {
-      container.scrollBy({ left: scrollAmount, behavior: 'smooth' })
-    }
+    container.scrollBy({ left: scrollAmount, behavior: 'smooth' })
   } else {
-    const isAtStart = container.scrollLeft <= 10
-    if (isAtStart) {
-      container.scrollTo({ left: container.scrollWidth, behavior: 'smooth' })
-    } else {
-      container.scrollBy({ left: -scrollAmount, behavior: 'smooth' })
-    }
+    container.scrollBy({ left: -scrollAmount, behavior: 'smooth' })
+  }
+}
+
+const handleInfiniteScroll = (e: Event) => {
+  const container = e.target as HTMLElement
+  const card = container.querySelector('.shrink-0')
+  if (!card || displayedProducts.value.length === 0) return
+
+  const cardWidth = card.clientWidth
+  const gap = 32
+  const scrollAmount = cardWidth + gap
+
+  const isNearEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - scrollAmount
+  const isNearStart = container.scrollLeft <= scrollAmount
+
+  if (isNearEnd || isNearStart) {
+    const itemsPerIter = displayedProducts.value.length
+    const currentScrollIndex = Math.round(container.scrollLeft / scrollAmount)
+    const offsetWithinIter = currentScrollIndex % itemsPerIter
+    
+    // Matikan smooth scroll sementara untuk instant jump
+    container.classList.remove('scroll-smooth')
+    
+    // Jump ke iterasi ke-20 dengan offset yang sama agar mulus
+    const newScrollLeft = (20 * itemsPerIter + offsetWithinIter) * scrollAmount
+    container.scrollTo({ left: newScrollLeft, behavior: 'instant' })
+    
+    // Kembalikan smooth scroll
+    requestAnimationFrame(() => {
+      container.classList.add('scroll-smooth')
+    })
   }
 }
 
@@ -528,6 +508,39 @@ const settingsStore = useSettings()
 const router = useRouter()
 const isLoading = ref(true)
 const displayedProducts = ref<ProductPreview[]>([])
+
+const loopedProducts = computed(() => {
+  if (displayedProducts.value.length === 0) return []
+  // Clone data 40x for endless illusion
+  return Array.from({ length: 40 }).flatMap((_, index) => 
+    displayedProducts.value.map(p => ({ ...p, _unique_key: `${p.No_Id || p.id}-${index}` }))
+  )
+})
+
+watch(displayedProducts, (newVal) => {
+  if (newVal.length > 0) {
+    nextTick(() => {
+      const container = scrollContainer.value
+      if (!container) return
+      
+      const card = container.querySelector('.shrink-0')
+      if (!card) return
+      
+      const cardWidth = card.clientWidth
+      const gap = 32
+      const scrollAmount = cardWidth + gap
+      
+      // Set posisi awal ke tengah (Iterasi ke-20)
+      const middleScrollLeft = scrollAmount * newVal.length * 20
+      container.classList.remove('scroll-smooth')
+      container.scrollTo({ left: middleScrollLeft, behavior: 'instant' })
+      requestAnimationFrame(() => {
+        container.classList.add('scroll-smooth')
+      })
+    })
+  }
+})
+
 const allProducts = ref<ProductPreview[]>([])
 const totalAreas = computed(() => {
   const cities = allProducts.value.map(p => p.Nama_Kota).filter(Boolean)
@@ -623,105 +636,22 @@ const fetchData = async () => {
     })
 
     if (data && data.Data) {
-      const actualData = data.Data || []
+      let actualData = data.Data || []
+      
+      // Filter out Draft, Terjual, and Tersewa for the entire homepage
+      actualData = actualData.filter((p: any) => 
+        p.Status_Display !== 'Draft' && 
+        p.Status_Properti !== 'Terjual' && 
+        p.Status_Properti !== 'Tersewa'
+      )
+
       allProducts.value = actualData
 
-      // Filter Aktif & Tersedia
+      // Filter Aktif & Tersedia untuk carousel
       const validProducts = actualData.filter((p: any) => p.Status_Display === 'Aktif' && p.Status_Properti === 'Tersedia')
 
       // Get up to 8 products for a richer carousel
       const products = validProducts.slice(0, 8)
-
-      // Pastikan tampil minimal 4 (tambah mock jika kurang)
-      if (products.length < 4) {
-        const mockItems = [
-          {
-            No_Id: 'mock_pakuwon_1',
-            Nama_Produk: 'Pakuwon Waterplace Residence',
-            Slug: 'pakuwon-waterplace-residence',
-            Alamat: 'Tower A, Lantai 15 (surabaya selatan)',
-            Tipe: 'Apartemen',
-            Luas_Bangunan: 56,
-            Area: ['Kelurahan, Kecamatan, Kota Surabaya, Jawa Timur', 'Surabaya Selatan'],
-            Status_Display: 'Aktif',
-            Status_Properti: 'Tersedia',
-            Status_Transaksi: ['Sewa'],
-            Harga_Sewa1: 80000000,
-            Harga_Sewa2: 55000000,
-            Satuan_Minimal_Sewa: 'Tahun',
-            Jumlah_Kamar_Tidur: 2,
-            Jumlah_Kamar_Mandi: 1,
-            Akses_Jalan: ['10 Menit ke Tol Satelit', '5 Menit ke National Hospital'],
-            MediaUrls: [{ Id_Media: 'https://images.unsplash.com/photo-1545324418-f1d3ac1ef739?auto=format&fit=crop&q=80&w=800' }]
-          },
-          {
-            No_Id: 'mock_graha_1',
-            Nama_Produk: 'Graha Famili Modern Mansion',
-            Slug: 'graha-famili-modern-mansion',
-            Alamat: 'Blok AA, Cluster Luxury Park',
-            Tipe: 'Rumah',
-            Luas_Bangunan: 250,
-            Area: ['Kelurahan, Kecamatan, Kota Surabaya, Jawa Timur', 'Surabaya Barat'],
-            Status_Display: 'Aktif',
-            Status_Properti: 'Tersedia',
-            Status_Transaksi: ['Jual'],
-            Harga_Jual1: 5200000000,
-            Harga_Jual2: 4900000000,
-            Jumlah_Kamar_Tidur: 4,
-            Jumlah_Kamar_Mandi: 3,
-            Akses_Jalan: ['Dekat National Hospital', 'Area Komersial Walk-in'],
-            MediaUrls: [{ Id_Media: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=800' }]
-          },
-          {
-            No_Id: 'mock_rosebay_1',
-            Nama_Produk: 'The Rosebay Low-Rise Condo',
-            Slug: 'the-rosebay-low-rise-condo',
-            Alamat: 'Graha Famili, Surabaya Barat',
-            Tipe: 'Apartemen',
-            Luas_Bangunan: 120,
-            Area: ['Kelurahan, Kecamatan, Kota Surabaya, Jawa Timur', 'Surabaya Barat'],
-            Status_Display: 'Aktif',
-            Status_Properti: 'Tersedia',
-            Status_Transaksi: ['Jual', 'Sewa'],
-            Harga_Jual1: 2800000000,
-            Harga_Jual2: 0,
-            Harga_Sewa1: 150000000,
-            Satuan_Minimal_Sewa: 'Tahun',
-            Jumlah_Kamar_Tidur: 2,
-            Jumlah_Kamar_Mandi: 2,
-            Akses_Jalan: ['Langsung ke Lapangan Golf', 'Privasi Tinggi'],
-            MediaUrls: [{ Id_Media: 'https://images.unsplash.com/photo-1567496898669-ee935f5f647a?auto=format&fit=crop&q=80&w=800' }]
-          },
-          {
-            No_Id: 'mock_ciputra_1',
-            Nama_Produk: 'Ciputra World Sky Loft',
-            Slug: 'ciputra-world-sky-loft',
-            Alamat: 'CBD Ciputra World, Surabaya Pusat',
-            Tipe: 'Apartemen',
-            Luas_Bangunan: 85,
-            Area: ['Kelurahan, Kecamatan, Kota Surabaya, Jawa Timur', 'Surabaya Pusat'],
-            Status_Display: 'Aktif',
-            Status_Properti: 'Tersedia',
-            Status_Transaksi: ['Sewa'],
-            Harga_Sewa1: 120000000,
-            Harga_Sewa2: 105000000,
-            Satuan_Minimal_Sewa: 'Tahun',
-            Jumlah_Kamar_Tidur: 1,
-            Jumlah_Kamar_Mandi: 1,
-            Akses_Jalan: ['Koneksi Mall Direct', 'Pusat Kota'],
-            MediaUrls: [{ Id_Media: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=800' }]
-          }
-        ]
-
-        let i = 0
-        while (products.length < 4 && i < mockItems.length) {
-          const mock = mockItems[i]
-          if (!products.some((p: ProductPreview) => p.Nama_Produk === mock.Nama_Produk)) {
-            products.push(mock as any)
-          }
-          i++
-        }
-      }
 
       displayedProducts.value = products
     }

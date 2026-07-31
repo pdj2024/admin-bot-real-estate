@@ -241,9 +241,9 @@ onBeforeUnmount(() => {
     <div class="space-y-6 flex flex-col h-full">
       <div class="flex items-center justify-between mb-1 shrink-0">
         <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Peta Properti <span class="text-red-500">*</span></label>
-        <label class="flex items-center gap-2 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-primary transition-colors tracking-widest mb-2">
-          <input type="checkbox" v-model="form.Hide_alamat" class="size-3.5 rounded border-slate-200 text-primary" />
-          Sembunyikan Alamat?
+        <label class="flex items-center gap-2 cursor-pointer group mb-2">
+          <input type="checkbox" v-model="form.Hide_alamat" class="size-4 rounded border-slate-200 text-primary" />
+          <span class="text-[10px] font-black text-slate-400 group-hover:text-primary transition-colors tracking-widest">Sembunyikan Alamat?</span>
         </label>
       </div>
 

@@ -19,22 +19,16 @@ const fullAddress = computed(() => {
   const kota = props.product.Nama_Kota || ''
   const area = props.product.Nama_Area || ''
 
-  if (props.product.Hide_alamat) {
-    return area ? `${kota} (${area})` : kota
-  }
-
-  // 1. Clean up street address (split by '_' and take first part)
-  const street = props.product.Alamat.split('_')[0].trim()
+  // 1. Clean up street address
+  const street = (props.product.Hide_alamat || !props.product.Alamat) ? '' : props.product.Alamat.split('_')[0].trim()
   
   // 2. Location parts
   const kelurahan = (props.product as any).Kelurahan || ''
   const kecamatan = (props.product as any).Kecamatan || ''
 
   // Build the string: street, kelurahan, kecamatan, kota (area)
-  let result = street
-  if (kelurahan) result += `, ${kelurahan}`
-  if (kecamatan) result += `, ${kecamatan}`
-  if (kota) result += `, ${kota}`
+  const parts = [street, kelurahan, kecamatan, kota].filter(Boolean)
+  let result = parts.join(', ')
   if (area) result += ` (${area})`
   
   return result
@@ -75,6 +69,7 @@ const formatText = (text: string) => {
             <div v-for="tag in product.Status_Transaksi" :key="tag" class="px-4 py-1 rounded-full bg-bejo-500 text-white text-[9px] font-black uppercase tracking-widest shadow-sm shadow-bejo-500/20">
               {{ tag }}
             </div>
+            
           </div>
           <div v-else class="flex gap-2 mb-5 animate-pulse">
             <div class="h-6 w-16 bg-slate-100 rounded-full"></div>

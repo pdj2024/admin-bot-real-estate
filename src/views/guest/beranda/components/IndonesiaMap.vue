@@ -28,6 +28,10 @@ let markerClusterer: any = null;
 const hoveredProperty = ref<any>(null);
 const tooltipPosition = ref({ x: 0, y: 0 });
 
+let hoverTimeout: ReturnType<typeof setTimeout> | null = null;
+const clearHoverTimeout = () => { if (hoverTimeout) clearTimeout(hoverTimeout); };
+const startHoverTimeout = () => { hoverTimeout = setTimeout(() => { hoveredProperty.value = null; }, 200); };
+
 // Helper to extract coordinates from property object
 const extractCoords = (property: Property) => {
   // 1. Prioritize explicit Latitude and Longitude fields
@@ -55,8 +59,8 @@ const extractCoords = (property: Property) => {
 
 // Helper to get bejo color
 const getBejoColor = () => {
-  if (typeof document === 'undefined') return '#f97316';
-  return getComputedStyle(document.documentElement).getPropertyValue('--color-bejo-500').trim() || '#f97316';
+  if (typeof document === 'undefined') return '#c2410c';
+  return getComputedStyle(document.documentElement).getPropertyValue('--color-bejo-600').trim() || '#c2410c';
 };
 
 const initMap = async () => {
@@ -75,19 +79,6 @@ const initMap = async () => {
     };
 
     map = new Map(mapRef.value, mapOptions);
-
-    if (map) {
-      const bejoColor = getBejoColor();
-      // Load Indonesia Highlight
-      map.data.loadGeoJson('https://raw.githubusercontent.com/superpikar/indonesia-geojson/master/indonesia-province-simple.json');
-      map.data.setStyle({
-        fillColor: bejoColor,
-        fillOpacity: 0.08,
-        strokeColor: bejoColor,
-        strokeWeight: 0.5,
-        clickable: false
-      });
-    }
 
     updateMarkers();
   } catch (error) {
@@ -135,6 +126,7 @@ const updateMarkers = async () => {
 
     // Hover effect for tooltip
     marker.addEventListener('mouseenter', () => {
+      clearHoverTimeout();
       hoveredProperty.value = property;
       const rect = (marker as any).getBoundingClientRect();
       const mapRect = mapRef.value?.getBoundingClientRect();
@@ -147,7 +139,7 @@ const updateMarkers = async () => {
     });
 
     marker.addEventListener('mouseleave', () => {
-      hoveredProperty.value = null;
+      startHoverTimeout();
     });
 
     markers.push(marker as any);
@@ -180,6 +172,23 @@ const updateMarkers = async () => {
           });
         }
       }
+    });
+  }
+
+  // Adjust map bounds to fit all markers
+  if (markers.length > 0) {
+    const bounds = new google.maps.LatLngBounds();
+    markers.forEach((marker: any) => {
+      bounds.extend(marker.position);
+    });
+    map.fitBounds(bounds);
+
+    // Prevent map from zooming in too close if there's only 1 marker or very close markers
+    const listener = google.maps.event.addListener(map, 'idle', () => {
+      if (map && (map.getZoom() || 0) > 13) {
+        map.setZoom(13);
+      }
+      google.maps.event.removeListener(listener);
     });
   }
 };
@@ -227,7 +236,7 @@ const formatCurrency = (val: number) => {
     <div class="max-w-7xl mx-auto px-4 relative z-10">
       <div class="text-center mb-8 space-y-4">
         <h2 class="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">
-          Properti <span class="text-bejo-600">{{ settingsStore.business.appName }}</span> di Indonesia
+          Sebaran Properti <span class="text-bejo-600">{{ settingsStore.business.appName }}</span>
         </h2>
         <p class="text-slate-500 font-medium max-w-2xl mx-auto">
           Lihat persebaran unit hunian kami secara real-time. Zoom untuk melihat lokasi lebih detail dan akurat.
@@ -254,18 +263,25 @@ const formatCurrency = (val: number) => {
               top: `${tooltipPosition.y}px`,
               transform: 'translate(-50%, calc(-100% - 30px))'
             }"
+            @mouseenter="clearHoverTimeout"
+            @mouseleave="startHoverTimeout"
           >
-            <div class="w-64 bg-white border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-[1.5rem] p-4 text-left relative">
-              <div class="flex items-center gap-3 mb-3">
-                <div class="size-10 rounded-2xl flex items-center justify-center bg-bejo-50 text-bejo-600">
-                  <Icon icon="lucide:building-2" class="size-6" />
+            <div class="w-64 bg-white border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-[1.5rem] p-4 text-left relative pointer-events-auto">
+              <div class="flex items-start justify-between gap-2 mb-3">
+                <div class="flex items-center gap-3">
+                  <div class="size-10 rounded-2xl flex items-center justify-center bg-bejo-50 text-bejo-600 shrink-0">
+                    <Icon icon="lucide:building-2" class="size-6" />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <h4 class="text-xs font-black text-slate-900 leading-tight truncate">{{ hoveredProperty.Nama_Produk }}</h4>
+                    <p class="text-[9px] font-bold text-slate-400 mt-0.5 truncate">
+                      {{ hoveredProperty.Nama_Kota || 'Lokasi Tersedia' }}
+                    </p>
+                  </div>
                 </div>
-                <div class="flex-1 min-w-0">
-                  <h4 class="text-xs font-black text-slate-900 leading-tight truncate">{{ hoveredProperty.Nama_Produk }}</h4>
-                  <p class="text-[9px] font-bold text-slate-400 mt-0.5 truncate">
-                    {{ hoveredProperty.Nama_Kota || 'Lokasi Tersedia' }}
-                  </p>
-                </div>
+                <RouterLink :to="`/detail/${hoveredProperty.Slug}`" class="size-8 rounded-full bg-slate-50 hover:bg-bejo-600 hover:text-white text-slate-400 flex items-center justify-center shrink-0 transition-all border border-slate-100 shadow-sm active:scale-95 group/link">
+                  <Icon icon="lucide:external-link" class="size-4 group-hover/link:-translate-y-0.5 group-hover/link:translate-x-0.5 transition-transform" />
+                </RouterLink>
               </div>
               <div class="space-y-1.5 border-t border-slate-50 pt-3">
                 <div class="flex items-center justify-between">

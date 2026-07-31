@@ -152,7 +152,7 @@ watch(() => props.product?.No_Id, (newId) => {
     </div>
 
     <!-- Media Showcase -->
-    <div class="card bg-white rounded-[2.5rem] overflow-hidden shadow-premium border-none relative group/main">
+    <div v-if="media.length > 0 || !product" class="card bg-white rounded-[2.5rem] overflow-hidden shadow-premium border-none relative group/main">
       <!-- Main Display -->
       <div 
         @touchstart="handleTouchStart"
@@ -300,6 +300,12 @@ watch(() => props.product?.No_Id, (newId) => {
          </button>
        </div>
        <div class="grid grid-cols-1 gap-3">
+          <!-- Custom Link -->
+          <a v-if="product?.Link" :href="product.Link" target="_blank" rel="noopener noreferrer" class="w-full h-12 bg-bejo-50 text-bejo-600 rounded-2xl font-black text-[10px] uppercase tracking-widest border border-bejo-100 hover:bg-bejo-600 hover:text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+             <Icon icon="lucide:external-link" class="size-4" />
+             Lihat {{ product.Link_Caption || 'Media' }}
+          </a>
+
           <!-- Created By -->
           <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
              <div class="flex items-center gap-3">
