@@ -3,6 +3,7 @@ import { inject, ref } from 'vue'
 import { Icon } from '@iconify/vue'
 import BaseFormGroup from '@/components/common/BaseFormGroup.vue'
 import { GOOGLE_DRIVE_API_KEY } from '@/config/constants'
+import { success, fail } from '@/utils/sweet-alert'
 
 const state = inject<any>('propertyModalState')
 if (!state) {
@@ -25,7 +26,14 @@ const isImportingDrive = ref(false)
 const importDriveFile = async (id: string, name: string) => {
   const url = `https://www.googleapis.com/drive/v3/files/${id}?alt=media&key=${GOOGLE_DRIVE_API_KEY}`
   const res = await fetch(url)
-  if (!res.ok) throw new Error('Failed to download from Drive')
+  if (!res.ok) {
+    let errMsg = 'Failed to download from Drive'
+    try {
+      const errData = await res.json()
+      if (errData.error?.message) errMsg = errData.error.message
+    } catch (e) {}
+    throw new Error(errMsg)
+  }
   const blob = await res.blob()
   const file = new File([blob], name, { type: blob.type || 'image/jpeg' })
   
@@ -59,7 +67,7 @@ const addDriveLink = async () => {
   const fileId = !folderId ? (link.match(/\/file\/d\/([a-zA-Z0-9_-]+)/)?.[1] || link.match(/[?&]id=([a-zA-Z0-9_-]+)/)?.[1]) : null
 
   if (!folderId && !fileId) {
-    alert('Format link tidak dikenali. Gunakan link file atau folder Google Drive.')
+    fail('Format link tidak dikenali. Gunakan link file atau folder Google Drive.')
     return
   }
 
@@ -68,23 +76,39 @@ const addDriveLink = async () => {
     if (folderId) {
       // Fetch folder contents
       const res = await fetch(
-        `https://www.googleapis.com/drive/v3/files?q=%27${folderId}%27+in+parents+and+mimeType+contains+%27image/%27+and+trashed=false&key=${GOOGLE_DRIVE_API_KEY}&fields=files(id,name,mimeType)&pageSize=100`
+        `https://www.googleapis.com/drive/v3/files?q=%27${folderId}%27+in+parents+and+trashed=false&key=${GOOGLE_DRIVE_API_KEY}&fields=files(id,name,mimeType)&pageSize=100`
       )
       const data = await res.json()
-      if (data.files?.length) {
-        for (const file of data.files) {
+      
+      if (data.error) {
+        if (data.error.message?.includes('are blocked')) {
+          fail('Akses ditolak: Google Drive memblokir pembacaan FOLDER menggunakan API Key publik. Mohon masukkan link FILE satu per satu, bukan link FOLDER.')
+        } else {
+          fail('Gagal mengakses folder: ' + data.error.message)
+        }
+        return
+      }
+
+      // Filter images/videos locally since Drive API doesn't support 'contains' on mimeType
+      const mediaFiles = data.files?.filter((f: any) => f.mimeType.startsWith('image/') || f.mimeType.startsWith('video/')) || []
+
+      if (mediaFiles.length) {
+        for (const file of mediaFiles) {
           await importDriveFile(file.id, file.name)
         }
+        success(`Berhasil mengimpor ${mediaFiles.length} file dari Drive.`)
       } else {
-        alert('Folder kosong, tidak dapat diakses, atau tidak berisi gambar.')
+        fail('Folder kosong, tidak dapat diakses, atau tidak berisi gambar/video.')
       }
     } else if (fileId) {
       await importDriveFile(fileId, `drive_${fileId}.jpg`)
+      success('Berhasil mengimpor file dari Drive.')
     }
     driveLinkInput.value = ''
-  } catch (err) {
+  } catch (err: any) {
     console.error('Drive import error:', err)
-    alert('Gagal mengunduh file dari Google Drive. Pastikan file/folder dapat diakses publik (Siapa saja yang memiliki link).')
+    let errorText = err.message || 'Gagal mengunduh file dari Google Drive.'
+    fail(`Gagal memproses link Drive. Pesan Error: ${errorText}`)
   } finally {
     isImportingDrive.value = false
   }
