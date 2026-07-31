@@ -118,6 +118,8 @@ export interface Product {
   Id_Customer?: string
   Nama_Customer?: string
   Tanggal_Transaksi?: string
+  Link?: string
+  Link_Caption?: string
 }
 
 const product = ref<Product | null>(null)
