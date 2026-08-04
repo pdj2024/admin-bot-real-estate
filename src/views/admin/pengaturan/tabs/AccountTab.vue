@@ -278,7 +278,7 @@ const handleUpdatePassword = async () => {
       }
     } catch (err: any) {
       console.error(err)
-      fail(err.response?.data?.message || 'Terjadi kesalahan sistem saat memperbarui kata sandi.')
+      fail(err, 'Terjadi kesalahan sistem saat memperbarui kata sandi.')
     } finally {
       isLoadingPassword.value = false
     }

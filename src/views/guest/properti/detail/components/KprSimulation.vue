@@ -16,7 +16,7 @@ const formatCurrency = (value: number) => {
 
 const trimDecimals = (val: number, decimals: number = 2) => {
   const factor = Math.pow(10, decimals)
-  return Math.floor(val * factor) / factor
+  return Math.floor(val * factor + 1e-9) / factor
 }
 
 const formatCurrencyShort = (value: number) => {

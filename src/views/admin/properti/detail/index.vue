@@ -189,15 +189,43 @@ const handleDelete = async () => {
 
   confirm('Apakah Anda ingin menghapus data ini?', async () => {
     try {
-      const res = await api.delete('/api/mediacloud/delete-batch', {
-        data: { ids: [...data.File_Image] },
-        headers: { 'X-Jenis-User': 'admin' }
-      })
+      const imageIds: string[] = []
+      const collectIds = (list: any) => {
+        if (Array.isArray(list)) {
+          list.forEach((id: any) => {
+            if (id && typeof id === 'string' && id.trim() !== '') imageIds.push(id.trim())
+          })
+        } else if (typeof list === 'string' && list.trim() !== '') {
+          imageIds.push(list.trim())
+        }
+      }
 
-      const successMedia: string[] = res.data?.Success || []
-      if (!data.File_Image.every((id: string) => successMedia.includes(id))) {
-        fail('Beberapa gambar gagal dihapus')
-        return
+      collectIds(data.File_Image)
+      collectIds((data as any).Id_Media_Denah)
+      collectIds((data as any).Id_Media_3d)
+      collectIds((data as any).Id_Media_Drive)
+      collectIds((data as any).Id_Media_Thumbnail)
+
+      if (Array.isArray(data.MediaUrls)) {
+        data.MediaUrls.forEach((m: any) => {
+          const id = m?.Id_Media || m?.No_Id_Media
+          if (id && typeof id === 'string' && id.trim() !== '') imageIds.push(id.trim())
+        })
+      }
+
+      const uniqueImageIds = [...new Set(imageIds)]
+
+      if (uniqueImageIds.length > 0) {
+        const res = await api.delete('/api/mediacloud/delete-batch', {
+          data: { ids: uniqueImageIds },
+          headers: { 'X-Jenis-User': 'admin' }
+        })
+
+        const successMedia: string[] = res.data?.Success || []
+        if (!uniqueImageIds.every((id: string) => successMedia.includes(id))) {
+          fail('Beberapa gambar gagal dihapus')
+          return
+        }
       }
 
       await api.delete(`/api/realEstate/delete?no_id=${data.No_Id}`, {

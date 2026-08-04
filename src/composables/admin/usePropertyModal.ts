@@ -562,7 +562,7 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
       await fetchKunci(form.value.No_Id)
       success(isEdit ? 'Kunci berhasil diperbarui' : 'Kunci berhasil ditambahkan')
     } catch (err: any) {
-      fail(err.response?.data?.message || err.message || 'Gagal menyimpan kunci')
+      fail(err, 'Gagal menyimpan kunci')
       throw err
     }
   }
@@ -573,7 +573,7 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
       await fetchKunci(form.value.No_Id)
       success('Kunci berhasil dihapus')
     } catch (err: any) {
-      fail(err.response?.data?.message || err.message || 'Gagal menghapus kunci')
+      fail(err, 'Gagal menghapus kunci')
       throw err
     }
   }
@@ -769,7 +769,7 @@ export function usePropertyModal(emit: any, handleCloseFn: () => void) {
       emit('success')
       handleCloseFn()
     } catch (err: any) {
-      fail(err.response?.data?.message || err.message || 'Gagal menyimpan')
+      fail(err, 'Gagal menyimpan')
     } finally {
       isLoading.value = false
     }

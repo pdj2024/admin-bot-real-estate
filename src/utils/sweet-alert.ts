@@ -79,14 +79,54 @@ export function success(text: string) {
   })
 }
 
-export function fail(text: string) {
+export function getErrorMessage(err: any, fallback: string = 'Terjadi kesalahan sistem'): string {
+  if (!err) return fallback
+  if (typeof err === 'string') {
+    if (err.includes('Request failed with status code') && fallback && fallback !== 'Terjadi kesalahan sistem') {
+      return fallback
+    }
+    return err
+  }
+
+  const data = err.response?.data
+  if (data) {
+    if (typeof data === 'string' && data.trim() !== '') return data
+    if (data.Message && typeof data.Message === 'string') return data.Message
+    if (data.message && typeof data.message === 'string') return data.message
+    if (data.error && typeof data.error === 'string') return data.error
+    if (data.Error && typeof data.Error === 'string') return data.Error
+    if (data.detail && typeof data.detail === 'string') return data.detail
+    if (data.Data && typeof data.Data === 'string') return data.Data
+  }
+
+  if (err.message && typeof err.message === 'string' && !err.message.includes('Request failed with status code')) {
+    return err.message
+  }
+
+  return fallback
+}
+
+export function fail(textOrError: any, fallback: string = 'Terjadi kesalahan sistem') {
   let timerInterval: any
+  let displayMessage = ''
+
+  if (typeof textOrError === 'string') {
+    if (textOrError.includes('Request failed with status code') && fallback && fallback !== 'Terjadi kesalahan sistem') {
+      displayMessage = fallback
+    } else if (textOrError.includes('Request failed with status code')) {
+      displayMessage = 'Permintaan gagal. Terjadi kesalahan pada server.'
+    } else {
+      displayMessage = textOrError
+    }
+  } else {
+    displayMessage = getErrorMessage(textOrError, fallback)
+  }
 
   Swal.fire({
     icon: "error",
     title: "Mohon maaf!",
-    html: text,
-    timer: 2000,
+    html: displayMessage,
+    timer: 3500,
     timerProgressBar: false,
     didOpen: () => {
       Swal.showLoading()
